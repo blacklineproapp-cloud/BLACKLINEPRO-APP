@@ -354,9 +354,12 @@ PROCESSOS DE RESTAURAÇÃO E APRIMORAMENTO:
 1. RESTAURAÇÃO DE DANOS (PRIORIDADE MÁXIMA):
    - Corrigir RASGOS, DOBRAS e AMASSADOS na foto
    - Remover RANHURAS, ARRANHÕES e RISCOS
+   - CORRIGIR MANCHAS de qualquer tipo (água, tinta, sujeira)
+   - REMOVER QUEIMADURAS e marcas de fogo/calor
    - Reconstruir áreas DANIFICADAS ou FALTANDO
    - Restaurar fotos ANTIGAS e DETERIORADAS
-   - Recuperar áreas MANCHADAS ou DESBOTADAS
+   - Recuperar áreas DESBOTADAS ou com perda de cor
+   - Suavizar IMPERFEIÇÕES mantendo naturalidade
 
 2. CORREÇÃO DE PIXELIZAÇÃO:
    - Eliminar PIXELS visíveis e BLOCKY ARTIFACTS
@@ -456,15 +459,17 @@ export async function analyzeImageColors(
 }> {
   const prompt = `ATUE COMO: Especialista em análise de cores e colorimetria para tatuagem profissional.
 
-MISSÃO: Analisar cientificamente as cores DOMINANTES desta imagem e criar uma paleta de referência profissional.
+MISSÃO: Analisar PROFUNDAMENTE TODAS as cores, tons e nuances desta imagem e criar uma paleta COMPLETA de referência profissional.
 
 ANÁLISE TÉCNICA REQUERIDA:
 
-1. EXTRAÇÃO DE CORES DOMINANTES:
-   - Identifique as 6-8 cores MAIS PRESENTES na imagem
-   - Calcule os valores RGB/HEX exatos dessas cores
+1. EXTRAÇÃO COMPLETA DE CORES (SEM LIMITE):
+   - Identifique TODAS as cores presentes na imagem (principais, secundárias, tons, nuances)
+   - Capture TODAS as variações de um mesmo tom (claro, médio, escuro)
+   - Inclua os degradês e transições entre cores
+   - Calcule os valores HEX exatos de cada cor
    - Ordene por predominância (mais presente primeiro)
-   - Ignore cores muito similares (mescladas)
+   - NÃO SE LIMITE a um número específico - extraia o que for necessário
 
 2. CARACTERIZAÇÃO DE CADA COR:
    - Código hexadecimal PRECISO (#RRGGBB)
