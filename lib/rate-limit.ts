@@ -49,23 +49,31 @@ export const apiLimiter = redis
 /**
  * Rate Limiter para geração de stencils (pesado)
  * Limite por plano:
+ * - Free: BLOQUEADO (0 gerações)
  * - Starter: 5 gerações/minuto
  * - Pro: 10 gerações/minuto
  * - Studio: 20 gerações/minuto
  */
 export const createStencilLimiter = (plan: 'free' | 'starter' | 'pro' | 'studio' = 'free') => {
+  // Garantir que sempre tenha um plano válido (fallback para free)
+  const validPlans = ['free', 'starter', 'pro', 'studio'];
+  const validPlan = plan && validPlans.includes(plan) ? plan : 'free';
+
+  // 🔒 FREE SEMPRE BLOQUEADO - não precisa de Redis para isso!
+  if (validPlan === 'free') {
+    return 'BLOCKED_FREE'; // Marcador especial para plano free
+  }
+
   if (!redis) return null;
 
   const limits = {
-    free: { max: 0, window: '1 m' },     // Free não pode gerar
     starter: { max: 5, window: '1 m' },
     pro: { max: 10, window: '1 m' },
     studio: { max: 20, window: '1 m' },
   };
 
-  // Garantir que sempre tenha um plano válido (fallback para free)
-  const validPlan = plan && limits[plan] ? plan : 'free';
-  const config = limits[validPlan];
+  const config = limits[validPlan as keyof typeof limits];
+  if (!config) return null;
 
   return new Ratelimit({
     redis,
@@ -159,10 +167,28 @@ export async function checkRateLimit(
  * Middleware helper para aplicar rate limiting em API routes
  */
 export async function withRateLimit(
-  limiter: Ratelimit | null,
+  limiter: Ratelimit | null | 'BLOCKED_FREE',
   identifier: string,
   handler: () => Promise<Response>
 ): Promise<Response> {
+  // 🔒 BLOQUEIO IMEDIATO para plano FREE
+  if (limiter === 'BLOCKED_FREE') {
+    return new Response(
+      JSON.stringify({
+        error: 'Plano gratuito não permite gerações',
+        message: 'Você está no plano gratuito. Assine um plano para gerar estêncils.',
+        requiresSubscription: true,
+        subscriptionType: 'plan',
+      }),
+      {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
+
   const result = await checkRateLimit(limiter, identifier);
 
   if (!result.success) {
