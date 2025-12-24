@@ -181,16 +181,16 @@ export async function generateStencilFromImage(
   promptDetails: string = '',
   style: 'standard' | 'perfect_lines' = 'standard'
 ): Promise<string> {
-  // Selecionar system instruction baseado no estilo
-  const systemInstruction = style === 'perfect_lines'
+  // INVERTIDO: standard = LINHAS, perfect_lines = TOPOGRÁFICO
+  const systemInstruction = style === 'standard'
     ? PERFECT_LINES_INSTRUCTION
     : TOPOGRAPHIC_INSTRUCTION;
 
-  // Selecionar modelo baseado no estilo
-  const model = style === 'perfect_lines' ? linesModel : topographicModel;
+  // INVERTIDO: standard = linesModel, perfect_lines = topographicModel
+  const model = style === 'standard' ? linesModel : topographicModel;
   
   // Log detalhado para debug
-  const modeInfo = style === 'perfect_lines' 
+  const modeInfo = style === 'standard' 
     ? 'LINHAS (temp: 0.3, topP: 0.9, topK: 32)' 
     : 'TOPOGRÁFICO (temp: 0.2, topP: 0.85, topK: 20)';
   console.log(`[Gemini] ▶ Gerando estêncil - Modo: ${modeInfo}`);
