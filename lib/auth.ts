@@ -94,7 +94,7 @@ export async function getOrCreateUser(clerkId: string) {
               subscription_status: 'inactive',
               is_paid: false,
               tools_unlocked: false,
-              plan: 'starter', // Default plan
+              plan: 'free', // Usuário começa FREE, só muda após pagamento
               credits: 0,
               usage_this_month: {},
               daily_usage: {},
