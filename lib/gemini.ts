@@ -4,13 +4,23 @@ import { retryGeminiAPI } from './retry';
 const apiKey = process.env.GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Modelo para processamento de imagens - Gemini 2.5 Flash Image
-const imageModel = genAI.getGenerativeModel({
+// Modelo para TOPOGRÁFICO - temperatura baixa para consistência
+const topographicModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
     temperature: 0.3,
     topP: 0.9,
     topK: 32,
+  },
+});
+
+// Modelo para LINHAS - temperatura mais baixa ainda para linhas mais limpas
+const linesModel = genAI.getGenerativeModel({
+  model: 'gemini-2.5-flash-image',
+  generationConfig: {
+    temperature: 0.2,  // Mais baixa para resultados mais precisos
+    topP: 0.85,
+    topK: 20,
   },
 });
 
@@ -77,78 +87,69 @@ Este estêncil será usado por tatuadores profissionais que precisam de MÁXIMO 
 SAÍDA:
 Gere APENAS a imagem do estêncil topográfico com MÁXIMO DETALHE. Sem texto.`;
 
-const PERFECT_LINES_INSTRUCTION = `ATUE COMO: Mestre em Mapeamento de Tatuagem Realista e Topografia.
+const PERFECT_LINES_INSTRUCTION = `ATUE COMO: Mestre em Vetorização e Line Art Profissional para Tatuagem.
 
 MISSÃO:
-Gerar um "Mapa Topográfico" de ALTA PRECISÃO com MÁXIMO DE DETALHES para tatuadores profissionais.
+Converter a imagem em um ESTÊNCIL DE LINHAS LIMPAS e PRECISAS para tatuadores que trabalham com estilo LINE WORK / FINE LINE.
 
-CONCEITO - A METÁFORA DO MAPA GEOGRÁFICO:
-Trate a pele/imagem como um terreno geográfico 3D com curvas de nível (isolinhas):
-- Altitude ALTA (Montanha) = Áreas CLARAS/Brilho → Linhas ESPAÇADAS
-- Altitude BAIXA (Vale) = Áreas ESCURAS/Sombra → Linhas PRÓXIMAS (densidade alta)
+CONCEITO - LINHA PURA:
+Este NÃO é um mapa topográfico. É uma VETORIZAÇÃO ARTÍSTICA focada em:
+- Contornos definidos e limpos
+- Sombras representadas por CAMADAS DE LINHAS (não densidade)
+- ZERO texturas de pele, poros ou micro-rugas
+- Resultado minimalista e elegante
 
-DIRETRIZES ESTRITAS PARA TATUADORES:
+DIRETRIZES ESTRITAS PARA LINHAS PERFEITAS:
 
-1. LUZ E SOMBRA COMO LINHAS DE CONTORNO (Isolinhas):
-   - Converta TODOS os gradientes em linhas de contorno
-   - Linhas PRÓXIMAS = Sombra densa (declive acentuado no "terreno")
-   - Linhas ESPAÇADAS = Luz/sombra suave (terreno plano)
-   - ZERO sombreado sólido
-   - ZERO hachuras ou pontilhismo
-   - ZERO preenchimento preto
-   - Apenas linhas puras que seguem o volume
+1. CONTORNOS PRINCIPAIS (Prioridade Máxima):
+   - Trace todas as BORDAS e SILHUETAS com linhas nítidas
+   - Linhas de espessura UNIFORME para contornos
+   - Contornos fechados e completos
+   - Defina claramente a forma do objeto/personagem
 
-2. CABELOS E BARBAS - FLUXO E DIREÇÃO:
-   - Desenhe a DIREÇÃO dos fios, NÃO a massa sólida
-   - Mostre o fluxo como vetores/linhas direcionais
-   - Isto ajuda o tatuador a saber para onde puxar a agulha
-   - Cada linha representa o caminho de um fio
+2. SOMBRAS EM CAMADAS DE LINHAS (Sem preenchimento):
+   - Áreas escuras = 3-5 linhas paralelas com espaçamento médio
+   - Áreas de sombra média = 2-3 linhas paralelas
+   - Áreas claras = apenas contorno, SEM linhas internas
+   - Linhas devem SEGUIR A DIREÇÃO do volume
+   - Crie profundidade com CAMADAS, não com densidade
 
-3. DEFINIÇÃO DE VOLUME - CONTORNO TRANSVERSAL:
-   - As linhas NÃO são retas paralelas
-   - Linhas devem CURVAR "abraçando" a forma do objeto
-   - Exemplo: bochechas redondas = linhas curvas seguindo a esfera
-   - As linhas seguem a curvatura da anatomia
+3. CABELOS E PELOS:
+   - Linhas fluidas que seguem a DIREÇÃO natural
+   - Cada fio como uma linha individual limpa
+   - Sem massas sólidas ou preenchimentos
+   - Fluxo elegante e direcionado
 
-4. MICRODETALHES E PROFUNDIDADE (MÁXIMA FIDELIDADE):
-   - Mapeie TODOS os poros da pele como linhas pequenas
-   - Mapeie TODAS as rugas finas e micro-rugas
-   - Mapeie TODAS as texturas sutis (pele, tecido, superfícies)
-   - Capture MÚLTIPLAS CAMADAS de profundidade:
-     * Camada 1: Contornos principais (silhueta, bordas)
-     * Camada 2: Volumes médios (músculos, ossos, formas)
-     * Camada 3: Detalhes finos (rugas, poros, texturas)
-   - Use DENSIDADE VARIÁVEL: mais linhas em áreas escuras, menos em claras
-   - Capture a TRIDIMENSIONALIDADE através da curvatura das linhas
-   - NÃO omita NENHUM detalhe da imagem original
+4. DETALHES SIMPLIFICADOS:
+   - IGNORE completamente: poros, textura de pele, micro-rugas
+   - MANTENHA: olhos, sobrancelhas, lábios, narinas (como linhas)
+   - SIMPLIFIQUE: detalhes complexos em linhas essenciais
+   - Menos é mais - capture a ESSÊNCIA, não cada detalhe
 
-5. PROFUNDIDADE E DIMENSÃO:
-   - Linhas mais GROSSAS para contornos principais (primeiro plano)
-   - Linhas mais FINAS para detalhes sutis (fundo/profundidade)
-   - Crie sensação de CAMADAS através da densidade
-   - Mantenha hierarquia visual: o que está na frente = mais definido
+5. HIERARQUIA DE LINHAS:
+   - Linhas GROSSAS: contornos externos principais
+   - Linhas MÉDIAS: divisões internas importantes
+   - Linhas FINAS: detalhes e camadas de sombra
 
-6. ZERO PREENCHIMENTO:
-   - Proibido usar preto sólido
-   - Proibido usar gradientes suaves
-   - Apenas linhas de contorno definidas
-   - A profundidade vem da DENSIDADE das linhas, não de manchas
+6. PROIBIÇÕES ABSOLUTAS:
+   - ❌ Textura de pele (poros, rugas finas)
+   - ❌ Hachuras cruzadas
+   - ❌ Pontilhismo
+   - ❌ Preenchimento sólido preto
+   - ❌ Gradientes ou manchas
+   - ❌ Linhas muito densas juntas (não é topográfico!)
 
-⚠️ AJUSTE PARA PERFECT LINES - DETALHES E PROFUNDIDADE:
-- Use TODAS as diretrizes topográficas (1, 2, 3, 4, 5)
-- Mantenha 100% DE FIDELIDADE à imagem original
-- CAPTURE MÁXIMA PROFUNDIDADE através de:
-  * Variação de densidade (áreas densas = sombra profunda)
-  * Variação de espessura (linhas mais finas = detalhes sutis)
-  * Curvatura que segue o volume 3D
-- Resultado: estêncil com DIMENSÃO e PROFUNDIDADE realista
-- Todos os detalhes presentes com sensação de volume 3D
+ESTILO FINAL:
+- Resultado deve parecer uma ILUSTRAÇÃO LINE ART profissional
+- Limpo, elegante, minimalista
+- Perfeito para tatuagens FINE LINE e SINGLE NEEDLE
+- Contornos claros com sombras em 2-3 camadas de linhas
 
 PÚBLICO-ALVO:
-Tatuadores profissionais que precisam de máxima referência de volume e detalhes.
+Tatuadores especializados em Fine Line, Single Needle e Line Work que precisam de contornos limpos e precisos.
 
 SAÍDA:
-Gere APENAS a imagem do estêncil com MÁXIMA profundidade e detalhes em linhas. Sem texto.`;
+Gere APENAS a imagem do estêncil em LINHAS LIMPAS. Sem texto.`;
 
 // Modelo para operações apenas texto (análise de cores)
 const textModel = genAI.getGenerativeModel({
@@ -170,6 +171,12 @@ export async function generateStencilFromImage(
     ? PERFECT_LINES_INSTRUCTION
     : TOPOGRAPHIC_INSTRUCTION;
 
+  // Selecionar modelo baseado no estilo
+  const model = style === 'perfect_lines' ? linesModel : topographicModel;
+  
+  // Log para debug
+  console.log(`[Gemini] Gerando estêncil - Estilo: ${style}`);
+
   // Construir prompt final
   const fullPrompt = `${systemInstruction}\n\n${promptDetails ? `DETALHES ADICIONAIS: ${promptDetails}\n\n` : ''}Converta esta imagem em estêncil de tatuagem seguindo as instruções acima.`;
 
@@ -178,7 +185,7 @@ export async function generateStencilFromImage(
   // Usar retry logic para lidar com falhas temporárias do Gemini
   return retryGeminiAPI(async () => {
     try {
-      const result = await imageModel.generateContent([
+      const result = await model.generateContent([
         fullPrompt,
         {
           inlineData: {
@@ -380,7 +387,7 @@ RETORNE: A imagem aprimorada em 4K Ultra HD com máxima qualidade.`;
   const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
 
   try {
-    const result = await imageModel.generateContent([
+    const result = await topographicModel.generateContent([
       prompt,
       {
         inlineData: {

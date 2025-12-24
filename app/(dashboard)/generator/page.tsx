@@ -110,9 +110,38 @@ export default function GeneratorPage() {
           )}
         </main>
 
-        {/* Controls Panel - Toque para abrir/fechar */}
+        {/* MOBILE: Barra de ações fixa quando imagem está gerada */}
+        {generatedImage && !loading && (
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 p-3">
+            <div className="flex gap-2">
+              <a
+                href={generatedImage}
+                download={`stencilflow-${Date.now()}.png`}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg"
+              >
+                <Download size={18} /> Baixar
+              </a>
+              <button
+                onClick={handleUseAsBase}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2"
+              >
+                <FileOutput size={18} /> Criar Stencil
+              </button>
+              <button
+                onClick={reset}
+                className="w-14 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white py-3 rounded-xl flex items-center justify-center"
+                title="Nova Geração"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+        )}
+
+
+        {/* Controls Panel - Esconde no mobile quando imagem está gerada */}
         <aside className={`
-          ${showControls ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
+          ${showControls && !generatedImage ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
           fixed lg:relative bottom-0 left-0 right-0
           lg:w-72 xl:w-80
           bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-800

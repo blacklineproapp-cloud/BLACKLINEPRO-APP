@@ -26,12 +26,30 @@ export default function DashboardClient({ projects, isSubscribed }: DashboardCli
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showStencil, setShowStencil] = useState(true);
 
-  const handleDownload = (project: Project) => {
+  const handleDownload = async (project: Project) => {
     const imageToDownload = showStencil ? project.stencil_image : project.original_image;
-    const link = document.createElement('a');
-    link.href = imageToDownload;
-    link.download = `${project.name}-${showStencil ? 'stencil' : 'original'}.png`;
-    link.click();
+    const fileName = `${project.name}-${showStencil ? 'stencil' : 'original'}.png`;
+    
+    try {
+      // Converter base64/URL para blob para forçar download
+      const response = await fetch(imageToDownload);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      // Fallback para método antigo
+      const link = document.createElement('a');
+      link.href = imageToDownload;
+      link.download = fileName;
+      link.click();
+    }
   };
 
   const handleEdit = (project: Project) => {

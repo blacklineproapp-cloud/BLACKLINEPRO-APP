@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       .eq('clerk_id', userId)
       .single();
 
-    const plan = (userData?.plan || 'starter') as PlanType;
+    const plan = (userData?.plan || 'free') as PlanType;
     const identifier = await getRateLimitIdentifier(userId);
     const limiter = createStencilLimiter(plan);
 

@@ -19,7 +19,7 @@ import { supabaseAdmin } from './supabase';
  */
 
 export type OperationType = 'topographic' | 'lines' | 'ia_gen' | 'enhance' | 'color_match';
-export type PlanType = 'starter' | 'pro' | 'studio';
+export type PlanType = 'free' | 'starter' | 'pro' | 'studio';
 
 // Custo em créditos por operação (SIMPLIFICADO - tudo 1 crédito)
 export const CREDITS_COST: Record<OperationType, number> = {
@@ -50,8 +50,9 @@ export const BRL_COST: Record<OperationType, number> = {
 };
 
 // Limites DIÁRIOS por plano (para evitar abuso)
-// IMPORTANTE: NÃO existe plano gratuito!
+// IMPORTANTE: Plano free = 0 gerações!
 export const DAILY_LIMITS: Record<PlanType, number> = {
+  free: 0,       // Sem gerações
   starter: 20,   // 20 gerações/dia
   pro: 50,       // 50 gerações/dia
   studio: 200,   // 200 gerações/dia (ilimitado mensal)
@@ -59,6 +60,13 @@ export const DAILY_LIMITS: Record<PlanType, number> = {
 
 // Limites mensais por plano (inclusos na assinatura)
 export const PLAN_LIMITS: Record<PlanType, Record<OperationType, number | null>> = {
+  free: {
+    topographic: 0,      // ZERO gerações para free
+    lines: 0,
+    ia_gen: 0,
+    enhance: 0,
+    color_match: 0,
+  },
   starter: {
     topographic: 100,    // 100 gerações/mês incluídas (Starter)
     lines: 100,
@@ -99,15 +107,15 @@ export async function canUseOperation(
     return { allowed: false, reason: 'Usuário não encontrado' };
   }
 
-  // Validar plano com fallback seguro
+  // Validar plano com fallback seguro - FREE para não pagantes!
   let plan = user.plan as PlanType;
-  if (!plan || !['starter', 'pro', 'studio'].includes(plan)) {
-    plan = 'starter'; // Default seguro
+  if (!plan || !['free', 'starter', 'pro', 'studio'].includes(plan)) {
+    plan = 'free'; // Default seguro - usuário não pagante!
 
     // Atualizar no banco para evitar erro futuro
     await supabaseAdmin
       .from('users')
-      .update({ plan: 'starter' })
+      .update({ plan: 'free' })
       .eq('clerk_id', userId);
   }
 
@@ -164,15 +172,15 @@ export async function consumeOperation(
     return { success: false, error: 'Usuário não encontrado' };
   }
 
-  // Validar plano com fallback seguro
+  // Validar plano com fallback seguro - FREE para não pagantes!
   let plan = user.plan as PlanType;
-  if (!plan || !['starter', 'pro', 'studio'].includes(plan)) {
-    plan = 'starter'; // Default seguro
+  if (!plan || !['free', 'starter', 'pro', 'studio'].includes(plan)) {
+    plan = 'free'; // Default seguro - usuário não pagante!
 
     // Atualizar no banco
     await supabaseAdmin
       .from('users')
-      .update({ plan: 'starter' })
+      .update({ plan: 'free' })
       .eq('clerk_id', userId);
   }
 
@@ -293,8 +301,8 @@ export async function getUserUsageStats(userId: string) {
 
   // Validar plano com fallback seguro
   let plan = user.plan as PlanType;
-  if (!plan || !['starter', 'pro', 'studio'].includes(plan)) {
-    plan = 'starter';
+  if (!plan || !['free', 'starter', 'pro', 'studio'].includes(plan)) {
+    plan = 'free';
   }
 
   const usage = (user.usage_this_month || {}) as Record<OperationType, number>;

@@ -208,12 +208,30 @@ export default function EditorPage() {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!generatedStencil) return;
-    const link = document.createElement('a');
-    link.href = generatedStencil;
-    link.download = `stencil-${widthCm}x${heightCm}cm-${Date.now()}.png`;
-    link.click();
+    const fileName = `stencil-${widthCm}x${heightCm}cm-${Date.now()}.png`;
+    
+    try {
+      // Converter base64 para blob para forçar download
+      const response = await fetch(generatedStencil);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      // Fallback
+      const link = document.createElement('a');
+      link.href = generatedStencil;
+      link.download = fileName;
+      link.click();
+    }
   };
 
   const handleReset = () => {
@@ -340,9 +358,36 @@ export default function EditorPage() {
           )}
         </main>
 
-        {/* Controls Panel - Toque para abrir/fechar */}
+        {/* MOBILE: Barra de ações fixa quando stencil está gerado */}
+        {generatedStencil && (
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 p-3">
+            <div className="flex gap-2">
+              <button
+                onClick={handleDownload}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg"
+              >
+                <Download size={18} /> Baixar
+              </button>
+              <button
+                onClick={handleSave}
+                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2"
+              >
+                <Save size={18} /> Salvar
+              </button>
+              <button
+                onClick={handleNewUpload}
+                className="w-14 bg-red-900/50 hover:bg-red-800 text-red-400 hover:text-white py-3 rounded-xl flex items-center justify-center border border-red-800"
+                title="Nova Imagem"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Controls Panel - Esconde no mobile quando stencil está gerado */}
         <aside className={`
-          ${showControls ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
+          ${showControls && !generatedStencil ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
           fixed lg:relative bottom-0 left-0 right-0 lg:w-72 xl:w-80
           bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-800
           transition-transform duration-300 z-40 shadow-2xl lg:shadow-none

@@ -53,17 +53,18 @@ export const apiLimiter = redis
  * - Pro: 10 gerações/minuto
  * - Studio: 20 gerações/minuto
  */
-export const createStencilLimiter = (plan: 'starter' | 'pro' | 'studio' = 'starter') => {
+export const createStencilLimiter = (plan: 'free' | 'starter' | 'pro' | 'studio' = 'free') => {
   if (!redis) return null;
 
   const limits = {
+    free: { max: 0, window: '1 m' },     // Free não pode gerar
     starter: { max: 5, window: '1 m' },
     pro: { max: 10, window: '1 m' },
     studio: { max: 20, window: '1 m' },
   };
 
-  // Garantir que sempre tenha um plano válido (fallback para starter)
-  const validPlan = plan && limits[plan] ? plan : 'starter';
+  // Garantir que sempre tenha um plano válido (fallback para free)
+  const validPlan = plan && limits[plan] ? plan : 'free';
   const config = limits[validPlan];
 
   return new Ratelimit({
