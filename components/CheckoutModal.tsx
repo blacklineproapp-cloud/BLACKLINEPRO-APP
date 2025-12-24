@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import { X, Loader2, Crown, Zap, Sparkles } from 'lucide-react';
+import { X, Loader2, Crown, Zap, Sparkles, LogIn } from 'lucide-react';
 import CheckoutForm from './CheckoutForm';
 import { useRouter } from 'next/navigation';
+import { useAuth, SignInButton } from '@clerk/nextjs';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -17,6 +18,7 @@ interface CheckoutModalProps {
 
 export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,15 +51,20 @@ export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalPr
   const details = planDetails[plan];
 
   useEffect(() => {
-    if (isOpen) {
-      createPaymentIntent();
+    if (isOpen && isLoaded) {
+      // Só cria payment intent se estiver logado
+      if (isSignedIn) {
+        createPaymentIntent();
+      } else {
+        setIsLoading(false);
+      }
       // Bloquear scroll do body quando modal está aberto
       document.body.style.overflow = 'hidden';
     }
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen, plan]);
+  }, [isOpen, plan, isSignedIn, isLoaded]);
 
   const createPaymentIntent = async () => {
     setIsLoading(true);
@@ -154,6 +161,31 @@ export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalPr
 
         {/* Content - Com overflow visible para dropdowns */}
         <div className="p-4 overflow-visible">
+          {/* Login Required State */}
+          {!isSignedIn && !isLoading && isLoaded && (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="w-16 h-16 bg-emerald-600/10 border border-emerald-500/30 rounded-full flex items-center justify-center mb-4">
+                <LogIn className="text-emerald-500" size={28} />
+              </div>
+              <h3 className="text-white font-bold text-lg mb-2">Faça login para continuar</h3>
+              <p className="text-zinc-400 text-sm text-center mb-6 max-w-xs">
+                Para assinar o plano <strong className="text-white">{details.name}</strong>, você precisa criar uma conta ou fazer login.
+              </p>
+              <SignInButton mode="modal">
+                <button className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg ${
+                  details.color === 'emerald' ? 'bg-emerald-600 hover:bg-emerald-500' :
+                  details.color === 'purple' ? 'bg-purple-600 hover:bg-purple-500' :
+                  'bg-amber-600 hover:bg-amber-500'
+                }`}>
+                  Entrar ou Criar Conta
+                </button>
+              </SignInButton>
+              <p className="text-zinc-500 text-xs mt-4">
+                É grátis e leva menos de 1 minuto
+              </p>
+            </div>
+          )}
+
           {/* Loading State */}
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-12">

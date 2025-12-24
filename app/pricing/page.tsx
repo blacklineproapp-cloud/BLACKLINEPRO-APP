@@ -13,11 +13,8 @@ export default function PricingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSelectPlan = (planId: string) => {
-    if (!isSignedIn) {
-      router.push('/sign-in');
-      return;
-    }
-
+    // Abre o modal mesmo sem estar logado
+    // O modal vai mostrar mensagem pedindo login se necessário
     if (planId === 'starter' || planId === 'pro' || planId === 'studio') {
       setSelectedPlan(planId);
       setIsModalOpen(true);
