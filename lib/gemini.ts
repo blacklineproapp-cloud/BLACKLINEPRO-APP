@@ -342,58 +342,65 @@ GERE A IMAGEM AGORA:`;
 export async function enhanceImage(base64Image: string): Promise<string> {
   const prompt = `ATUE COMO: Especialista em restauração e aprimoramento de imagens de alta qualidade.
 
-MISSÃO: Transformar esta imagem em ULTRA HD 4K com qualidade profissional máxima.
+MISSÃO: Restaurar e transformar esta imagem em ULTRA HD 4K com qualidade profissional máxima.
 
 ESPECIFICAÇÕES TÉCNICAS:
 - Resolução final: 4096x4096px (4K Ultra HD)
 - Qualidade: Máxima definição possível
 - Formato: Sem perda de qualidade
 
-PROCESSOS DE APRIMORAMENTO:
+PROCESSOS DE RESTAURAÇÃO E APRIMORAMENTO:
 
-1. UPSCALING INTELIGENTE:
+1. RESTAURAÇÃO DE DANOS (PRIORIDADE MÁXIMA):
+   - Corrigir RASGOS, DOBRAS e AMASSADOS na foto
+   - Remover RANHURAS, ARRANHÕES e RISCOS
+   - Reconstruir áreas DANIFICADAS ou FALTANDO
+   - Restaurar fotos ANTIGAS e DETERIORADAS
+   - Recuperar áreas MANCHADAS ou DESBOTADAS
+
+2. CORREÇÃO DE PIXELIZAÇÃO:
+   - Eliminar PIXELS visíveis e BLOCKY ARTIFACTS
+   - Suavizar bordas SERRILHADAS/DENTADAS
+   - Reconstruir detalhes PERDIDOS por compressão
+   - Transformar imagens de BAIXA RESOLUÇÃO em HD
+
+3. UPSCALING INTELIGENTE:
    - Aumentar resolução para 4K mantendo proporções
    - Usar interpolação inteligente para criar detalhes novos
    - Reconstruir texturas e padrões perdidos
    - Gerar microdetalhes baseados no contexto
 
-2. NITIDEZ E CLAREZA:
+4. NITIDEZ E CLAREZA:
    - Aumentar nitidez de forma natural (sem oversharpening)
    - Melhorar definição de bordas e contornos
    - Restaurar detalhes finos (cabelos, texturas, poros)
    - Clarificar áreas embaçadas ou desfocadas
 
-3. REDUÇÃO DE RUÍDO:
+5. REDUÇÃO DE RUÍDO:
    - Remover grain/noise digital
    - Eliminar artefatos de compressão JPEG
-   - Suavizar pixelização
    - Limpar imperfeições técnicas
 
-4. OTIMIZAÇÃO DE CORES:
+6. OTIMIZAÇÃO DE CORES:
    - Ajustar balanço de brancos
    - Corrigir saturação (cores vibrantes mas naturais)
    - Melhorar contraste de forma equilibrada
    - Restaurar profundidade tonal
 
-5. RESTAURAÇÃO DE DETALHES:
+7. RESTAURAÇÃO DE DETALHES:
    - Recuperar informações em áreas escuras (shadows)
    - Recuperar informações em áreas claras (highlights)
    - Melhorar textura e profundidade
-   - Preservar autenticidade da imagem original
-
-6. QUALIDADE PROFISSIONAL:
-   - Resultado deve parecer uma foto profissional
-   - Sem exageros ou efeitos artificiais
-   - Manter naturalidade
-   - Máxima qualidade técnica
+   - MANTER ORIGINALIDADE e autenticidade da imagem
 
 IMPORTANTE:
-- NÃO adicione elementos que não existem
+- NÃO adicione elementos que não existem na imagem original
 - NÃO mude a composição ou enquadramento
-- NÃO altere o conteúdo, apenas APRIMORE
-- Foque em QUALIDADE TÉCNICA, não em mudanças artísticas
+- NÃO altere o conteúdo, apenas RESTAURE e APRIMORE
+- PRESERVE a originalidade - reconstrua o que estava lá, não invente
+- Foco em QUALIDADE TÉCNICA e RESTAURAÇÃO fiel
 
-RETORNE: A imagem aprimorada em 4K Ultra HD com máxima qualidade.`;
+RETORNE: A imagem restaurada e aprimorada em 4K Ultra HD com máxima qualidade.`;
 
   // Detectar o mimeType original da imagem
   let mimeType = 'image/jpeg'; // fallback padrão
