@@ -4,23 +4,23 @@ import { retryGeminiAPI } from './retry';
 const apiKey = process.env.GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Modelo para TOPOGRÁFICO - temperatura baixa para consistência
+// Modelo para TOPOGRÁFICO - temperatura BAIXA para máxima consistência e detalhes precisos
 const topographicModel = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash-image',
-  generationConfig: {
-    temperature: 0.3,
-    topP: 0.9,
-    topK: 32,
-  },
-});
-
-// Modelo para LINHAS - temperatura mais baixa ainda para linhas mais limpas
-const linesModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
     temperature: 0.2,
     topP: 0.85,
     topK: 20,
+  },
+});
+
+// Modelo para LINHAS - temperatura um pouco mais alta para contornos fluidos
+const linesModel = genAI.getGenerativeModel({
+  model: 'gemini-2.5-flash-image',
+  generationConfig: {
+    temperature: 0.3,
+    topP: 0.9,
+    topK: 32,
   },
 });
 
@@ -184,8 +184,11 @@ export async function generateStencilFromImage(
   // Selecionar modelo baseado no estilo
   const model = style === 'perfect_lines' ? linesModel : topographicModel;
   
-  // Log para debug
-  console.log(`[Gemini] Gerando estêncil - Estilo: ${style}`);
+  // Log detalhado para debug
+  const modeInfo = style === 'perfect_lines' 
+    ? 'LINHAS (temp: 0.3, topP: 0.9, topK: 32)' 
+    : 'TOPOGRÁFICO (temp: 0.2, topP: 0.85, topK: 20)';
+  console.log(`[Gemini] ▶ Gerando estêncil - Modo: ${modeInfo}`);
 
   // Construir prompt final
   const fullPrompt = `${systemInstruction}\n\n${promptDetails ? `DETALHES ADICIONAIS: ${promptDetails}\n\n` : ''}Converta esta imagem em estêncil de tatuagem seguindo as instruções acima.`;

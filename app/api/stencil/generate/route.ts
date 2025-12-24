@@ -60,8 +60,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Imagem não fornecida' }, { status: 400 });
     }
 
-      // 4. Gerar estêncil
-      const stencilImage = await generateStencilFromImage(image, promptDetails, style);
+    // VALIDAÇÃO: Garantir que style é um valor válido
+    const validStyles = ['standard', 'perfect_lines'] as const;
+    const selectedStyle = validStyles.includes(style) ? style : 'standard';
+    
+    // Log para debug - verificar qual modo foi selecionado
+    console.log(`[API Stencil] Modo selecionado: ${selectedStyle} (recebido: ${style})`);
+
+      // 4. Gerar estêncil com o modo VALIDADO
+      const stencilImage = await generateStencilFromImage(image, promptDetails, selectedStyle);
 
       // 5. CONSUMIR CRÉDITO/LIMITE após geração bem-sucedida
       const consumeResult = await consumeOperation(userId, 'topographic');
