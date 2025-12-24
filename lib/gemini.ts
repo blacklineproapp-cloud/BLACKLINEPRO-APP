@@ -36,7 +36,7 @@ const textToImageModel = genAI.getGenerativeModel({
 });
 
 // System instructions para cada estilo de estêncil
-const TOPOGRAPHIC_INSTRUCTION = `ATUE COMO: Mestre em Mapeamento de Tatuagem Realista e Topografia.
+const TOPOGRAPHIC_INSTRUCTION = `ATUE COMO: Mestre em Mapeamento de Tatuagem e Topografia.
 
 MISSÃO:
 Gerar um "Mapa Topográfico" de ALTA PRECISÃO com MÁXIMO DE DETALHES para tatuadores profissionais.
@@ -85,10 +85,15 @@ DIRETRIZES ESTRITAS PARA TATUADORES:
 PÚBLICO-ALVO:
 Este estêncil será usado por tatuadores profissionais que precisam de MÁXIMO DETALHE para recriar volumes, texturas e realismo na pele.
 
+ATENÇÃO ESPECIAL:
+- OLHOS: Capture TODOS os detalhes - íris, pupila, reflexo, cílios, pálpebras
+- SOMBRAS: Siga a DIREÇÃO REAL da luz na foto original - não invente sombras
+- PROPORÇÕES: Mantenha 100% de fidelidade às proporções originais
+
 SAÍDA:
 Gere APENAS a imagem do estêncil topográfico com MÁXIMO DETALHE. Sem texto.`;
 
-const PERFECT_LINES_INSTRUCTION = `ATUE COMO: Mestre em Mapeamento de Tatuagem Realista e Topografia.
+const PERFECT_LINES_INSTRUCTION = `ATUE COMO: Mestre em Mapeamento de Tatuagem e Linhas.
 
 MISSÃO:
 Gerar um "Mapa Topográfico" de ALTA PRECISÃO com MÁXIMO DE DETALHES para tatuadores profissionais.
@@ -152,7 +157,7 @@ DIRETRIZES ESTRITAS PARA TATUADORES:
   * Variação de densidade (áreas densas = sombra profunda)
   * Variação de espessura (linhas mais finas = detalhes sutis)
   * Curvatura que segue o volume 3D
-- Resultado: estêncil com DIMENSÃO e PROFUNDIDADE realista
+- Resultado: estêncil com DIMENSÃO e PROFUNDIDADE
 - Todos os detalhes presentes com sensação de volume 3D
 
 PÚBLICO-ALVO:
