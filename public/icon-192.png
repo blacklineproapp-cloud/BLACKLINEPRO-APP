@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="192" height="192" fill="#000000"/>
+
+  <!-- Emerald gradient overlay -->
+  <rect width="192" height="192" fill="url(#grad)" opacity="0.1"/>
+
+  <!-- Icon -->
+  <g transform="translate(38.400000000000006, 38.400000000000006)">
+    <path d="M57.599999999999994 17.279999999999998 L23.04 40.31999999999999 V74.88 L57.599999999999994 97.91999999999999 L92.16 74.88 V40.31999999999999 Z"
+          fill="none"
+          stroke="#10b981"
+          stroke-width="9.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+
+    <path d="M57.599999999999994 57.599999999999994 V97.91999999999999"
+          stroke="#10b981"
+          stroke-width="9.6"
+          stroke-linecap="round"/>
+
+    <path d="M23.04 40.31999999999999 L57.599999999999994 57.599999999999994 L92.16 40.31999999999999"
+          stroke="#10b981"
+          stroke-width="9.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>
+
+    <circle cx="57.599999999999994" cy="40.31999999999999" r="6.4" fill="#10b981"/>
+    <circle cx="23.04" cy="57.599999999999994" r="6.4" fill="#10b981"/>
+    <circle cx="92.16" cy="57.599999999999994" r="6.4" fill="#10b981"/>
+  </g>
+
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="192" y2="192" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#000000"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Desregistrar Service Worker</title>
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: system-ui;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    .container { max-width: 500px; }
+    h1 { color: #10b981; }
+    button {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px;
+    }
+    button:hover { background: #dc2626; }
+    .success { color: #10b981; margin-top: 20px; }
+    .error { color: #ef4444; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚨 Desregistrar Service Worker</h1>
+    <p>Se o app não está funcionando, clique abaixo para remover o Service Worker.</p>
+
+    <button onclick="unregisterSW()">Desregistrar Service Worker</button>
+    <button onclick="clearCache()">Limpar Todo o Cache</button>
+    <button onclick="clearAll()">LIMPAR TUDO</button>
+
+    <div id="status"></div>
+
+    <p style="margin-top: 40px; color: #71717a; font-size: 14px;">
+      Depois de limpar, feche todas as abas e reabra o app.
+    </p>
+  </div>
+
+  <script>
+    async function unregisterSW() {
+      const status = document.getElementById('status');
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+
+        if (registrations.length === 0) {
+          status.innerHTML = '<div class="success">✅ Nenhum Service Worker registrado</div>';
+          return;
+        }
+
+        for (let registration of registrations) {
+          await registration.unregister();
+        }
+
+        status.innerHTML = `<div class="success">✅ ${registrations.length} Service Worker(s) removido(s)!<br>Feche todas as abas e reabra o app.</div>`;
+      } catch (error) {
+        status.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+      }
+    }
+
+    async function clearCache() {
+      const status = document.getElementById('status');
+      try {
+        const cacheNames = await caches.keys();
+
+        if (cacheNames.length === 0) {
+          status.innerHTML = '<div class="success">✅ Nenhum cache encontrado</div>';
+          return;
+        }
+
+        for (let cacheName of cacheNames) {
+          await caches.delete(cacheName);
+        }
+
+        status.innerHTML = `<div class="success">✅ ${cacheNames.length} cache(s) removido(s)!</div>`;
+      } catch (error) {
+        status.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+      }
+    }
+
+    async function clearAll() {
+      const status = document.getElementById('status');
+      try {
+        // Desregistrar SW
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (let registration of registrations) {
+          await registration.unregister();
+        }
+
+        // Limpar caches
+        const cacheNames = await caches.keys();
+        for (let cacheName of cacheNames) {
+          await caches.delete(cacheName);
+        }
+
+        // Limpar localStorage
+        localStorage.clear();
+
+        // Limpar sessionStorage
+        sessionStorage.clear();
+
+        status.innerHTML = `<div class="success">✅ TUDO LIMPO!<br>- ${registrations.length} SW removidos<br>- ${cacheNames.length} caches removidos<br>- Storage limpo<br><br><strong>FECHE TODAS AS ABAS e reabra o app!</strong></div>`;
+      } catch (error) {
+        status.innerHTML = `<div class="error">❌ Erro: ${error.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>

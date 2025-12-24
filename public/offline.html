@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#10b981">
+  <title>Offline - StencilFlow</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000000;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-center;
+      margin: 0 auto 32px;
+      box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3);
+    }
+
+    .icon svg {
+      width: 40px;
+      height: 40px;
+      stroke: #000;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #10b981;
+      margin-bottom: 16px;
+    }
+
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: #a1a1aa;
+      margin-bottom: 12px;
+    }
+
+    .features {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 16px;
+      padding: 24px;
+      margin: 32px 0;
+      text-align: left;
+    }
+
+    .features h2 {
+      font-size: 18px;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: start;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: #71717a;
+      font-size: 14px;
+    }
+
+    .feature-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .check {
+      width: 20px;
+      height: 20px;
+      background: #10b981;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .check::after {
+      content: '✓';
+      color: #000;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    button {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #000;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      max-width: 300px;
+      margin-top: 32px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #ef4444;
+      margin: 24px auto;
+    }
+
+    .status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Icon -->
+    <div class="icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L4 7v10l8 5 8-5V7l-8-5z" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 12v5" stroke-linecap="round"/>
+        <path d="M4 7l8 5 8-5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- Title -->
+    <h1>Você está offline</h1>
+
+    <p>Parece que você perdeu a conexão com a internet.</p>
+    <p>Algumas funcionalidades podem estar limitadas.</p>
+
+    <!-- Status -->
+    <div class="status">
+      Sem conexão com a internet
+    </div>
+
+    <!-- Features Available Offline -->
+    <div class="features">
+      <h2>Disponível offline:</h2>
+      <div class="feature-item">
+        <div class="check"></div>
+        <span>Visualizar projetos salvos anteriormente</span>
+      </div>
+      <div class="feature-item">
+        <div class="check"></div>
+        <span>Acessar ferramentas básicas de edição</span>
+      </div>
+      <div class="feature-item">
+        <div class="check"></div>
+        <span>Navegar pelo app (páginas em cache)</span>
+      </div>
+    </div>
+
+    <!-- Retry Button -->
+    <button onclick="location.reload()">
+      Tentar Novamente
+    </button>
+
+    <!-- Help Text -->
+    <p style="margin-top: 32px; font-size: 14px;">
+      Conecte-se à internet para acessar todos os recursos do StencilFlow
+    </p>
+  </div>
+</body>
+</html>
