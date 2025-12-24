@@ -5,17 +5,26 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   typescript: true,
 });
 
-// Novos planos
-export const PRICES = {
-  EDITOR_ONLY: process.env.STRIPE_PRICE_EDITOR!, // R$ 50/mês
-  FULL_ACCESS: process.env.STRIPE_PRICE_FULL!, // R$ 100/mês
+// ============================================================================
+// PRICE IDs DO STRIPE
+// ============================================================================
 
-  // Manter compatibilidade (deprecated)
-  SUBSCRIPTION: process.env.STRIPE_PRICE_SUBSCRIPTION || process.env.STRIPE_PRICE_EDITOR!,
-  TOOLS: process.env.STRIPE_PRICE_TOOLS || process.env.STRIPE_PRICE_FULL!,
+export const PRICES = {
+  // Planos atuais (DEZEMBRO 2025)
+  STARTER: process.env.STRIPE_PRICE_STARTER_MONTHLY!,   // R$ 50/mês
+  PRO: process.env.STRIPE_PRICE_PRO_MONTHLY!,           // R$ 100/mês
+  STUDIO: process.env.STRIPE_PRICE_STUDIO_MONTHLY!,     // R$ 300/mês
 };
 
-export type PlanType = 'free' | 'editor_only' | 'full_access';
+// ============================================================================
+// TIPOS DE PLANOS
+// ============================================================================
+
+export type PlanType = 'free' | 'starter' | 'pro' | 'studio';
+
+// ============================================================================
+// FEATURES DOS PLANOS
+// ============================================================================
 
 export const PLAN_FEATURES = {
   free: {
@@ -23,28 +32,43 @@ export const PLAN_FEATURES = {
     price: 0,
     features: ['Visualização básica', 'Galeria limitada'],
   },
-  editor_only: {
-    name: 'Editor',
+  starter: {
+    name: 'Starter',
     price: 50,
-    priceId: PRICES.EDITOR_ONLY,
+    priceId: PRICES.STARTER,
+    generationLimit: 100,
     features: [
       'Editor de Stencil completo',
       'Modo Topográfico',
       'Modo Linhas Perfeitas',
       'Salvar projetos ilimitados',
+      '100 gerações/mês',
     ],
   },
-  full_access: {
-    name: 'Full Access',
+  pro: {
+    name: 'Pro',
     price: 100,
-    priceId: PRICES.FULL_ACCESS,
+    priceId: PRICES.PRO,
+    generationLimit: 500,
     features: [
-      'Tudo do plano Editor',
+      'Tudo do plano Starter',
       'IA GEN (geração de imagens)',
       'Aprimorar imagem (4K)',
       'Color Match (análise de tintas)',
       'Dividir em A4 (tattoos grandes)',
-      'Prioridade no suporte',
+      '500 gerações/mês',
+    ],
+  },
+  studio: {
+    name: 'Studio',
+    price: 300,
+    priceId: PRICES.STUDIO,
+    generationLimit: null, // Ilimitado
+    features: [
+      'Tudo do plano Pro',
+      'Uso ilimitado',
+      'Suporte prioritário',
+      'Ideal para estúdios',
     ],
   },
 };

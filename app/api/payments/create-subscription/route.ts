@@ -1,6 +1,9 @@
 /**
  * API Route: Create Subscription with Payment Intent
  * Cria uma assinatura Stripe usando Payment Intent (in-app checkout)
+ * 
+ * ATUALIZADO: Dezembro 2025
+ * - Novos planos: starter, pro, studio
  */
 
 import { auth, currentUser } from '@clerk/nextjs/server';
@@ -10,7 +13,7 @@ import { getOrCreateUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { CustomerService } from '@/lib/stripe';
 
-type CheckoutPlan = 'editor_only' | 'full_access';
+type CheckoutPlan = 'starter' | 'pro' | 'studio';
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +27,7 @@ export async function POST(req: Request) {
     const { plan } = await req.json();
 
     // Validar plano
-    if (plan !== 'editor_only' && plan !== 'full_access') {
+    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio') {
       return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
     }
 
@@ -35,11 +38,10 @@ export async function POST(req: Request) {
 
     // Verificar se Stripe está configurado
     const isStripeConfigured =
-      PRICES.EDITOR_ONLY &&
-      PRICES.FULL_ACCESS &&
-      PRICES.EDITOR_ONLY.startsWith('price_') &&
-      PRICES.EDITOR_ONLY.length > 20 &&
-      !PRICES.EDITOR_ONLY.includes('xxx');
+      PRICES.STARTER &&
+      PRICES.PRO &&
+      PRICES.STARTER.startsWith('price_') &&
+      PRICES.STARTER.length > 20;
 
     // Em desenvolvimento, ativar direto sem Stripe
     if (!isStripeConfigured && process.env.NODE_ENV !== 'production') {
@@ -50,7 +52,7 @@ export async function POST(req: Request) {
         plan: plan,
       };
 
-      if (plan === 'full_access') {
+      if (plan === 'pro' || plan === 'studio') {
         updates.tools_unlocked = true;
       }
 
@@ -70,9 +72,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Stripe não configurado' }, { status: 500 });
     }
 
-    // Definir price ID baseado no plano
-    const priceId = plan === 'editor_only' ? PRICES.EDITOR_ONLY : PRICES.FULL_ACCESS;
-    const amount = plan === 'editor_only' ? 5000 : 10000; // R$ 50 ou R$ 100 em centavos
+    // Definir price ID e valor baseado no plano
+    let priceId: string;
+    let amount: number;
+    
+    switch (plan) {
+      case 'starter':
+        priceId = PRICES.STARTER;
+        amount = 5000; // R$ 50 em centavos
+        break;
+      case 'pro':
+        priceId = PRICES.PRO;
+        amount = 10000; // R$ 100 em centavos
+        break;
+      case 'studio':
+        priceId = PRICES.STUDIO;
+        amount = 30000; // R$ 300 em centavos
+        break;
+      default:
+        priceId = PRICES.STARTER;
+        amount = 5000;
+    }
 
     // Buscar ou criar customer no Stripe
     let stripeCustomerId: string;

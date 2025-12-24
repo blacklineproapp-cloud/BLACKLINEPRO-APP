@@ -1,12 +1,15 @@
 #!/usr/bin/env tsx
 /**
  * Script para criar produtos e preços no Stripe
+ * 
+ * ATUALIZADO: Dezembro 2025
+ * - Novos planos: Starter (R$50), Pro (R$100), Studio (R$300)
  *
  * Uso:
  *   npm run billing:setup
  *
  * Ou diretamente:
- *   tsx scripts/create-stripe-products.ts
+ *   npx tsx scripts/create-stripe-products.ts
  */
 
 import Stripe from 'stripe';
@@ -32,22 +35,31 @@ interface ProductConfig {
 }
 
 const PRODUCTS: Record<string, ProductConfig> = {
-  editor_only: {
-    name: 'StencilFlow Editor',
-    description: 'Editor completo de stencil com modos Topográfico e Linhas Perfeitas',
+  starter: {
+    name: 'StencilFlow Starter',
+    description: 'Editor completo de stencil com modos Topográfico e Linhas Perfeitas. 100 gerações/mês.',
     prices: {
       monthly: 50.00,
       quarterly: 135.00,   // 10% desconto
       yearly: 360.00,      // 40% desconto
     },
   },
-  full_access: {
-    name: 'StencilFlow Full Access',
-    description: 'Acesso completo: Editor + IA GEN + Color Match + Split A4 + Aprimorar',
+  pro: {
+    name: 'StencilFlow Pro',
+    description: 'Acesso completo: Editor + IA GEN + Color Match + Split A4 + Aprimorar. 500 gerações/mês.',
     prices: {
       monthly: 100.00,
       quarterly: 270.00,   // 10% desconto
       yearly: 720.00,      // 40% desconto
+    },
+  },
+  studio: {
+    name: 'StencilFlow Studio',
+    description: 'Uso ilimitado para estúdios. Todas as ferramentas + suporte prioritário.',
+    prices: {
+      monthly: 300.00,
+      quarterly: 810.00,   // 10% desconto
+      yearly: 2160.00,     // 40% desconto
     },
   },
 };
@@ -56,7 +68,12 @@ async function createProducts() {
   console.log('🚀 Iniciando criação de produtos no Stripe...\n');
 
   // Verificar se Stripe está configurado
-  if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes('sk_test_')) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error('❌ STRIPE_SECRET_KEY não configurada!');
+    process.exit(1);
+  }
+
+  if (process.env.STRIPE_SECRET_KEY.includes('sk_test_')) {
     console.log('⚠️  Usando chave de TESTE do Stripe');
   } else {
     console.log('✅ Usando chave de PRODUÇÃO do Stripe');
@@ -75,23 +92,24 @@ async function createProducts() {
         description: config.description,
         metadata: {
           plan_type: key,
+          created_at: new Date().toISOString(),
         },
       });
 
       console.log(`   ✅ Produto criado: ${product.id}`);
       results[key] = { product_id: product.id, prices: {} };
 
-      // Criar preços
-      const intervals: Array<'month' | 'year'> = ['month', 'year'];
-      const priceMap = {
-        month: { amount: config.prices.monthly, label: 'Mensal' },
-        year: { amount: config.prices.yearly, label: 'Anual' },
-      };
+      // Criar preços (mensal, trimestral, anual)
+      const intervals: Array<{ interval: 'month' | 'year', count: number, key: string, label: string }> = [
+        { interval: 'month', count: 1, key: 'monthly', label: 'Mensal' },
+        { interval: 'month', count: 3, key: 'quarterly', label: 'Trimestral' },
+        { interval: 'year', count: 1, key: 'yearly', label: 'Anual' },
+      ];
 
-      for (const interval of intervals) {
-        const { amount, label } = priceMap[interval];
+      for (const { interval, count, key: priceKey, label } of intervals) {
+        const amount = config.prices[priceKey as keyof typeof config.prices];
 
-        console.log(`   💰 Criando preço ${label}: R$ ${amount.toFixed(2)}/${interval === 'month' ? 'mês' : 'ano'}`);
+        console.log(`   💰 Criando preço ${label}: R$ ${amount.toFixed(2)}`);
 
         const price = await stripe.prices.create({
           product: product.id,
@@ -99,16 +117,16 @@ async function createProducts() {
           unit_amount: Math.round(amount * 100), // Converter para centavos
           recurring: {
             interval: interval,
-            interval_count: 1,
+            interval_count: count,
           },
           metadata: {
             plan_type: key,
-            billing_cycle: interval,
+            billing_cycle: priceKey,
           },
         });
 
         console.log(`      ✅ Price ID: ${price.id}`);
-        results[key].prices[interval] = price.id;
+        results[key].prices[priceKey] = price.id;
       }
 
     } catch (error: any) {
@@ -123,24 +141,33 @@ async function createProducts() {
   console.log('='.repeat(80));
   console.log('\n📋 COPIE E COLE NO SEU .env.local:\n');
 
-  console.log('# Stripe Products - Criados em ' + new Date().toISOString());
-  console.log(`STRIPE_PRICE_EDITOR_MONTHLY=${results.editor_only.prices.month}`);
-  console.log(`STRIPE_PRICE_EDITOR_YEARLY=${results.editor_only.prices.year}`);
-  console.log(`STRIPE_PRICE_FULL_MONTHLY=${results.full_access.prices.month}`);
-  console.log(`STRIPE_PRICE_FULL_YEARLY=${results.full_access.prices.year}`);
+  console.log('# ============================================');
+  console.log('# STRIPE PRICES - Planos de Assinatura');
+  console.log('# Criados em ' + new Date().toISOString());
+  console.log('# ============================================');
   console.log('');
-  console.log('# Compatibilidade (usar monthly por padrão)');
-  console.log(`STRIPE_PRICE_EDITOR=${results.editor_only.prices.month}`);
-  console.log(`STRIPE_PRICE_FULL=${results.full_access.prices.month}`);
-  console.log(`STRIPE_PRICE_SUBSCRIPTION=${results.editor_only.prices.month}  # deprecated`);
-  console.log(`STRIPE_PRICE_TOOLS=${results.full_access.prices.month}  # deprecated`);
+  console.log('# Starter - R$ 50/mês (100 gerações)');
+  console.log(`STRIPE_PRICE_STARTER_MONTHLY=${results.starter.prices.monthly}`);
+  console.log(`STRIPE_PRICE_STARTER_QUARTERLY=${results.starter.prices.quarterly}`);
+  console.log(`STRIPE_PRICE_STARTER_YEARLY=${results.starter.prices.yearly}`);
+  console.log('');
+  console.log('# Pro - R$ 100/mês (500 gerações)');
+  console.log(`STRIPE_PRICE_PRO_MONTHLY=${results.pro.prices.monthly}`);
+  console.log(`STRIPE_PRICE_PRO_QUARTERLY=${results.pro.prices.quarterly}`);
+  console.log(`STRIPE_PRICE_PRO_YEARLY=${results.pro.prices.yearly}`);
+  console.log('');
+  console.log('# Studio - R$ 300/mês (Ilimitado)');
+  console.log(`STRIPE_PRICE_STUDIO_MONTHLY=${results.studio.prices.monthly}`);
+  console.log(`STRIPE_PRICE_STUDIO_QUARTERLY=${results.studio.prices.quarterly}`);
+  console.log(`STRIPE_PRICE_STUDIO_YEARLY=${results.studio.prices.yearly}`);
 
   console.log('\n' + '='.repeat(80));
   console.log('\n🎯 PRÓXIMOS PASSOS:');
   console.log('   1. Copie as variáveis acima e adicione no .env.local');
   console.log('   2. Adicione as mesmas variáveis no Vercel (Settings → Environment Variables)');
   console.log('   3. Configure o webhook no Stripe Dashboard');
-  console.log('   4. Faça deploy para produção');
+  console.log('   4. Arquive os produtos antigos: npx tsx scripts/archive-stripe-products.ts --archive-all');
+  console.log('   5. Faça deploy para produção');
   console.log('\n');
 
   return results;

@@ -65,12 +65,13 @@ export async function GET(req: Request) {
     const { data: planStats } = await supabaseAdmin
       .from('users')
       .select('plan')
-      .in('plan', ['free', 'editor_only', 'full_access']);
+      .in('plan', ['free', 'starter', 'pro', 'studio']);
 
     const planCounts = {
       free: 0,
-      editor_only: 0,
-      full_access: 0,
+      starter: 0,
+      pro: 0,
+      studio: 0,
     };
 
     planStats?.forEach(u => {

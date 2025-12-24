@@ -1,6 +1,9 @@
 /**
  * API Route: Confirm Subscription
  * Confirma pagamento e cria subscription no Stripe após Payment Intent bem-sucedido
+ * 
+ * ATUALIZADO: Dezembro 2025
+ * - Novos planos: starter, pro, studio
  */
 
 import { auth } from '@clerk/nextjs/server';
@@ -74,8 +77,8 @@ export async function POST(req: Request) {
         subscription_id: subscription.id,
         subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
         is_paid: true,
-        plan: plan as 'editor_only' | 'full_access',
-        tools_unlocked: plan === 'full_access',
+        plan: plan as 'starter' | 'pro' | 'studio',
+        tools_unlocked: plan === 'pro' || plan === 'studio',
       })
       .eq('id', user.id);
 
@@ -105,6 +108,19 @@ export async function POST(req: Request) {
       metadata: subscription.metadata,
     });
 
+    // Definir descrição do pagamento
+    let planDescription: string;
+    switch (plan) {
+      case 'studio':
+        planDescription = 'Studio';
+        break;
+      case 'pro':
+        planDescription = 'Pro';
+        break;
+      default:
+        planDescription = 'Starter';
+    }
+
     // Registrar pagamento
     await supabaseAdmin.from('payments').insert({
       user_id: user.id,
@@ -116,7 +132,7 @@ export async function POST(req: Request) {
       currency: paymentIntent.currency.toUpperCase(),
       status: 'succeeded',
       payment_method: 'card',
-      description: `Assinatura ${plan === 'full_access' ? 'Full Access' : 'Editor'}`,
+      description: `Assinatura ${planDescription}`,
       plan_type: plan,
     });
 

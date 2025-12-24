@@ -5,7 +5,7 @@ import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js'
 import { Loader2, Lock, CreditCard } from 'lucide-react';
 
 interface CheckoutFormProps {
-  plan: 'editor_only' | 'full_access' | 'studio';
+  plan: 'starter' | 'pro' | 'studio';
   onSuccess?: () => void;
   onError?: (error: string) => void;
 }
@@ -18,8 +18,8 @@ export default function CheckoutForm({ plan, onSuccess, onError }: CheckoutFormP
   const [loadingText, setLoadingText] = useState('Processando...');
 
   const planPrices = {
-    editor_only: 'R$ 50',
-    full_access: 'R$ 100',
+    starter: 'R$ 50',
+    pro: 'R$ 100',
     studio: 'R$ 300',
   };
 

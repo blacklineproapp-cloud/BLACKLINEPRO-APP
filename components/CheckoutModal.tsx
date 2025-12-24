@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface CheckoutModalProps {
-  plan: 'editor_only' | 'full_access' | 'studio';
+  plan: 'starter' | 'pro' | 'studio';
   isOpen: boolean;
   onClose: () => void;
 }
@@ -23,14 +23,14 @@ export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalPr
   const [devMode, setDevMode] = useState(false);
 
   const planDetails = {
-    editor_only: {
+    starter: {
       name: 'Starter',
       price: 'R$ 50',
       icon: Zap,
       color: 'emerald',
       limit: '100 gerações/mês',
     },
-    full_access: {
+    pro: {
       name: 'Pro',
       price: 'R$ 100',
       icon: Crown,
@@ -67,7 +67,7 @@ export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalPr
       const res = await fetch('/api/payments/create-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: plan === 'studio' ? 'full_access' : plan }),
+        body: JSON.stringify({ plan }),
       });
 
       if (!res.ok) {
@@ -232,7 +232,7 @@ export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalPr
             <div className="mt-4 pt-4 border-t border-zinc-800">
               <h3 className="text-xs font-semibold text-white mb-2">Incluído no plano:</h3>
               <div className="flex flex-wrap gap-2">
-                {plan === 'editor_only' && (
+                {plan === 'starter' && (
                   <>
                     <span className="text-xs text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 px-2 py-1 rounded-md">
                       ✓ Editor Completo
@@ -245,7 +245,7 @@ export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalPr
                     </span>
                   </>
                 )}
-                {plan === 'full_access' && (
+                {plan === 'pro' && (
                   <>
                     <span className="text-xs text-purple-500 bg-purple-500/10 border border-purple-500/30 px-2 py-1 rounded-md">
                       ✓ Tudo do Starter

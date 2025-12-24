@@ -9,7 +9,7 @@ import CheckoutModal from '@/components/CheckoutModal';
 export default function PricingPage() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState<'editor_only' | 'full_access' | 'studio' | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | 'studio' | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSelectPlan = (planId: string) => {
@@ -18,14 +18,8 @@ export default function PricingPage() {
       return;
     }
 
-    if (planId === 'starter') {
-      setSelectedPlan('editor_only');
-      setIsModalOpen(true);
-    } else if (planId === 'pro') {
-      setSelectedPlan('full_access');
-      setIsModalOpen(true);
-    } else if (planId === 'studio') {
-      setSelectedPlan('studio');
+    if (planId === 'starter' || planId === 'pro' || planId === 'studio') {
+      setSelectedPlan(planId);
       setIsModalOpen(true);
     }
   };
@@ -285,7 +279,7 @@ export default function PricingPage() {
       {/* Checkout Modal */}
       {selectedPlan && (
         <CheckoutModal
-          plan={selectedPlan === 'studio' ? 'full_access' : selectedPlan}
+          plan={selectedPlan}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />

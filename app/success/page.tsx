@@ -7,11 +7,11 @@ import { useEffect } from 'react';
 export default function SuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const plan = searchParams?.get('plan') as 'editor_only' | 'full_access' | null;
+  const plan = searchParams?.get('plan') as 'starter' | 'pro' | 'studio' | null;
 
   const planDetails = {
-    editor_only: {
-      name: 'Editor',
+    starter: {
+      name: 'Starter',
       price: 'R$ 50/mês',
       icon: Zap,
       color: 'emerald',
@@ -22,16 +22,28 @@ export default function SuccessPage() {
         'Projetos ilimitados',
       ],
     },
-    full_access: {
-      name: 'Full Access',
+    pro: {
+      name: 'Pro',
       price: 'R$ 100/mês',
       icon: Crown,
       color: 'purple',
       features: [
-        'Tudo do plano Editor',
+        'Tudo do plano Starter',
         'IA GEN (geração de imagens)',
         'Aprimorar imagem (4K)',
         'Color Match + Dividir A4',
+      ],
+    },
+    studio: {
+      name: 'Studio',
+      price: 'R$ 300/mês',
+      icon: Sparkles,
+      color: 'amber',
+      features: [
+        'Tudo do plano Pro',
+        'Uso ilimitado',
+        'Suporte prioritário',
+        'Ideal para estúdios',
       ],
     },
   };

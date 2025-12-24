@@ -1,51 +1,64 @@
 /**
  * Stripe Plan Mapping
  * Mapeia Price IDs do Stripe para planos internos
+ * 
+ * ATUALIZADO: Dezembro 2025
+ * - Novos nomes: starter, pro, studio
+ * - Removido: editor_only, full_access
  */
 
-import type { PlanType, BillingCycle } from '../stripe/types';
+import type { BillingCycle } from '../stripe/types';
+
+// ============================================================================
+// TIPOS
+// ============================================================================
+
+export type PlanTier = 'starter' | 'pro' | 'studio';
+
+export interface PlanMapping {
+  tier: PlanTier;
+  cycle: BillingCycle;
+}
 
 // ============================================================================
 // MAPEAMENTO PRICE_ID → PLAN
 // ============================================================================
 
-export interface PlanMapping {
-  tier: Exclude<PlanType, 'free'>;
-  cycle: BillingCycle;
-}
-
 /**
  * Obtém plano a partir de um Price ID do Stripe
  */
 export function getPlanFromPriceId(priceId: string): PlanMapping | null {
-  // Editor Only
-  if (priceId === process.env.STRIPE_PRICE_EDITOR_MONTHLY) {
-    return { tier: 'editor_only', cycle: 'monthly' };
+  // Starter (R$ 50/mês)
+  if (priceId === process.env.STRIPE_PRICE_STARTER_MONTHLY) {
+    return { tier: 'starter', cycle: 'monthly' };
   }
-  if (priceId === process.env.STRIPE_PRICE_EDITOR_QUARTERLY) {
-    return { tier: 'editor_only', cycle: 'quarterly' };
+  if (priceId === process.env.STRIPE_PRICE_STARTER_QUARTERLY) {
+    return { tier: 'starter', cycle: 'quarterly' };
   }
-  if (priceId === process.env.STRIPE_PRICE_EDITOR_YEARLY) {
-    return { tier: 'editor_only', cycle: 'yearly' };
-  }
-
-  // Full Access
-  if (priceId === process.env.STRIPE_PRICE_FULL_MONTHLY) {
-    return { tier: 'full_access', cycle: 'monthly' };
-  }
-  if (priceId === process.env.STRIPE_PRICE_FULL_QUARTERLY) {
-    return { tier: 'full_access', cycle: 'quarterly' };
-  }
-  if (priceId === process.env.STRIPE_PRICE_FULL_YEARLY) {
-    return { tier: 'full_access', cycle: 'yearly' };
+  if (priceId === process.env.STRIPE_PRICE_STARTER_YEARLY) {
+    return { tier: 'starter', cycle: 'yearly' };
   }
 
-  // Legacy (compatibilidade)
-  if (priceId === process.env.STRIPE_PRICE_EDITOR) {
-    return { tier: 'editor_only', cycle: 'monthly' };
+  // Pro (R$ 100/mês)
+  if (priceId === process.env.STRIPE_PRICE_PRO_MONTHLY) {
+    return { tier: 'pro', cycle: 'monthly' };
   }
-  if (priceId === process.env.STRIPE_PRICE_FULL) {
-    return { tier: 'full_access', cycle: 'monthly' };
+  if (priceId === process.env.STRIPE_PRICE_PRO_QUARTERLY) {
+    return { tier: 'pro', cycle: 'quarterly' };
+  }
+  if (priceId === process.env.STRIPE_PRICE_PRO_YEARLY) {
+    return { tier: 'pro', cycle: 'yearly' };
+  }
+
+  // Studio (R$ 300/mês)
+  if (priceId === process.env.STRIPE_PRICE_STUDIO_MONTHLY) {
+    return { tier: 'studio', cycle: 'monthly' };
+  }
+  if (priceId === process.env.STRIPE_PRICE_STUDIO_QUARTERLY) {
+    return { tier: 'studio', cycle: 'quarterly' };
+  }
+  if (priceId === process.env.STRIPE_PRICE_STUDIO_YEARLY) {
+    return { tier: 'studio', cycle: 'yearly' };
   }
 
   console.warn('[PlanMapping] Price ID desconhecido:', priceId);
@@ -56,11 +69,11 @@ export function getPlanFromPriceId(priceId: string): PlanMapping | null {
  * Obtém Price ID a partir de plano e ciclo
  */
 export function getPriceIdFromPlan(
-  tier: Exclude<PlanType, 'free'>,
+  tier: PlanTier,
   cycle: BillingCycle
 ): string {
-  const prefix = tier === 'editor_only' ? 'EDITOR' : 'FULL';
-  const suffix = cycle.toUpperCase();
+  const prefix = tier.toUpperCase(); // STARTER, PRO, STUDIO
+  const suffix = cycle.toUpperCase(); // MONTHLY, QUARTERLY, YEARLY
 
   const envKey = `STRIPE_PRICE_${prefix}_${suffix}`;
   const priceId = process.env[envKey];
@@ -85,12 +98,18 @@ export function isValidPriceId(priceId: string): boolean {
  */
 export function getAllPriceIds(): string[] {
   return [
-    process.env.STRIPE_PRICE_EDITOR_MONTHLY,
-    process.env.STRIPE_PRICE_EDITOR_QUARTERLY,
-    process.env.STRIPE_PRICE_EDITOR_YEARLY,
-    process.env.STRIPE_PRICE_FULL_MONTHLY,
-    process.env.STRIPE_PRICE_FULL_QUARTERLY,
-    process.env.STRIPE_PRICE_FULL_YEARLY
+    // Starter
+    process.env.STRIPE_PRICE_STARTER_MONTHLY,
+    process.env.STRIPE_PRICE_STARTER_QUARTERLY,
+    process.env.STRIPE_PRICE_STARTER_YEARLY,
+    // Pro
+    process.env.STRIPE_PRICE_PRO_MONTHLY,
+    process.env.STRIPE_PRICE_PRO_QUARTERLY,
+    process.env.STRIPE_PRICE_PRO_YEARLY,
+    // Studio
+    process.env.STRIPE_PRICE_STUDIO_MONTHLY,
+    process.env.STRIPE_PRICE_STUDIO_QUARTERLY,
+    process.env.STRIPE_PRICE_STUDIO_YEARLY,
   ].filter(Boolean) as string[];
 }
 
@@ -102,14 +121,12 @@ export function validatePriceConfig(): {
   missing: string[];
 } {
   const required = [
-    'STRIPE_PRICE_EDITOR_MONTHLY',
-    'STRIPE_PRICE_EDITOR_QUARTERLY',
-    'STRIPE_PRICE_EDITOR_YEARLY',
-    'STRIPE_PRICE_FULL_MONTHLY',
-    'STRIPE_PRICE_FULL_QUARTERLY',
-    'STRIPE_PRICE_FULL_YEARLY'
+    'STRIPE_PRICE_STARTER_MONTHLY',
+    'STRIPE_PRICE_PRO_MONTHLY',
+    'STRIPE_PRICE_STUDIO_MONTHLY',
   ];
 
+  // Quarterly e Yearly são opcionais por enquanto
   const missing = required.filter(key => !process.env[key]);
 
   return {

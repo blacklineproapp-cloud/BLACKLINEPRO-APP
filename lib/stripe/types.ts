@@ -1,6 +1,9 @@
 /**
  * TypeScript Definitions para Stripe
  * Tipos completos para objetos e respostas do Stripe
+ * 
+ * ATUALIZADO: Dezembro 2025
+ * - Novos planos: starter, pro, studio
  */
 
 import Stripe from 'stripe';
@@ -51,7 +54,7 @@ export type PaymentMethod =
 // PLAN TYPE
 // ============================================================================
 
-export type PlanType = 'free' | 'editor_only' | 'full_access';
+export type PlanType = 'free' | 'starter' | 'pro' | 'studio';
 
 export type BillingCycle = 'monthly' | 'quarterly' | 'yearly';
 

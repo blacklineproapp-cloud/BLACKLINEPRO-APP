@@ -139,7 +139,7 @@ export async function POST(req: Request) {
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const clerkId = session.client_reference_id || session.metadata?.clerk_id;
-  const plan = session.metadata?.plan as 'editor_only' | 'full_access' | undefined;
+  const plan = session.metadata?.plan as 'starter' | 'pro' | 'studio' | undefined;
 
   if (!clerkId) {
     throw new Error('Checkout sem clerk_id');
@@ -189,12 +189,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         subscription_id: subscription.id,
         subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
         is_paid: true,
-        plan: plan || 'editor_only',
-        tools_unlocked: plan === 'full_access'
+        plan: plan || 'starter',
+        tools_unlocked: plan === 'pro' || plan === 'studio'
       })
       .eq('id', user.id);
 
-    console.log(`  ✅ Assinatura ativada: ${plan || 'editor_only'}`);
+    console.log(`  ✅ Assinatura ativada: ${plan || 'starter'}`);
 
     // Registrar pagamento
     await supabaseAdmin.from('payments').insert({
@@ -207,8 +207,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       currency: session.currency || 'brl',
       status: 'succeeded',
       payment_method: 'card',
-      description: `Assinatura ${plan === 'full_access' ? 'Full Access' : 'Editor'}`,
-      plan_type: plan || 'editor_only'
+      description: `Assinatura ${plan === 'studio' ? 'Studio' : plan === 'pro' ? 'Pro' : 'Starter'}`,
+      plan_type: plan || 'starter'
     });
 
     // TODO: Enviar email de boas-vindas
@@ -233,7 +233,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   // Determinar plano baseado no price_id
   const priceId = subscription.items.data[0].price.id;
   const planMapping = getPlanFromPriceId(priceId);
-  const planType = planMapping?.tier || 'editor_only';
+  const planType = planMapping?.tier || 'starter';
 
   // Criar subscription no banco
   await supabaseAdmin.from('subscriptions').insert({
@@ -263,7 +263,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       subscription_status: subscription.status,
       subscription_id: subscription.id,
       is_paid: true,
-      tools_unlocked: planType === 'full_access'
+      tools_unlocked: planType === 'pro' || planType === 'studio'
     })
     .eq('id', customer.user_id);
 

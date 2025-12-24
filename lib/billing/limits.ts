@@ -1,6 +1,9 @@
 /**
  * Usage Limits System
  * Sistema de controle de limites por plano
+ * 
+ * ATUALIZADO: Dezembro 2025
+ * - Novos planos: starter, pro, studio
  */
 
 import { supabaseAdmin } from '../supabase';
@@ -22,14 +25,19 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
     aiRequests: 0,           // Não tem acesso
     toolsUsage: 0            // Não tem acesso
   },
-  editor_only: {
-    editorGenerations: 50,   // 50 gerações por mês
-    aiRequests: 0,           // Não tem acesso à IA
-    toolsUsage: 0            // Não tem acesso às ferramentas
+  starter: {
+    editorGenerations: 100,  // 100 gerações por mês
+    aiRequests: 0,           // Não tem acesso à IA avançada
+    toolsUsage: 100          // Uso básico de ferramentas
   },
-  full_access: {
-    editorGenerations: -1,   // Ilimitado
+  pro: {
+    editorGenerations: 500,  // 500 gerações por mês
     aiRequests: 100,         // 100 requests IA por mês
+    toolsUsage: 500          // Ferramentas completas
+  },
+  studio: {
+    editorGenerations: -1,   // Ilimitado
+    aiRequests: -1,          // Ilimitado
     toolsUsage: -1           // Ilimitado
   }
 };

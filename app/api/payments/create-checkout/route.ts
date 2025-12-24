@@ -4,7 +4,7 @@ import { stripe, PRICES, PlanType } from '@/lib/stripe';
 import { getOrCreateUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
-type CheckoutPlan = 'editor_only' | 'full_access';
+type CheckoutPlan = 'starter' | 'pro' | 'studio';
 
 // Versão que retorna objeto (para JSON response)
 async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan): Promise<{ url: string } | { redirect: URL }> {
@@ -22,11 +22,10 @@ async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan): Promi
 
   // Verificar se Stripe está configurado
   const isStripeConfigured =
-    PRICES.EDITOR_ONLY &&
-    PRICES.FULL_ACCESS &&
-    PRICES.EDITOR_ONLY.startsWith('price_') &&
-    PRICES.EDITOR_ONLY.length > 20 &&
-    !PRICES.EDITOR_ONLY.includes('xxx');
+    PRICES.STARTER &&
+    PRICES.PRO &&
+    PRICES.STARTER.startsWith('price_') &&
+    PRICES.STARTER.length > 20;
 
   // Em desenvolvimento, ativar direto sem Stripe
   if (!isStripeConfigured && process.env.NODE_ENV !== 'production') {
@@ -37,8 +36,8 @@ async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan): Promi
       plan: plan,
     };
 
-    // Full access inclui tools
-    if (plan === 'full_access') {
+    // Pro e Studio incluem tools
+    if (plan === 'pro' || plan === 'studio') {
       updates.tools_unlocked = true;
     }
 
@@ -55,7 +54,20 @@ async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan): Promi
   }
 
   // Definir price ID baseado no plano
-  const priceId = plan === 'editor_only' ? PRICES.EDITOR_ONLY : PRICES.FULL_ACCESS;
+  let priceId: string;
+  switch (plan) {
+    case 'starter':
+      priceId = PRICES.STARTER;
+      break;
+    case 'pro':
+      priceId = PRICES.PRO;
+      break;
+    case 'studio':
+      priceId = PRICES.STUDIO;
+      break;
+    default:
+      priceId = PRICES.STARTER;
+  }
 
   // Criar sessão de checkout do Stripe
   const session = await stripe.checkout.sessions.create({
@@ -101,11 +113,10 @@ async function handleCheckout(req: Request, plan: CheckoutPlan) {
 
   // Verificar se Stripe está configurado
   const isStripeConfigured =
-    PRICES.EDITOR_ONLY &&
-    PRICES.FULL_ACCESS &&
-    PRICES.EDITOR_ONLY.startsWith('price_') &&
-    PRICES.EDITOR_ONLY.length > 20 &&
-    !PRICES.EDITOR_ONLY.includes('xxx');
+    PRICES.STARTER &&
+    PRICES.PRO &&
+    PRICES.STARTER.startsWith('price_') &&
+    PRICES.STARTER.length > 20;
 
   // Em desenvolvimento, ativar direto sem Stripe
   if (!isStripeConfigured && process.env.NODE_ENV !== 'production') {
@@ -116,8 +127,8 @@ async function handleCheckout(req: Request, plan: CheckoutPlan) {
       plan: plan,
     };
 
-    // Full access inclui tools
-    if (plan === 'full_access') {
+    // Pro e Studio incluem tools
+    if (plan === 'pro' || plan === 'studio') {
       updates.tools_unlocked = true;
     }
 
@@ -134,7 +145,20 @@ async function handleCheckout(req: Request, plan: CheckoutPlan) {
   }
 
   // Definir price ID baseado no plano
-  const priceId = plan === 'editor_only' ? PRICES.EDITOR_ONLY : PRICES.FULL_ACCESS;
+  let priceId: string;
+  switch (plan) {
+    case 'starter':
+      priceId = PRICES.STARTER;
+      break;
+    case 'pro':
+      priceId = PRICES.PRO;
+      break;
+    case 'studio':
+      priceId = PRICES.STUDIO;
+      break;
+    default:
+      priceId = PRICES.STARTER;
+  }
 
   // Criar sessão de checkout do Stripe
   const session = await stripe.checkout.sessions.create({
@@ -168,10 +192,10 @@ async function handleCheckout(req: Request, plan: CheckoutPlan) {
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const plan = url.searchParams.get('plan') as CheckoutPlan || 'editor_only';
+    const plan = url.searchParams.get('plan') as CheckoutPlan || 'starter';
 
     // Validar plano
-    if (plan !== 'editor_only' && plan !== 'full_access') {
+    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio') {
       // Se é fetch (Accept: application/json), retornar JSON
       const acceptHeader = req.headers.get('accept') || '';
       if (acceptHeader.includes('application/json')) {
@@ -212,19 +236,19 @@ export async function GET(req: Request) {
 // POST - Suporta form e JSON
 export async function POST(req: Request) {
   try {
-    let plan: CheckoutPlan = 'editor_only';
+    let plan: CheckoutPlan = 'starter';
     const contentType = req.headers.get('content-type') || '';
 
     if (contentType.includes('application/json')) {
       const body = await req.json();
-      plan = body.plan || 'editor_only';
+      plan = body.plan || 'starter';
     } else if (contentType.includes('application/x-www-form-urlencoded')) {
       const formData = await req.formData();
-      plan = (formData.get('plan')?.toString() as CheckoutPlan) || 'editor_only';
+      plan = (formData.get('plan')?.toString() as CheckoutPlan) || 'starter';
     }
 
     // Validar plano
-    if (plan !== 'editor_only' && plan !== 'full_access') {
+    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio') {
       return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
     }
 
@@ -237,4 +261,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

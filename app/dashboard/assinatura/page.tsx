@@ -74,10 +74,12 @@ export default function AssinaturaPage() {
 
   function getPlanName(plan: string) {
     switch (plan) {
-      case 'editor_only':
-        return 'Editor Only';
-      case 'full_access':
-        return 'Full Access';
+      case 'starter':
+        return 'Starter';
+      case 'pro':
+        return 'Pro';
+      case 'studio':
+        return 'Studio';
       default:
         return 'Free';
     }

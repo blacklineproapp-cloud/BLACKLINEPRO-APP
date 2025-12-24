@@ -159,7 +159,7 @@ export async function POST(req: Request) {
       }
 
       case 'change_plan': {
-        if (!newPlan || !['free', 'editor_only', 'full_access'].includes(newPlan)) {
+        if (!newPlan || !['free', 'starter', 'pro', 'studio'].includes(newPlan)) {
           return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
         }
 
@@ -168,10 +168,10 @@ export async function POST(req: Request) {
         if (newPlan === 'free') {
           updates.is_paid = false;
           updates.tools_unlocked = false;
-        } else if (newPlan === 'editor_only') {
+        } else if (newPlan === 'starter') {
           updates.is_paid = true;
           updates.tools_unlocked = false;
-        } else if (newPlan === 'full_access') {
+        } else if (newPlan === 'pro' || newPlan === 'studio') {
           updates.is_paid = true;
           updates.tools_unlocked = true;
         }

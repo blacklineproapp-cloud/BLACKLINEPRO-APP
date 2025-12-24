@@ -19,8 +19,9 @@ interface Metrics {
   };
   plans: {
     free: number;
-    editor_only: number;
-    full_access: number;
+    starter: number;
+    pro: number;
+    studio: number;
   };
   revenue: {
     total: number;
@@ -290,8 +291,9 @@ export default function AdminPage() {
               </h3>
               <div className="space-y-3">
                 <PlanBar name="Free" count={metrics.plans.free} total={metrics.general.totalUsers} color="zinc" />
-                <PlanBar name="Editor (R$ 50)" count={metrics.plans.editor_only} total={metrics.general.totalUsers} color="blue" />
-                <PlanBar name="Full Access (R$ 100)" count={metrics.plans.full_access} total={metrics.general.totalUsers} color="purple" />
+                <PlanBar name="Starter (R$ 50)" count={metrics.plans.starter} total={metrics.general.totalUsers} color="blue" />
+                <PlanBar name="Pro (R$ 100)" count={metrics.plans.pro} total={metrics.general.totalUsers} color="purple" />
+                <PlanBar name="Studio (R$ 300)" count={metrics.plans.studio || 0} total={metrics.general.totalUsers} color="yellow" />
               </div>
             </div>
 
@@ -386,8 +388,9 @@ export default function AdminPage() {
               >
                 <option value="all">Todos os planos</option>
                 <option value="free">Free</option>
-                <option value="editor_only">Editor</option>
-                <option value="full_access">Full Access</option>
+                <option value="starter">Starter</option>
+                <option value="pro">Pro</option>
+                <option value="studio">Studio</option>
               </select>
 
               <select
@@ -461,17 +464,21 @@ export default function AdminPage() {
                       <td className="px-6 py-4">
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                            user.plan === 'full_access'
+                            user.plan === 'studio'
+                              ? 'bg-amber-900/30 text-amber-400 border border-amber-800/30'
+                              : user.plan === 'pro'
                               ? 'bg-purple-900/30 text-purple-400 border border-purple-800/30'
-                              : user.plan === 'editor_only'
+                              : user.plan === 'starter'
                               ? 'bg-blue-900/30 text-blue-400 border border-blue-800/30'
                               : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
                           }`}
                         >
-                          {user.plan === 'full_access'
-                            ? 'Full Access'
-                            : user.plan === 'editor_only'
-                            ? 'Editor'
+                          {user.plan === 'studio'
+                            ? 'Studio'
+                            : user.plan === 'pro'
+                            ? 'Pro'
+                            : user.plan === 'starter'
+                            ? 'Starter'
                             : 'Free'}
                         </span>
                       </td>
@@ -542,8 +549,9 @@ export default function AdminPage() {
                           >
                             <option value="">Alterar Plano</option>
                             <option value="free">→ Free</option>
-                            <option value="editor_only">→ Editor</option>
-                            <option value="full_access">→ Full Access</option>
+                            <option value="starter">→ Starter</option>
+                            <option value="pro">→ Pro</option>
+                            <option value="studio">→ Studio</option>
                           </select>
 
                           <button
@@ -715,6 +723,7 @@ function PlanBar({
     zinc: 'bg-zinc-700',
     blue: 'bg-blue-600',
     purple: 'bg-purple-600',
+    yellow: 'bg-amber-500',
   };
 
   return (
