@@ -4,6 +4,9 @@ import { getOrCreateUser } from '@/lib/auth';
 import { analyzeImageColors } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Emails admin com acesso ilimitado
+const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
+
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();
@@ -18,24 +21,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    // Verificar assinatura
-    if (!user.is_paid || user.subscription_status !== 'active') {
-      return NextResponse.json({
-        error: 'Assinatura necessária',
-        message: 'Assine o plano básico primeiro.',
-        requiresSubscription: true,
-        subscriptionType: 'subscription'
-      }, { status: 403 });
-    }
+    // 🔓 BYPASS PARA ADMINS - acesso ilimitado
+    const userEmailLower = user.email?.toLowerCase() || '';
+    const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
 
-    // Verificar ferramentas
-    if (!user.tools_unlocked) {
-      return NextResponse.json({
-        error: 'Ferramentas premium não desbloqueadas',
-        message: 'Desbloqueie as ferramentas premium por R$ 50.',
-        requiresSubscription: true,
-        subscriptionType: 'tools'
-      }, { status: 403 });
+    if (!isAdmin) {
+      // Verificar assinatura (apenas para não-admins)
+      if (!user.is_paid || user.subscription_status !== 'active') {
+        return NextResponse.json({
+          error: 'Assinatura necessária',
+          message: 'Assine o plano básico primeiro.',
+          requiresSubscription: true,
+          subscriptionType: 'subscription'
+        }, { status: 403 });
+      }
+
+      // Verificar ferramentas (apenas para não-admins)
+      if (!user.tools_unlocked) {
+        return NextResponse.json({
+          error: 'Ferramentas premium não desbloqueadas',
+          message: 'Desbloqueie as ferramentas premium por R$ 50.',
+          requiresSubscription: true,
+          subscriptionType: 'tools'
+        }, { status: 403 });
+      }
     }
 
     const { image, brand } = await req.json();
