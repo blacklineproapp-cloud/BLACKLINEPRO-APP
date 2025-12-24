@@ -24,6 +24,7 @@ const linesModel = genAI.getGenerativeModel({
   },
 });
 
+
 // Modelo para geração de imagens a partir de texto - Gemini 2.5 Flash
 const textToImageModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
@@ -34,10 +35,60 @@ const textToImageModel = genAI.getGenerativeModel({
   },
 });
 
-// ====================================================================
-// PROMPT TOPOGRÁFICO (Curvas de nível, máximo detalhe, densidade)
-// ====================================================================
+// System instructions para cada estilo de estêncil
 const TOPOGRAPHIC_INSTRUCTION = `ATUE COMO: Mestre em Mapeamento de Tatuagem Realista e Topografia.
+
+MISSÃO:
+Gerar um "Mapa Topográfico" de ALTA PRECISÃO com MÁXIMO DE DETALHES para tatuadores profissionais.
+
+CONCEITO - A METÁFORA DO MAPA GEOGRÁFICO:
+Trate a pele/imagem como um terreno geográfico 3D com curvas de nível (isolinhas):
+- Altitude ALTA (Montanha) = Áreas CLARAS/Brilho → Linhas ESPAÇADAS
+- Altitude BAIXA (Vale) = Áreas ESCURAS/Sombra → Linhas PRÓXIMAS (densidade alta)
+
+DIRETRIZES ESTRITAS PARA TATUADORES:
+
+1. LUZ E SOMBRA COMO LINHAS DE CONTORNO (Isolinhas):
+   - Converta TODOS os gradientes em linhas de contorno
+   - Linhas PRÓXIMAS = Sombra densa (declive acentuado no "terreno")
+   - Linhas ESPAÇADAS = Luz/sombra suave (terreno plano)
+   - ZERO sombreado sólido
+   - ZERO hachuras ou pontilhismo
+   - ZERO preenchimento preto
+   - Apenas linhas puras que seguem o volume
+
+2. CABELOS E BARBAS - FLUXO E DIREÇÃO:
+   - Desenhe a DIREÇÃO dos fios, NÃO a massa sólida
+   - Mostre o fluxo como vetores/linhas direcionais
+   - Isto ajuda o tatuador a saber para onde puxar a agulha
+   - Cada linha representa o caminho de um fio
+
+3. DEFINIÇÃO DE VOLUME - CONTORNO TRANSVERSAL:
+   - As linhas NÃO são retas paralelas
+   - Linhas devem CURVAR "abraçando" a forma do objeto
+   - Exemplo: bochechas redondas = linhas curvas seguindo a esfera
+   - As linhas seguem a curvatura da anatomia
+
+4. MICRODETALHES (MÁXIMA PRIORIDADE):
+   - Mapeie POROS da pele como pequenas depressões
+   - Mapeie RUGAS FINAS como vales no terreno
+   - Mapeie TEXTURAS sutis da pele
+   - Trate cada imperfeição como acidente geográfico
+   - DENSIDADE MÁXIMA de informação
+   - Quanto mais detalhes, melhor para o tatuador
+
+5. ZERO PREENCHIMENTO:
+   - Proibido usar preto sólido (gasta tinta e perde referência na pele)
+   - Proibido usar gradientes suaves
+   - Apenas linhas de contorno definidas
+
+PÚBLICO-ALVO:
+Este estêncil será usado por tatuadores profissionais que precisam de MÁXIMO DETALHE para recriar volumes, texturas e realismo na pele.
+
+SAÍDA:
+Gere APENAS a imagem do estêncil topográfico com MÁXIMO DETALHE. Sem texto.`;
+
+const PERFECT_LINES_INSTRUCTION = `ATUE COMO: Mestre em Mapeamento de Tatuagem Realista e Topografia.
 
 MISSÃO:
 Gerar um "Mapa Topográfico" de ALTA PRECISÃO com MÁXIMO DE DETALHES para tatuadores profissionais.
@@ -94,82 +145,21 @@ DIRETRIZES ESTRITAS PARA TATUADORES:
    - Apenas linhas de contorno definidas
    - A profundidade vem da DENSIDADE das linhas, não de manchas
 
-PÚBLICO-ALVO:
-Tatuadores profissionais que precisam de máxima referência de volume e detalhes topográficos.
-
-SAÍDA:
-Gere APENAS a imagem do estêncil topográfico com MÁXIMA profundidade e densidade. Sem texto.`;
-
-// ====================================================================
-// PROMPT LINHAS PERFEITAS (Contornos limpos, bordas definidas, clareza)
-// ====================================================================
-const PERFECT_LINES_INSTRUCTION = `ATUE COMO: Artista especializado em ilustração vetorial de alta precisão para tatuagem.
-
-MISSÃO:
-Criar um estêncil com LINHAS PERFEITAS, CONTORNOS LIMPOS e BORDAS DEFINIDAS para tatuadores profissionais.
-
-CONCEITO - SIMPLICIDADE E CLAREZA:
-Transforme a imagem em um desenho de linhas puras, focando em:
-- Contornos principais NÍTIDOS e DEFINIDOS
-- Bordas LIMPAS sem excesso de informação
-- Hierarquia clara: primeiro plano vs. fundo
-- Legibilidade máxima para aplicação na pele
-
-DIRETRIZES PARA LINHAS PERFEITAS:
-
-1. CONTORNOS PRINCIPAIS:
-   - Identifique as BORDAS PRINCIPAIS de cada elemento
-   - Desenhe linhas LIMPAS e CONTÍNUAS
-   - Evite linhas tremidas ou hesitantes
-   - Foco na SILHUETA e FORMA GERAL
-   - Linhas GROSSAS para contornos externos
-   - Linhas FINAS para detalhes internos
-
-2. SELETIVIDADE DE DETALHES:
-   - NÃO tente capturar TODOS os detalhes
-   - Escolha os detalhes ESSENCIAIS para reconhecimento
-   - Simplifique texturas complexas em padrões claros
-   - Agrupe pequenos detalhes em formas maiores quando possível
-   - Priorize CLAREZA sobre QUANTIDADE de linhas
-
-3. HIERARQUIA VISUAL:
-   - Primeiro plano: linhas mais grossas e definidas
-   - Segundo plano: linhas médias
-   - Fundo: linhas finas ou omitidas
-   - Crie PROFUNDIDADE através da espessura, não da densidade
-
-4. CABELOS E TEXTURAS:
-   - Simplifique cabelos em DIREÇÕES e FLUXOS principais
-   - NÃO desenhe cada fio individualmente
-   - Use linhas direcionais que mostram o MOVIMENTO
-   - Agrupe mechas em formas maiores
-   - Mantenha as linhas FLUIDAS e ELEGANTES
-
-5. LIMPEZA E CLAREZA:
-   - ZERO preenchimento sólido (a menos que seja crucial)
-   - ZERO sombreado com densidade de linhas
-   - ZERO texturas complexas desnecessárias
-   - Apenas linhas essenciais e bem posicionadas
-   - Espaços em branco são BEM-VINDOS (deixam a pele "respirar")
-
-6. ESTILO VETORIAL:
-   - Linhas devem parecer desenhadas à mão por um ilustrador habilidoso
-   - Curvas suaves e naturais
-   - Cantos e encontros limpos
-   - Espessura consistente em cada linha
-   - Resultado final: elegante, legível, tatável
-
-IMPORTANTE:
-- Este é um estêncil de LINHAS, não topográfico
-- Menos linhas = mais clareza = melhor aplicação na pele
-- Qualidade > Quantidade
-- O tatuador precisa VER CLARAMENTE cada linha para tatuar
+⚠️ AJUSTE PARA PERFECT LINES - DETALHES E PROFUNDIDADE:
+- Use TODAS as diretrizes topográficas (1, 2, 3, 4, 5)
+- Mantenha 100% DE FIDELIDADE à imagem original
+- CAPTURE MÁXIMA PROFUNDIDADE através de:
+  * Variação de densidade (áreas densas = sombra profunda)
+  * Variação de espessura (linhas mais finas = detalhes sutis)
+  * Curvatura que segue o volume 3D
+- Resultado: estêncil com DIMENSÃO e PROFUNDIDADE realista
+- Todos os detalhes presentes com sensação de volume 3D
 
 PÚBLICO-ALVO:
-Tatuadores que precisam de um guia limpo e claro de contornos para aplicação precisa.
+Tatuadores profissionais que precisam de máxima referência de volume e detalhes.
 
 SAÍDA:
-Gere APENAS a imagem do estêncil com linhas limpas e definidas. Sem texto.`;
+Gere APENAS a imagem do estêncil com MÁXIMA profundidade e detalhes em linhas. Sem texto.`;
 
 // Modelo para operações apenas texto (análise de cores)
 const textModel = genAI.getGenerativeModel({
@@ -180,26 +170,24 @@ const textModel = genAI.getGenerativeModel({
   }
 });
 
-// Gerar estêncil a partir de imagem
+// Gerar estêncil a partir de imagem usando mapeamento topográfico
 export async function generateStencilFromImage(
   base64Image: string,
   promptDetails: string = '',
   style: 'standard' | 'perfect_lines' = 'standard'
 ): Promise<string> {
-  // AGORA ESTÁ CORRETO:
-  // 'standard' = Topográfico (densidade, detalhes, curvas de nível)
-  // 'perfect_lines' = Linhas Perfeitas (contornos limpos, simplicidade)
-  
-  const systemInstruction = style === 'standard'
-    ? TOPOGRAPHIC_INSTRUCTION
-    : PERFECT_LINES_INSTRUCTION;
+  // Selecionar system instruction baseado no estilo
+  const systemInstruction = style === 'perfect_lines'
+    ? PERFECT_LINES_INSTRUCTION
+    : TOPOGRAPHIC_INSTRUCTION;
 
-  const model = style === 'standard' ? topographicModel : linesModel;
+  // Selecionar modelo baseado no estilo
+  const model = style === 'perfect_lines' ? linesModel : topographicModel;
   
   // Log detalhado para debug
-  const modeInfo = style === 'standard' 
-    ? 'TOPOGRÁFICO (topographicModel - temp: 0.2 - densidade máxima)' 
-    : 'LINHAS PERFEITAS (linesModel - temp: 0.3 - contornos limpos)';
+  const modeInfo = style === 'perfect_lines' 
+    ? 'LINHAS (temp: 0.3, topP: 0.9, topK: 32)' 
+    : 'TOPOGRÁFICO (temp: 0.2, topP: 0.85, topK: 20)';
   console.log(`[Gemini] ▶ Gerando estêncil - Modo: ${modeInfo}`);
 
   // Construir prompt final
@@ -207,6 +195,7 @@ export async function generateStencilFromImage(
 
   const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
 
+  // Usar retry logic para lidar com falhas temporárias do Gemini
   return retryGeminiAPI(async () => {
     try {
       const result = await model.generateContent([
@@ -224,7 +213,7 @@ export async function generateStencilFromImage(
 
       if (parts) {
         for (const part of parts) {
-          // @ts-ignore
+          // @ts-ignore - Check for inline image data
           if (part.inlineData) {
             // @ts-ignore
             return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
@@ -232,6 +221,7 @@ export async function generateStencilFromImage(
         }
       }
 
+      // Se não retornou imagem, logar resposta para debug
       console.error('Resposta do Gemini:', JSON.stringify(response, null, 2));
       throw new Error('Modelo não retornou imagem no formato esperado');
     } catch (error: any) {
@@ -315,6 +305,7 @@ IMPORTANTE:
 
 GERE A IMAGEM AGORA:`;
 
+  // Usar retry logic para lidar com falhas temporárias do Gemini
   return retryGeminiAPI(async () => {
     try {
       const result = await textToImageModel.generateContent(tattooPrompt);
@@ -331,6 +322,7 @@ GERE A IMAGEM AGORA:`;
         }
       }
 
+      // Se chegou aqui, o modelo retornou texto ao invés de imagem
       const text = response.text();
       console.error('Gemini retornou texto ao invés de imagem:', text);
       throw new Error('Falha ao gerar imagem. O modelo retornou apenas texto.');
@@ -398,7 +390,8 @@ IMPORTANTE:
 
 RETORNE: A imagem aprimorada em 4K Ultra HD com máxima qualidade.`;
 
-  let mimeType = 'image/jpeg';
+  // Detectar o mimeType original da imagem
+  let mimeType = 'image/jpeg'; // fallback padrão
   const mimeMatch = base64Image.match(/^data:([^;]+);base64,/);
   if (mimeMatch) {
     mimeType = mimeMatch[1];
@@ -510,7 +503,8 @@ IMPORTANTE:
 
 ANALISE A IMAGEM AGORA:`;
 
-  let mimeType = 'image/jpeg';
+  // Detectar o mimeType original da imagem
+  let mimeType = 'image/jpeg'; // fallback padrão
   const mimeMatch = base64Image.match(/^data:([^;]+);base64,/);
   if (mimeMatch) {
     mimeType = mimeMatch[1];
@@ -532,13 +526,16 @@ ANALISE A IMAGEM AGORA:`;
     const response = result.response;
     const text = response.text();
 
+    // Tentar extrair JSON (aceita markdown code blocks ou JSON puro)
     let jsonText = text;
 
+    // Remover markdown code blocks se existirem
     const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (codeBlockMatch) {
       jsonText = codeBlockMatch[1].trim();
     }
 
+    // Extrair JSON puro
     const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       console.error('Resposta do Gemini não contém JSON:', text);
@@ -547,6 +544,7 @@ ANALISE A IMAGEM AGORA:`;
 
     const parsedData = JSON.parse(jsonMatch[0]);
 
+    // Validar estrutura básica
     if (!parsedData.summary || !Array.isArray(parsedData.colors)) {
       throw new Error('JSON inválido: faltam campos obrigatórios (summary, colors)');
     }
