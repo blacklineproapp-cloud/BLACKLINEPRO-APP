@@ -8,11 +8,14 @@ const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
 async function isAdmin(userId: string): Promise<boolean> {
   const { data: user } = await supabaseAdmin
     .from('users')
-    .select('email')
+    .select('email, is_admin')
     .eq('clerk_id', userId)
     .single();
   
-  return user ? ADMIN_EMAILS.includes(user.email) : false;
+  // Comparação case-insensitive
+  const userEmailLower = user?.email?.toLowerCase() || '';
+  const isAdminByEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
+  return user ? (isAdminByEmail || user.is_admin) : false;
 }
 
 // GET - Estatísticas gerais do app (OTIMIZADO)

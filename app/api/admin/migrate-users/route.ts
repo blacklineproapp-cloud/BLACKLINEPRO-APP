@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-// Emails com acesso admin
+// Emails com acesso admin (case-insensitive)
 const ADMIN_EMAILS = [
   'erickrussomat@gmail.com',
   'yurilojavirtual@gmail.com',
@@ -15,7 +15,10 @@ async function isAdmin(userId: string): Promise<boolean> {
     .eq('clerk_id', userId)
     .single();
 
-  return user ? (ADMIN_EMAILS.includes(user.email) || user.is_admin) : false;
+  // Comparação case-insensitive
+  const userEmailLower = user?.email?.toLowerCase() || '';
+  const isAdminByEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
+  return user ? (isAdminByEmail || user.is_admin) : false;
 }
 
 /**
