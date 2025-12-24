@@ -90,6 +90,9 @@ export const PLAN_LIMITS: Record<PlanType, Record<OperationType, number | null>>
   },
 };
 
+// Lista de emails admin com acesso ilimitado
+const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
+
 /**
  * Verifica se usuário tem créditos/limites suficientes
  */
@@ -99,12 +102,19 @@ export async function canUseOperation(
 ): Promise<{ allowed: boolean; reason?: string }> {
   const { data: user, error } = await supabaseAdmin
     .from('users')
-    .select('plan, credits, usage_this_month, subscription_expires_at, subscription_status')
+    .select('email, plan, credits, usage_this_month, subscription_expires_at, subscription_status')
     .eq('clerk_id', userId)
     .single();
 
   if (error || !user) {
     return { allowed: false, reason: 'Usuário não encontrado' };
+  }
+
+  // 🔓 BYPASS PARA ADMINS - acesso ilimitado
+  const userEmailLower = user.email?.toLowerCase() || '';
+  if (ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower)) {
+    console.log(`[Credits] Admin bypass para: ${user.email}`);
+    return { allowed: true };
   }
 
   // 🔒 VERIFICAR EXPIRAÇÃO DA ASSINATURA

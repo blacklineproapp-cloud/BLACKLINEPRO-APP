@@ -174,18 +174,35 @@ export async function POST(req: Request) {
         if (newPlan === 'free') {
           updates.is_paid = false;
           updates.tools_unlocked = false;
+          updates.subscription_status = 'inactive';
         } else if (newPlan === 'starter') {
           updates.is_paid = true;
           updates.tools_unlocked = false;
+          updates.subscription_status = 'active';
         } else if (newPlan === 'pro' || newPlan === 'studio') {
           updates.is_paid = true;
           updates.tools_unlocked = true;
+          updates.subscription_status = 'active';
         }
 
         await supabaseAdmin
           .from('users')
           .update(updates)
           .eq('id', targetUserId);
+
+        // Buscar clerk_id para invalidar cache
+        const { data: targetUser } = await supabaseAdmin
+          .from('users')
+          .select('clerk_id')
+          .eq('id', targetUserId)
+          .single();
+
+        // Invalidar cache do usuário
+        if (targetUser?.clerk_id) {
+          const { invalidateCache } = await import('@/lib/cache');
+          await invalidateCache(targetUser.clerk_id, 'users');
+          console.log(`[Admin] Cache invalidado para: ${targetUser.clerk_id}`);
+        }
 
         await supabaseAdmin.from('admin_logs').insert({
           admin_user_id: adminCheck.adminId!,
