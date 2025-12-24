@@ -10,6 +10,7 @@ CREATE TABLE public.ai_usage (
   model_used character varying,
   processing_time_ms integer,
   created_at timestamp with time zone DEFAULT now(),
+  usage_type character varying,
   CONSTRAINT ai_usage_pkey PRIMARY KEY (id),
   CONSTRAINT ai_usage_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
@@ -21,6 +22,19 @@ CREATE TABLE public.credit_transactions (
   stripe_payment_id character varying,
   created_at timestamp without time zone DEFAULT now(),
   CONSTRAINT credit_transactions_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.customers (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  stripe_customer_id character varying UNIQUE,
+  nome character varying,
+  email character varying,
+  phone character varying,
+  cpf_cnpj character varying,
+  created_at timestamp without time zone DEFAULT now(),
+  updated_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT customers_pkey PRIMARY KEY (id),
+  CONSTRAINT customers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
 CREATE TABLE public.payments (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -35,8 +49,16 @@ CREATE TABLE public.payments (
   description text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  customer_id uuid,
+  subscription_id uuid,
+  stripe_payment_intent_id character varying,
+  receipt_url character varying,
+  invoice_url character varying,
+  plan_type character varying,
   CONSTRAINT payments_pkey PRIMARY KEY (id),
-  CONSTRAINT payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+  CONSTRAINT payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT payments_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id),
+  CONSTRAINT payments_subscription_id_fkey FOREIGN KEY (subscription_id) REFERENCES public.subscriptions(id)
 );
 CREATE TABLE public.plan_changes (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -60,6 +82,25 @@ CREATE TABLE public.projects (
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT projects_pkey PRIMARY KEY (id),
   CONSTRAINT projects_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
+);
+CREATE TABLE public.subscriptions (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  customer_id uuid NOT NULL,
+  stripe_subscription_id character varying UNIQUE,
+  stripe_price_id character varying,
+  stripe_product_id character varying,
+  status character varying CHECK (status::text = ANY (ARRAY['active'::character varying, 'trialing'::character varying, 'past_due'::character varying, 'canceled'::character varying, 'unpaid'::character varying, 'incomplete'::character varying, 'incomplete_expired'::character varying, 'paused'::character varying]::text[])),
+  current_period_start timestamp without time zone,
+  current_period_end timestamp without time zone,
+  trial_start timestamp without time zone,
+  trial_end timestamp without time zone,
+  canceled_at timestamp without time zone,
+  ended_at timestamp without time zone,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamp without time zone DEFAULT now(),
+  updated_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
+  CONSTRAINT subscriptions_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id)
 );
 CREATE TABLE public.usage_logs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -86,7 +127,19 @@ CREATE TABLE public.users (
   last_login timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   credits integer DEFAULT 0 CHECK (credits >= 0),
-  plan character varying DEFAULT 'free'::character varying CHECK (plan::text = ANY (ARRAY['free'::character varying, 'pro'::character varying, 'studio'::character varying]::text[])),
+  plan character varying DEFAULT 'free'::character varying CHECK (plan::text = ANY (ARRAY['free'::character varying, 'starter'::character varying, 'pro'::character varying, 'studio'::character varying]::text[])),
   usage_this_month jsonb DEFAULT '{}'::jsonb,
+  daily_usage jsonb DEFAULT '{}'::jsonb,
   CONSTRAINT users_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.webhook_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  event character varying NOT NULL,
+  stripe_event_id character varying UNIQUE,
+  payload jsonb NOT NULL,
+  processed boolean DEFAULT false,
+  error text,
+  processed_at timestamp without time zone,
+  created_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT webhook_logs_pkey PRIMARY KEY (id)
 );

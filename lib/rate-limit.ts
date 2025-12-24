@@ -9,6 +9,10 @@ import { headers } from 'next/headers';
  * Diferentes limites por tipo de operação e plano do usuário
  */
 
+// 🎛️ CONTROLE: Permitir gerações gratuitas?
+// ENV: ALLOW_FREE_GENERATIONS=true para liberar, false/undefined para bloquear
+const ALLOW_FREE_GENERATIONS = process.env.ALLOW_FREE_GENERATIONS === 'true';
+
 // Configurar Redis do Upstash
 // IMPORTANTE: Adicionar variáveis de ambiente no .env:
 // UPSTASH_REDIS_REST_URL=https://...
@@ -49,7 +53,7 @@ export const apiLimiter = redis
 /**
  * Rate Limiter para geração de stencils (pesado)
  * Limite por plano:
- * - Free: BLOQUEADO (0 gerações)
+ * - Free: BLOQUEADO (ou 3/min se ALLOW_FREE_GENERATIONS=true)
  * - Starter: 5 gerações/minuto
  * - Pro: 10 gerações/minuto
  * - Studio: 20 gerações/minuto
@@ -59,9 +63,23 @@ export const createStencilLimiter = (plan: 'free' | 'starter' | 'pro' | 'studio'
   const validPlans = ['free', 'starter', 'pro', 'studio'];
   const validPlan = plan && validPlans.includes(plan) ? plan : 'free';
 
-  // 🔒 FREE SEMPRE BLOQUEADO - não precisa de Redis para isso!
+  // 🔒 FREE: Depende da variável de ambiente
   if (validPlan === 'free') {
-    return 'BLOCKED_FREE'; // Marcador especial para plano free
+    if (ALLOW_FREE_GENERATIONS) {
+      // Modo liberado: FREE pode gerar com limite de 3/min
+      console.log('[Rate Limit] 🟢 FREE liberado (ALLOW_FREE_GENERATIONS=true)');
+      if (!redis) return null;
+      return new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(3, '1 m'), // 3 gerações/minuto para free
+        analytics: true,
+        prefix: 'ratelimit:stencil:free',
+      });
+    } else {
+      // Modo bloqueado: FREE não pode gerar
+      console.log('[Rate Limit] 🔴 FREE bloqueado (ALLOW_FREE_GENERATIONS=false)');
+      return 'BLOCKED_FREE';
+    }
   }
 
   if (!redis) return null;

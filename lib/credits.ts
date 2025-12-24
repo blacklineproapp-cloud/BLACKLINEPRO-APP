@@ -99,12 +99,35 @@ export async function canUseOperation(
 ): Promise<{ allowed: boolean; reason?: string }> {
   const { data: user, error } = await supabaseAdmin
     .from('users')
-    .select('plan, credits, usage_this_month')
+    .select('plan, credits, usage_this_month, subscription_expires_at, subscription_status')
     .eq('clerk_id', userId)
     .single();
 
   if (error || !user) {
     return { allowed: false, reason: 'Usuário não encontrado' };
+  }
+
+  // 🔒 VERIFICAR EXPIRAÇÃO DA ASSINATURA
+  if (user.subscription_expires_at) {
+    const expiresAt = new Date(user.subscription_expires_at);
+    const now = new Date();
+    
+    if (expiresAt < now) {
+      // Assinatura expirou! Atualizar status e bloquear
+      await supabaseAdmin
+        .from('users')
+        .update({ 
+          subscription_status: 'expired',
+          is_paid: false,
+          plan: 'free'
+        })
+        .eq('clerk_id', userId);
+      
+      return { 
+        allowed: false, 
+        reason: 'Sua assinatura expirou. Renove para continuar gerando estêncils.' 
+      };
+    }
   }
 
   // Validar plano com fallback seguro - FREE para não pagantes!

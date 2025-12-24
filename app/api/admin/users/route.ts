@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 // Lista de emails com acesso admin
 const ADMIN_EMAILS = [
   'erickrussomat@gmail.com',
+  'yurilojavirtual@gmail.com',
 ];
 
 // Middleware para verificar admin

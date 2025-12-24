@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getOrSetCache } from '@/lib/cache';
 
-const ADMIN_EMAILS = ['erickrussomat@gmail.com'];
+const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
 
 async function isAdmin(userId: string): Promise<boolean> {
   const { data: user } = await supabaseAdmin

@@ -2,6 +2,9 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
+// Emails com acesso admin
+const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
+
 export async function GET(req: Request) {
   try {
     const { userId } = await auth();
@@ -10,14 +13,16 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    // Verificar se é admin
+    // Verificar se é admin (por email OU campo is_admin)
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('is_admin')
+      .select('email, is_admin')
       .eq('clerk_id', userId)
       .single();
 
-    if (!user?.is_admin) {
+    const isAdmin = user && (ADMIN_EMAILS.includes(user.email) || user.is_admin);
+    
+    if (!isAdmin) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
