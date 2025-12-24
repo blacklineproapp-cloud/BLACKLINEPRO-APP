@@ -48,7 +48,7 @@ export default function Home() {
   //   }
   // }, [isLoaded, isSignedIn, router]);
 
-  // Buscar estatísticas
+  // Buscar estatísticas (sempre, independente do login)
   useEffect(() => {
     async function fetchStats() {
       try {
@@ -62,10 +62,11 @@ export default function Home() {
       }
     }
 
-    if (isLoaded && !isSignedIn) {
+    // Sempre buscar stats quando a página carregar
+    if (isLoaded) {
       fetchStats();
     }
-  }, [isLoaded, isSignedIn]);
+  }, [isLoaded]);
 
   // Não renderizar nada enquanto verifica autenticação
   if (!isLoaded) {
