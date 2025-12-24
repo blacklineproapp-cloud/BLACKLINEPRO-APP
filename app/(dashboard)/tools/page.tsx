@@ -813,7 +813,7 @@ export default function ToolsPage() {
                         <Palette size={18} /> Tintas Recomendadas
                       </h3>
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                        <p className="text-zinc-400 text-xs lg:text-sm italic pr-2">"{colorResult.summary}"</p>
+                        <p className="text-zinc-400 text-xs lg:text-sm italic pr-2">&quot;{colorResult.summary}&quot;</p>
                         <span className="text-[10px] bg-pink-900/30 text-pink-300 border border-pink-800 px-2 py-1 rounded whitespace-nowrap self-start sm:self-auto">
                           {selectedBrand}
                         </span>
