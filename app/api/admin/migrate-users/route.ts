@@ -11,14 +11,13 @@ const ADMIN_EMAILS = [
 async function isAdmin(userId: string): Promise<boolean> {
   const { data: user } = await supabaseAdmin
     .from('users')
-    .select('email, is_admin')
+    .select('email')
     .eq('clerk_id', userId)
     .single();
 
-  // Comparação case-insensitive
+  // Comparação case-insensitive (apenas por email)
   const userEmailLower = user?.email?.toLowerCase() || '';
-  const isAdminByEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
-  return user ? (isAdminByEmail || user.is_admin) : false;
+  return user ? ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower) : false;
 }
 
 /**

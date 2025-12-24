@@ -17,20 +17,20 @@ export async function GET() {
       }, { status: 401 });
     }
 
-    // Buscar usuário no Supabase
+    // Buscar usuário no Supabase (sem is_admin pois não existe)
     const { data: user, error } = await supabaseAdmin
       .from('users')
-      .select('id, email, clerk_id, is_admin, is_paid, plan, subscription_status')
+      .select('id, email, clerk_id, is_paid, plan, subscription_status')
       .eq('clerk_id', userId)
       .single();
 
     // Lista de emails admin
     const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
     
-    // Verificar admin
+    // Verificar admin apenas por email
     const userEmailLower = user?.email?.toLowerCase() || '';
     const isAdminByEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
-    const hasAdminAccess = user && (isAdminByEmail || user.is_admin);
+    const hasAdminAccess = user && isAdminByEmail;
 
     return NextResponse.json({
       clerkUserId: userId,
@@ -40,14 +40,13 @@ export async function GET() {
         userEmail: user?.email,
         userEmailLower,
         isAdminByEmail,
-        isAdminInDB: user?.is_admin,
         hasAdminAccess,
         adminEmails: ADMIN_EMAILS,
       },
       recommendation: !user 
         ? 'Usuário NÃO existe no Supabase. Faça logout e login novamente para criar.'
         : !hasAdminAccess 
-          ? `Email ${user?.email} não está na lista de admins ou is_admin=false`
+          ? `Email ${user?.email} não está na lista de admins`
           : 'Tudo OK! Deveria ter acesso admin.'
     });
 

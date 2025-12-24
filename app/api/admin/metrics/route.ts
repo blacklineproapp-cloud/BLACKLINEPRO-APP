@@ -13,10 +13,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    // Verificar se é admin (por email OU campo is_admin)
+    // Verificar se é admin (apenas por email, sem campo is_admin)
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
-      .select('email, is_admin')
+      .select('email')
       .eq('clerk_id', userId)
       .single();
 
@@ -24,14 +24,12 @@ export async function GET(req: Request) {
     console.log('[Admin Check]', { 
       clerkId: userId, 
       userEmail: user?.email, 
-      isAdmin: user?.is_admin,
       error: userError?.message 
     });
 
     // Comparação case-insensitive
     const userEmailLower = user?.email?.toLowerCase() || '';
-    const isAdminByEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
-    const isAdmin = user && (isAdminByEmail || user.is_admin);
+    const isAdmin = user && ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
     
     if (!isAdmin) {
       console.log('[Admin Check] ACESSO NEGADO para:', user?.email);

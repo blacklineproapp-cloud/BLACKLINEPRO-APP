@@ -12,14 +12,13 @@ const ADMIN_EMAILS = [
 async function isAdmin(userId: string): Promise<{ isAdmin: boolean; adminId?: string }> {
   const { data: user, error } = await supabaseAdmin
     .from('users')
-    .select('id, email, is_admin')
+    .select('id, email')
     .eq('clerk_id', userId)
     .single();
 
-  // Comparação case-insensitive
+  // Comparação case-insensitive (apenas por email, sem campo is_admin no banco)
   const userEmailLower = user?.email?.toLowerCase() || '';
-  const isAdminByEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
-  const hasAccess = user && (isAdminByEmail || user.is_admin);
+  const hasAccess = !!(user && ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower));
   
   console.log('[Admin Users] Check:', { email: user?.email, hasAccess, error: error?.message });
   
