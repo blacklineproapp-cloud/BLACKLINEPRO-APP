@@ -5,11 +5,14 @@ import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import CheckoutModal from '@/components/CheckoutModal';
+import { BILLING_CYCLES, PLAN_PRICING, formatPrice, getMonthlyEquivalent } from '@/lib/billing/plans';
+import type { BillingCycle } from '@/lib/stripe/types';
 
 export default function PricingPage() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | 'studio' | null>(null);
+  const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSelectPlan = (planId: string) => {
@@ -25,8 +28,7 @@ export default function PricingPage() {
     {
       id: 'starter',
       name: 'Starter',
-      price: 'R$ 50',
-      period: '/mês',
+      basePrice: 50,
       limit: '100 gerações/mês',
       description: 'Ideal para começar',
       icon: Zap,
@@ -47,8 +49,7 @@ export default function PricingPage() {
     {
       id: 'pro',
       name: 'Pro',
-      price: 'R$ 100',
-      period: '/mês',
+      basePrice: 100,
       limit: '500 gerações/mês',
       description: 'Para tatuadores profissionais',
       icon: Crown,
@@ -71,8 +72,7 @@ export default function PricingPage() {
     {
       id: 'studio',
       name: 'Studio',
-      price: 'R$ 300',
-      period: '/mês',
+      basePrice: 300,
       limit: 'Ilimitado',
       description: 'Para estúdios e uso intensivo',
       icon: Sparkles,
@@ -117,6 +117,36 @@ export default function PricingPage() {
 
       {/* Pricing Cards */}
       <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
+        {/* Billing Cycle Selector */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex flex-wrap items-center justify-center gap-2 p-1.5 bg-zinc-900 border border-zinc-800 rounded-xl max-w-full">
+            {(Object.entries(BILLING_CYCLES) as [BillingCycle, typeof BILLING_CYCLES[BillingCycle]][]).map(([cycle, info]) => (
+              <button
+                key={cycle}
+                onClick={() => setSelectedCycle(cycle)}
+                className={`relative px-3 sm:px-4 py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all ${
+                  selectedCycle === cycle
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                }`}
+              >
+                <div className="flex flex-col items-center">
+                  <span className="whitespace-nowrap">{info.label}</span>
+                  {info.badge && selectedCycle === cycle && (
+                    <span className="text-[9px] sm:text-[10px] text-emerald-200 mt-0.5 hidden sm:inline">{info.badge}</span>
+                  )}
+                  {info.badge && selectedCycle !== cycle && (
+                    <span className="text-[9px] sm:text-[10px] text-emerald-400 mt-0.5 hidden sm:inline">{info.badge}</span>
+                  )}
+                  {info.discount > 0 && (
+                    <span className="text-[9px] text-emerald-400 mt-0.5 sm:hidden">-{info.discount}%</span>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Como Funciona */}
         <div className="bg-emerald-900/10 border border-emerald-800/30 rounded-2xl p-6 mb-8">
           <div className="flex items-start gap-4">
@@ -126,150 +156,131 @@ export default function PricingPage() {
             <div>
               <h2 className="text-lg font-bold text-white mb-2">Como Funciona</h2>
               <p className="text-sm text-zinc-400 mb-3">
-                Assine e use o StencilFlow durante todo o mês. Cada plano tem um limite de gerações incluído.
+                Assine e use o StencilFlow durante todo o período escolhido. Cada plano tem um limite de gerações mensal incluído.
               </p>
               <ul className="text-sm text-zinc-400 space-y-1">
-                <li>• <strong className="text-white">Assinatura mensal recorrente</strong></li>
-                <li>• Cancele a qualquer momento</li>
-                <li>• Limites renovam todo mês</li>
-                <li>• Acesso imediato após pagamento</li>
+                <li>• <strong className="text-white">Assinatura recorrente</strong> - Renovação automática</li>
+                <li>• Cancele a qualquer momento - Sem multas ou taxas</li>
+                <li>• Limites renovam todo mês - Mesmo em planos anuais</li>
+                <li>• Acesso imediato após pagamento - Comece a usar agora</li>
+                {selectedCycle !== 'monthly' && (
+                  <li className="text-emerald-400">
+                    • <strong>Economize {BILLING_CYCLES[selectedCycle].discount}%</strong> pagando {BILLING_CYCLES[selectedCycle].label.toLowerCase()}
+                  </li>
+                )}
               </ul>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-          {packages.map((pkg) => (
-            <div
-              key={pkg.id}
-              className={`relative bg-gradient-to-br ${pkg.bgGradient} border-2 ${pkg.borderColor} rounded-2xl p-6 sm:p-8 flex flex-col ${
-                pkg.popular ? 'ring-2 ring-purple-500 ring-offset-2 ring-offset-black' : ''
-              }`}
-            >
-              {/* Popular Badge */}
-              {pkg.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-purple-500 text-white px-4 py-1 rounded-full text-xs font-bold">
-                  MAIS POPULAR
-                </div>
-              )}
+          {packages.map((pkg) => {
+            const pricing = PLAN_PRICING[pkg.id as 'starter' | 'pro' | 'studio'];
+            const totalPrice = pricing[selectedCycle];
+            const monthlyEquivalent = getMonthlyEquivalent(pkg.id as 'starter' | 'pro' | 'studio', selectedCycle);
+            const savings = selectedCycle !== 'monthly' ? pkg.basePrice - monthlyEquivalent : 0;
 
-              {/* Icon */}
-              <div className={`w-12 h-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-4`}>
-                <pkg.icon className={`${pkg.iconColor}`} size={24} />
-              </div>
-
-              {/* Package Name */}
-              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                {pkg.name}
-              </h3>
-
-              {/* Description */}
-              <p className="text-sm text-zinc-400 mb-4">
-                {pkg.description}
-              </p>
-
-              {/* Price */}
-              <div className="mb-6">
-                <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-3xl sm:text-4xl font-bold text-white">
-                    {pkg.price}
-                  </span>
-                  <span className="text-zinc-400 text-lg">
-                    {pkg.period}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-zinc-400">
-                  {pkg.limit === 'Ilimitado' ? (
-                    <>
-                      <Infinity className="w-4 h-4 text-amber-400" />
-                      <span className="text-amber-400 font-medium">{pkg.limit}</span>
-                    </>
-                  ) : (
-                    <span>{pkg.limit}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Features */}
-              <ul className="space-y-3 mb-8 flex-1">
-                {pkg.features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-3 text-sm">
-                    <Check className="text-emerald-500 shrink-0 mt-0.5" size={16} />
-                    <span className="text-zinc-300">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA Button */}
-              <button
-                onClick={() => handleSelectPlan(pkg.id)}
-                className={`w-full py-3 sm:py-4 rounded-xl font-bold text-white ${pkg.buttonColor} transition-all shadow-lg`}
+            return (
+              <div
+                key={pkg.id}
+                className={`relative bg-gradient-to-br ${pkg.bgGradient} border-2 ${pkg.borderColor} rounded-2xl p-6 sm:p-8 flex flex-col ${
+                  pkg.popular ? 'ring-2 ring-purple-500 ring-offset-2 ring-offset-black' : ''
+                }`}
               >
-                Assinar Agora
-              </button>
-            </div>
-          ))}
+                {/* Popular Badge */}
+                {pkg.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                      <Crown size={12} />
+                      MAIS POPULAR
+                    </div>
+                  </div>
+                )}
+
+                {/* Icon */}
+                <div
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-4 ${
+                    pkg.id === 'starter' ? 'bg-emerald-600/10 border border-emerald-500/30' :
+                    pkg.id === 'pro' ? 'bg-purple-600/10 border border-purple-500/30' :
+                    'bg-amber-600/10 border border-amber-500/30'
+                  }`}
+                >
+                  <pkg.icon className={pkg.iconColor} size={28} />
+                </div>
+
+                {/* Plan Name */}
+                <h3 className="text-2xl font-bold text-white mb-1">{pkg.name}</h3>
+                <p className="text-zinc-400 text-sm mb-4">{pkg.description}</p>
+
+                {/* Price */}
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold text-white">
+                      {formatPrice(monthlyEquivalent)}
+                    </span>
+                    <span className="text-zinc-500 text-sm">/mês</span>
+                  </div>
+                  {selectedCycle !== 'monthly' && (
+                    <div className="mt-2 space-y-1">
+                      <p className="text-xs text-zinc-500">
+                        Cobrança {selectedCycle === 'quarterly' ? 'trimestral' : selectedCycle === 'semiannual' ? 'semestral' : 'anual'}: <strong className="text-white">{formatPrice(totalPrice)}</strong>
+                      </p>
+                      <p className="text-xs text-emerald-400 font-medium">
+                        ✓ Economize {formatPrice(savings)}/mês ({BILLING_CYCLES[selectedCycle].discount}% off)
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-zinc-500 text-xs mt-2">{pkg.limit}</p>
+                </div>
+
+                {/* Features */}
+                <ul className="space-y-3 mb-8 flex-grow">
+                  {pkg.features.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <Check size={18} className="text-emerald-500 flex-shrink-0 mt-0.5" />
+                      <span className="text-zinc-300">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA Button */}
+                <button
+                  onClick={() => handleSelectPlan(pkg.id)}
+                  className={`w-full ${pkg.buttonColor} text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg`}
+                >
+                  Assinar {pkg.name}
+                </button>
+              </div>
+            );
+          })}
         </div>
 
-        {/* FAQ / Info */}
-        <div className="mt-12 sm:mt-16 bg-zinc-900 border border-zinc-800 rounded-2xl p-6 sm:p-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-6">
-            Perguntas Frequentes
-          </h2>
-
-          <div className="space-y-6 text-sm sm:text-base">
+        {/* FAQ/Info adicional */}
+        <div className="mt-12 bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+          <h3 className="text-white font-bold text-lg mb-4">Perguntas Frequentes</h3>
+          <div className="space-y-4 text-sm">
             <div>
-              <h3 className="text-white font-semibold mb-2">
-                O que acontece quando atinjo o limite?
-              </h3>
-              <p className="text-zinc-400">
-                Você pode fazer upgrade para um plano maior ou aguardar a renovação mensal.
-              </p>
+              <p className="text-white font-medium mb-1">Posso mudar de plano depois?</p>
+              <p className="text-zinc-400">Sim! Você pode fazer upgrade ou downgrade a qualquer momento.</p>
             </div>
-
             <div>
-              <h3 className="text-white font-semibold mb-2">
-                Posso cancelar a qualquer momento?
-              </h3>
-              <p className="text-zinc-400">
-                Sim! Você pode cancelar sua assinatura quando quiser. O acesso continua até o fim do período pago.
-              </p>
+              <p className="text-white font-medium mb-1">Como funciona o cancelamento?</p>
+              <p className="text-zinc-400">Você pode cancelar quando quiser. Continuará com acesso até o fim do período pago.</p>
             </div>
-
             <div>
-              <h3 className="text-white font-semibold mb-2">
-                Como funciona o pagamento?
-              </h3>
-              <p className="text-zinc-400">
-                Os pagamentos são processados de forma segura via Stripe. A cobrança é mensal e automática.
-              </p>
+              <p className="text-white font-medium mb-1">Aceitam quais formas de pagamento?</p>
+              <p className="text-zinc-400">Cartão de crédito e boleto bancário (para planos anuais).</p>
             </div>
-
-            <div>
-              <h3 className="text-white font-semibold mb-2">
-                Posso trocar de plano depois?
-              </h3>
-              <p className="text-zinc-400">
-                Sim! Você pode fazer upgrade ou downgrade a qualquer momento. A diferença é calculada automaticamente.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-white font-semibold mb-2">
-                Qual a diferença entre os planos?
-              </h3>
-              <p className="text-zinc-400">
-                O <strong>Starter</strong> oferece o editor completo. O <strong>Pro</strong> adiciona geração IA, Color Match e ferramentas avançadas. O <strong>Studio</strong> oferece uso ilimitado para estúdios.
-              </p>
-            </div>
+            {selectedCycle !== 'monthly' && (
+              <div>
+                <p className="text-white font-medium mb-1">Como funciona a renovação do plano {selectedCycle === 'quarterly' ? 'trimestral' : selectedCycle === 'semiannual' ? 'semestral' : 'anual'}?</p>
+                <p className="text-zinc-400">
+                  Renovação automática a cada {selectedCycle === 'quarterly' ? '3 meses' : selectedCycle === 'semiannual' ? '6 meses' : '12 meses'}.
+                  Você receberá um email 7 dias antes da renovação.
+                </p>
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* Contact Support */}
-        <div className="mt-8 text-center">
-          <p className="text-zinc-500 text-sm">
-            Tem dúvidas? Entre em contato: <a href="mailto:suporte@stencilflow.com" className="text-emerald-500 hover:text-emerald-400 underline">suporte@stencilflow.com</a>
-          </p>
         </div>
       </div>
 
@@ -277,8 +288,12 @@ export default function PricingPage() {
       {selectedPlan && (
         <CheckoutModal
           plan={selectedPlan}
+          cycle={selectedCycle}
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedPlan(null);
+          }}
         />
       )}
     </div>

@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import DownloadControls from '@/components/split-a4/DownloadControls';
 import { Wand2, Palette, Upload, Download, Copy, Check, ArrowRight, X, Droplet, ChevronUp, ChevronDown, Grid3x3, Image as ImageIcon } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { TileData } from '@/lib/download-helpers';
 
 const InteractiveGridPreview = dynamic(() => import('@/components/InteractiveGridPreview'), { ssr: false });
 
@@ -904,31 +906,30 @@ export default function ToolsPage() {
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-3 border-t border-zinc-800 space-y-2">
-                      <div className="flex justify-between items-center">
+                    <div className="mt-3 pt-3 border-t border-zinc-800 space-y-3">
+                      {/* Download Controls (ZIP/PDF/Individual) */}
+                      <DownloadControls
+                        tiles={splitResult.pages?.map((page: any) => ({
+                          image: page.imageData,
+                          pageNumber: page.pageNumber,
+                          row: page.position.row,
+                          col: page.position.col
+                        } as TileData)) || []}
+                        filename={`stencil-${paperSize.toLowerCase()}-${splitResult.pages?.length}folhas`}
+                        paperFormat={paperSize.toLowerCase() as 'a4' | 'a3' | 'letter'}
+                        orientation={orientation}
+                      />
+
+                      <div className="space-y-2">
                         <p className="text-[10px] text-zinc-600">
                           * Imprima em {paperSize} {orientation === 'portrait' ? 'retrato' : 'paisagem'} sem margens
                         </p>
-                        <button
-                          onClick={() => {
-                            splitResult.pages?.forEach((page: any) => {
-                              const link = document.createElement('a');
-                              link.href = page.imageData;
-                              link.download = `page-${page.pageNumber}-${paperSize.toLowerCase()}.png`;
-                              link.click();
-                            });
-                          }}
-                          className="text-xs text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1"
-                        >
-                          <Download size={14} />
-                          Baixar {splitResult.pages?.length} Páginas
-                        </button>
+                        {overlapCm > 0 && (
+                          <div className="bg-purple-900/20 border border-purple-800/30 rounded p-2 text-[10px] text-purple-300">
+                            💡 <strong>{overlapCm}cm de overlap</strong> entre páginas para facilitar a colagem/alinhamento
+                          </div>
+                        )}
                       </div>
-                      {overlapCm > 0 && (
-                        <div className="bg-purple-900/20 border border-purple-800/30 rounded p-2 text-[10px] text-purple-300">
-                          💡 <strong>{overlapCm}cm de overlap</strong> entre páginas para facilitar a colagem/alinhamento
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}

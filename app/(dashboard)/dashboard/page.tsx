@@ -30,5 +30,33 @@ export default async function DashboardPage() {
 
   const isSubscribed = user.is_paid && user.subscription_status === 'active';
 
-  return <DashboardClient projects={projects || []} isSubscribed={isSubscribed} />;
+  // Buscar uso do mês atual
+  const now = new Date();
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const { data: usageData } = await supabaseAdmin
+    .from('ai_usage')
+    .select('id')
+    .eq('user_id', user.id)
+    .gte('created_at', firstDayOfMonth.toISOString());
+
+  const currentUsage = usageData?.length || 0;
+
+  // Determinar limite baseado no plano
+  const limits: Record<string, number | null> = {
+    'starter': 100,
+    'pro': 500,
+    'studio': null // ilimitado
+  };
+  const monthlyLimit = limits[user.plan as string] || 100;
+
+  return (
+    <DashboardClient
+      projects={projects || []}
+      isSubscribed={isSubscribed}
+      currentUsage={currentUsage}
+      monthlyLimit={monthlyLimit}
+      userPlan={user.plan as string}
+    />
+  );
 }

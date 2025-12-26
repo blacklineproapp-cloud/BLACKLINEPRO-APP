@@ -6,7 +6,7 @@ import {
   ColorMatchJobData,
 } from './queue';
 import { generateStencilFromImage, enhanceImage, generateTattooIdea, analyzeImageColors } from './gemini';
-import { consumeOperation } from './credits';
+import { recordUsage } from './billing/limits';
 import { supabaseAdmin } from './supabase';
 import { Redis } from 'ioredis';
 
@@ -55,26 +55,30 @@ export const stencilWorker = new Worker<StencilJobData>(
       await job.updateProgress(30);
       const stencilImage = await generateStencilFromImage(image, promptDetails, style);
 
-      // 3. Consumir crédito
+      // 3. Buscar user ID (UUID) do banco
       await job.updateProgress(80);
-      const consumeResult = await consumeOperation(userId, operationType);
 
-      if (!consumeResult.success) {
-        console.error(`[Worker] Erro ao consumir crédito: ${consumeResult.error}`);
-        // Não falhar o job por isso, apenas logar
-      }
-
-      // 4. Salvar no banco (opcional - para histórico)
-      await job.updateProgress(90);
-
-      // Buscar user ID (UUID) do banco
       const { data: user } = await supabaseAdmin
         .from('users')
         .select('id')
         .eq('clerk_id', userId)
         .single();
 
+      // 4. Registrar uso
       if (user) {
+        await recordUsage({
+          userId: user.id,
+          type: 'editor_generation',
+          metadata: {
+            style: style === 'perfect_lines' ? 'perfect_lines' : 'standard',
+            operation: operationType,
+            via: 'queue'
+          }
+        });
+
+        // Salvar no banco (opcional - para histórico)
+        await job.updateProgress(90);
+
         await supabaseAdmin.from('projects').insert({
           user_id: user.id,
           name: `Stencil ${new Date().toLocaleDateString()}`,
@@ -125,7 +129,24 @@ export const enhanceWorker = new Worker<EnhanceJobData>(
       const enhancedImage = await enhanceImage(image);
 
       await job.updateProgress(80);
-      await consumeOperation(userId, 'enhance');
+
+      // Buscar UUID do usuário
+      const { data: user } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('clerk_id', userId)
+        .single();
+
+      if (user) {
+        await recordUsage({
+          userId: user.id,
+          type: 'tool_usage',
+          metadata: {
+            tool: 'enhance',
+            via: 'queue'
+          }
+        });
+      }
 
       await job.updateProgress(100);
 
@@ -161,7 +182,25 @@ export const iaGenWorker = new Worker<IaGenJobData>(
       const generatedImage = await generateTattooIdea(prompt, size);
 
       await job.updateProgress(80);
-      await consumeOperation(userId, 'ia_gen');
+
+      // Buscar UUID do usuário
+      const { data: user } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('clerk_id', userId)
+        .single();
+
+      if (user) {
+        await recordUsage({
+          userId: user.id,
+          type: 'ai_request',
+          metadata: {
+            operation: 'ia_gen',
+            prompt_length: prompt.length,
+            via: 'queue'
+          }
+        });
+      }
 
       await job.updateProgress(100);
 
@@ -197,7 +236,24 @@ export const colorMatchWorker = new Worker<ColorMatchJobData>(
       const colors = await analyzeImageColors(image);
 
       await job.updateProgress(80);
-      await consumeOperation(userId, 'color_match');
+
+      // Buscar UUID do usuário
+      const { data: user } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('clerk_id', userId)
+        .single();
+
+      if (user) {
+        await recordUsage({
+          userId: user.id,
+          type: 'tool_usage',
+          metadata: {
+            tool: 'color_match',
+            via: 'queue'
+          }
+        });
+      }
 
       await job.updateProgress(100);
 

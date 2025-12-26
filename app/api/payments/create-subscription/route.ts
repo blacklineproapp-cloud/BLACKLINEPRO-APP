@@ -12,6 +12,8 @@ import { stripe, PRICES } from '@/lib/stripe';
 import { getOrCreateUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { CustomerService } from '@/lib/stripe';
+import { getPriceIdFromPlan } from '@/lib/billing/stripe-plan-mapping';
+import type { BillingCycle } from '@/lib/stripe/types';
 
 type CheckoutPlan = 'starter' | 'pro' | 'studio';
 
@@ -24,11 +26,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    const { plan } = await req.json();
+    const { plan, cycle = 'monthly' } = await req.json();
 
     // Validar plano
     if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio') {
       return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
+    }
+
+    // Validar ciclo de pagamento
+    const validCycles: BillingCycle[] = ['monthly', 'quarterly', 'semiannual', 'yearly'];
+    if (!validCycles.includes(cycle as BillingCycle)) {
+      return NextResponse.json({ error: 'Ciclo de pagamento inválido' }, { status: 400 });
     }
 
     const user = await getOrCreateUser(userId);
@@ -72,26 +80,39 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Stripe não configurado' }, { status: 500 });
     }
 
-    // Definir price ID e valor baseado no plano
+    // Definir price ID baseado no plano e ciclo
     let priceId: string;
     let amount: number;
-    
-    switch (plan) {
-      case 'starter':
-        priceId = PRICES.STARTER;
-        amount = 5000; // R$ 50 em centavos
-        break;
-      case 'pro':
-        priceId = PRICES.PRO;
-        amount = 10000; // R$ 100 em centavos
-        break;
-      case 'studio':
-        priceId = PRICES.STUDIO;
-        amount = 30000; // R$ 300 em centavos
-        break;
-      default:
-        priceId = PRICES.STARTER;
-        amount = 5000;
+
+    try {
+      priceId = getPriceIdFromPlan(plan, cycle as BillingCycle);
+
+      // Calcular valor baseado no plano e ciclo
+      switch (plan) {
+        case 'starter':
+          amount = cycle === 'monthly' ? 5000 :
+                   cycle === 'quarterly' ? 13500 :
+                   cycle === 'semiannual' ? 22500 :
+                   36000; // yearly
+          break;
+        case 'pro':
+          amount = cycle === 'monthly' ? 10000 :
+                   cycle === 'quarterly' ? 27000 :
+                   cycle === 'semiannual' ? 45000 :
+                   72000; // yearly
+          break;
+        case 'studio':
+          amount = cycle === 'monthly' ? 30000 :
+                   cycle === 'quarterly' ? 81000 :
+                   cycle === 'semiannual' ? 135000 :
+                   216000; // yearly
+          break;
+        default:
+          priceId = PRICES.STARTER;
+          amount = 5000;
+      }
+    } catch (error: any) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
     // Buscar ou criar customer no Stripe
@@ -133,11 +154,12 @@ export async function POST(req: Request) {
         clerk_id: userId,
         user_id: user.id,
         plan: plan,
+        cycle: cycle,
         price_id: priceId,
       },
     });
 
-    console.log(`[Create Subscription] Payment Intent criado: ${paymentIntent.id} para ${plan}`);
+    console.log(`[Create Subscription] Payment Intent criado: ${paymentIntent.id} para ${plan} (${cycle})`);
 
     // Retornar client secret para o frontend
     return NextResponse.json({
@@ -145,6 +167,7 @@ export async function POST(req: Request) {
       customerId: stripeCustomerId,
       priceId: priceId,
       plan: plan,
+      cycle: cycle,
     });
   } catch (error: any) {
     console.error('[Create Subscription] Erro:', error);

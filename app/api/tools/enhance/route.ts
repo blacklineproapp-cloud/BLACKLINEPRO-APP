@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getOrCreateUser } from '@/lib/auth';
 import { enhanceImage } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
+import { checkToolsLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
 
 // Emails admin com acesso ilimitado
 const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
@@ -15,19 +16,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    const user = await getOrCreateUser(userId);
+    // Buscar usuário completo (precisa do UUID user.id)
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('id, email, is_paid, subscription_status, tools_unlocked')
+      .eq('clerk_id', userId)
+      .single();
 
-    if (!user) {
+    if (!userData) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
     // 🔓 BYPASS PARA ADMINS - acesso ilimitado
-    const userEmailLower = user.email?.toLowerCase() || '';
+    const userEmailLower = userData.email?.toLowerCase() || '';
     const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
 
     if (!isAdmin) {
       // Verificar assinatura (apenas para não-admins)
-      if (!user.is_paid || user.subscription_status !== 'active') {
+      if (!userData.is_paid || userData.subscription_status !== 'active') {
         return NextResponse.json({
           error: 'Assinatura necessária',
           message: 'Assine o plano básico primeiro.',
@@ -37,13 +43,32 @@ export async function POST(req: Request) {
       }
 
       // Verificar ferramentas desbloqueadas (apenas para não-admins)
-      if (!user.tools_unlocked) {
+      if (!userData.tools_unlocked) {
         return NextResponse.json({
           error: 'Ferramentas premium não desbloqueadas',
           message: 'Desbloqueie as ferramentas premium por R$ 50.',
           requiresSubscription: true,
           subscriptionType: 'tools'
         }, { status: 403 });
+      }
+
+      // ✅ VERIFICAR LIMITE DE USO (100/500 por plano)
+      const limitCheck = await checkToolsLimit(userData.id);
+
+      if (!limitCheck.allowed) {
+        const message = getLimitMessage('tool_usage', limitCheck.limit, limitCheck.resetDate);
+        return NextResponse.json(
+          {
+            error: 'Limite atingido',
+            message,
+            remaining: limitCheck.remaining,
+            limit: limitCheck.limit,
+            resetDate: limitCheck.resetDate,
+            requiresSubscription: true,
+            subscriptionType: 'credits',
+          },
+          { status: 429 }
+        );
       }
     }
 
@@ -56,17 +81,16 @@ export async function POST(req: Request) {
     // Aprimorar imagem
     const enhancedImage = await enhanceImage(image);
 
-    // Registrar uso (ignorar erros)
-    try {
-      await supabaseAdmin.from('ai_usage').insert({
-        user_id: user.id,
-        operation_type: 'enhance',
-        tokens_used: 1200,
-        cost: 0.20,
-        model_used: 'gemini-2.0-flash-exp',
+    // ✅ REGISTRAR USO após operação bem-sucedida (exceto admins)
+    if (!isAdmin) {
+      await recordUsage({
+        userId: userData.id,
+        type: 'tool_usage',
+        metadata: {
+          tool: 'enhance',
+          operation: 'enhance_image'
+        }
       });
-    } catch (e) {
-      console.warn('Erro ao registrar uso de IA:', e);
     }
 
     return NextResponse.json({ image: enhancedImage });

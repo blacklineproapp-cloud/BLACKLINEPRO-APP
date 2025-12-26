@@ -35,6 +35,9 @@ export function getPlanFromPriceId(priceId: string): PlanMapping | null {
   if (priceId === process.env.STRIPE_PRICE_STARTER_QUARTERLY) {
     return { tier: 'starter', cycle: 'quarterly' };
   }
+  if (priceId === process.env.STRIPE_PRICE_STARTER_SEMIANNUAL) {
+    return { tier: 'starter', cycle: 'semiannual' };
+  }
   if (priceId === process.env.STRIPE_PRICE_STARTER_YEARLY) {
     return { tier: 'starter', cycle: 'yearly' };
   }
@@ -46,6 +49,9 @@ export function getPlanFromPriceId(priceId: string): PlanMapping | null {
   if (priceId === process.env.STRIPE_PRICE_PRO_QUARTERLY) {
     return { tier: 'pro', cycle: 'quarterly' };
   }
+  if (priceId === process.env.STRIPE_PRICE_PRO_SEMIANNUAL) {
+    return { tier: 'pro', cycle: 'semiannual' };
+  }
   if (priceId === process.env.STRIPE_PRICE_PRO_YEARLY) {
     return { tier: 'pro', cycle: 'yearly' };
   }
@@ -56,6 +62,9 @@ export function getPlanFromPriceId(priceId: string): PlanMapping | null {
   }
   if (priceId === process.env.STRIPE_PRICE_STUDIO_QUARTERLY) {
     return { tier: 'studio', cycle: 'quarterly' };
+  }
+  if (priceId === process.env.STRIPE_PRICE_STUDIO_SEMIANNUAL) {
+    return { tier: 'studio', cycle: 'semiannual' };
   }
   if (priceId === process.env.STRIPE_PRICE_STUDIO_YEARLY) {
     return { tier: 'studio', cycle: 'yearly' };
@@ -101,14 +110,17 @@ export function getAllPriceIds(): string[] {
     // Starter
     process.env.STRIPE_PRICE_STARTER_MONTHLY,
     process.env.STRIPE_PRICE_STARTER_QUARTERLY,
+    process.env.STRIPE_PRICE_STARTER_SEMIANNUAL,
     process.env.STRIPE_PRICE_STARTER_YEARLY,
     // Pro
     process.env.STRIPE_PRICE_PRO_MONTHLY,
     process.env.STRIPE_PRICE_PRO_QUARTERLY,
+    process.env.STRIPE_PRICE_PRO_SEMIANNUAL,
     process.env.STRIPE_PRICE_PRO_YEARLY,
     // Studio
     process.env.STRIPE_PRICE_STUDIO_MONTHLY,
     process.env.STRIPE_PRICE_STUDIO_QUARTERLY,
+    process.env.STRIPE_PRICE_STUDIO_SEMIANNUAL,
     process.env.STRIPE_PRICE_STUDIO_YEARLY,
   ].filter(Boolean) as string[];
 }

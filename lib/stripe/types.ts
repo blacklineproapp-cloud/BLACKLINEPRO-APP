@@ -56,7 +56,7 @@ export type PaymentMethod =
 
 export type PlanType = 'free' | 'starter' | 'pro' | 'studio';
 
-export type BillingCycle = 'monthly' | 'quarterly' | 'yearly';
+export type BillingCycle = 'monthly' | 'quarterly' | 'semiannual' | 'yearly';
 
 // ============================================================================
 // DATABASE MODELS

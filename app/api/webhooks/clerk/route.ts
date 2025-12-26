@@ -70,8 +70,39 @@ async function handleUserCreated(data: any) {
     const email = data.email_addresses[0]?.email_address;
     const name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Usuário';
 
-    console.log(`✅ Criando usuário: ${email}`);
+    console.log(`✅ Criando/Atualizando usuário: ${email} (clerk_id: ${data.id})`);
 
+    // PROTEÇÃO CONTRA DUPLICAÇÃO:
+    // 1. Verificar se usuário já existe (por clerk_id OU email)
+    const { data: existing } = await supabaseAdmin
+      .from('users')
+      .select('id, clerk_id, email')
+      .or(`clerk_id.eq.${data.id},email.eq.${email}`)
+      .maybeSingle();
+
+    if (existing) {
+      console.log(`⚠️ Usuário já existe: ${existing.email} (ID: ${existing.id})`);
+
+      // Atualizar dados do usuário existente
+      const { error: updateError } = await supabaseAdmin
+        .from('users')
+        .update({
+          clerk_id: data.id, // Atualizar clerk_id caso email já existia
+          email: email,
+          name: name,
+          picture: data.image_url || null,
+        })
+        .eq('id', existing.id);
+
+      if (updateError) {
+        console.error('Erro ao atualizar usuário existente:', updateError);
+      } else {
+        console.log(`✅ Usuário atualizado: ${email}`);
+      }
+      return;
+    }
+
+    // 2. Inserir apenas se NÃO existir
     const { error } = await supabaseAdmin.from('users').insert({
       clerk_id: data.id,
       email: email,
@@ -83,12 +114,12 @@ async function handleUserCreated(data: any) {
     });
 
     if (error) {
-      console.error('Erro ao criar usuário:', error);
+      console.error('❌ Erro ao criar usuário:', error);
     } else {
       console.log(`✅ Usuário criado: ${email}`);
     }
   } catch (error) {
-    console.error('Erro em handleUserCreated:', error);
+    console.error('❌ Erro em handleUserCreated:', error);
   }
 }
 

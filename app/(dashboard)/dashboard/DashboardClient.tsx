@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, Clock, Upload, Zap, Printer, Crown, X, Download, Edit2, Trash2, Maximize2 } from 'lucide-react';
+import { Plus, Clock, Upload, Zap, Printer, Crown, X, Download, Edit2, Trash2, Maximize2, Activity, TrendingUp, Infinity as InfinityIcon } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -19,9 +19,12 @@ interface Project {
 interface DashboardClientProps {
   projects: Project[];
   isSubscribed: boolean;
+  currentUsage: number;
+  monthlyLimit: number | null;
+  userPlan: string;
 }
 
-export default function DashboardClient({ projects, isSubscribed }: DashboardClientProps) {
+export default function DashboardClient({ projects, isSubscribed, currentUsage, monthlyLimit, userPlan }: DashboardClientProps) {
   const router = useRouter();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showStencil, setShowStencil] = useState(true);
@@ -74,8 +77,89 @@ export default function DashboardClient({ projects, isSubscribed }: DashboardCli
     }
   };
 
+  // Calcular porcentagem de uso
+  const usagePercentage = monthlyLimit ? Math.min((currentUsage / monthlyLimit) * 100, 100) : 0;
+  const isUnlimited = monthlyLimit === null;
+
+  // Determinar estilo baseado no uso
+  const isLowUsage = usagePercentage < 50;
+  const isMediumUsage = usagePercentage >= 50 && usagePercentage < 80;
+  const isHighUsage = usagePercentage >= 80;
+
   return (
     <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+      {/* Contador de Uso */}
+      <div className="mb-6 lg:mb-8 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-4 lg:p-6">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3 lg:gap-4">
+            <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center shrink-0 ${
+              isUnlimited || isLowUsage
+                ? 'bg-emerald-600/10 border border-emerald-600/20'
+                : isMediumUsage
+                ? 'bg-yellow-600/10 border border-yellow-600/20'
+                : 'bg-red-600/10 border border-red-600/20'
+            }`}>
+              {isUnlimited ? (
+                <InfinityIcon size={20} className="text-emerald-500" />
+              ) : (
+                <Activity size={20} className={
+                  isLowUsage ? 'text-emerald-500' : isMediumUsage ? 'text-yellow-500' : 'text-red-500'
+                } />
+              )}
+            </div>
+            <div>
+              <h3 className="text-white font-semibold text-sm lg:text-base">Uso Mensal</h3>
+              <p className="text-zinc-400 text-xs lg:text-sm">
+                {isUnlimited ? (
+                  <>
+                    <span className="text-emerald-400 font-bold">{currentUsage} gerações</span> este mês (Ilimitado)
+                  </>
+                ) : (
+                  <>
+                    <span className={`font-bold ${
+                      isLowUsage ? 'text-emerald-400' : isMediumUsage ? 'text-yellow-400' : 'text-red-400'
+                    }`}>{currentUsage}</span> de{' '}
+                    <span className="text-white font-bold">{monthlyLimit}</span> gerações usadas
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-xs text-zinc-500">Plano</div>
+            <div className="text-sm font-bold text-white capitalize">{userPlan}</div>
+          </div>
+        </div>
+
+        {/* Barra de Progresso */}
+        {!isUnlimited && (
+          <div className="space-y-2">
+            <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  isLowUsage
+                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-500'
+                    : isMediumUsage
+                    ? 'bg-gradient-to-r from-yellow-600 to-yellow-500'
+                    : 'bg-gradient-to-r from-red-600 to-red-500'
+                }`}
+                style={{ width: `${usagePercentage}%` }}
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs">
+              <span className="text-zinc-500">
+                Reseta em {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}
+              </span>
+              {isHighUsage && (
+                <a href="/pricing" className="text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1">
+                  <TrendingUp size={12} /> Fazer Upgrade
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Banner de Assinatura */}
       {!isSubscribed && (
         <div className="mb-6 lg:mb-8 bg-gradient-to-r from-emerald-900/30 to-purple-900/30 border border-emerald-500/30 rounded-xl p-4 lg:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

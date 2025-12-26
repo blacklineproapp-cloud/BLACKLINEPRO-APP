@@ -12,11 +12,12 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
 
 interface CheckoutModalProps {
   plan: 'starter' | 'pro' | 'studio';
+  cycle?: 'monthly' | 'quarterly' | 'semiannual' | 'yearly';
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalProps) {
+export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose }: CheckoutModalProps) {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalPr
       const res = await fetch('/api/payments/create-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, cycle }),
       });
 
       if (!res.ok) {
@@ -90,7 +91,7 @@ export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalPr
         setIsLoading(false);
         // Auto-redirecionar após 2 segundos
         setTimeout(() => {
-          router.push('/dashboard?plan=' + plan + '&activated=true');
+          router.push('/dashboard?plan=' + plan + '&cycle=' + cycle + '&activated=true');
           onClose();
         }, 2000);
         return;
@@ -106,7 +107,7 @@ export default function CheckoutModal({ plan, isOpen, onClose }: CheckoutModalPr
   };
 
   const handleSuccess = () => {
-    router.push('/success?plan=' + plan);
+    router.push('/success?plan=' + plan + '&cycle=' + cycle);
     onClose();
   };
 

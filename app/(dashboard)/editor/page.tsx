@@ -1,12 +1,19 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Printer, Settings, ChevronUp, Ruler } from 'lucide-react';
+import StencilAdjustControls from '@/components/editor/StencilAdjustControls';
+import ProfessionalControls from '@/components/editor/ProfessionalControls';
+import QualityIndicator from '@/components/editor/QualityIndicator';
+import ResizeModal from '@/components/editor/ResizeModal';
+import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Printer, Settings, ChevronUp, Ruler, Undo, Redo } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useEditorHistory } from '@/hooks/useEditorHistory';
+import { DEFAULT_ADJUST_CONTROLS, type AdjustControls } from '@/lib/stencil-types';
+import { applyAdjustments, resetControls } from '@/lib/stencil-adjustments';
 
 type Style = 'standard' | 'perfect_lines';
-type ComparisonMode = 'wipe' | 'overlay';
+type ComparisonMode = 'wipe' | 'overlay' | 'split';
 
 export default function EditorPage() {
   const router = useRouter();
@@ -14,24 +21,63 @@ export default function EditorPage() {
   
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [generatedStencil, setGeneratedStencil] = useState<string | null>(null);
+  const [adjustedStencil, setAdjustedStencil] = useState<string | null>(null);
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAdjusting, setIsAdjusting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [promptText, setPromptText] = useState('');
   const [selectedStyle, setSelectedStyle] = useState<Style>('standard');
   const [sliderPosition, setSliderPosition] = useState(50);
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('overlay');
   const [showControls, setShowControls] = useState(true);
-  
+  const [showOriginalPreview, setShowOriginalPreview] = useState(false); // Toggle rápido (Espaço)
+  const [showResizeModal, setShowResizeModal] = useState(false); // Modal de resize
+
   // Tamanho - ANTES de gerar
   const [widthCm, setWidthCm] = useState(15);
   const [heightCm, setHeightCm] = useState(15);
   const [aspectRatio, setAspectRatio] = useState(1);
-  
+
+  // Controles de ajuste
+  const [adjustControls, setAdjustControls] = useState<AdjustControls>(DEFAULT_ADJUST_CONTROLS);
+
+  // Histórico (Undo/Redo)
+  const history = useEditorHistory();
+
   // Controle de seções expansíveis (mobile)
   const [showSizeSection, setShowSizeSection] = useState(false);
   const [showModeSection, setShowModeSection] = useState(false);
+  const [showAdjustSection, setShowAdjustSection] = useState(true);
+  const [showProfessionalSection, setShowProfessionalSection] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isRestoringHistoryRef = useRef(false); // Flag para ignorar mudanças do histórico
+
+  // Imagem atual para exibir (ajustada ou gerada)
+  const currentStencil = adjustedStencil || generatedStencil;
+
+  // Helper: verificar se controles estão nos valores padrão
+  const isDefaultControls = (controls: AdjustControls): boolean => {
+    return (
+      controls.brightness === 0 &&
+      controls.contrast === 0 &&
+      controls.threshold === 128 &&
+      controls.gamma === 1.0 &&
+      controls.rotation === 0 &&
+      !controls.flipHorizontal &&
+      !controls.flipVertical &&
+      !controls.invert &&
+      !controls.removeNoise &&
+      !controls.sharpen &&
+      // Ferramentas profissionais
+      (controls.posterize === null || controls.posterize === undefined) &&
+      (controls.levels === null || controls.levels === undefined) &&
+      !controls.findEdges &&
+      (controls.clarity === 0 || controls.clarity === undefined)
+    );
+  };
 
   // Load image from sessionStorage (from Generator or Edit from Dashboard)
   useEffect(() => {
@@ -81,16 +127,249 @@ export default function EditorPage() {
     }
   }, [widthCm, originalImage]);
 
+  // Aplicar ajustes com debounce
+  const applyAdjustmentsDebounced = useCallback((controls: AdjustControls) => {
+    // Proteção: não processar se não houver stencil gerado
+    if (!generatedStencil) {
+      console.warn('[Editor] Tentativa de ajustar sem stencil gerado');
+      return;
+    }
+
+    // Proteção: não processar se já estiver ajustando
+    if (isAdjusting) {
+      console.warn('[Editor] Ajuste já em andamento, ignorando nova requisição');
+      return;
+    }
+
+    // Cancelar timer anterior
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // Criar novo timer (300ms de debounce)
+    debounceTimerRef.current = setTimeout(async () => {
+      // ✨ OTIMIZAÇÃO: Se todos os controles estão nos valores padrão, voltar ao original
+      if (isDefaultControls(controls)) {
+        console.log('[Editor] ✅ Controles nos valores padrão - voltando ao original');
+        setAdjustedStencil(null); // Volta ao generatedStencil original
+        history.pushState(generatedStencil, controls);
+        return;
+      }
+
+      console.log('[Editor] Iniciando ajuste com controles:', controls);
+      setIsAdjusting(true);
+
+      try {
+        const adjusted = await applyAdjustments(generatedStencil, controls);
+        setAdjustedStencil(adjusted);
+
+        // Adicionar ao histórico
+        history.pushState(adjusted, controls);
+        console.log('[Editor] ✅ Ajuste aplicado e adicionado ao histórico:', {
+          historySize: history.historySize + 1, // +1 porque ainda não atualizou
+          canUndo: true,
+          controls
+        });
+      } catch (error: any) {
+        console.error('[Editor] Erro ao aplicar ajustes:', error);
+        alert('Erro ao aplicar ajustes: ' + error.message);
+      } finally {
+        setIsAdjusting(false);
+      }
+    }, 300);
+  }, [generatedStencil, history, isAdjusting]);
+
+  // Handler de mudança de controles
+  const handleAdjustChange = (newControls: AdjustControls) => {
+    setAdjustControls(newControls);
+
+    // NÃO aplicar ajustes se estamos restaurando do histórico
+    if (isRestoringHistoryRef.current) {
+      console.log('[Editor] Ignorando mudança de controles (restauração do histórico)');
+      return;
+    }
+
+    applyAdjustmentsDebounced(newControls);
+  };
+
+  // Reset de ajustes
+  const handleResetAdjustments = useCallback(() => {
+    const controls = resetControls();
+    setAdjustControls(controls);
+    setAdjustedStencil(null);
+  }, []);
+
+  // Handler de resize concluído
+  const handleResizeComplete = (newImage: string, newWidthCm: number, newHeightCm: number) => {
+    console.log('[Editor] Resize concluído:', { newWidthCm, newHeightCm });
+
+    // Atualizar imagem gerada com a versão redimensionada
+    setGeneratedStencil(newImage);
+    setAdjustedStencil(null); // Limpar ajustes
+    setWidthCm(newWidthCm);
+    setHeightCm(newHeightCm);
+
+    // Limpar histórico e adicionar novo estado
+    history.clear();
+    history.pushState(newImage, DEFAULT_ADJUST_CONTROLS);
+
+    // Resetar controles de ajuste
+    setAdjustControls(DEFAULT_ADJUST_CONTROLS);
+  };
+
+  // Presets removidos temporariamente (causavam travamento)
+
+  // Undo
+  const handleUndo = useCallback(() => {
+    console.log('[Editor] handleUndo chamado:', {
+      canUndo: history.canUndo,
+      historySize: history.historySize,
+      currentIndex: history.currentIndex
+    });
+
+    if (!history.canUndo) {
+      console.log('[Editor] Undo bloqueado: canUndo = false');
+      return;
+    }
+
+    const previousState = history.undo();
+    console.log('[Editor] previousState recebido:', previousState ? 'sim' : 'não');
+
+    if (previousState) {
+      // Marcar que estamos restaurando do histórico
+      isRestoringHistoryRef.current = true;
+
+      // Se controles são padrão, voltar ao original sem reprocessamento
+      if (isDefaultControls(previousState.controls)) {
+        console.log('[Editor] Undo para estado padrão - voltando ao original');
+        setAdjustedStencil(null);
+      } else {
+        setAdjustedStencil(previousState.image);
+      }
+
+      setAdjustControls(previousState.controls);
+
+      console.log('[Editor] Estados atualizados:', {
+        imageLength: previousState.image?.length || 0,
+        controls: previousState.controls,
+        isDefault: isDefaultControls(previousState.controls)
+      });
+
+      // Resetar flag após render
+      setTimeout(() => {
+        isRestoringHistoryRef.current = false;
+      }, 100);
+
+      console.log('[Editor] ✅ Undo aplicado com sucesso');
+    }
+  }, [history]);
+
+  // Redo
+  const handleRedo = useCallback(() => {
+    console.log('[Editor] handleRedo chamado:', {
+      canRedo: history.canRedo,
+      historySize: history.historySize,
+      currentIndex: history.currentIndex
+    });
+
+    if (!history.canRedo) {
+      console.log('[Editor] Redo bloqueado: canRedo = false');
+      return;
+    }
+
+    const nextState = history.redo();
+    console.log('[Editor] nextState recebido:', nextState ? 'sim' : 'não');
+
+    if (nextState) {
+      // Marcar que estamos restaurando do histórico
+      isRestoringHistoryRef.current = true;
+
+      // Se controles são padrão, voltar ao original sem reprocessamento
+      if (isDefaultControls(nextState.controls)) {
+        console.log('[Editor] Redo para estado padrão - voltando ao original');
+        setAdjustedStencil(null);
+      } else {
+        setAdjustedStencil(nextState.image);
+      }
+
+      setAdjustControls(nextState.controls);
+
+      console.log('[Editor] Estados atualizados:', {
+        imageLength: nextState.image?.length || 0,
+        controls: nextState.controls,
+        isDefault: isDefaultControls(nextState.controls)
+      });
+
+      // Resetar flag após render
+      setTimeout(() => {
+        isRestoringHistoryRef.current = false;
+      }, 100);
+
+      console.log('[Editor] ✅ Redo aplicado com sucesso');
+    }
+  }, [history]);
+
+  // Keyboard shortcuts (Undo/Redo)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!currentStencil) return;
+
+      // Ctrl+Z ou Cmd+Z = Undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+
+      // Ctrl+Y ou Cmd+Shift+Z = Redo
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) {
+        e.preventDefault();
+        handleRedo();
+      }
+
+      // ESPAÇO = Toggle preview rápido (mostrar original)
+      if (e.key === ' ' && !e.ctrlKey && !e.metaKey && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        setShowOriginalPreview(true);
+      }
+
+      // R = Reset ajustes
+      if (e.key === 'r' && !e.ctrlKey && !e.metaKey && document.activeElement?.tagName !== 'TEXTAREA') {
+        handleResetAdjustments();
+      }
+
+      // I = Inverter
+      if (e.key === 'i' && !e.ctrlKey && !e.metaKey && document.activeElement?.tagName !== 'TEXTAREA') {
+        setAdjustControls(prev => ({ ...prev, invert: !prev.invert }));
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      // Soltar ESPAÇO = Voltar ao stencil
+      if (e.key === ' ') {
+        setShowOriginalPreview(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [currentStencil, handleUndo, handleRedo, handleResetAdjustments]);
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (ev) => {
         setOriginalImage(ev.target?.result as string);
-        setGeneratedStencil(null); // LIMPAR estêncil anterior
+        setGeneratedStencil(null);
+        setAdjustedStencil(null);
         setComparisonMode('overlay');
         setSliderPosition(50);
-        setShowControls(true); // SEMPRE abrir painel ao carregar imagem
+        setShowControls(true);
+        history.clear();
       };
       reader.readAsDataURL(file);
     }
@@ -101,12 +380,13 @@ export default function EditorPage() {
 
     // LIMPAR estêncil anterior antes de gerar novo
     setGeneratedStencil(null);
+    setAdjustedStencil(null);
     setIsProcessing(true);
     // No mobile, manter painel aberto para ver o loading
     if (window.innerWidth >= 1024) {
       setShowControls(false);
     }
-    
+
     try {
       const res = await fetch('/api/stencil/generate', {
         method: 'POST',
@@ -126,7 +406,14 @@ export default function EditorPage() {
         setGeneratedStencil(data.image);
         setSliderPosition(100);
         setComparisonMode('overlay');
-        
+
+        // Adicionar ao histórico
+        history.clear();
+        history.pushState(data.image, DEFAULT_ADJUST_CONTROLS);
+
+        // Resetar controles
+        setAdjustControls(DEFAULT_ADJUST_CONTROLS);
+
         // AUTO-SAVE após gerar com sucesso
         autoSaveProject(data.image);
       } else if (data.requiresSubscription) {
@@ -178,10 +465,11 @@ export default function EditorPage() {
   };
 
   const handleSave = async () => {
-    if (!generatedStencil || !originalImage) return;
-    
+    if (!currentStencil || !originalImage) return;
+
     const name = prompt('Nome do projeto:') || `Estêncil ${new Date().toLocaleTimeString()}`;
 
+    setIsSaving(true);
     try {
       const res = await fetch('/api/projects', {
         method: 'POST',
@@ -189,7 +477,7 @@ export default function EditorPage() {
         body: JSON.stringify({
           name,
           originalImage,
-          stencilImage: generatedStencil,
+          stencilImage: currentStencil,
           style: selectedStyle,
           widthCm,
           heightCm,
@@ -205,19 +493,21 @@ export default function EditorPage() {
       }
     } catch (error) {
       alert('Erro ao salvar');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDownload = async () => {
-    if (!generatedStencil) return;
+    if (!currentStencil) return;
     const fileName = `stencil-${widthCm}x${heightCm}cm-${Date.now()}.png`;
-    
+
     try {
       // Converter base64 para blob para forçar download
-      const response = await fetch(generatedStencil);
+      const response = await fetch(currentStencil);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = fileName;
@@ -228,7 +518,7 @@ export default function EditorPage() {
     } catch (error) {
       // Fallback
       const link = document.createElement('a');
-      link.href = generatedStencil;
+      link.href = currentStencil;
       link.download = fileName;
       link.click();
     }
@@ -236,19 +526,25 @@ export default function EditorPage() {
 
   const handleReset = () => {
     setGeneratedStencil(null);
+    setAdjustedStencil(null);
     setPromptText('');
     setSliderPosition(50);
     setShowControls(true);
+    setAdjustControls(DEFAULT_ADJUST_CONTROLS);
+    history.clear();
   };
 
   const handleNewUpload = () => {
     setOriginalImage(null);
     setGeneratedStencil(null);
+    setAdjustedStencil(null);
     setPromptText('');
     setSliderPosition(50);
     setShowControls(false);
     setWidthCm(15);
     setHeightCm(15);
+    setAdjustControls(DEFAULT_ADJUST_CONTROLS);
+    history.clear();
   };
 
   // Presets de tamanho
@@ -274,7 +570,7 @@ export default function EditorPage() {
       <div className="flex-1 flex flex-col lg:flex-row relative overflow-hidden">
         
         {/* Canvas Area */}
-        <main className="flex-1 bg-zinc-950 flex items-center justify-center p-3 lg:p-6 min-h-[50vh] lg:min-h-0">
+        <main className="flex-1 bg-zinc-950 flex items-center justify-center p-3 lg:p-6 min-h-[40vh] lg:min-h-0 pb-20 lg:pb-6">
           
           {/* Upload State */}
           {!originalImage && (
@@ -296,32 +592,78 @@ export default function EditorPage() {
           )}
           
           {/* Original Image (before generation) */}
-          {originalImage && !isProcessing && !generatedStencil && (
+          {originalImage && !isProcessing && !currentStencil && (
             <img src={originalImage} alt="Original" className="max-w-full max-h-[45vh] lg:max-h-[70vh] object-contain shadow-2xl rounded-lg" />
           )}
-          
+
           {/* Comparison View (after generation) */}
-          {originalImage && !isProcessing && generatedStencil && (
+          {originalImage && !isProcessing && currentStencil && (
             <div className="relative select-none shadow-2xl rounded-lg overflow-hidden bg-white max-w-full max-h-[45vh] lg:max-h-[70vh]">
               {/* Mode Toggle */}
               <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-zinc-900/95 border border-zinc-700 rounded-full p-0.5 flex gap-0.5 shadow-xl">
                 <button
                   onClick={() => setComparisonMode('wipe')}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium ${
-                    comparisonMode === 'wipe' ? 'bg-emerald-600 text-white' : 'text-zinc-400'
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-colors ${
+                    comparisonMode === 'wipe' ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'
                   }`}
+                  title="Deslize horizontal (←→)"
                 >
-                  <ScanLine size={10} /> Wipe
+                  <ScanLine size={10} /> Horizontal
+                </button>
+                <button
+                  onClick={() => setComparisonMode('split')}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-colors ${
+                    comparisonMode === 'split' ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'
+                  }`}
+                  title="Deslize vertical (↑↓)"
+                >
+                  <ScanLine size={10} className="rotate-90" /> Vertical
                 </button>
                 <button
                   onClick={() => setComparisonMode('overlay')}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium ${
-                    comparisonMode === 'overlay' ? 'bg-emerald-600 text-white' : 'text-zinc-400'
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-colors ${
+                    comparisonMode === 'overlay' ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'
                   }`}
+                  title="Sobreposição ajustável"
                 >
                   <Layers size={10} /> Blend
                 </button>
               </div>
+
+              {/* Indicador de preview rápido (Espaço) */}
+              {showOriginalPreview && (
+                <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-blue-600 border border-blue-400 rounded-lg px-3 py-1.5 shadow-xl animate-pulse">
+                  <p className="text-white text-xs font-medium">Segure ESPAÇO para comparar</p>
+                </div>
+              )}
+
+              {/* Undo/Redo Buttons */}
+              {generatedStencil && (
+                <div className="absolute top-2 right-2 z-50 flex flex-col gap-1">
+                  <div className="flex gap-1">
+                    <button
+                      onClick={handleUndo}
+                      disabled={!history.canUndo || isAdjusting}
+                      className="bg-zinc-900/95 border border-zinc-700 rounded-lg p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      title={`Desfazer (Ctrl+Z) - ${history.currentIndex}/${history.historySize - 1}`}
+                    >
+                      <Undo size={14} />
+                    </button>
+                    <button
+                      onClick={handleRedo}
+                      disabled={!history.canRedo || isAdjusting}
+                      className="bg-zinc-900/95 border border-zinc-700 rounded-lg p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      title={`Refazer (Ctrl+Y) - ${history.currentIndex}/${history.historySize - 1}`}
+                    >
+                      <Redo size={14} />
+                    </button>
+                  </div>
+                  {/* Debug info */}
+                  <div className="bg-zinc-900/95 border border-zinc-700 rounded px-2 py-0.5 text-[9px] text-zinc-500 font-mono">
+                    {history.currentIndex + 1}/{history.historySize}
+                  </div>
+                </div>
+              )}
 
               {/* Background (Original) */}
               <img
@@ -329,23 +671,29 @@ export default function EditorPage() {
                 alt="Original"
                 className="block max-w-full max-h-[45vh] lg:max-h-[70vh] object-contain"
                 draggable={false}
-                style={{ opacity: comparisonMode === 'overlay' ? 0.5 : 1 }}
+                style={{
+                  opacity: showOriginalPreview ? 1 : (comparisonMode === 'overlay' ? 0.5 : 1),
+                  display: showOriginalPreview ? 'block' : 'block'
+                }}
               />
 
               {/* Foreground (Stencil) */}
-              <div 
+              <div
                 className="absolute inset-0 bg-white"
-                style={{ 
-                  clipPath: comparisonMode === 'wipe' ? `inset(0 ${100 - sliderPosition}% 0 0)` : 'none',
+                style={{
+                  clipPath:
+                    comparisonMode === 'wipe' ? `inset(0 ${100 - sliderPosition}% 0 0)` :
+                    comparisonMode === 'split' ? `inset(${sliderPosition}% 0 0 0)` :
+                    'none',
                   mixBlendMode: comparisonMode === 'overlay' ? 'multiply' : 'normal',
-                  opacity: comparisonMode === 'overlay' ? sliderPosition / 100 : 1
+                  opacity: showOriginalPreview ? 0 : (comparisonMode === 'overlay' ? sliderPosition / 100 : 1)
                 }}
               >
-                <img src={generatedStencil} alt="Stencil" className="w-full h-full object-contain" draggable={false} />
+                <img src={currentStencil} alt="Stencil" className="w-full h-full object-contain" draggable={false} />
               </div>
 
-              {/* Wipe handle */}
-              {comparisonMode === 'wipe' && (
+              {/* Wipe handle - Horizontal */}
+              {comparisonMode === 'wipe' && !showOriginalPreview && (
                 <div className="absolute top-0 bottom-0 w-0.5 bg-emerald-500 z-20" style={{ left: `${sliderPosition}%` }}>
                   <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
                     <div className="flex gap-px"><div className="w-px h-2 bg-white/80"></div><div className="w-px h-2 bg-white/80"></div></div>
@@ -353,15 +701,53 @@ export default function EditorPage() {
                 </div>
               )}
 
-              <input type="range" min="0" max="100" value={sliderPosition} onChange={(e) => setSliderPosition(Number(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize z-30" />
+              {/* Split handle - Vertical */}
+              {comparisonMode === 'split' && !showOriginalPreview && (
+                <div className="absolute left-0 right-0 h-0.5 bg-emerald-500 z-20" style={{ top: `${sliderPosition}%` }}>
+                  <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                    <div className="flex flex-col gap-px"><div className="h-px w-2 bg-white/80"></div><div className="h-px w-2 bg-white/80"></div></div>
+                  </div>
+                </div>
+              )}
+
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={sliderPosition}
+                onChange={(e) => setSliderPosition(Number(e.target.value))}
+                className={`absolute inset-0 w-full h-full opacity-0 z-30 ${
+                  comparisonMode === 'wipe' ? 'cursor-ew-resize' :
+                  comparisonMode === 'split' ? 'cursor-ns-resize' :
+                  'cursor-pointer'
+                }`}
+                disabled={showOriginalPreview}
+              />
+
+              {/* Processing overlay */}
+              {isAdjusting && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-40">
+                  <div className="bg-zinc-900/95 border border-zinc-700 rounded-lg px-4 py-2 flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-white text-sm">Aplicando ajustes...</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </main>
 
         {/* MOBILE: Barra de ações fixa quando stencil está gerado */}
-        {generatedStencil && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 p-3">
+        {currentStencil && (
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 p-3 safe-area-pb">
             <div className="flex gap-2">
+              <button
+                onClick={() => setShowControls(!showControls)}
+                className="w-14 bg-purple-900/50 hover:bg-purple-800 text-purple-400 hover:text-white py-3 rounded-xl flex items-center justify-center border border-purple-800"
+                title="Ajustes"
+              >
+                <Settings size={18} />
+              </button>
               <button
                 onClick={handleDownload}
                 className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg"
@@ -385,13 +771,22 @@ export default function EditorPage() {
           </div>
         )}
 
-        {/* Controls Panel - Esconde no mobile quando stencil está gerado */}
+        {/* Overlay - Mobile quando painel está aberto */}
+        {showControls && generatedStencil && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/60 z-30 backdrop-blur-sm"
+            onClick={() => setShowControls(false)}
+          />
+        )}
+
+        {/* Controls Panel - Responsivo e acessível */}
         <aside className={`
-          ${showControls && !generatedStencil ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
+          ${showControls ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
           fixed lg:relative bottom-0 left-0 right-0 lg:w-72 xl:w-80
           bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-800
           transition-transform duration-300 z-40 shadow-2xl lg:shadow-none
-          lg:max-h-none max-h-[60vh] rounded-t-2xl lg:rounded-none
+          ${generatedStencil ? 'max-h-[75vh] lg:max-h-none' : 'max-h-[60vh] lg:max-h-none'}
+          rounded-t-2xl lg:rounded-none overflow-hidden
         `}>
           {/* Drag handle - Clicável para abrir/fechar */}
           <div
@@ -401,7 +796,7 @@ export default function EditorPage() {
             <div className="w-12 h-1 bg-zinc-600 rounded-full"></div>
           </div>
 
-          <div className="p-2.5 lg:p-5 space-y-2 lg:space-y-3 overflow-y-visible lg:overflow-y-auto pb-20 lg:pb-5">
+          <div className="p-2.5 lg:p-5 space-y-2 lg:space-y-3 overflow-y-auto pb-24 lg:pb-5 max-h-full">
 
             {/* Botão Nova Imagem - Aparece quando tem imagem carregada */}
             {originalImage && !generatedStencil && (
@@ -488,17 +883,65 @@ export default function EditorPage() {
               </>
             )}
 
-            {/* After Generation */}
+            {/* AJUSTES (após gerar) */}
             {generatedStencil && (
               <>
-                <div className={`p-2.5 rounded-xl border ${
-                  selectedStyle === 'perfect_lines' ? 'bg-purple-900/20 border-purple-800' : 'bg-emerald-900/20 border-emerald-800'
-                }`}>
-                  <p className={`text-[11px] ${selectedStyle === 'perfect_lines' ? 'text-purple-300' : 'text-emerald-300'}`}>
-                    ✓ Estêncil gerado!
-                  </p>
+                {/* Botões de Ação - Desktop */}
+                <div className="hidden lg:grid grid-cols-2 gap-2">
+                  <button
+                    onClick={handleDownload}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
+                  >
+                    <Download size={16} /> Baixar
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="bg-purple-600 hover:bg-purple-500 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+                  >
+                    <Save size={16} /> {isSaving ? 'Salvando...' : 'Salvar'}
+                  </button>
                 </div>
-                <button onClick={handleReset} className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-xl font-medium flex items-center justify-center gap-2 text-sm">
+
+                {/* Indicador de Qualidade/DPI */}
+                <QualityIndicator
+                  imageBase64={currentStencil}
+                  widthCm={widthCm}
+                  heightCm={heightCm}
+                  onOptimizeClick={() => setShowResizeModal(true)}
+                />
+
+                <div className="bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden">
+                  <button onClick={() => setShowAdjustSection(!showAdjustSection)} className="w-full p-2 flex items-center justify-between">
+                    <h3 className="text-white font-medium text-xs flex items-center gap-1.5">
+                      <Settings size={11} className="text-purple-400" /> Ajustes Avançados
+                    </h3>
+                    <ChevronUp size={14} className={`text-zinc-500 transition-transform ${showAdjustSection ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {showAdjustSection && (
+                    <div className="px-2 pb-2">
+                      <StencilAdjustControls
+                        controls={adjustControls}
+                        onChange={handleAdjustChange}
+                        onReset={handleResetAdjustments}
+                        isProcessing={isAdjusting}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Controles Profissionais */}
+                <div className="mt-3">
+                  <ProfessionalControls
+                    controls={adjustControls}
+                    onChange={(newControls) => handleAdjustChange({ ...adjustControls, ...newControls })}
+                    isExpanded={showProfessionalSection}
+                    onToggleExpand={() => setShowProfessionalSection(!showProfessionalSection)}
+                  />
+                </div>
+
+                <button onClick={handleReset} className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-xl font-medium flex items-center justify-center gap-2 text-sm mt-3">
                   <RotateCcw size={14} /> Gerar Novo
                 </button>
               </>
@@ -506,6 +949,16 @@ export default function EditorPage() {
           </div>
         </aside>
       </div>
+
+      {/* Modal de Resize/Otimização de Qualidade */}
+      <ResizeModal
+        isOpen={showResizeModal}
+        onClose={() => setShowResizeModal(false)}
+        currentImage={currentStencil || generatedStencil || ''}
+        currentWidthCm={widthCm}
+        currentHeightCm={heightCm}
+        onResizeComplete={handleResizeComplete}
+      />
     </div>
   );
 }

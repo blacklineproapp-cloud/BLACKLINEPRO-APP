@@ -3,11 +3,13 @@ import { NextResponse } from 'next/server';
 import { stripe, PRICES, PlanType } from '@/lib/stripe';
 import { getOrCreateUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getPriceIdFromPlan } from '@/lib/billing/stripe-plan-mapping';
+import type { BillingCycle } from '@/lib/stripe/types';
 
 type CheckoutPlan = 'starter' | 'pro' | 'studio';
 
 // Versão que retorna objeto (para JSON response)
-async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan): Promise<{ url: string } | { redirect: URL }> {
+async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan, cycle: BillingCycle = 'monthly'): Promise<{ url: string } | { redirect: URL }> {
   const { userId } = await auth();
   const clerkUser = await currentUser();
 
@@ -53,20 +55,12 @@ async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan): Promi
     return { redirect: new URL('/dashboard?error=stripe_not_configured', req.url) };
   }
 
-  // Definir price ID baseado no plano
+  // Definir price ID baseado no plano e ciclo
   let priceId: string;
-  switch (plan) {
-    case 'starter':
-      priceId = PRICES.STARTER;
-      break;
-    case 'pro':
-      priceId = PRICES.PRO;
-      break;
-    case 'studio':
-      priceId = PRICES.STUDIO;
-      break;
-    default:
-      priceId = PRICES.STARTER;
+  try {
+    priceId = getPriceIdFromPlan(plan, cycle);
+  } catch (error: any) {
+    return { redirect: new URL('/pricing?error=invalid_price_config', req.url) };
   }
 
   // Criar sessão de checkout do Stripe
@@ -83,12 +77,14 @@ async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan): Promi
     metadata: {
       clerk_id: userId,
       plan: plan,
+      cycle: cycle,
       user_id: user.id,
     },
     subscription_data: {
       metadata: {
         clerk_id: userId,
         plan: plan,
+        cycle: cycle,
         user_id: user.id,
       },
     },
@@ -98,7 +94,7 @@ async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan): Promi
 }
 
 // Versão legacy que retorna NextResponse (para navegação direta)
-async function handleCheckout(req: Request, plan: CheckoutPlan) {
+async function handleCheckout(req: Request, plan: CheckoutPlan, cycle: BillingCycle = 'monthly') {
   const { userId } = await auth();
   const clerkUser = await currentUser();
 
@@ -144,20 +140,12 @@ async function handleCheckout(req: Request, plan: CheckoutPlan) {
     return NextResponse.redirect(new URL('/dashboard?error=stripe_not_configured', req.url));
   }
 
-  // Definir price ID baseado no plano
+  // Definir price ID baseado no plano e ciclo
   let priceId: string;
-  switch (plan) {
-    case 'starter':
-      priceId = PRICES.STARTER;
-      break;
-    case 'pro':
-      priceId = PRICES.PRO;
-      break;
-    case 'studio':
-      priceId = PRICES.STUDIO;
-      break;
-    default:
-      priceId = PRICES.STARTER;
+  try {
+    priceId = getPriceIdFromPlan(plan, cycle);
+  } catch (error: any) {
+    return NextResponse.redirect(new URL('/pricing?error=invalid_price_config', req.url));
   }
 
   // Criar sessão de checkout do Stripe
@@ -174,12 +162,14 @@ async function handleCheckout(req: Request, plan: CheckoutPlan) {
     metadata: {
       clerk_id: userId,
       plan: plan,
+      cycle: cycle,
       user_id: user.id,
     },
     subscription_data: {
       metadata: {
         clerk_id: userId,
         plan: plan,
+        cycle: cycle,
         user_id: user.id,
       },
     },
@@ -193,6 +183,7 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const plan = url.searchParams.get('plan') as CheckoutPlan || 'starter';
+    const cycle = (url.searchParams.get('cycle') as BillingCycle) || 'monthly';
 
     // Validar plano
     if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio') {
@@ -204,7 +195,17 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL('/pricing?error=invalid_plan', req.url));
     }
 
-    const result = await handleCheckoutWithResult(req, plan);
+    // Validar ciclo
+    const validCycles: BillingCycle[] = ['monthly', 'quarterly', 'semiannual', 'yearly'];
+    if (!validCycles.includes(cycle)) {
+      const acceptHeader = req.headers.get('accept') || '';
+      if (acceptHeader.includes('application/json')) {
+        return NextResponse.json({ error: 'Ciclo de pagamento inválido' }, { status: 400 });
+      }
+      return NextResponse.redirect(new URL('/pricing?error=invalid_cycle', req.url));
+    }
+
+    const result = await handleCheckoutWithResult(req, plan, cycle);
 
     // Se é fetch (Accept: application/json), retornar JSON
     const acceptHeader = req.headers.get('accept') || '';
@@ -237,14 +238,17 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     let plan: CheckoutPlan = 'starter';
+    let cycle: BillingCycle = 'monthly';
     const contentType = req.headers.get('content-type') || '';
 
     if (contentType.includes('application/json')) {
       const body = await req.json();
       plan = body.plan || 'starter';
+      cycle = body.cycle || 'monthly';
     } else if (contentType.includes('application/x-www-form-urlencoded')) {
       const formData = await req.formData();
       plan = (formData.get('plan')?.toString() as CheckoutPlan) || 'starter';
+      cycle = (formData.get('cycle')?.toString() as BillingCycle) || 'monthly';
     }
 
     // Validar plano
@@ -252,7 +256,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
     }
 
-    return await handleCheckout(req, plan);
+    // Validar ciclo
+    const validCycles: BillingCycle[] = ['monthly', 'quarterly', 'semiannual', 'yearly'];
+    if (!validCycles.includes(cycle)) {
+      return NextResponse.json({ error: 'Ciclo de pagamento inválido' }, { status: 400 });
+    }
+
+    return await handleCheckout(req, plan, cycle);
   } catch (error: any) {
     console.error('Erro ao criar checkout:', error);
     return NextResponse.json(

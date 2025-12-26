@@ -33,10 +33,15 @@ export const BILLING_CYCLES: Record<BillingCycle, CycleInfo> = {
     discount: 10,
     badge: 'Economize 10%'
   },
+  semiannual: {
+    label: 'Semestral',
+    discount: 25,
+    badge: 'Economize 25%'
+  },
   yearly: {
     label: 'Anual',
     discount: 40,
-    badge: 'Economize 40%'
+    badge: 'Melhor Oferta! Economize 40%'
   }
 };
 
@@ -46,25 +51,29 @@ export const BILLING_CYCLES: Record<BillingCycle, CycleInfo> = {
 
 export interface PlanPricing {
   monthly: number;
-  quarterly: number;   // Total trimestral
-  yearly: number;      // Total anual
+  quarterly: number;   // Total trimestral (3 meses)
+  semiannual: number;  // Total semestral (6 meses)
+  yearly: number;      // Total anual (12 meses)
 }
 
 export const PLAN_PRICING: Record<PlanType, PlanPricing> = {
   starter: {
     monthly: 50.00,
-    quarterly: 135.00,  // R$ 45/mês (10% off)
-    yearly: 360.00      // R$ 30/mês (40% off)
+    quarterly: 135.00,   // R$ 45/mês (10% off)
+    semiannual: 225.00,  // R$ 37.50/mês (25% off)
+    yearly: 360.00       // R$ 30/mês (40% off)
   },
   pro: {
     monthly: 100.00,
-    quarterly: 270.00,  // R$ 90/mês (10% off)
-    yearly: 720.00      // R$ 60/mês (40% off)
+    quarterly: 270.00,   // R$ 90/mês (10% off)
+    semiannual: 450.00,  // R$ 75/mês (25% off)
+    yearly: 720.00       // R$ 60/mês (40% off)
   },
   studio: {
     monthly: 300.00,
-    quarterly: 810.00,  // R$ 270/mês (10% off)
-    yearly: 2160.00     // R$ 180/mês (40% off)
+    quarterly: 810.00,   // R$ 270/mês (10% off)
+    semiannual: 1350.00, // R$ 225/mês (25% off)
+    yearly: 2160.00      // R$ 180/mês (40% off)
   }
 };
 
@@ -266,6 +275,8 @@ export function getMonthlyEquivalent(
       return pricing.monthly;
     case 'quarterly':
       return pricing.quarterly / 3;
+    case 'semiannual':
+      return pricing.semiannual / 6;
     case 'yearly':
       return pricing.yearly / 12;
   }

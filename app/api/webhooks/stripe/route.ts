@@ -92,6 +92,10 @@ export async function POST(req: Request) {
         await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice);
         break;
 
+      case 'setup_intent.succeeded':
+        await handleSetupIntentSucceeded(event.data.object as Stripe.SetupIntent);
+        break;
+
       default:
         console.log(`[Webhook] Evento não tratado: ${event.type}`);
     }
@@ -139,7 +143,13 @@ export async function POST(req: Request) {
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const clerkId = session.client_reference_id || session.metadata?.clerk_id;
+  const userId = session.metadata?.user_id;
   const plan = session.metadata?.plan as 'starter' | 'pro' | 'studio' | undefined;
+
+  // Se é modo 'setup', processar adição de cartão
+  if (session.mode === 'setup') {
+    return await handlePaymentMethodSetup(session, userId);
+  }
 
   if (!clerkId) {
     throw new Error('Checkout sem clerk_id');
@@ -434,4 +444,135 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
   // TODO: Enviar email de falha no pagamento
   // await sendPaymentFailedEmail(customer.email, customer.nome, invoice);
+}
+
+/**
+ * setup_intent.succeeded
+ * Quando usuário adiciona cartão com sucesso via Stripe Elements
+ */
+async function handleSetupIntentSucceeded(setupIntent: Stripe.SetupIntent) {
+  console.log(`  → Setup Intent bem-sucedido: ${setupIntent.id}`);
+
+  if (!setupIntent.customer || !setupIntent.payment_method) {
+    throw new Error('Setup Intent sem customer ou payment_method');
+  }
+
+  try {
+    const paymentMethodId = setupIntent.payment_method as string;
+
+    // 1. Definir como método de pagamento padrão do customer
+    await stripe.customers.update(setupIntent.customer as string, {
+      invoice_settings: {
+        default_payment_method: paymentMethodId
+      }
+    });
+
+    console.log(`  ✅ Método de pagamento definido como padrão: ${paymentMethodId}`);
+
+    // 2. Buscar customer no banco
+    const { data: customer } = await supabaseAdmin
+      .from('customers')
+      .select('user_id, email')
+      .eq('stripe_customer_id', setupIntent.customer as string)
+      .single();
+
+    if (!customer) {
+      console.warn(`  ⚠️  Customer não encontrado no banco: ${setupIntent.customer}`);
+      return;
+    }
+
+    // 3. Atualizar metadata do usuário
+    const { data: currentUser } = await supabaseAdmin
+      .from('users')
+      .select('metadata')
+      .eq('id', customer.user_id)
+      .single();
+
+    const currentMetadata = currentUser?.metadata || {};
+
+    await supabaseAdmin
+      .from('users')
+      .update({
+        metadata: {
+          ...currentMetadata,
+          payment_method_added: true,
+          payment_method_added_at: new Date().toISOString(),
+          payment_method_id: paymentMethodId
+        }
+      })
+      .eq('id', customer.user_id);
+
+    console.log(`  ✅ Usuário ${customer.email} agora tem método de pagamento configurado`);
+
+    // TODO: Enviar email de confirmação
+    // await sendPaymentMethodAddedEmail(customer.email);
+
+  } catch (error: any) {
+    console.error(`  ❌ Erro ao processar setup intent:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Processar adição de método de pagamento (modo setup)
+ * Quando usuário adiciona cartão via Checkout Session mode='setup'
+ */
+async function handlePaymentMethodSetup(session: Stripe.Checkout.Session, userId?: string) {
+  console.log(`  → Cartão adicionado via Setup Session: ${session.id}`);
+
+  if (!session.customer || !session.setup_intent) {
+    throw new Error('Setup Session sem customer ou setup_intent');
+  }
+
+  try {
+    // 1. Buscar SetupIntent para pegar o payment method
+    const setupIntent = await stripe.setupIntents.retrieve(session.setup_intent as string);
+
+    if (!setupIntent.payment_method) {
+      throw new Error('Setup Intent sem payment method');
+    }
+
+    const paymentMethodId = setupIntent.payment_method as string;
+
+    // 2. Definir como método de pagamento padrão do customer
+    await stripe.customers.update(session.customer as string, {
+      invoice_settings: {
+        default_payment_method: paymentMethodId
+      }
+    });
+
+    console.log(`  ✅ Método de pagamento definido como padrão: ${paymentMethodId}`);
+
+    // 3. Se temos userId, atualizar informação no banco
+    if (userId) {
+      await supabaseAdmin
+        .from('users')
+        .update({
+          metadata: {
+            payment_method_added: true,
+            payment_method_added_at: new Date().toISOString()
+          }
+        })
+        .eq('id', userId);
+
+      console.log(`  ✅ Usuário ${userId} agora tem método de pagamento configurado`);
+    }
+
+    // 4. Buscar customer no banco
+    const { data: customer } = await supabaseAdmin
+      .from('customers')
+      .select('user_id, email')
+      .eq('stripe_customer_id', session.customer as string)
+      .single();
+
+    if (customer) {
+      console.log(`  ✅ Cartão adicionado para: ${customer.email}`);
+      // TODO: Enviar email de confirmação
+      // await sendPaymentMethodAddedEmail(customer.email);
+    }
+
+  } catch (error: any) {
+    console.error(`  ❌ Erro ao processar setup de pagamento:`, error);
+    throw error;
+  }
 }
