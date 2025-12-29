@@ -139,7 +139,7 @@ export default function FeaturesShowcase() {
               </h3>
               <BeforeAfterSlider
                 beforeImage="/screenshots/topografico.jpeg"
-                afterImage="/screenshots/Topografico1.png"
+                afterImage="/screenshots/topografico-after.png"
                 beforeLabel="Original"
                 afterLabel="Topográfico"
               />

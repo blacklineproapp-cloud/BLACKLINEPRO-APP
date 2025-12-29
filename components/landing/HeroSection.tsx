@@ -33,9 +33,9 @@ export default function HeroSection() {
     {
       title: 'Modo Topográfico',
       description: 'Efeito de curvas de nível para sombreamentos complexos.',
-      image: '/screenshots/Topografico1.png',
+      image: '/screenshots/topografico-after.png',
       beforeImage: '/screenshots/topografico.jpeg',
-      afterImage: '/screenshots/Topografico1.png',
+      afterImage: '/screenshots/topografico-after.png',
       icon: Map,
       color: 'text-blue-500',
       bg: 'blue',
