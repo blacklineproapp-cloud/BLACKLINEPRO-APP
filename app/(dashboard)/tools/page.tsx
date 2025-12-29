@@ -222,16 +222,16 @@ export default function ToolsPage() {
     }
   };
 
-  // ✅ Helper para comprimir imagem no cliente antes do envio (evita Erro 413)
+  // ✅ Helper de segurança extrema para evitar Erro 413 (Payload Too Large)
   const compressImageIfNeeded = async (base64: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        const MAX_DIM = 1800; // 1800px é o "sweet spot" para o Gemini 2.5 e limites de body
+        // 1024px é o tamanho perfeito: leve para o servidor e ideal para a IA fazer o upscale
+        const MAX_DIM = 1024; 
         let width = img.width;
         let height = img.height;
 
-        // Calcular novas dimensões mantendo proporção
         if (width > MAX_DIM || height > MAX_DIM) {
           if (width > height) {
             height *= MAX_DIM / width;
@@ -242,24 +242,22 @@ export default function ToolsPage() {
           }
         }
 
-        // Criar canvas para compressão
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-          resolve(base64); // Fallback caso dê erro no context
+          resolve(base64);
           return;
         }
 
-        // Fundo branco para garantir que transparências (PNG) não fiquem pretas no JPEG
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
         
-        // Exportar como JPEG com qualidade 0.8 (Equilíbrio perfeito entre peso e nitidez)
-        // Isso reduz o peso em até 90% comparado a um PNG original
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        // Qualidade 0.6: Garante que o arquivo fique abaixo de 1MB, evitando o erro 413 da Vercel
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
+        console.log(`[STENCILFLOW] Imagem otimizada para envio: ${(compressedBase64.length / 1024 / 1024).toFixed(2)}MB`);
         resolve(compressedBase64);
       };
       
