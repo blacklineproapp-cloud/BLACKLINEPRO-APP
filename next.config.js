@@ -11,6 +11,12 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react'], // Tree-shaking agressivo
   },
 
+  // AUMENTAR LIMITE DE BODY (para imagens grandes)
+  // Next.js App Router tem limite padrão de 4MB
+  serverRuntimeConfig: {
+    maxRequestBodySize: 50 * 1024 * 1024, // 50MB
+  },
+
   images: {
     remotePatterns: [
       {

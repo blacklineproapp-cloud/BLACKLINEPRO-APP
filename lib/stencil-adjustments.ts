@@ -1,4 +1,5 @@
 import { AdjustControls, STENCIL_PRESETS } from './stencil-types';
+import { compressIfNeeded } from './image-compress';
 
 /**
  * Helper functions para aplicar ajustes em stencils
@@ -39,8 +40,13 @@ export async function applyAdjustments(
   }
 
   try {
+    // ⚡ COMPRIMIR IMAGEM SE NECESSÁRIO (evitar erro 413)
+    const compressedImage = await compressIfNeeded(imageBase64);
+
     console.log('[Adjustments] Enviando requisição:', {
       imageLength: imageBase64.length,
+      compressedLength: compressedImage.length,
+      reduction: ((1 - compressedImage.length / imageBase64.length) * 100).toFixed(1) + '%',
       controlsKeys: Object.keys(controls)
     });
 
@@ -50,7 +56,7 @@ export async function applyAdjustments(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        image: imageBase64,
+        image: compressedImage,
         controls
       })
     });

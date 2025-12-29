@@ -209,5 +209,6 @@ export async function POST(req: Request) {
   }
 }
 
-// Configuração de timeout
+// Configuração de timeout e body size
 export const maxDuration = 60;
+export const runtime = 'nodejs'; // Necessário para body grande
