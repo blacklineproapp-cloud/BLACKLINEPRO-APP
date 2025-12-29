@@ -1,12 +1,11 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOrCreateUser } from '@/lib/auth';
+import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { enhanceImage } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkToolsLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 
-// Emails admin com acesso ilimitado
-const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
 
 export async function POST(req: Request) {
   try {
@@ -14,6 +13,34 @@ export async function POST(req: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+
+    // 🛡️ RATE LIMITING: Prevenir abuso (60 requests/min)
+    const identifier = await getRateLimitIdentifier(userId);
+
+    if (apiLimiter) {
+      const { success, limit, remaining, reset } = await apiLimiter.limit(identifier);
+
+      if (!success) {
+        return NextResponse.json(
+          {
+            error: 'Muitas requisições',
+            message: 'Você atingiu o limite de requisições. Tente novamente em alguns minutos.',
+            limit,
+            remaining,
+            reset: new Date(reset).toISOString(),
+          },
+          {
+            status: 429,
+            headers: {
+              'X-RateLimit-Limit': limit.toString(),
+              'X-RateLimit-Remaining': remaining.toString(),
+              'X-RateLimit-Reset': reset.toString(),
+              'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
+            },
+          }
+        );
+      }
     }
 
     // Buscar usuário completo (precisa do UUID user.id)
@@ -28,10 +55,9 @@ export async function POST(req: Request) {
     }
 
     // 🔓 BYPASS PARA ADMINS - acesso ilimitado
-    const userEmailLower = userData.email?.toLowerCase() || '';
-    const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
+    const userIsAdmin = await checkIsAdmin(userId);
 
-    if (!isAdmin) {
+    if (!userIsAdmin) {
       // Verificar assinatura (apenas para não-admins)
       if (!userData.is_paid || userData.subscription_status !== 'active') {
         return NextResponse.json({
@@ -72,20 +98,34 @@ export async function POST(req: Request) {
       }
     }
 
-    const { image } = await req.json();
+    const { image, targetDpi, widthCm, heightCm } = await req.json();
 
     if (!image) {
       return NextResponse.json({ error: 'Imagem não fornecida' }, { status: 400 });
     }
 
+    console.log('[Enhance API] Iniciando enhancement:', {
+      imageLength: image.length,
+      targetDpi,
+      widthCm,
+      heightCm,
+      userIsAdmin
+    });
+
     // Aprimorar imagem
     const enhancedImage = await enhanceImage(image);
 
+    console.log('[Enhance API] Enhancement concluído:', {
+      enhancedImageLength: enhancedImage?.length,
+      hasImage: !!enhancedImage
+    });
+
     // ✅ REGISTRAR USO após operação bem-sucedida (exceto admins)
-    if (!isAdmin) {
+    if (!userIsAdmin) {
       await recordUsage({
         userId: userData.id,
         type: 'tool_usage',
+        operationType: 'enhance_image',
         metadata: {
           tool: 'enhance',
           operation: 'enhance_image'

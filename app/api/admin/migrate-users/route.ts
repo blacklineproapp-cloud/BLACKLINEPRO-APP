@@ -1,24 +1,10 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { isAdmin } from '@/lib/auth';
+
 import { supabaseAdmin } from '@/lib/supabase';
 
-// Emails com acesso admin (case-insensitive)
-const ADMIN_EMAILS = [
-  'erickrussomat@gmail.com',
-  'yurilojavirtual@gmail.com',
-];
 
-async function isAdmin(userId: string): Promise<boolean> {
-  const { data: user } = await supabaseAdmin
-    .from('users')
-    .select('email')
-    .eq('clerk_id', userId)
-    .single();
-
-  // Comparação case-insensitive (apenas por email)
-  const userEmailLower = user?.email?.toLowerCase() || '';
-  return user ? ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower) : false;
-}
 
 /**
  * POST /api/admin/migrate-users

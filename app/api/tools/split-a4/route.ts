@@ -1,9 +1,10 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOrCreateUser } from '@/lib/auth';
+import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateStencilFromImage } from '@/lib/gemini';
 import { checkToolsLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 import sharp from 'sharp';
 
 // =============================================================================
@@ -34,6 +35,18 @@ const CM_TO_PX = DPI / 2.54; // 1 cm = 118.11 pixels @ 300 DPI
 //
 // =============================================================================
 
+interface CropArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface FlipTransform {
+  horizontal: boolean;
+  vertical: boolean;
+}
+
 interface SplitOptions {
   imageBase64: string;
   tattooWidthCm: number;
@@ -47,7 +60,10 @@ interface SplitOptions {
   forcedCols?: number; // Grid fixo definido pelo usuário
   forcedRows?: number; // Grid fixo definido pelo usuário
   userUuid?: string; // UUID do usuário para registrar uso
-  isAdmin?: boolean; // Admin bypass
+  userIsAdmin?: boolean; // Admin bypass
+  croppedArea?: CropArea; // Área de crop da react-easy-crop (em pixels)
+  rotation?: number; // Rotação em graus
+  flip?: FlipTransform; // Flip horizontal/vertical
 }
 
 async function splitImageIntoA4Pages(options: SplitOptions) {
@@ -64,74 +80,114 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
     forcedCols,
     forcedRows,
     userUuid,
-    isAdmin
+    userIsAdmin,
+    croppedArea,
+    rotation = 0,
+    flip = { horizontal: false, vertical: false }
   } = options;
-
-  console.log('=== SPLIT A4 DEBUG ===');
-  console.log('Tattoo size (cm):', tattooWidthCm, 'x', tattooHeightCm);
-  console.log('Paper size (cm):', paperWidthCm, 'x', paperHeightCm);
-  console.log('Offset (cm):', offsetXCm, offsetYCm);
-  console.log('Process mode:', processMode);
 
   // ---------------------------------------------------------------------------
   // STEP 1: Preparar imagem no tamanho físico correto
   // ---------------------------------------------------------------------------
 
-  const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-  const imageBuffer = Buffer.from(cleanBase64, 'base64');
-
-  // Obter dimensões originais
-  const metadata = await sharp(imageBuffer).metadata();
-  const originalWidth = metadata.width!;
-  const originalHeight = metadata.height!;
-
-  console.log('Original image (px):', originalWidth, 'x', originalHeight);
-
-  // ---------------------------------------------------------------------------
-  // MAXIMIZAR TAMANHO: Caber dentro dos limites mantendo proporção
-  // ---------------------------------------------------------------------------
-
-  // Calcular proporção original
-  const originalAspectRatio = originalWidth / originalHeight;
-  console.log('Original aspect ratio:', originalAspectRatio.toFixed(3));
-
-  // Usuário define limites máximos
-  const maxWidthCm = tattooWidthCm;
-  const maxHeightCm = tattooHeightCm;
-
-  console.log('User requested max size (cm):', maxWidthCm, 'x', maxHeightCm);
-
-  // Calcular qual dimensão usar para MAXIMIZAR sem distorcer
-  const widthBasedHeightCm = maxWidthCm / originalAspectRatio;
-  const heightBasedWidthCm = maxHeightCm * originalAspectRatio;
-
-  let finalWidthCm: number;
-  let finalHeightCm: number;
-
-  if (widthBasedHeightCm <= maxHeightCm) {
-    // Usar LARGURA completa, ajustar altura
-    finalWidthCm = maxWidthCm;
-    finalHeightCm = widthBasedHeightCm;
-    console.log('Width-limited: using full width, adjusting height');
-  } else {
-    // Usar ALTURA completa, ajustar largura
-    finalWidthCm = heightBasedWidthCm;
-    finalHeightCm = maxHeightCm;
-    console.log('Height-limited: using full height, adjusting width');
+  // Validar imagem base64
+  if (!imageBase64 || typeof imageBase64 !== 'string') {
+    throw new Error('Imagem inválida ou não fornecida');
   }
 
-  console.log('Final tattoo size (cm):', finalWidthCm.toFixed(2), 'x', finalHeightCm.toFixed(2));
+  const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
-  // Converter para pixels
-  const imageWidthPx = Math.round(finalWidthCm * CM_TO_PX);
-  const imageHeightPx = Math.round(finalHeightCm * CM_TO_PX);
+  if (!cleanBase64 || cleanBase64.length < 100) {
+    throw new Error('Imagem base64 inválida ou muito pequena');
+  }
 
-  console.log('Final tattoo size (px):', imageWidthPx, 'x', imageHeightPx);
+  let imageBuffer: Buffer;
+  try {
+    imageBuffer = Buffer.from(cleanBase64, 'base64');
+  } catch (error) {
+    throw new Error('Falha ao decodificar base64: ' + error);
+  }
 
-  // Resize mantendo proporção, usando o máximo de espaço
+  // Obter dimensões originais
+  let metadata = await sharp(imageBuffer).metadata();
+  let originalWidth = metadata.width!;
+  let originalHeight = metadata.height!;
+
+  // ---------------------------------------------------------------------------
+  // STEP 1.5: Aplicar transformações (rotate, flip, crop) ANTES do resize
+  // ---------------------------------------------------------------------------
+  //
+  // 🔍 DPI MAPPING (WYSIWYG Fix):
+  // - Frontend ImageCropControl: Container 500px (escala visual ~100 DPI)
+  // - Backend API: 300 DPI para impressão @ 1:1
+  // - croppedArea já vem ESCALADO do frontend (page.tsx linhas 268-307)
+  //   - Calcula scale = imagemOriginal / container
+  //   - Multiplica x, y, width, height por scale
+  // - Resultado: crop correto na imagem original em alta resolução
+  // ---------------------------------------------------------------------------
+
+  let sharpPipeline = sharp(imageBuffer);
+
+  // 1. Aplicar rotação (se houver)
+  if (rotation !== 0) {
+    sharpPipeline = sharpPipeline.rotate(rotation, {
+      background: { r: 255, g: 255, b: 255, alpha: 0 } // Fundo transparente
+    });
+  }
+
+  // 2. Aplicar flip (se houver)
+  if (flip.horizontal) {
+    sharpPipeline = sharpPipeline.flop();
+  }
+  if (flip.vertical) {
+    sharpPipeline = sharpPipeline.flip();
+  }
+
+  // Aplicar transformações até aqui para obter novas dimensões
+  imageBuffer = await sharpPipeline.png().toBuffer();
+  metadata = await sharp(imageBuffer).metadata();
+  originalWidth = metadata.width!;
+  originalHeight = metadata.height!;
+
+  // 3. Aplicar crop (se houver)
+  if (croppedArea) {
+
+    // croppedArea vem em pixels absolutos da react-easy-crop
+    const cropLeft = Math.max(0, Math.round(croppedArea.x));
+    const cropTop = Math.max(0, Math.round(croppedArea.y));
+    const cropWidth = Math.min(originalWidth - cropLeft, Math.round(croppedArea.width));
+    const cropHeight = Math.min(originalHeight - cropTop, Math.round(croppedArea.height));
+
+    imageBuffer = await sharp(imageBuffer)
+      .extract({
+        left: cropLeft,
+        top: cropTop,
+        width: cropWidth,
+        height: cropHeight
+      })
+      .png()
+      .toBuffer();
+
+    // Atualizar dimensões após crop
+    metadata = await sharp(imageBuffer).metadata();
+    originalWidth = metadata.width!;
+    originalHeight = metadata.height!;
+
+  }
+
+  // ---------------------------------------------------------------------------
+  // USAR EXATAMENTE as dimensões fornecidas pelo frontend (usuário controla zoom)
+  // ---------------------------------------------------------------------------
+
+  // O frontend já calculou tattooWidthCm e tattooHeightCm baseado no zoom do usuário
+  // Não forçar fit: cover - apenas usar as dimensões exatas que o usuário escolheu
+  let imageWidthPx = Math.round(tattooWidthCm * CM_TO_PX);
+  let imageHeightPx = Math.round(tattooHeightCm * CM_TO_PX);
+
+  // Resize para tamanho EXATO calculado pelo frontend
   let processedBuffer = await sharp(imageBuffer)
     .resize(imageWidthPx, imageHeightPx, {
-      fit: 'inside',  // Mantém proporção, cabe dentro dos limites
+      fit: 'fill',  // Força tamanho exato (proporção já foi mantida no cálculo do frontend)
       kernel: sharp.kernel.lanczos3,
       withoutEnlargement: false,
     })
@@ -143,7 +199,6 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
   // ---------------------------------------------------------------------------
 
   if (processMode === 'topographic' || processMode === 'perfect_lines') {
-    console.log('Applying Gemini processing:', processMode);
 
     const resizedBase64 = `data:image/png;base64,${processedBuffer.toString('base64')}`;
     const stencilStyle = processMode === 'perfect_lines' ? 'perfect_lines' : 'standard';
@@ -155,11 +210,9 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
 
       // CRITICAL: Recalcular metadata após Gemini
       const stencilMetadata = await sharp(processedBuffer).metadata();
-      console.log('After Gemini (px):', stencilMetadata.width, 'x', stencilMetadata.height);
 
       // Garantir que mantém as dimensões corretas
       if (stencilMetadata.width !== imageWidthPx || stencilMetadata.height !== imageHeightPx) {
-        console.log('Resizing after Gemini to match original dimensions');
         processedBuffer = await sharp(processedBuffer)
           .resize(imageWidthPx, imageHeightPx, {
             fit: 'fill',
@@ -170,10 +223,11 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
       }
 
       // ✅ REGISTRAR USO após processamento Gemini bem-sucedido (exceto admins)
-      if (userUuid && !isAdmin) {
+      if (userUuid && !userIsAdmin) {
         await recordUsage({
           userId: userUuid,
           type: 'tool_usage',
+          operationType: 'split_with_gemini',
           metadata: {
             tool: 'split_a4',
             processMode: processMode,
@@ -182,8 +236,24 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
         });
       }
     } catch (error) {
-      console.error('Gemini processing failed:', error);
+      console.error('❌ Gemini processing failed:', error);
       throw new Error(`Falha no processamento ${processMode}: ${error}`);
+    }
+  } else {
+    // Reference mode: RÁPIDO, sem processamento AI
+
+    // Registrar uso no modo reference (exceto admins)
+    if (userUuid && !userIsAdmin) {
+      await recordUsage({
+        userId: userUuid,
+        type: 'tool_usage',
+        operationType: 'split_only',
+        metadata: {
+          tool: 'split_a4',
+          processMode: 'reference',
+          operation: 'split_only'
+        }
+      });
     }
   }
 
@@ -197,14 +267,9 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
   const effectiveWidthPx = paperWidthPx - overlapPx;
   const effectiveHeightPx = paperHeightPx - overlapPx;
 
-  console.log('Paper (px):', paperWidthPx, 'x', paperHeightPx);
-  console.log('Effective (px):', effectiveWidthPx, 'x', effectiveHeightPx);
-
   // Offset em pixels
   const offsetXPx = Math.round(offsetXCm * CM_TO_PX);
   const offsetYPx = Math.round(offsetYCm * CM_TO_PX);
-
-  console.log('Offset (px):', offsetXPx, offsetYPx);
 
   // Área total necessária
   const totalWidthPx = offsetXPx + imageWidthPx;
@@ -217,18 +282,29 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
   if (forcedCols !== undefined && forcedRows !== undefined) {
     cols = forcedCols;
     rows = forcedRows;
-    console.log('Using FORCED grid from frontend:', cols, 'x', rows);
   } else {
     cols = Math.ceil(totalWidthPx / effectiveWidthPx);
     rows = Math.ceil(totalHeightPx / effectiveHeightPx);
-    console.log('Calculated grid dynamically:', cols, 'x', rows);
   }
-
-  console.log('Grid:', cols, 'x', rows, '=', cols * rows, 'pages');
 
   // ---------------------------------------------------------------------------
   // STEP 4: Gerar cada página
   // ---------------------------------------------------------------------------
+
+  // Verificar dimensões reais do buffer processado
+  const finalMetadata = await sharp(processedBuffer).metadata();
+  let actualWidth = finalMetadata.width!;
+  let actualHeight = finalMetadata.height!;
+
+  // Se as dimensões não batem, usar as dimensões reais
+  if (actualWidth !== imageWidthPx || actualHeight !== imageHeightPx) {
+    imageWidthPx = actualWidth;
+    imageHeightPx = actualHeight;
+
+    // Recalcular área total
+    const totalWidthPx = offsetXPx + imageWidthPx;
+    const totalHeightPx = offsetYPx + imageHeightPx;
+  }
 
   const pages: Array<{
     imageData: string;
@@ -240,7 +316,6 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      console.log(`\n--- Page ${pageNumber} [${row},${col}] ---`);
 
       // Posição da página no espaço global (canto superior esquerdo)
       const pageGlobalLeft = col * effectiveWidthPx;
@@ -248,15 +323,11 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
       const pageGlobalRight = pageGlobalLeft + paperWidthPx;
       const pageGlobalBottom = pageGlobalTop + paperHeightPx;
 
-      console.log('Page bounds (global px):', pageGlobalLeft, pageGlobalTop, pageGlobalRight, pageGlobalBottom);
-
       // Posição da imagem no espaço global
       const imageGlobalLeft = offsetXPx;
       const imageGlobalTop = offsetYPx;
       const imageGlobalRight = imageGlobalLeft + imageWidthPx;
       const imageGlobalBottom = imageGlobalTop + imageHeightPx;
-
-      console.log('Image bounds (global px):', imageGlobalLeft, imageGlobalTop, imageGlobalRight, imageGlobalBottom);
 
       // Criar canvas branco do tamanho do papel
       const paperCanvas = await sharp({
@@ -277,7 +348,6 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
       );
 
       if (!hasIntersection) {
-        console.log('No intersection - blank page');
         const base64Page = `data:image/png;base64,${paperCanvas.toString('base64')}`;
         pages.push({
           imageData: base64Page,
@@ -299,16 +369,27 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
       const srcWidth = intersectRight - intersectLeft;
       const srcHeight = intersectBottom - intersectTop;
 
-      console.log('Extract from image (local px):', srcLeft, srcTop, srcWidth, srcHeight);
+      // Validar bounds e ajustar se necessário
+      let adjustedLeft = Math.max(0, Math.floor(srcLeft));
+      let adjustedTop = Math.max(0, Math.floor(srcTop));
+      let adjustedWidth = Math.floor(srcWidth);
+      let adjustedHeight = Math.floor(srcHeight);
 
-      // Validar bounds
+      // Garantir que não ultrapasse os limites da imagem
+      if (adjustedLeft + adjustedWidth > imageWidthPx) {
+        adjustedWidth = imageWidthPx - adjustedLeft;
+      }
+      if (adjustedTop + adjustedHeight > imageHeightPx) {
+        adjustedHeight = imageHeightPx - adjustedTop;
+      }
+
+      // Validar se ainda é válido
       if (
-        srcLeft < 0 || srcTop < 0 ||
-        srcWidth <= 0 || srcHeight <= 0 ||
-        srcLeft + srcWidth > imageWidthPx ||
-        srcTop + srcHeight > imageHeightPx
+        adjustedLeft < 0 || adjustedTop < 0 ||
+        adjustedWidth <= 0 || adjustedHeight <= 0 ||
+        adjustedLeft >= imageWidthPx ||
+        adjustedTop >= imageHeightPx
       ) {
-        console.log('Invalid bounds - blank page');
         const base64Page = `data:image/png;base64,${paperCanvas.toString('base64')}`;
         pages.push({
           imageData: base64Page,
@@ -318,19 +399,20 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
         continue;
       }
 
+      if (adjustedWidth !== Math.floor(srcWidth) || adjustedHeight !== Math.floor(srcHeight)) {
+      }
+
       // Posição onde colar no papel (0,0 = canto do papel)
       const dstLeft = intersectLeft - pageGlobalLeft;
       const dstTop = intersectTop - pageGlobalTop;
 
-      console.log('Paste on paper (local px):', dstLeft, dstTop);
-
-      // Extrair parte da imagem
+      // Extrair parte da imagem usando valores ajustados
       const croppedImage = await sharp(processedBuffer)
         .extract({
-          left: Math.round(srcLeft),
-          top: Math.round(srcTop),
-          width: Math.round(srcWidth),
-          height: Math.round(srcHeight),
+          left: adjustedLeft,
+          top: adjustedTop,
+          width: adjustedWidth,
+          height: adjustedHeight,
         })
         .toBuffer();
 
@@ -351,7 +433,6 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
         pageNumber: pageNumber++
       });
 
-      console.log('✓ Page generated successfully');
     }
   }
 
@@ -368,15 +449,40 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
   };
 }
 
-// Emails admin com acesso ilimitado
-const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
-
 export async function POST(req: Request) {
   try {
     const { userId } = await auth();
 
     if (!userId) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+
+    // 🛡️ RATE LIMITING: Prevenir abuso (60 requests/min)
+    const identifier = await getRateLimitIdentifier(userId);
+
+    if (apiLimiter) {
+      const { success, limit, remaining, reset } = await apiLimiter.limit(identifier);
+
+      if (!success) {
+        return NextResponse.json(
+          {
+            error: 'Muitas requisições',
+            message: 'Você atingiu o limite de requisições. Tente novamente em alguns minutos.',
+            limit,
+            remaining,
+            reset: new Date(reset).toISOString(),
+          },
+          {
+            status: 429,
+            headers: {
+              'X-RateLimit-Limit': limit.toString(),
+              'X-RateLimit-Remaining': remaining.toString(),
+              'X-RateLimit-Reset': reset.toString(),
+              'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
+            },
+          }
+        );
+      }
     }
 
     // Buscar usuário completo (precisa do UUID user.id)
@@ -391,10 +497,9 @@ export async function POST(req: Request) {
     }
 
     // 🔓 BYPASS PARA ADMINS - acesso ilimitado
-    const userEmailLower = userData.email?.toLowerCase() || '';
-    const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
+    const userIsAdmin = await checkIsAdmin(userId);
 
-    if (!isAdmin) {
+    if (!userIsAdmin) {
       // Verificar assinatura (apenas para não-admins)
       if (!userData.is_paid || userData.subscription_status !== 'active') {
         return NextResponse.json({
@@ -427,7 +532,10 @@ export async function POST(req: Request) {
       offsetY = 0,
       processMode = 'reference',
       forcedCols,
-      forcedRows
+      forcedRows,
+      croppedArea,
+      rotation = 0,
+      flip = { horizontal: false, vertical: false }
     }: {
       image: string;
       tattooWidth: number;
@@ -440,10 +548,13 @@ export async function POST(req: Request) {
       processMode?: 'reference' | 'topographic' | 'perfect_lines';
       forcedCols?: number;
       forcedRows?: number;
+      croppedArea?: CropArea;
+      rotation?: number;
+      flip?: FlipTransform;
     } = await req.json();
 
     // ✅ VERIFICAR LIMITE DE USO se usar Gemini (100/500 por plano)
-    if (!isAdmin && processMode !== 'reference') {
+    if (!userIsAdmin && processMode !== 'reference') {
       const limitCheck = await checkToolsLimit(userData.id);
 
       if (!limitCheck.allowed) {
@@ -490,7 +601,10 @@ export async function POST(req: Request) {
       forcedCols,
       forcedRows,
       userUuid: userData.id,
-      isAdmin
+      userIsAdmin,
+      croppedArea,
+      rotation,
+      flip
     });
 
     return NextResponse.json(result);

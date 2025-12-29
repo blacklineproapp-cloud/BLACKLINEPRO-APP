@@ -36,8 +36,6 @@ export async function POST(req: Request) {
     return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
   }
 
-  console.log(`\n🔔 [Webhook] Evento recebido: ${event.type} (${event.id})`);
-
   // ========================================
   // 2. REGISTRAR WEBHOOK NO LOG
   // ========================================
@@ -97,7 +95,6 @@ export async function POST(req: Request) {
         break;
 
       default:
-        console.log(`[Webhook] Evento não tratado: ${event.type}`);
     }
 
     // Marcar log como processado
@@ -111,7 +108,6 @@ export async function POST(req: Request) {
         .eq('id', logId);
     }
 
-    console.log(`✅ [Webhook] Processado com sucesso: ${event.type}\n`);
     return new NextResponse('OK', { status: 200 });
 
   } catch (error: any) {
@@ -144,7 +140,7 @@ export async function POST(req: Request) {
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const clerkId = session.client_reference_id || session.metadata?.clerk_id;
   const userId = session.metadata?.user_id;
-  const plan = session.metadata?.plan as 'starter' | 'pro' | 'studio' | undefined;
+  const plan = session.metadata?.plan as 'starter' | 'pro' | 'studio' | 'enterprise' | undefined;
 
   // Se é modo 'setup', processar adição de cartão
   if (session.mode === 'setup') {
@@ -154,8 +150,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (!clerkId) {
     throw new Error('Checkout sem clerk_id');
   }
-
-  console.log(`  → Checkout completado para: ${clerkId}, plan: ${plan}`);
 
   // 1. Buscar usuário
   const { data: user } = await supabaseAdmin
@@ -200,11 +194,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
         is_paid: true,
         plan: plan || 'starter',
-        tools_unlocked: plan === 'pro' || plan === 'studio'
+        tools_unlocked: plan === 'pro' || plan === 'studio' || plan === 'enterprise'
       })
       .eq('id', user.id);
-
-    console.log(`  ✅ Assinatura ativada: ${plan || 'starter'}`);
 
     // Registrar pagamento
     await supabaseAdmin.from('payments').insert({
@@ -231,7 +223,6 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
  * Quando nova assinatura é criada
  */
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
-  console.log(`  → Nova assinatura: ${subscription.id}`);
 
   // Buscar customer
   const customer = await CustomerService.getByStripeId(subscription.customer as string);
@@ -273,11 +264,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       subscription_status: subscription.status,
       subscription_id: subscription.id,
       is_paid: true,
-      tools_unlocked: planType === 'pro' || planType === 'studio'
+      tools_unlocked: planType === 'pro' || planType === 'studio' || planType === 'enterprise'
     })
     .eq('id', customer.user_id);
-
-  console.log(`  ✅ Subscription criada no banco`);
 
   // TODO: Enviar email de boas-vindas
   // await sendWelcomeEmail(customer.email, customer.nome);
@@ -288,7 +277,6 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
  * Quando assinatura é atualizada (mudança de plano, status, etc)
  */
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  console.log(`  → Assinatura atualizada: ${subscription.id} (${subscription.status})`);
 
   // Sincronizar com banco
   await SubscriptionService.syncFromStripe(subscription.id);
@@ -303,7 +291,6 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     })
     .eq('subscription_id', subscription.id);
 
-  console.log(`  ✅ Assinatura atualizada`);
 }
 
 /**
@@ -311,7 +298,6 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
  * Quando assinatura é cancelada/deletada
  */
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  console.log(`  → Assinatura deletada: ${subscription.id}`);
 
   // Buscar subscription no banco
   const sub = await SubscriptionService.getByStripeId(subscription.id);
@@ -336,8 +322,6 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     })
     .eq('subscription_id', subscription.id);
 
-  console.log(`  ✅ Assinatura cancelada, usuário revertido para FREE`);
-
   // TODO: Enviar email de cancelamento
   // await sendCancellationEmail(customer.email, customer.nome);
 }
@@ -348,11 +332,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
  */
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   if (!invoice.subscription) {
-    console.log(`  → Invoice sem subscription, ignorando`);
     return;
   }
-
-  console.log(`  → Pagamento bem-sucedido: ${invoice.id}`);
 
   // Buscar subscription
   const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
@@ -397,8 +378,6 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     plan_type: planMapping?.tier || 'editor_only'
   });
 
-  console.log(`  ✅ Pagamento registrado: R$ ${invoice.amount_paid / 100}`);
-
   // TODO: Enviar email de confirmação de pagamento
   // await sendPaymentConfirmationEmail(customer.email, customer.nome, invoice);
 }
@@ -409,11 +388,8 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
  */
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   if (!invoice.subscription) {
-    console.log(`  → Invoice sem subscription, ignorando`);
     return;
   }
-
-  console.log(`  ⚠️  Pagamento falhou: ${invoice.id}`);
 
   // Marcar como past_due
   await supabaseAdmin
@@ -440,8 +416,6 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
     });
   }
 
-  console.log(`  ✅ Status atualizado para past_due`);
-
   // TODO: Enviar email de falha no pagamento
   // await sendPaymentFailedEmail(customer.email, customer.nome, invoice);
 }
@@ -451,7 +425,6 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
  * Quando usuário adiciona cartão com sucesso via Stripe Elements
  */
 async function handleSetupIntentSucceeded(setupIntent: Stripe.SetupIntent) {
-  console.log(`  → Setup Intent bem-sucedido: ${setupIntent.id}`);
 
   if (!setupIntent.customer || !setupIntent.payment_method) {
     throw new Error('Setup Intent sem customer ou payment_method');
@@ -467,8 +440,6 @@ async function handleSetupIntentSucceeded(setupIntent: Stripe.SetupIntent) {
       }
     });
 
-    console.log(`  ✅ Método de pagamento definido como padrão: ${paymentMethodId}`);
-
     // 2. Buscar customer no banco
     const { data: customer } = await supabaseAdmin
       .from('customers')
@@ -477,7 +448,6 @@ async function handleSetupIntentSucceeded(setupIntent: Stripe.SetupIntent) {
       .single();
 
     if (!customer) {
-      console.warn(`  ⚠️  Customer não encontrado no banco: ${setupIntent.customer}`);
       return;
     }
 
@@ -502,8 +472,6 @@ async function handleSetupIntentSucceeded(setupIntent: Stripe.SetupIntent) {
       })
       .eq('id', customer.user_id);
 
-    console.log(`  ✅ Usuário ${customer.email} agora tem método de pagamento configurado`);
-
     // TODO: Enviar email de confirmação
     // await sendPaymentMethodAddedEmail(customer.email);
 
@@ -518,7 +486,6 @@ async function handleSetupIntentSucceeded(setupIntent: Stripe.SetupIntent) {
  * Quando usuário adiciona cartão via Checkout Session mode='setup'
  */
 async function handlePaymentMethodSetup(session: Stripe.Checkout.Session, userId?: string) {
-  console.log(`  → Cartão adicionado via Setup Session: ${session.id}`);
 
   if (!session.customer || !session.setup_intent) {
     throw new Error('Setup Session sem customer ou setup_intent');
@@ -541,8 +508,6 @@ async function handlePaymentMethodSetup(session: Stripe.Checkout.Session, userId
       }
     });
 
-    console.log(`  ✅ Método de pagamento definido como padrão: ${paymentMethodId}`);
-
     // 3. Se temos userId, atualizar informação no banco
     if (userId) {
       await supabaseAdmin
@@ -555,7 +520,6 @@ async function handlePaymentMethodSetup(session: Stripe.Checkout.Session, userId
         })
         .eq('id', userId);
 
-      console.log(`  ✅ Usuário ${userId} agora tem método de pagamento configurado`);
     }
 
     // 4. Buscar customer no banco
@@ -566,7 +530,6 @@ async function handlePaymentMethodSetup(session: Stripe.Checkout.Session, userId
       .single();
 
     if (customer) {
-      console.log(`  ✅ Cartão adicionado para: ${customer.email}`);
       // TODO: Enviar email de confirmação
       // await sendPaymentMethodAddedEmail(customer.email);
     }

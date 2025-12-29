@@ -3,25 +3,26 @@
 import { useState, FormEvent } from 'react';
 import { useStripe, useElements, PaymentElement } from '@stripe/react-stripe-js';
 import { Loader2, Lock, CreditCard } from 'lucide-react';
+import { PLAN_PRICING, formatPrice, BILLING_CYCLES } from '@/lib/billing/plans';
+import type { BillingCycle } from '@/lib/stripe/types';
 
 interface CheckoutFormProps {
-  plan: 'starter' | 'pro' | 'studio';
-  onSuccess?: () => void;
-  onError?: (error: string) => void;
+  plan: 'starter' | 'pro' | 'studio' | 'enterprise';
+  cycle?: BillingCycle;
+  onSuccess: () => void;
+  onError: (error: string) => void;
 }
 
-export default function CheckoutForm({ plan, onSuccess, onError }: CheckoutFormProps) {
+export default function CheckoutForm({ plan, cycle = 'monthly', onSuccess, onError }: CheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loadingText, setLoadingText] = useState('Processando...');
 
-  const planPrices = {
-    starter: 'R$ 50',
-    pro: 'R$ 100',
-    studio: 'R$ 300',
-  };
+  // Calcular preço total baseado no ciclo
+  const totalPrice = PLAN_PRICING[plan][cycle];
+  const cycleInfo = BILLING_CYCLES[cycle];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -92,7 +93,7 @@ export default function CheckoutForm({ plan, onSuccess, onError }: CheckoutFormP
         <PaymentElement
           options={{
             layout: 'tabs',
-            paymentMethodOrder: ['card'],
+            paymentMethodOrder: ['card', 'boleto'],
             defaultValues: {
               billingDetails: {
                 address: {
@@ -126,7 +127,10 @@ export default function CheckoutForm({ plan, onSuccess, onError }: CheckoutFormP
         ) : (
           <>
             <CreditCard size={20} />
-            <span>Assinar por {planPrices[plan]}/mês</span>
+            <span>
+              Assinar por {formatPrice(totalPrice)}
+              {cycle !== 'monthly' && ` (${cycleInfo.label})`}
+            </span>
           </>
         )}
       </button>

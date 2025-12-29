@@ -21,8 +21,17 @@ export async function applyAdjustments(
     throw new Error('Imagem inválida ou não fornecida');
   }
 
-  if (!imageBase64.startsWith('data:image/')) {
-    throw new Error('Formato de imagem inválido (esperado base64)');
+  // Log para debug
+  console.log('[Adjustments] Validando imagem:', {
+    length: imageBase64.length,
+    startsWithData: imageBase64.startsWith('data:'),
+    first50chars: imageBase64.substring(0, 50)
+  });
+
+  // Validação simplificada - aceitar qualquer string não vazia
+  // A API backend fará a validação real
+  if (imageBase64.length < 10) {
+    throw new Error('Formato de imagem inválido (muito curta)');
   }
 
   if (!controls || typeof controls !== 'object') {
@@ -166,8 +175,8 @@ export function validateControls(
     return { valid: false, error: 'Threshold deve estar entre 0 e 255' };
   }
 
-  if (controls.gamma < 0.5 || controls.gamma > 2.0) {
-    return { valid: false, error: 'Gamma deve estar entre 0.5 e 2.0' };
+  if (controls.gamma < 1.0 || controls.gamma > 3.0) {
+    return { valid: false, error: 'Gamma deve estar entre 1.0 e 3.0' };
   }
 
   if (controls.rotation < -180 || controls.rotation > 180) {

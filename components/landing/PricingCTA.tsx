@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Zap, Crown, Sparkles, Infinity } from 'lucide-react';
+import { Zap, Crown, Sparkles, Infinity, Package } from 'lucide-react';
 
 export default function PricingCTA() {
   const plans = [
@@ -36,14 +36,28 @@ export default function PricingCTA() {
       name: 'Studio',
       price: 'R$ 300',
       period: '/mês',
-      limit: 'Ilimitado',
+      limit: '7.500 gerações/mês',
       icon: Sparkles,
       color: 'amber',
       features: [
         'Tudo do Pro',
-        'Uso ilimitado',
+        'Até 7.500 gerações/mês',
         'Suporte prioritário',
         'Ideal para estúdios'
+      ]
+    },
+    {
+      name: 'Enterprise',
+      price: 'R$ 600',
+      period: '/mês',
+      limit: 'Ilimitado',
+      icon: Package,
+      color: 'blue',
+      features: [
+        'Tudo do Studio',
+        'Uso ILIMITADO',
+        'Suporte dedicado 24/7',
+        'SLA garantido 99.9%'
       ]
     }
   ];
@@ -63,6 +77,11 @@ export default function PricingCTA() {
       gradient: 'from-amber-900/20 to-zinc-900',
       border: 'border-amber-500',
       icon: 'text-amber-400'
+    },
+    blue: {
+      gradient: 'from-blue-900/20 to-zinc-900',
+      border: 'border-blue-500',
+      icon: 'text-blue-400'
     }
   };
 
@@ -78,7 +97,7 @@ export default function PricingCTA() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((plan) => {
             const colors = colorClasses[plan.color as keyof typeof colorClasses];
             const Icon = plan.icon;

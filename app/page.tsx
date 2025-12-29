@@ -21,11 +21,7 @@ interface StatsData {
 }
 
 export default function Home() {
-  console.log('🚀 Home component iniciou!');
-
   const { isSignedIn, isLoaded } = useAuth();
-  console.log('📊 Auth hooks:', { isSignedIn, isLoaded });
-
   const router = useRouter();
   const [stats, setStats] = useState<StatsData>({
     totalUsers: 0,
@@ -34,21 +30,14 @@ export default function Home() {
     conversionRate: 0,
   });
 
-  // Debug logs
+  // ✅ RE-HABILITADO: Redireciona usuários logados para dashboard
   useEffect(() => {
-    console.log('🔍 Auth State:', { isLoaded, isSignedIn });
-  }, [isLoaded, isSignedIn]);
+    if (isLoaded && isSignedIn) {
+      router.push('/dashboard');
+    }
+  }, [isLoaded, isSignedIn, router]);
 
-  // Se já está logado, redireciona para dashboard
-  // TEMPORARIAMENTE DESABILITADO PARA VER A LANDING PAGE
-  // useEffect(() => {
-  //   if (isLoaded && isSignedIn) {
-  //     console.log('✅ Redirecionando para dashboard...');
-  //     router.push('/dashboard');
-  //   }
-  // }, [isLoaded, isSignedIn, router]);
-
-  // Buscar estatísticas (sempre, independente do login)
+  // Buscar estatísticas
   useEffect(() => {
     async function fetchStats() {
       try {
@@ -58,17 +47,16 @@ export default function Home() {
           setStats(data);
         }
       } catch (error) {
-        console.error('Erro ao buscar stats:', error);
+        // Falha silenciosa - stats não são críticas
       }
     }
 
-    // Sempre buscar stats quando a página carregar
     if (isLoaded) {
       fetchStats();
     }
   }, [isLoaded]);
 
-  // Não renderizar nada enquanto verifica autenticação
+  // Loading state
   if (!isLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-black">
@@ -76,13 +64,6 @@ export default function Home() {
       </div>
     );
   }
-
-  // TEMPORARIAMENTE DESABILITADO - permitir ver landing mesmo logado
-  // if (isSignedIn) {
-  //   return null;
-  // }
-
-  console.log('✅ Renderizando landing page!');
 
   return (
     <main className="bg-black">

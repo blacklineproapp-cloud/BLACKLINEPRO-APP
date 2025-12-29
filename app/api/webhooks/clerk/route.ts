@@ -42,8 +42,6 @@ export async function POST(req: Request) {
   // Processar evento
   const { type, data } = evt;
 
-  console.log(`📩 Webhook Clerk: ${type}`);
-
   switch (type) {
     case 'user.created':
       await handleUserCreated(data);
@@ -58,7 +56,6 @@ export async function POST(req: Request) {
       break;
 
     default:
-      console.log(`Evento não tratado: ${type}`);
   }
 
   return new NextResponse('OK', { status: 200 });
@@ -70,8 +67,6 @@ async function handleUserCreated(data: any) {
     const email = data.email_addresses[0]?.email_address;
     const name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Usuário';
 
-    console.log(`✅ Criando/Atualizando usuário: ${email} (clerk_id: ${data.id})`);
-
     // PROTEÇÃO CONTRA DUPLICAÇÃO:
     // 1. Verificar se usuário já existe (por clerk_id OU email)
     const { data: existing } = await supabaseAdmin
@@ -81,7 +76,6 @@ async function handleUserCreated(data: any) {
       .maybeSingle();
 
     if (existing) {
-      console.log(`⚠️ Usuário já existe: ${existing.email} (ID: ${existing.id})`);
 
       // Atualizar dados do usuário existente
       const { error: updateError } = await supabaseAdmin
@@ -97,7 +91,6 @@ async function handleUserCreated(data: any) {
       if (updateError) {
         console.error('Erro ao atualizar usuário existente:', updateError);
       } else {
-        console.log(`✅ Usuário atualizado: ${email}`);
       }
       return;
     }
@@ -116,7 +109,6 @@ async function handleUserCreated(data: any) {
     if (error) {
       console.error('❌ Erro ao criar usuário:', error);
     } else {
-      console.log(`✅ Usuário criado: ${email}`);
     }
   } catch (error) {
     console.error('❌ Erro em handleUserCreated:', error);
@@ -128,8 +120,6 @@ async function handleUserUpdated(data: any) {
   try {
     const email = data.email_addresses[0]?.email_address;
     const name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Usuário';
-
-    console.log(`🔄 Atualizando usuário: ${email}`);
 
     const { error } = await supabaseAdmin
       .from('users')
@@ -151,7 +141,6 @@ async function handleUserUpdated(data: any) {
 // Handler: Usuário deletado
 async function handleUserDeleted(data: any) {
   try {
-    console.log(`🗑️  Deletando usuário: ${data.id}`);
 
     const { error } = await supabaseAdmin
       .from('users')

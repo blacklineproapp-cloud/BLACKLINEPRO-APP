@@ -11,14 +11,14 @@ import type { BillingCycle } from '@/lib/stripe/types';
 export default function PricingPage() {
   const { isSignedIn } = useAuth();
   const router = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | 'studio' | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | 'studio' | 'enterprise' | null>(null);
   const [selectedCycle, setSelectedCycle] = useState<BillingCycle>('monthly');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSelectPlan = (planId: string) => {
     // Abre o modal mesmo sem estar logado
     // O modal vai mostrar mensagem pedindo login se necessário
-    if (planId === 'starter' || planId === 'pro' || planId === 'studio') {
+    if (planId === 'starter' || planId === 'pro' || planId === 'studio' || planId === 'enterprise') {
       setSelectedPlan(planId);
       setIsModalOpen(true);
     }
@@ -73,8 +73,8 @@ export default function PricingPage() {
       id: 'studio',
       name: 'Studio',
       basePrice: 300,
-      limit: 'Ilimitado',
-      description: 'Para estúdios e uso intensivo',
+      limit: '7.500 gerações/mês',
+      description: 'Para estúdios e uso profissional',
       icon: Sparkles,
       iconColor: 'text-amber-400',
       bgGradient: 'from-amber-900/20 to-zinc-900',
@@ -82,13 +82,35 @@ export default function PricingPage() {
       buttonColor: 'bg-amber-600 hover:bg-amber-500',
       features: [
         'Tudo do plano Pro',
-        '🏆 Uso ilimitado',
-        '⚡ Prioridade no suporte',
+        '🏆 Até 7.500 gerações/mês',
+        '⚡ Suporte prioritário',
         '💎 Ideal para estúdios',
         'Múltiplos tatuadores',
-        'Sem limites mensais',
         'Relatórios de uso',
-        'Suporte prioritário',
+        'Preview avançado',
+        'Ferramentas completas',
+      ],
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      basePrice: 600,
+      limit: 'Ilimitado',
+      description: 'Uso verdadeiramente ilimitado',
+      icon: Package,
+      iconColor: 'text-blue-400',
+      bgGradient: 'from-blue-900/20 to-zinc-900',
+      borderColor: 'border-blue-500',
+      buttonColor: 'bg-blue-600 hover:bg-blue-500',
+      features: [
+        'Tudo do plano Studio',
+        '♾️ Uso ILIMITADO',
+        '🔥 Suporte dedicado 24/7',
+        '✅ SLA garantido 99.9%',
+        '🎯 Onboarding personalizado',
+        '🔌 API access',
+        'Integração com sistemas',
+        'Atendimento exclusivo',
       ],
     },
   ];
@@ -173,11 +195,11 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {packages.map((pkg) => {
-            const pricing = PLAN_PRICING[pkg.id as 'starter' | 'pro' | 'studio'];
+            const pricing = PLAN_PRICING[pkg.id as 'starter' | 'pro' | 'studio' | 'enterprise'];
             const totalPrice = pricing[selectedCycle];
-            const monthlyEquivalent = getMonthlyEquivalent(pkg.id as 'starter' | 'pro' | 'studio', selectedCycle);
+            const monthlyEquivalent = getMonthlyEquivalent(pkg.id as 'starter' | 'pro' | 'studio' | 'enterprise', selectedCycle);
             const savings = selectedCycle !== 'monthly' ? pkg.basePrice - monthlyEquivalent : 0;
 
             return (

@@ -65,14 +65,11 @@ export async function GET() {
 
 // POST - Salvar novo projeto
 export async function POST(req: Request) {
-  console.log('=== POST /api/projects ===');
   
   try {
     const { userId } = await auth();
-    console.log('UserId from Clerk:', userId);
 
     if (!userId) {
-      console.log('ERROR: Não autenticado');
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
@@ -82,24 +79,17 @@ export async function POST(req: Request) {
       .eq('clerk_id', userId)
       .single();
 
-    console.log('User from Supabase:', user?.id, user?.email);
     if (userError) console.log('User error:', userError);
 
     if (!user) {
-      console.log('ERROR: Usuário não encontrado');
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
     const body = await req.json();
-    console.log('Request body keys:', Object.keys(body));
-    console.log('Has originalImage:', !!body.originalImage);
-    console.log('Has stencilImage:', !!body.stencilImage);
-    console.log('Name:', body.name);
 
     const { name, originalImage, stencilImage, style, widthCm, heightCm, promptDetails } = body;
 
     if (!name || !originalImage || !stencilImage) {
-      console.log('ERROR: Campos obrigatórios faltando');
       return NextResponse.json(
         { error: 'Nome, imagem original e estêncil são obrigatórios' },
         { status: 400 }
@@ -107,34 +97,27 @@ export async function POST(req: Request) {
     }
 
     // Garantir que bucket existe (cria se necessário)
-    console.log('Verificando bucket...');
     await ensureBucketExists();
 
     // Gerar UUID para o projeto
     const projectId = uuidv4();
-    console.log('Generated project ID:', projectId);
 
     // Upload das imagens para o Storage
-    console.log('Fazendo upload da imagem original...');
     const originalImageResult = await uploadImage(
       originalImage,
       user.id,
       projectId,
       'original'
     );
-    console.log('Original image URL:', originalImageResult.publicUrl);
 
-    console.log('Fazendo upload do stencil...');
     const stencilImageResult = await uploadImage(
       stencilImage,
       user.id,
       projectId,
       'stencil'
     );
-    console.log('Stencil image URL:', stencilImageResult.publicUrl);
 
     // Salvar projeto no banco (URLs do Storage)
-    console.log('Inserting project...');
     const { data: project, error } = await supabaseAdmin
       .from('projects')
       .insert({
@@ -153,15 +136,11 @@ export async function POST(req: Request) {
       .single();
 
     if (error) {
-      console.log('Supabase insert error:', error);
       throw error;
     }
 
-    console.log('Project saved successfully:', project?.id);
-
     // Invalidar cache de projetos do usuário
     await invalidateCache(userId, 'projects');
-    console.log('Cache invalidado para userId:', userId);
 
     return NextResponse.json(project);
   } catch (error: any) {

@@ -1,5 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { isAdmin as checkIsAdmin } from '@/lib/auth';
+
 import { supabaseAdmin } from '@/lib/supabase';
 
 /**

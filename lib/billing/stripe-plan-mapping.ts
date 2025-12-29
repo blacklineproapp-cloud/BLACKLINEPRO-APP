@@ -13,7 +13,7 @@ import type { BillingCycle } from '../stripe/types';
 // TIPOS
 // ============================================================================
 
-export type PlanTier = 'starter' | 'pro' | 'studio';
+export type PlanTier = 'starter' | 'pro' | 'studio' | 'enterprise';
 
 export interface PlanMapping {
   tier: PlanTier;

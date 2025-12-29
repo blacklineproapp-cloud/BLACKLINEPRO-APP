@@ -7,11 +7,13 @@ import { X, Loader2, Crown, Zap, Sparkles, LogIn } from 'lucide-react';
 import CheckoutForm from './CheckoutForm';
 import { useRouter } from 'next/navigation';
 import { useAuth, SignInButton } from '@clerk/nextjs';
+import { PLAN_PRICING, BILLING_CYCLES, formatPrice, getMonthlyEquivalent } from '@/lib/billing/plans';
+import type { BillingCycle } from '@/lib/stripe/types';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface CheckoutModalProps {
-  plan: 'starter' | 'pro' | 'studio';
+  plan: 'starter' | 'pro' | 'studio' | 'enterprise';
   cycle?: 'monthly' | 'quarterly' | 'semiannual' | 'yearly';
   isOpen: boolean;
   onClose: () => void;
@@ -28,21 +30,24 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
   const planDetails = {
     starter: {
       name: 'Starter',
-      price: 'R$ 50',
       icon: Zap,
       color: 'emerald',
       limit: '100 gerações/mês',
     },
     pro: {
       name: 'Pro',
-      price: 'R$ 100',
       icon: Crown,
       color: 'purple',
       limit: '500 gerações/mês',
     },
     studio: {
       name: 'Studio',
-      price: 'R$ 300',
+      icon: Sparkles,
+      color: 'amber',
+      limit: '1000 gerações/mês',
+    },
+    enterprise: {
+      name: 'Enterprise',
       icon: Sparkles,
       color: 'amber',
       limit: 'Ilimitado',
@@ -50,6 +55,11 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
   };
 
   const details = planDetails[plan];
+
+  // Calcular preços dinâmicos baseado no ciclo
+  const monthlyEquivalent = getMonthlyEquivalent(plan, cycle);
+  const totalPrice = PLAN_PRICING[plan][cycle];
+  const cycleInfo = BILLING_CYCLES[cycle];
 
   useEffect(() => {
     if (isOpen && isLoaded) {
@@ -115,6 +125,12 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
     setError(errorMsg);
   };
 
+  // Validação: se plan inválido, não renderizar
+  if (!details) {
+    console.error('[CheckoutModal] Plan inválido:', plan);
+    return null;
+  }
+
   if (!isOpen) return null;
 
   return (
@@ -149,7 +165,15 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
             </div>
             <div>
               <h2 className="text-lg font-bold text-white">{details.name}</h2>
-              <p className="text-xs text-zinc-400">{details.price}/mês • {details.limit}</p>
+              <p className="text-xs text-zinc-400">
+                {formatPrice(monthlyEquivalent)}/mês
+                {cycle !== 'monthly' && (
+                  <span className="text-emerald-400 ml-1">
+                    ({cycleInfo.label}: {formatPrice(totalPrice)})
+                  </span>
+                )}
+                {' • '}{details.limit}
+              </p>
             </div>
           </div>
           <button
@@ -256,7 +280,7 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
                 },
               }}
             >
-              <CheckoutForm plan={plan} onSuccess={handleSuccess} onError={handleError} />
+              <CheckoutForm plan={plan} cycle={cycle} onSuccess={handleSuccess} onError={handleError} />
             </Elements>
           )}
 
@@ -297,10 +321,23 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
                       ✓ Tudo do Pro
                     </span>
                     <span className="text-xs text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md">
-                      ✓ Uso Ilimitado
+                      ✓ 1000 Gerações/mês
                     </span>
                     <span className="text-xs text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md">
                       ✓ Suporte Prioritário
+                    </span>
+                  </>
+                )}
+                {plan === 'enterprise' && (
+                  <>
+                    <span className="text-xs text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md">
+                      ✓ Tudo do Studio
+                    </span>
+                    <span className="text-xs text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md">
+                      ✓ Uso Ilimitado
+                    </span>
+                    <span className="text-xs text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md">
+                      ✓ Suporte VIP
                     </span>
                   </>
                 )}

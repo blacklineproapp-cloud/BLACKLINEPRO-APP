@@ -135,3 +135,118 @@ export async function getOrCreateUser(clerkId: string) {
     return null;
   }
 }
+
+// ============================================
+// ADMIN ROLE CHECKING
+// ============================================
+
+/**
+ * Verifica se um usuário é admin (qualquer role: admin ou superadmin)
+ * @param userId - Clerk user ID
+ * @returns true se for admin ativo (não expirado)
+ */
+export async function isAdmin(userId: string): Promise<boolean> {
+  try {
+    // Buscar no cache primeiro (5 minutos)
+    const cacheKey = `admin:${userId}`;
+    const cached = await getOrSetCache(
+      cacheKey,
+      async () => {
+        const { data, error } = await supabaseAdmin
+          .from('admin_users')
+          .select('role, expires_at')
+          .eq('user_id', userId)
+          .single();
+
+        if (error || !data) {
+          return { isAdmin: false };
+        }
+
+        // Verificar se expirou
+        if (data.expires_at && new Date(data.expires_at) < new Date()) {
+          return { isAdmin: false };
+        }
+
+        return { isAdmin: true, role: data.role };
+      },
+      {
+        ttl: 300000, // 5 minutos
+        tags: [`admin:${userId}`],
+        namespace: 'admin',
+      }
+    );
+
+    return cached.isAdmin;
+  } catch (error) {
+    console.error('❌ Erro ao verificar admin:', error);
+    return false;
+  }
+}
+
+/**
+ * Verifica se um usuário é superadmin
+ * @param userId - Clerk user ID
+ * @returns true se for superadmin ativo
+ */
+export async function isSuperAdmin(userId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('admin_users')
+      .select('role, expires_at')
+      .eq('user_id', userId)
+      .eq('role', 'superadmin')
+      .single();
+
+    if (error || !data) {
+      return false;
+    }
+
+    // Verificar se expirou
+    if (data.expires_at && new Date(data.expires_at) < new Date()) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Erro ao verificar superadmin:', error);
+    return false;
+  }
+}
+
+/**
+ * Verifica se usuário é admin, caso contrário lança erro
+ * Útil para proteger rotas de API
+ */
+export async function requireAdmin(userId: string | null): Promise<void> {
+  if (!userId) {
+    throw new Error('Não autorizado. Faça login para continuar.');
+  }
+
+  const admin = await isAdmin(userId);
+  if (!admin) {
+    throw new Error('Acesso negado. Esta ação requer privilégios de administrador.');
+  }
+}
+
+/**
+ * Verifica se usuário é superadmin, caso contrário lança erro
+ * Útil para proteger rotas de API críticas
+ */
+export async function requireSuperAdmin(userId: string | null): Promise<void> {
+  if (!userId) {
+    throw new Error('Não autorizado. Faça login para continuar.');
+  }
+
+  const superAdmin = await isSuperAdmin(userId);
+  if (!superAdmin) {
+    throw new Error('Acesso negado. Esta ação requer privilégios de superadministrador.');
+  }
+}
+
+/**
+ * Invalida cache de admin para um usuário
+ * Útil após conceder/revogar permissões
+ */
+export async function invalidateAdminCache(userId: string): Promise<void> {
+  await invalidateCache(`admin:${userId}`);
+}

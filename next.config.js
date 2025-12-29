@@ -2,6 +2,15 @@ const { withSentryConfig } = require('@sentry/nextjs');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // ⚡ OTIMIZAÇÕES DE PERFORMANCE
+  compress: true, // Compressão gzip automática
+  poweredByHeader: false, // Remover header desnecessário
+
+  // Experimental features para performance
+  experimental: {
+    optimizePackageImports: ['lucide-react'], // Tree-shaking agressivo
+  },
+
   images: {
     remotePatterns: [
       {
@@ -13,6 +22,10 @@ const nextConfig = {
         hostname: 'img.clerk.com',
       },
     ],
+    // Otimizar imagens
+    formats: ['image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
   // Headers PWA

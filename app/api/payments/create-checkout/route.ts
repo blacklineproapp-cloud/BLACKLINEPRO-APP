@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { getPriceIdFromPlan } from '@/lib/billing/stripe-plan-mapping';
 import type { BillingCycle } from '@/lib/stripe/types';
 
-type CheckoutPlan = 'starter' | 'pro' | 'studio';
+type CheckoutPlan = 'starter' | 'pro' | 'studio' | 'enterprise';
 
 // Versão que retorna objeto (para JSON response)
 async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan, cycle: BillingCycle = 'monthly'): Promise<{ url: string } | { redirect: URL }> {

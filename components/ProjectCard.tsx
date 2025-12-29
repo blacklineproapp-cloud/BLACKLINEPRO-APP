@@ -4,17 +4,24 @@ import { Project } from '@/lib/supabase';
 import { Trash2, Download } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import ConfirmModal from './ui/ConfirmModal';
 
 export default function ProjectCard({ project }: { project: Project }) {
+  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const handleDeleteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (!confirm('Tem certeza que deseja deletar este projeto?')) return;
+    setShowDeleteModal(true);
+  };
 
+  const handleConfirmDelete = async () => {
     setIsDeleting(true);
+    setError(null);
 
     try {
       const res = await fetch(`/api/projects/${project.id}`, {
@@ -22,12 +29,14 @@ export default function ProjectCard({ project }: { project: Project }) {
       });
 
       if (res.ok) {
-        window.location.reload();
+        setShowDeleteModal(false);
+        router.refresh(); // ✅ Substituído window.location.reload()
       } else {
-        alert('Erro ao deletar projeto');
+        const data = await res.json();
+        setError(data.error || 'Erro ao deletar projeto');
       }
     } catch (error) {
-      alert('Erro ao deletar projeto');
+      setError('Erro ao deletar projeto. Tente novamente.');
     } finally {
       setIsDeleting(false);
     }
@@ -69,7 +78,7 @@ export default function ProjectCard({ project }: { project: Project }) {
           </button>
 
           <button
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             disabled={isDeleting}
             className="bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 transition disabled:opacity-50 shadow-lg"
             title="Deletar"
@@ -97,7 +106,27 @@ export default function ProjectCard({ project }: { project: Project }) {
             )}
           </div>
         </div>
+
+        {/* Erro de deleção */}
+        {error && (
+          <div className="mt-2 p-2 bg-red-900/20 border border-red-500/30 rounded text-xs text-red-400">
+            {error}
+          </div>
+        )}
       </div>
+
+      {/* Modal de confirmação */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => !isDeleting && setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        title="Deletar Projeto"
+        description={`Tem certeza que deseja deletar "${project.name}"? Esta ação não pode ser desfeita.`}
+        confirmText="Deletar"
+        cancelText="Cancelar"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </Link>
   );
 }

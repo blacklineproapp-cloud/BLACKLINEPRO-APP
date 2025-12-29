@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import StencilAdjustControls from '@/components/editor/StencilAdjustControls';
-import ProfessionalControls from '@/components/editor/ProfessionalControls';
+
 import QualityIndicator from '@/components/editor/QualityIndicator';
 import ResizeModal from '@/components/editor/ResizeModal';
 import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Printer, Settings, ChevronUp, Ruler, Undo, Redo } from 'lucide-react';
@@ -70,12 +70,7 @@ export default function EditorPage() {
       !controls.flipVertical &&
       !controls.invert &&
       !controls.removeNoise &&
-      !controls.sharpen &&
-      // Ferramentas profissionais
-      (controls.posterize === null || controls.posterize === undefined) &&
-      (controls.levels === null || controls.levels === undefined) &&
-      !controls.findEdges &&
-      (controls.clarity === 0 || controls.clarity === undefined)
+      !controls.sharpen
     );
   };
 
@@ -131,13 +126,11 @@ export default function EditorPage() {
   const applyAdjustmentsDebounced = useCallback((controls: AdjustControls) => {
     // Proteção: não processar se não houver stencil gerado
     if (!generatedStencil) {
-      console.warn('[Editor] Tentativa de ajustar sem stencil gerado');
       return;
     }
 
     // Proteção: não processar se já estiver ajustando
     if (isAdjusting) {
-      console.warn('[Editor] Ajuste já em andamento, ignorando nova requisição');
       return;
     }
 
@@ -150,13 +143,11 @@ export default function EditorPage() {
     debounceTimerRef.current = setTimeout(async () => {
       // ✨ OTIMIZAÇÃO: Se todos os controles estão nos valores padrão, voltar ao original
       if (isDefaultControls(controls)) {
-        console.log('[Editor] ✅ Controles nos valores padrão - voltando ao original');
         setAdjustedStencil(null); // Volta ao generatedStencil original
         history.pushState(generatedStencil, controls);
         return;
       }
 
-      console.log('[Editor] Iniciando ajuste com controles:', controls);
       setIsAdjusting(true);
 
       try {
@@ -165,11 +156,6 @@ export default function EditorPage() {
 
         // Adicionar ao histórico
         history.pushState(adjusted, controls);
-        console.log('[Editor] ✅ Ajuste aplicado e adicionado ao histórico:', {
-          historySize: history.historySize + 1, // +1 porque ainda não atualizou
-          canUndo: true,
-          controls
-        });
       } catch (error: any) {
         console.error('[Editor] Erro ao aplicar ajustes:', error);
         alert('Erro ao aplicar ajustes: ' + error.message);
@@ -185,7 +171,6 @@ export default function EditorPage() {
 
     // NÃO aplicar ajustes se estamos restaurando do histórico
     if (isRestoringHistoryRef.current) {
-      console.log('[Editor] Ignorando mudança de controles (restauração do histórico)');
       return;
     }
 
@@ -201,7 +186,6 @@ export default function EditorPage() {
 
   // Handler de resize concluído
   const handleResizeComplete = (newImage: string, newWidthCm: number, newHeightCm: number) => {
-    console.log('[Editor] Resize concluído:', { newWidthCm, newHeightCm });
 
     // Atualizar imagem gerada com a versão redimensionada
     setGeneratedStencil(newImage);
@@ -221,19 +205,11 @@ export default function EditorPage() {
 
   // Undo
   const handleUndo = useCallback(() => {
-    console.log('[Editor] handleUndo chamado:', {
-      canUndo: history.canUndo,
-      historySize: history.historySize,
-      currentIndex: history.currentIndex
-    });
-
     if (!history.canUndo) {
-      console.log('[Editor] Undo bloqueado: canUndo = false');
       return;
     }
 
     const previousState = history.undo();
-    console.log('[Editor] previousState recebido:', previousState ? 'sim' : 'não');
 
     if (previousState) {
       // Marcar que estamos restaurando do histórico
@@ -241,7 +217,6 @@ export default function EditorPage() {
 
       // Se controles são padrão, voltar ao original sem reprocessamento
       if (isDefaultControls(previousState.controls)) {
-        console.log('[Editor] Undo para estado padrão - voltando ao original');
         setAdjustedStencil(null);
       } else {
         setAdjustedStencil(previousState.image);
@@ -249,36 +224,21 @@ export default function EditorPage() {
 
       setAdjustControls(previousState.controls);
 
-      console.log('[Editor] Estados atualizados:', {
-        imageLength: previousState.image?.length || 0,
-        controls: previousState.controls,
-        isDefault: isDefaultControls(previousState.controls)
-      });
-
       // Resetar flag após render
       setTimeout(() => {
         isRestoringHistoryRef.current = false;
       }, 100);
 
-      console.log('[Editor] ✅ Undo aplicado com sucesso');
     }
   }, [history]);
 
   // Redo
   const handleRedo = useCallback(() => {
-    console.log('[Editor] handleRedo chamado:', {
-      canRedo: history.canRedo,
-      historySize: history.historySize,
-      currentIndex: history.currentIndex
-    });
-
     if (!history.canRedo) {
-      console.log('[Editor] Redo bloqueado: canRedo = false');
       return;
     }
 
     const nextState = history.redo();
-    console.log('[Editor] nextState recebido:', nextState ? 'sim' : 'não');
 
     if (nextState) {
       // Marcar que estamos restaurando do histórico
@@ -286,7 +246,6 @@ export default function EditorPage() {
 
       // Se controles são padrão, voltar ao original sem reprocessamento
       if (isDefaultControls(nextState.controls)) {
-        console.log('[Editor] Redo para estado padrão - voltando ao original');
         setAdjustedStencil(null);
       } else {
         setAdjustedStencil(nextState.image);
@@ -294,18 +253,11 @@ export default function EditorPage() {
 
       setAdjustControls(nextState.controls);
 
-      console.log('[Editor] Estados atualizados:', {
-        imageLength: nextState.image?.length || 0,
-        controls: nextState.controls,
-        isDefault: isDefaultControls(nextState.controls)
-      });
-
       // Resetar flag após render
       setTimeout(() => {
         isRestoringHistoryRef.current = false;
       }, 100);
 
-      console.log('[Editor] ✅ Redo aplicado com sucesso');
     }
   }, [history]);
 
@@ -457,7 +409,6 @@ export default function EditorPage() {
         console.error('Erro ao salvar projeto:', data);
         // Não mostrar alert para não incomodar, mas logar
       } else {
-        console.log('Projeto salvo automaticamente:', data);
       }
     } catch (error) {
       console.error('Erro ao auto-salvar:', error);
@@ -609,15 +560,6 @@ export default function EditorPage() {
                   title="Deslize horizontal (←→)"
                 >
                   <ScanLine size={10} /> Horizontal
-                </button>
-                <button
-                  onClick={() => setComparisonMode('split')}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-colors ${
-                    comparisonMode === 'split' ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'
-                  }`}
-                  title="Deslize vertical (↑↓)"
-                >
-                  <ScanLine size={10} className="rotate-90" /> Vertical
                 </button>
                 <button
                   onClick={() => setComparisonMode('overlay')}
@@ -931,15 +873,7 @@ export default function EditorPage() {
                   )}
                 </div>
 
-                {/* Controles Profissionais */}
-                <div className="mt-3">
-                  <ProfessionalControls
-                    controls={adjustControls}
-                    onChange={(newControls) => handleAdjustChange({ ...adjustControls, ...newControls })}
-                    isExpanded={showProfessionalSection}
-                    onToggleExpand={() => setShowProfessionalSection(!showProfessionalSection)}
-                  />
-                </div>
+
 
                 <button onClick={handleReset} className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-xl font-medium flex items-center justify-center gap-2 text-sm mt-3">
                   <RotateCcw size={14} /> Gerar Novo

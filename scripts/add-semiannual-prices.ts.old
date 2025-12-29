@@ -1,0 +1,94 @@
+/**
+ * Script para ADICIONAR APENAS os prices SEMESTRAIS aos produtos existentes
+ * Os produtos Starter, Pro e Studio já existem no Stripe
+ * Este script adiciona apenas os novos prices de 6 meses
+ */
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+// Preços semestrais (6 meses)
+const SEMIANNUAL_PRICES = {
+  starter: 22500,  // R$ 225,00 (6 meses = R$ 37,50/mês - 25% off)
+  pro: 45000,      // R$ 450,00 (6 meses = R$ 75,00/mês - 25% off)
+  studio: 135000   // R$ 1.350,00 (6 meses = R$ 225,00/mês - 25% off)
+};
+
+// IDs dos produtos existentes no Stripe
+const PRODUCT_IDS = {
+  starter: process.env.STRIPE_PRODUCT_STARTER,
+  pro: process.env.STRIPE_PRODUCT_PRO,
+  studio: process.env.STRIPE_PRODUCT_STUDIO
+};
+
+async function addSemiannualPrices() {
+  console.log('🚀 Adicionando prices SEMESTRAIS aos produtos existentes...\n');
+
+  const results: Record<string, string> = {};
+
+  for (const [planName, productId] of Object.entries(PRODUCT_IDS)) {
+    if (!productId) {
+      console.log(`⚠️  ${planName.toUpperCase()}: Product ID não encontrado no .env`);
+      continue;
+    }
+
+    const priceInCents = SEMIANNUAL_PRICES[planName as keyof typeof SEMIANNUAL_PRICES];
+    const priceInReais = priceInCents / 100;
+
+    console.log(`\n📦 ${planName.toUpperCase()}: Criando price semestral...`);
+    console.log(`   Produto: ${productId}`);
+    console.log(`   Preço: R$ ${priceInReais.toFixed(2)} / 6 meses`);
+
+    try {
+      const price = await stripe.prices.create({
+        product: productId,
+        unit_amount: priceInCents,
+        currency: 'brl',
+        recurring: {
+          interval: 'month',
+          interval_count: 6
+        },
+        metadata: {
+          plan: planName,
+          cycle: 'semiannual',
+          discount: '25%'
+        }
+      });
+
+      results[planName] = price.id;
+      console.log(`   ✅ Price criado: ${price.id}`);
+    } catch (error: any) {
+      console.error(`   ❌ Erro ao criar price:`, error.message);
+    }
+  }
+
+  // Exibir variáveis de ambiente
+  console.log('\n' + '='.repeat(70));
+  console.log('✅ PRICES SEMESTRAIS CRIADOS COM SUCESSO!');
+  console.log('='.repeat(70));
+  console.log('\n📋 Adicione estas variáveis ao seu arquivo .env:\n');
+
+  for (const [planName, priceId] of Object.entries(results)) {
+    const envVarName = `STRIPE_PRICE_${planName.toUpperCase()}_SEMIANNUAL`;
+    console.log(`${envVarName}=${priceId}`);
+  }
+
+  console.log('\n' + '='.repeat(70));
+  console.log('💡 PRÓXIMOS PASSOS:');
+  console.log('='.repeat(70));
+  console.log('1. Copie as variáveis acima');
+  console.log('2. Cole no arquivo .env.local');
+  console.log('3. Reinicie o servidor Next.js');
+  console.log('4. Os planos semestrais estarão disponíveis no checkout!');
+  console.log('='.repeat(70) + '\n');
+}
+
+// Executar
+addSemiannualPrices()
+  .then(() => {
+    console.log('✨ Script finalizado!\n');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('\n❌ ERRO FATAL:', error);
+    process.exit(1);
+  });

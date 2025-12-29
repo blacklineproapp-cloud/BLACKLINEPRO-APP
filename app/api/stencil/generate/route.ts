@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOrCreateUser } from '@/lib/auth';
+import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { generateStencilFromImage } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import {
@@ -9,9 +9,6 @@ import {
   withRateLimit,
 } from '@/lib/rate-limit';
 import { checkEditorLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
-
-// Emails admin com acesso ilimitado
-const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +21,7 @@ export async function POST(req: Request) {
     // 1. Buscar usuário completo (precisa do UUID user.id)
     const { data: userData } = await supabaseAdmin
       .from('users')
-      .select('id, plan, email')
+      .select('id, plan')
       .eq('clerk_id', userId)
       .single();
 
@@ -33,11 +30,9 @@ export async function POST(req: Request) {
     }
 
     // 🔓 BYPASS PARA ADMINS - acesso ilimitado
-    const userEmailLower = userData.email?.toLowerCase() || '';
-    const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
+    const userIsAdmin = await checkIsAdmin(userId);
 
-    if (isAdmin) {
-      console.log(`[Generate] Admin bypass para: ${userData.email}`);
+    if (userIsAdmin) {
       // Admin: processar diretamente sem limitações
       return await processGeneration(req, userId, userData.id, true);
     }
@@ -86,9 +81,8 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
   const selectedStyle = validStyles.includes(style) ? style : 'standard';
 
   // Log para debug - verificar qual modo foi selecionado
-  console.log(`[API Stencil] Modo selecionado: ${selectedStyle} (recebido: ${style})`);
 
-  // Gerar estêncil com o modo VALIDADO
+  // Gerar stencil no modo selecionado pelo usuário
   const stencilImage = await generateStencilFromImage(image, promptDetails, selectedStyle);
 
   // ✅ REGISTRAR USO após geração bem-sucedida (exceto admins)
@@ -96,6 +90,7 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
     await recordUsage({
       userId: userUuid,
       type: 'editor_generation',
+      operationType: 'generate_stencil',
       metadata: {
         style: selectedStyle,
         operation: 'generate_stencil'

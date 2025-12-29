@@ -109,13 +109,16 @@ export function usePWA(): UsePWAReturn {
     async function registerSW() {
       try {
         setSwStatus('installing');
-        
+
+        // ⚡ OTIMIZAÇÃO: Delay adicional para não bloquear hidratação React
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
         const registration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/',
           updateViaCache: 'none',
         });
 
-        console.log('[PWA] Service Worker registrado:', registration.scope);
+        console.log('[PWA] ⚡ Service Worker registrado (lazy):', registration.scope);
         setSwStatus('installed');
 
         // Verificar atualizações
@@ -124,24 +127,26 @@ export function usePWA(): UsePWAReturn {
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[PWA] Nova versão disponível');
+                console.log('[PWA] 🔄 Nova versão disponível');
               }
             });
           }
         });
 
       } catch (error) {
-        console.error('[PWA] Erro ao registrar Service Worker:', error);
+        console.error('[PWA] ❌ Erro ao registrar Service Worker:', error);
         setSwStatus('error');
       }
     }
 
-    // Aguardar carregamento completo da página
+    // ⚡ OTIMIZAÇÃO: Aguardar carregamento E dar tempo para hidratação
     if (document.readyState === 'complete') {
-      registerSW();
+      // Delay de 1s para garantir que não atrapalha FCP/LCP
+      setTimeout(registerSW, 1000);
     } else {
-      window.addEventListener('load', registerSW);
-      return () => window.removeEventListener('load', registerSW);
+      const handleLoad = () => setTimeout(registerSW, 1000);
+      window.addEventListener('load', handleLoad);
+      return () => window.removeEventListener('load', handleLoad);
     }
   }, []);
 

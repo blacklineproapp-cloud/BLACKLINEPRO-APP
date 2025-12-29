@@ -3,34 +3,31 @@
  * Estratégia: Network-first com fallback para cache
  */
 
-const CACHE_NAME = 'stencilflow-v1';
+const CACHE_NAME = 'stencilflow-v2-fast';
 const OFFLINE_URL = '/offline.html';
 
-// Assets essenciais para cache inicial
+// ⚡ OTIMIZAÇÃO CRÍTICA: Cachear APENAS o mínimo no install
+// Assets pesados são cacheados sob demanda (lazy caching)
 const PRECACHE_ASSETS = [
-  '/',
-  '/dashboard',
-  '/editor',
-  '/generator',
-  '/tools',
-  '/pricing',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/icon-192x192.png',
+  '/icon-512x512.png',
 ];
 
-// Install - Precache assets essenciais
+// Install - Precache apenas essencial (super rápido!)
 self.addEventListener('install', (event) => {
-  console.log('[SW] Instalando Service Worker...');
+  console.log('[SW] 🚀 Instalando Service Worker OTIMIZADO...');
 
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Cacheando assets essenciais');
-      return cache.addAll(PRECACHE_ASSETS.map(url => new Request(url, { cache: 'reload' })));
+      console.log('[SW] ⚡ Cacheando apenas assets críticos (rápido)');
+      return cache.addAll(PRECACHE_ASSETS).catch(err => {
+        console.warn('[SW] ⚠️ Erro no precache (continuando):', err);
+      });
     })
-    .then(() => self.skipWaiting())
-    .catch((error) => {
-      console.error('[SW] Erro ao cachear assets:', error);
+    .then(() => {
+      console.log('[SW] ✅ Install completo - pulando espera');
+      return self.skipWaiting();
     })
   );
 });
@@ -54,7 +51,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch - Estratégia Network-first com cache fallback
+// Fetch - Estratégia OTIMIZADA: Cache-first para estáticos, Network-first para API
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -84,30 +81,56 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Estratégia de cache
-  event.respondWith(
-    networkFirst(request)
-      .catch(() => cacheFirst(request))
-      .catch(() => offlineFallback(request))
-  );
+  // ⚡ OTIMIZAÇÃO: Determinar estratégia baseada no tipo de recurso
+  const isStaticAsset =
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.match(/\.(js|css|woff2?|ttf|otf|eot|png|jpg|jpeg|gif|svg|webp|ico)$/) ||
+    url.pathname === '/manifest.json';
+
+  const isApiRoute = url.pathname.startsWith('/api/');
+
+  // Estratégia de cache otimizada
+  if (isStaticAsset) {
+    // ⚡ CACHE-FIRST para assets estáticos (JS, CSS, imagens, fontes)
+    event.respondWith(
+      cacheFirst(request)
+        .catch(() => networkFirst(request, 2000)) // 2s timeout
+        .catch(() => offlineFallback(request))
+    );
+  } else if (isApiRoute) {
+    // 🌐 NETWORK-ONLY para API (sempre dados frescos)
+    event.respondWith(
+      fetch(request).catch(() => offlineFallback(request))
+    );
+  } else {
+    // 🌐 NETWORK-FIRST para páginas HTML (com timeout curto)
+    event.respondWith(
+      networkFirst(request, 2000) // 2s timeout (antes era 5s!)
+        .catch(() => cacheFirst(request))
+        .catch(() => offlineFallback(request))
+    );
+  }
 });
 
-// Network-first: Tenta rede, fallback para cache
-async function networkFirst(request) {
+// Network-first: Tenta rede com timeout configurável
+async function networkFirst(request, timeout = 2000) {
   try {
     const response = await fetch(request, {
-      signal: AbortSignal.timeout(5000), // 5s timeout
+      signal: AbortSignal.timeout(timeout), // Timeout configurável (padrão 2s)
     });
 
-    // Se resposta OK, cachear para uso futuro
+    // Se resposta OK, cachear para uso futuro (lazy caching!)
     if (response && response.status === 200) {
       const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
+      // Clone assíncrono para não bloquear resposta
+      cache.put(request, response.clone()).catch(err =>
+        console.warn('[SW] ⚠️ Erro ao cachear:', err)
+      );
     }
 
     return response;
   } catch (error) {
-    console.log('[SW] Network failed, tentando cache:', request.url);
+    console.log('[SW] ⚡ Network timeout/failed, usando cache:', request.url);
     throw error;
   }
 }

@@ -176,7 +176,6 @@ export async function addStencilJob(
     }
   );
 
-  console.log(`[Queue] Job criado: ${job.id} (user: ${data.userId})`);
   return job as Job<StencilJobData>;
 }
 
@@ -188,7 +187,6 @@ export async function addEnhanceJob(data: EnhanceJobData): Promise<Job<EnhanceJo
     jobId: `enhance-${data.userId}-${Date.now()}`,
   });
 
-  console.log(`[Queue] Enhance job criado: ${job.id}`);
   return job as Job<EnhanceJobData>;
 }
 
@@ -200,7 +198,6 @@ export async function addIaGenJob(data: IaGenJobData): Promise<Job<IaGenJobData>
     jobId: `ia-gen-${data.userId}-${Date.now()}`,
   });
 
-  console.log(`[Queue] IA Gen job criado: ${job.id}`);
   return job as Job<IaGenJobData>;
 }
 
@@ -344,7 +341,6 @@ export async function cleanOldJobs(): Promise<void> {
     iaGenQueue.clean(24 * 3600 * 1000, 50, 'completed'),
   ]);
 
-  console.log('[Queue] Jobs antigos limpos');
 }
 
 // ============================================

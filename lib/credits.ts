@@ -19,7 +19,7 @@ import { supabaseAdmin } from './supabase';
  */
 
 export type OperationType = 'topographic' | 'lines' | 'ia_gen' | 'enhance' | 'color_match';
-export type PlanType = 'free' | 'starter' | 'pro' | 'studio';
+export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise';
 
 // Custo em créditos por operação (SIMPLIFICADO - tudo 1 crédito)
 export const CREDITS_COST: Record<OperationType, number> = {
@@ -52,10 +52,11 @@ export const BRL_COST: Record<OperationType, number> = {
 // Limites DIÁRIOS por plano (para evitar abuso)
 // IMPORTANTE: Plano free = 0 gerações!
 export const DAILY_LIMITS: Record<PlanType, number> = {
-  free: 0,       // Sem gerações
-  starter: 20,   // 20 gerações/dia
-  pro: 50,       // 50 gerações/dia
-  studio: 200,   // 200 gerações/dia (ilimitado mensal)
+  free: 0,         // Sem gerações
+  starter: 20,     // 20 gerações/dia
+  pro: 50,         // 50 gerações/dia
+  studio: 200,     // 200 gerações/dia (ilimitado mensal)
+  enterprise: -1   // Verdadeiramente ilimitado
 };
 
 // Limites mensais por plano (inclusos na assinatura)
@@ -88,10 +89,16 @@ export const PLAN_LIMITS: Record<PlanType, Record<OperationType, number | null>>
     enhance: null,
     color_match: null,
   },
+  enterprise: {
+    topographic: null,   // Verdadeiramente ilimitado
+    lines: null,
+    ia_gen: null,
+    enhance: null,
+    color_match: null,
+  }
 };
 
 // Lista de emails admin com acesso ilimitado
-const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
 
 /**
  * Verifica se usuário tem créditos/limites suficientes
@@ -108,13 +115,6 @@ export async function canUseOperation(
 
   if (error || !user) {
     return { allowed: false, reason: 'Usuário não encontrado' };
-  }
-
-  // 🔓 BYPASS PARA ADMINS - acesso ilimitado
-  const userEmailLower = user.email?.toLowerCase() || '';
-  if (ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower)) {
-    console.log(`[Credits] Admin bypass para: ${user.email}`);
-    return { allowed: true };
   }
 
   // 🔒 VERIFICAR EXPIRAÇÃO DA ASSINATURA
@@ -142,7 +142,7 @@ export async function canUseOperation(
 
   // Validar plano com fallback seguro - FREE para não pagantes!
   let plan = user.plan as PlanType;
-  if (!plan || !['free', 'starter', 'pro', 'studio'].includes(plan)) {
+  if (!plan || !['free', 'starter', 'pro', 'studio', 'enterprise'].includes(plan)) {
     plan = 'free'; // Default seguro - usuário não pagante!
 
     // Atualizar no banco para evitar erro futuro
@@ -152,13 +152,14 @@ export async function canUseOperation(
       .eq('clerk_id', userId);
   }
 
-  const credits = user.credits || 0;
-  const usage = (user.usage_this_month || {}) as Record<OperationType, number>;
-
-  // Studio = ilimitado
-  if (plan === 'studio') {
+  // Enterprise e Studio = ilimitado
+  if (plan === 'enterprise' || plan === 'studio') {
+    console.log(`[Credits] Plano ilimitado para: ${user.email}`);
     return { allowed: true };
   }
+
+  const credits = user.credits || 0;
+  const usage = (user.usage_this_month || {}) as Record<OperationType, number>;
 
   // Verificar limite mensal do plano
   const planLimits = PLAN_LIMITS[plan];

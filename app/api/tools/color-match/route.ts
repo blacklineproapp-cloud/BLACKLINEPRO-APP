@@ -1,11 +1,10 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOrCreateUser } from '@/lib/auth';
+import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { analyzeImageColors } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
+import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 
-// Emails admin com acesso ilimitado
-const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
 
 export async function POST(req: Request) {
   try {
@@ -15,6 +14,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
+    // 🛡️ RATE LIMITING: Prevenir abuso (60 requests/min)
+    const identifier = await getRateLimitIdentifier(userId);
+
+    if (apiLimiter) {
+      const { success, limit, remaining, reset } = await apiLimiter.limit(identifier);
+
+      if (!success) {
+        return NextResponse.json(
+          {
+            error: 'Muitas requisições',
+            message: 'Você atingiu o limite de requisições. Tente novamente em alguns minutos.',
+            limit,
+            remaining,
+            reset: new Date(reset).toISOString(),
+          },
+          {
+            status: 429,
+            headers: {
+              'X-RateLimit-Limit': limit.toString(),
+              'X-RateLimit-Remaining': remaining.toString(),
+              'X-RateLimit-Reset': reset.toString(),
+              'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
+            },
+          }
+        );
+      }
+    }
+
     const user = await getOrCreateUser(userId);
 
     if (!user) {
@@ -22,10 +49,9 @@ export async function POST(req: Request) {
     }
 
     // 🔓 BYPASS PARA ADMINS - acesso ilimitado
-    const userEmailLower = user.email?.toLowerCase() || '';
-    const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
+    const userIsAdmin = await checkIsAdmin(userId);
 
-    if (!isAdmin) {
+    if (!userIsAdmin) {
       // Verificar assinatura (apenas para não-admins)
       if (!user.is_paid || user.subscription_status !== 'active') {
         return NextResponse.json({

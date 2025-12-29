@@ -1,20 +1,10 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { isAdmin } from '@/lib/auth';
+
 import { supabaseAdmin } from '@/lib/supabase';
 import { stripe } from '@/lib/stripe';
 
-const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
-
-async function isAdmin(userId: string): Promise<boolean> {
-  const { data: user } = await supabaseAdmin
-    .from('users')
-    .select('email')
-    .eq('clerk_id', userId)
-    .single();
-
-  const userEmailLower = user?.email?.toLowerCase() || '';
-  return user ? ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower) : false;
-}
 
 /**
  * POST - Gerar link para usuário adicionar método de pagamento

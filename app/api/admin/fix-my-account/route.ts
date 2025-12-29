@@ -1,8 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
-
-const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
 
 /**
  * GET - Corrige sua própria conta (ativa + deleta duplicados)
@@ -29,9 +28,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    const isAdmin = ADMIN_EMAILS.some(e => e.toLowerCase() === currentUser.email?.toLowerCase());
+    const userIsAdmin = await isAdmin(userId);
 
-    if (!isAdmin) {
+    if (!userIsAdmin) {
       return NextResponse.json({ error: 'Apenas admins podem usar este endpoint' }, { status: 403 });
     }
 

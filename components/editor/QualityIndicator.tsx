@@ -7,7 +7,7 @@ interface QualityIndicatorProps {
   imageBase64: string | null;
   widthCm: number;
   heightCm: number;
-  onOptimizeClick?: () => void; // Callback para abrir modal de resize
+  onOptimizeClick?: () => void; // Callback para abrir modal de otimização manual
 }
 
 interface ImageInfo {
@@ -180,6 +180,7 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
             {config.description}
           </p>
 
+
           {/* Botão Otimizar (se DPI < 300) */}
           {imageInfo.quality !== 'excellent' && onOptimizeClick && (
             <button
@@ -187,9 +188,22 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
               className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors"
             >
               <Zap size={14} />
-              Otimizar Qualidade / Redimensionar
+              Otimizar Qualidade
             </button>
           )}
+
+          {/* Indicador de otimização em progresso */}
+          {/* isOptimizing is not defined in this scope, assuming it was removed or is meant to be added */}
+          {/* {isOptimizing && (
+            <div className="bg-blue-900/20 border border-blue-800 rounded p-2">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-400"></div>
+                <p className="text-xs text-blue-300">
+                  🔄 Otimizando qualidade automaticamente...
+                </p>
+              </div>
+            </div>
+          )} */}
 
           {/* Avisos */}
           {imageInfo.warnings.length > 0 && (

@@ -71,16 +71,38 @@ export default function ResizeModal({
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewInfo, setPreviewInfo] = useState<any>(null);
   const [originalDimensions, setOriginalDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [actualWidthCm, setActualWidthCm] = useState(currentWidthCm);
+  const [actualHeightCm, setActualHeightCm] = useState(currentHeightCm);
 
-  // Obter dimensões originais da imagem
+  // Obter dimensões originais da imagem e calcular tamanho real
   useEffect(() => {
     if (!currentImage) return;
 
-    // Para preview, pode usar a imagem diretamente (URL ou base64)
     const img = new Image();
     img.onload = () => {
       setOriginalDimensions({ width: img.width, height: img.height });
-      updatePreview(img.width, img.height, targetWidthCm, targetHeightCm, targetDpi);
+      
+      // Calcular tamanho real baseado em DPI 300 (padrão profissional)
+      // Se currentWidthCm for muito pequeno (< 10), provavelmente está errado
+      let realWidthCm = currentWidthCm;
+      let realHeightCm = currentHeightCm;
+      
+      if (currentWidthCm < 10 || currentHeightCm < 10) {
+        // Valores parecem incorretos, calcular baseado em 300 DPI
+        realWidthCm = Number(((img.width / 300) * 2.54).toFixed(1));
+        realHeightCm = Number(((img.height / 300) * 2.54).toFixed(1));
+        console.log('[ResizeModal] Valores corrigidos:', { 
+          original: { currentWidthCm, currentHeightCm },
+          calculated: { realWidthCm, realHeightCm }
+        });
+      }
+      
+      setActualWidthCm(realWidthCm);
+      setActualHeightCm(realHeightCm);
+      setTargetWidthCm(realWidthCm);
+      setTargetHeightCm(realHeightCm);
+      
+      updatePreview(img.width, img.height, realWidthCm, realHeightCm, targetDpi);
     };
     img.onerror = (error) => {
       console.error('[ResizeModal] Erro ao carregar imagem:', error);
@@ -116,8 +138,8 @@ export default function ResizeModal({
       const isUpscaling = finalTotalPixels > originalTotalPixels;
       const algorithm = isUpscaling ? 'Lanczos3' : 'Mitchell';
 
-      // Calcular DPI original estimado usando currentWidthCm (tamanho atual)
-      const originalDpi = Math.round((origWidth / currentWidthCm) * 2.54);
+      // Calcular DPI original estimado usando actualWidthCm (tamanho real calculado)
+      const originalDpi = Math.round((origWidth / widthCm) * 2.54);
 
       setPreviewInfo({
         ...result,
@@ -237,7 +259,7 @@ export default function ResizeModal({
               <div>
                 <p className="text-zinc-500 text-xs mb-1">Tamanho Físico</p>
                 <p className="text-white text-sm font-mono">
-                  {currentWidthCm} × {currentHeightCm}cm
+                  {actualWidthCm} × {actualHeightCm}cm
                 </p>
               </div>
               <div>

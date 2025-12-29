@@ -30,6 +30,7 @@ interface ProductConfig {
   prices: {
     monthly: number;
     quarterly: number;
+    semiannual: number;
     yearly: number;
   };
 }
@@ -40,8 +41,9 @@ const PRODUCTS: Record<string, ProductConfig> = {
     description: 'Editor completo de stencil com modos Topográfico e Linhas Perfeitas. 100 gerações/mês.',
     prices: {
       monthly: 50.00,
-      quarterly: 135.00,   // 10% desconto
-      yearly: 360.00,      // 40% desconto
+      quarterly: 135.00,   // 10% desconto (R$ 45/mês)
+      semiannual: 225.00,  // 25% desconto (R$ 37.50/mês)
+      yearly: 360.00,      // 40% desconto (R$ 30/mês)
     },
   },
   pro: {
@@ -49,8 +51,9 @@ const PRODUCTS: Record<string, ProductConfig> = {
     description: 'Acesso completo: Editor + IA GEN + Color Match + Split A4 + Aprimorar. 500 gerações/mês.',
     prices: {
       monthly: 100.00,
-      quarterly: 270.00,   // 10% desconto
-      yearly: 720.00,      // 40% desconto
+      quarterly: 270.00,   // 10% desconto (R$ 90/mês)
+      semiannual: 450.00,  // 25% desconto (R$ 75/mês)
+      yearly: 720.00,      // 40% desconto (R$ 60/mês)
     },
   },
   studio: {
@@ -58,8 +61,9 @@ const PRODUCTS: Record<string, ProductConfig> = {
     description: 'Uso ilimitado para estúdios. Todas as ferramentas + suporte prioritário.',
     prices: {
       monthly: 300.00,
-      quarterly: 810.00,   // 10% desconto
-      yearly: 2160.00,     // 40% desconto
+      quarterly: 810.00,   // 10% desconto (R$ 270/mês)
+      semiannual: 1350.00, // 25% desconto (R$ 225/mês)
+      yearly: 2160.00,     // 40% desconto (R$ 180/mês)
     },
   },
 };
@@ -99,10 +103,11 @@ async function createProducts() {
       console.log(`   ✅ Produto criado: ${product.id}`);
       results[key] = { product_id: product.id, prices: {} };
 
-      // Criar preços (mensal, trimestral, anual)
+      // Criar preços (mensal, trimestral, semestral, anual)
       const intervals: Array<{ interval: 'month' | 'year', count: number, key: string, label: string }> = [
         { interval: 'month', count: 1, key: 'monthly', label: 'Mensal' },
         { interval: 'month', count: 3, key: 'quarterly', label: 'Trimestral' },
+        { interval: 'month', count: 6, key: 'semiannual', label: 'Semestral' },
         { interval: 'year', count: 1, key: 'yearly', label: 'Anual' },
       ];
 
@@ -149,16 +154,19 @@ async function createProducts() {
   console.log('# Starter - R$ 50/mês (100 gerações)');
   console.log(`STRIPE_PRICE_STARTER_MONTHLY=${results.starter.prices.monthly}`);
   console.log(`STRIPE_PRICE_STARTER_QUARTERLY=${results.starter.prices.quarterly}`);
+  console.log(`STRIPE_PRICE_STARTER_SEMIANNUAL=${results.starter.prices.semiannual}`);
   console.log(`STRIPE_PRICE_STARTER_YEARLY=${results.starter.prices.yearly}`);
   console.log('');
   console.log('# Pro - R$ 100/mês (500 gerações)');
   console.log(`STRIPE_PRICE_PRO_MONTHLY=${results.pro.prices.monthly}`);
   console.log(`STRIPE_PRICE_PRO_QUARTERLY=${results.pro.prices.quarterly}`);
+  console.log(`STRIPE_PRICE_PRO_SEMIANNUAL=${results.pro.prices.semiannual}`);
   console.log(`STRIPE_PRICE_PRO_YEARLY=${results.pro.prices.yearly}`);
   console.log('');
   console.log('# Studio - R$ 300/mês (Ilimitado)');
   console.log(`STRIPE_PRICE_STUDIO_MONTHLY=${results.studio.prices.monthly}`);
   console.log(`STRIPE_PRICE_STUDIO_QUARTERLY=${results.studio.prices.quarterly}`);
+  console.log(`STRIPE_PRICE_STUDIO_SEMIANNUAL=${results.studio.prices.semiannual}`);
   console.log(`STRIPE_PRICE_STUDIO_YEARLY=${results.studio.prices.yearly}`);
 
   console.log('\n' + '='.repeat(80));

@@ -14,21 +14,35 @@ function AnimatedCounter({ end }: { end: number }) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    let start = 0;
-    const duration = 2000;
-    const increment = end / (duration / 16);
+    let startTime: number | null = null;
+    let animationFrame: number;
+    const duration = 2000; // 2 segundos
 
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= end) {
-        setCount(end);
-        clearInterval(timer);
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Easing suave (ease-out)
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const currentCount = Math.floor(easedProgress * end);
+
+      setCount(currentCount);
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
       } else {
-        setCount(Math.floor(start));
+        setCount(end); // Garantir valor final exato
       }
-    }, 16);
+    };
 
-    return () => clearInterval(timer);
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
   }, [end]);
 
   return <span>{count.toLocaleString('pt-BR')}</span>;

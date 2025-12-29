@@ -11,7 +11,7 @@
 import type { BillingCycle } from '../stripe/types';
 
 // Tipos de plano
-export type PlanType = 'starter' | 'pro' | 'studio';
+export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise';
 
 // ============================================================================
 // CICLOS DE PAGAMENTO
@@ -57,6 +57,12 @@ export interface PlanPricing {
 }
 
 export const PLAN_PRICING: Record<PlanType, PlanPricing> = {
+  free: {
+    monthly: 0,
+    quarterly: 0,
+    semiannual: 0,
+    yearly: 0
+  },
   starter: {
     monthly: 50.00,
     quarterly: 135.00,   // R$ 45/mês (10% off)
@@ -74,6 +80,12 @@ export const PLAN_PRICING: Record<PlanType, PlanPricing> = {
     quarterly: 810.00,   // R$ 270/mês (10% off)
     semiannual: 1350.00, // R$ 225/mês (25% off)
     yearly: 2160.00      // R$ 180/mês (40% off)
+  },
+  enterprise: {
+    monthly: 600.00,      // 🏢 ENTERPRISE: Verdadeiramente ilimitado
+    quarterly: 1620.00,   // R$ 540/mês (10% off)
+    semiannual: 2700.00,  // R$ 450/mês (25% off)
+    yearly: 4320.00       // R$ 360/mês (40% off)
   }
 };
 
@@ -82,9 +94,11 @@ export const PLAN_PRICING: Record<PlanType, PlanPricing> = {
 // ============================================================================
 
 export const PLAN_GENERATION_LIMITS: Record<PlanType, number | null> = {
-  starter: 100,   // 100 gerações/mês
-  pro: 500,       // 500 gerações/mês
-  studio: null,   // Ilimitado
+  free: 0,         // Sem acesso
+  starter: 100,    // 100 gerações/mês
+  pro: 500,        // 500 gerações/mês
+  studio: 7500,    // 🛡️ Soft limit: 7.500 gerações/mês
+  enterprise: null // 🏢 Verdadeiramente ilimitado
 };
 
 // ============================================================================
@@ -108,6 +122,31 @@ export interface PlanInfo {
 }
 
 export const PLANS: Record<PlanType, PlanInfo> = {
+  free: {
+    name: 'Free',
+    description: 'Acesso limitado',
+    price: PLAN_PRICING.free,
+    generationLimit: 0,
+    cta: 'Começar Grátis',
+    features: [
+      {
+        name: 'Visualizar exemplos',
+        included: true,
+        description: 'Explore a plataforma'
+      },
+      {
+        name: 'Editor de Stencil',
+        included: false,
+        description: 'Apenas para assinantes'
+      },
+      {
+        name: 'Ferramentas IA',
+        included: false,
+        description: 'Apenas para assinantes'
+      }
+    ]
+  },
+
   starter: {
     name: 'Starter',
     description: 'Ideal para começar',
@@ -192,7 +231,7 @@ export const PLANS: Record<PlanType, PlanInfo> = {
     name: 'Studio',
     description: 'Para estúdios e uso intensivo',
     price: PLAN_PRICING.studio,
-    generationLimit: null, // Ilimitado
+    generationLimit: 7500, // 🛡️ Soft limit
     cta: 'Assinar Studio',
     features: [
       {
@@ -200,9 +239,9 @@ export const PLANS: Record<PlanType, PlanInfo> = {
         included: true
       },
       {
-        name: 'Uso ilimitado',
+        name: 'Até 7.500 gerações/mês',
         included: true,
-        description: 'Sem limites mensais'
+        description: 'Limite justo para uso profissional'
       },
       {
         name: 'Suporte prioritário',
@@ -220,6 +259,45 @@ export const PLANS: Record<PlanType, PlanInfo> = {
         description: 'Acompanhe o consumo'
       }
     ]
+  },
+
+  enterprise: {
+    name: 'Enterprise',
+    description: 'Uso verdadeiramente ilimitado',
+    price: PLAN_PRICING.enterprise,
+    generationLimit: null, // 🏢 VERDADEIRAMENTE ILIMITADO
+    cta: 'Assinar Enterprise',
+    features: [
+      {
+        name: 'Tudo do Studio',
+        included: true
+      },
+      {
+        name: 'Uso ILIMITADO',
+        included: true,
+        description: 'Sem nenhum limite mensal'
+      },
+      {
+        name: 'Suporte dedicado',
+        included: true,
+        description: 'Atendimento exclusivo 24/7'
+      },
+      {
+        name: 'SLA garantido',
+        included: true,
+        description: '99.9% de uptime'
+      },
+      {
+        name: 'Onboarding personalizado',
+        included: true,
+        description: 'Setup e treinamento incluídos'
+      },
+      {
+        name: 'API access',
+        included: true,
+        description: 'Integração com seus sistemas'
+      }
+    ]
   }
 };
 
@@ -230,6 +308,7 @@ export const PLANS: Record<PlanType, PlanInfo> = {
 export interface StripePriceIds {
   monthly: string;
   quarterly: string;
+  semiannual: string;
   yearly: string;
 }
 
@@ -238,15 +317,18 @@ export interface StripePriceIds {
  */
 export function getStripePriceIds(plan: PlanType): StripePriceIds {
   const prefixMap: Record<PlanType, string> = {
+    free: 'FREE',
     starter: 'STARTER',
     pro: 'PRO',
-    studio: 'STUDIO'
+    studio: 'STUDIO',
+    enterprise: 'ENTERPRISE'
   };
   const prefix = prefixMap[plan];
 
   return {
     monthly: process.env[`STRIPE_PRICE_${prefix}_MONTHLY`] || '',
     quarterly: process.env[`STRIPE_PRICE_${prefix}_QUARTERLY`] || '',
+    semiannual: process.env[`STRIPE_PRICE_${prefix}_SEMIANNUAL`] || '',
     yearly: process.env[`STRIPE_PRICE_${prefix}_YEARLY`] || ''
   };
 }

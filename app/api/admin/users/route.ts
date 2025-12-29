@@ -1,5 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { isAdmin as checkIsAdmin } from '@/lib/auth';
+
 import { supabaseAdmin } from '@/lib/supabase';
 
 // Lista de emails com acesso admin (case-insensitive)
@@ -9,7 +11,7 @@ const ADMIN_EMAILS = [
 ];
 
 // Middleware para verificar admin
-async function isAdmin(userId: string): Promise<{ isAdmin: boolean; adminId?: string }> {
+async function userIsAdmin(userId: string): Promise<{ userIsAdmin: boolean; adminId?: string }> {
   const { data: user, error } = await supabaseAdmin
     .from('users')
     .select('id, email')
@@ -22,7 +24,7 @@ async function isAdmin(userId: string): Promise<{ isAdmin: boolean; adminId?: st
   
   console.log('[Admin Users] Check:', { email: user?.email, hasAccess, error: error?.message });
   
-  return { isAdmin: hasAccess, adminId: user?.id };
+  return { userIsAdmin: hasAccess, adminId: user?.id };
 }
 
 // GET - Listar todos os usuários
@@ -33,8 +35,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    const adminCheck = await isAdmin(userId);
-    if (!adminCheck.isAdmin) {
+    const adminCheck = await userIsAdmin(userId);
+    if (!adminCheck.userIsAdmin) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
@@ -72,20 +74,40 @@ export async function GET(req: Request) {
 
     if (error) throw error;
 
-    // Adicionar métricas de cada usuário
-    const usersWithMetrics = await Promise.all(
-      (users || []).map(async (user) => {
-        const { count: requestCount } = await supabaseAdmin
-          .from('ai_usage')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
+    // ✅ OTIMIZADO: Uma única query para pegar contagem de todos os usuários
+    // Em vez de N queries separadas (N+1 problem)
+    const userIds = (users || []).map(u => u.id);
 
-        return {
-          ...user,
-          total_requests: requestCount || 0,
-        };
-      })
-    );
+    if (userIds.length === 0) {
+      return NextResponse.json({
+        users: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          totalPages: 0,
+        },
+      });
+    }
+
+    // Query agregada: conta requests por usuário em uma única chamada
+    const { data: usageCounts } = await supabaseAdmin
+      .from('ai_usage')
+      .select('user_id')
+      .in('user_id', userIds);
+
+    // Criar mapa de contagens
+    const countMap = new Map<string, number>();
+    (usageCounts || []).forEach(usage => {
+      const count = countMap.get(usage.user_id) || 0;
+      countMap.set(usage.user_id, count + 1);
+    });
+
+    // Adicionar métricas aos usuários
+    const usersWithMetrics = (users || []).map(user => ({
+      ...user,
+      total_requests: countMap.get(user.id) || 0,
+    }));
 
     return NextResponse.json({
       users: usersWithMetrics,
@@ -110,8 +132,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    const adminCheck = await isAdmin(userId);
-    if (!adminCheck.isAdmin) {
+    const adminCheck = await userIsAdmin(userId);
+    if (!adminCheck.userIsAdmin) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
@@ -231,8 +253,8 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    const adminCheck = await isAdmin(userId);
-    if (!adminCheck.isAdmin) {
+    const adminCheck = await userIsAdmin(userId);
+    if (!adminCheck.userIsAdmin) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 

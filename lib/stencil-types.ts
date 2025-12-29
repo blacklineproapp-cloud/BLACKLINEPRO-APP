@@ -3,40 +3,29 @@
  * Centraliza interfaces usadas tanto no client quanto server
  */
 
-// Controles de ajuste
+// Controles de ajuste (SIMPLIFICADOS - apenas essenciais)
 export interface AdjustControls {
-  // Intensidade e contraste
-  brightness: number;        // -150 a +150 (padrão: 0)
-  contrast: number;           // -100 a +100 (padrão: 0)
-  threshold: number;          // 0 a 255 (padrão: 128)
-  gamma: number;              // 1.0 a 3.0 (padrão: 1.0) - Sharp só aceita >= 1.0
+  // Ajustes Tonais Essenciais
+  brightness: number;        // -100 a +100 (padrão: 0)
+  contrast: number;          // -100 a +100 (padrão: 0)
+  threshold: number;         // 0 a 255 (padrão: 128)
+  gamma: number;             // 0.5 a 2.0 (padrão: 1.0)
 
-  // Ferramentas Profissionais (Photoshop-style)
-  posterize?: number | null;  // 2 a 255 níveis tonais (padrão: null - desativado)
-  levels?: {                  // Ajuste fino de tons (substitui gamma limitado)
-    inputBlack?: number;      // 0-254 (padrão: 0) - ponto de preto puro (DEVE ser < inputWhite)
-    inputGray?: number;       // 1.0-3.0 (padrão: 1.0) - gamma dos meios-tons (Sharp só aceita >= 1.0)
-    inputWhite?: number;      // 1-255 (padrão: 255) - ponto de branco puro (DEVE ser > inputBlack)
-    outputBlack?: number;     // 0-254 (padrão: 0) - remapear preto para
-    outputWhite?: number;     // 1-255 (padrão: 255) - remapear branco para
-  } | null;
-  findEdges?: boolean;        // Detectar bordas (padrão: false)
-  edgeStrength?: number;      // 0-100 (padrão: 50) - força da detecção
-  clarity?: number;           // -100 a +100 (padrão: 0) - contraste local
-
-  // Transformações
-  rotation: number;           // -180 a +180 graus (padrão: 0)
-  flipHorizontal: boolean;    // Espelhar horizontal (padrão: false)
-  flipVertical: boolean;      // Espelhar vertical (padrão: false)
+  // Transformações Geométricas
+  rotation: number;          // -180 a +180 graus (padrão: 0)
+  flipHorizontal: boolean;   // Espelhar horizontal (padrão: false)
+  flipVertical: boolean;     // Espelhar vertical (padrão: false)
 
   // Inversão
-  invert: boolean;            // Inverter cores (padrão: false)
+  invert: boolean;           // Inverter cores (padrão: false)
 
-  // Limpeza (opcional)
-  removeNoise: boolean;       // Remover ruído (padrão: false)
-  noiseReduction: number;     // 0 a 10 (sigma do blur) (padrão: 1)
-  sharpen: boolean;           // Aplicar sharpen (padrão: false)
-  sharpenAmount: number;      // 0 a 10 (padrão: 1)
+  // Nitidez (opcional)
+  sharpen: boolean;          // Aplicar sharpen (padrão: false)
+  sharpenAmount: number;     // 0.5 a 3.0 (padrão: 1.0)
+
+  // Suavização (opcional)
+  removeNoise: boolean;      // Remover ruído (padrão: false)
+  noiseReduction: number;    // 0.5 a 2.0 (padrão: 1.0)
 }
 
 // Controles específicos do Modo Topográfico
@@ -55,31 +44,30 @@ export interface LineControls {
   simplification: number;     // 0 a 10 (reduz pontos de vetor)
 }
 
-// Valores padrão dos controles
+// Valores padrão dos controles (SIMPLIFICADOS)
 export const DEFAULT_ADJUST_CONTROLS: AdjustControls = {
+  // Ajustes Tonais
   brightness: 0,
   contrast: 0,
   threshold: 128,
   gamma: 1.0,
 
-  // Ferramentas profissionais (desativadas por padrão)
-  posterize: null,
-  levels: null,
-  findEdges: false,
-  edgeStrength: 50,
-  clarity: 0,
-
+  // Transformações
   rotation: 0,
   flipHorizontal: false,
   flipVertical: false,
   invert: false,
-  removeNoise: false,
-  noiseReduction: 1,
+
+  // Nitidez
   sharpen: false,
-  sharpenAmount: 1
+  sharpenAmount: 1.0,
+
+  // Suavização
+  removeNoise: false,
+  noiseReduction: 1.0
 };
 
-// Presets pré-configurados
+// Presets pré-configurados (SIMPLIFICADOS - apenas com controles essenciais)
 export interface StencilPreset {
   name: string;
   description: string;
@@ -104,7 +92,7 @@ export const STENCIL_PRESETS: Record<string, StencilPreset> = {
     controls: {
       contrast: 25,
       brightness: -5,
-      gamma: 1.0, // Sharp.js não aceita gamma < 1.0
+      gamma: 1.0,
       sharpen: true,
       sharpenAmount: 1.5,
       threshold: 115
@@ -129,7 +117,7 @@ export const STENCIL_PRESETS: Record<string, StencilPreset> = {
       brightness: 3,
       gamma: 1.1,
       sharpen: true,
-      sharpenAmount: 1
+      sharpenAmount: 1.0
     }
   },
   clean: {
@@ -137,52 +125,12 @@ export const STENCIL_PRESETS: Record<string, StencilPreset> = {
     description: 'Remove ruídos e suaviza imperfeições',
     controls: {
       removeNoise: true,
-      noiseReduction: 1,
+      noiseReduction: 1.0,
       contrast: 15,
       threshold: 128,
       gamma: 1.0,
       sharpen: true,
       sharpenAmount: 0.5
-    }
-  },
-  photoStencil: {
-    name: 'Foto → Stencil',
-    description: 'Detecta bordas para converter fotos em stencils de linha',
-    controls: {
-      findEdges: true,
-      edgeStrength: 70,
-      threshold: 180,
-      invert: false,
-      clarity: 20
-    }
-  },
-  professional: {
-    name: 'Profissional',
-    description: 'Ajustes profissionais com Levels e Posterize',
-    controls: {
-      posterize: 8,
-      levels: {
-        inputBlack: 30,
-        inputGray: 1.2,
-        inputWhite: 225,
-        outputBlack: 0,
-        outputWhite: 255
-      },
-      clarity: 15,
-      sharpen: true,
-      sharpenAmount: 1.2
-    }
-  },
-  highContrast: {
-    name: 'Alto Contraste',
-    description: 'Máximo contraste para stencils ultra-definidos',
-    controls: {
-      posterize: 4,
-      clarity: 30,
-      threshold: 128,
-      contrast: 30,
-      sharpen: true,
-      sharpenAmount: 2
     }
   }
 };

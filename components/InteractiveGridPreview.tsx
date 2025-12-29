@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Move } from 'lucide-react';
+import { Move, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
 interface InteractiveGridPreviewProps {
   imageUrl: string;
@@ -31,11 +31,13 @@ export default function InteractiveGridPreview({
   forcedRows
 }: InteractiveGridPreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [offsetX, setOffsetX] = useState(initialX);
   const [offsetY, setOffsetY] = useState(initialY);
   const [imageObj, setImageObj] = useState<HTMLImageElement | null>(null);
   const [gridInfo, setGridInfo] = useState({ cols: 0, rows: 0 });
+  const [zoom, setZoom] = useState(1);
 
   const dragStart = useRef({ mouseX: 0, mouseY: 0, offsetX: 0, offsetY: 0 });
 
@@ -136,10 +138,11 @@ export default function InteractiveGridPreview({
     // DESENHAR IMAGEM (na posição offsetX, offsetY do espaço global)
     // ==========================================================================
 
+    // Aplicar ZOOM na imagem (não no canvas inteiro)
     const imgX = toCanvasX(offsetXPx);
     const imgY = toCanvasY(offsetYPx);
-    const imgW = imageWidthPx * scale;
-    const imgH = imageHeightPx * scale;
+    const imgW = imageWidthPx * scale * zoom; // Zoom aplicado aqui
+    const imgH = imageHeightPx * scale * zoom; // Zoom aplicado aqui
 
     ctx.drawImage(imageObj, imgX, imgY, imgW, imgH);
 
@@ -188,7 +191,7 @@ export default function InteractiveGridPreview({
     }
 
     ctx.setLineDash([]);
-  }, [imageObj, offsetX, offsetY, tattooWidthCm, tattooHeightCm, paperWidthCm, paperHeightCm, overlapCm, forcedCols, forcedRows]);
+  }, [imageObj, offsetX, offsetY, tattooWidthCm, tattooHeightCm, paperWidthCm, paperHeightCm, overlapCm, forcedCols, forcedRows, zoom]);
 
   // ==========================================================================
   // DRAG: Mover a imagem (aumentar/diminuir offset)
@@ -269,6 +272,29 @@ export default function InteractiveGridPreview({
 
   const handleMouseUp = () => setIsDragging(false);
 
+  // ==========================================================================
+  // ZOOM CONTROLS
+  // ==========================================================================
+
+  const handleZoomIn = () => {
+    setZoom(prevZoom => Math.min(prevZoom + 0.25, 3)); // Max 300%
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prevZoom => Math.max(prevZoom - 0.25, 0.5)); // Min 50%
+  };
+
+  const handleZoomReset = () => {
+    setZoom(1);
+  };
+
+  // Wheel event para zoom com scroll (aplicado apenas na imagem)
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setZoom(prevZoom => Math.min(Math.max(prevZoom + delta, 0.5), 3));
+  };
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-xs text-zinc-400">
@@ -276,23 +302,65 @@ export default function InteractiveGridPreview({
           <Move size={14} className="text-purple-500" />
           <span>Arraste a imagem</span>
         </div>
-        <div className="bg-purple-900/20 px-2 py-1 rounded text-purple-300 font-medium">
-          {gridInfo.cols}×{gridInfo.rows} = {gridInfo.cols * gridInfo.rows} folhas
+        <div className="flex items-center gap-2">
+          <div className="bg-purple-900/20 px-2 py-1 rounded text-purple-300 font-medium">
+            {gridInfo.cols}×{gridInfo.rows} = {gridInfo.cols * gridInfo.rows} folhas
+          </div>
+          <div className="bg-zinc-900 px-2 py-1 rounded text-zinc-400 font-mono">
+            {(zoom * 100).toFixed(0)}%
+          </div>
         </div>
       </div>
 
-      <canvas
-        ref={canvasRef}
-        width={CANVAS_WIDTH}
-        height={CANVAS_HEIGHT}
-        className={`w-full bg-zinc-950 rounded-lg border-2 transition-colors ${
-          isDragging ? 'border-purple-500 cursor-grabbing' : 'border-zinc-800 cursor-grab'
-        }`}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      />
+      {/* Zoom Controls */}
+      <div className="flex gap-2 items-center justify-center">
+        <button
+          onClick={handleZoomOut}
+          className="p-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded transition-colors disabled:opacity-50"
+          disabled={zoom <= 0.5}
+          title="Zoom Out (50% min)"
+        >
+          <ZoomOut size={16} />
+        </button>
+        <button
+          onClick={handleZoomReset}
+          className="p-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded transition-colors"
+          title="Reset Zoom (100%)"
+        >
+          <Maximize2 size={16} />
+        </button>
+        <button
+          onClick={handleZoomIn}
+          className="p-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded transition-colors disabled:opacity-50"
+          disabled={zoom >= 3}
+          title="Zoom In (300% max)"
+        >
+          <ZoomIn size={16} />
+        </button>
+      </div>
+
+      {/* Canvas Container com Zoom */}
+      <div
+        ref={containerRef}
+        className="overflow-hidden bg-zinc-950 rounded-lg border-2 border-zinc-800"
+        onWheel={handleWheel}
+      >
+        <canvas
+          ref={canvasRef}
+          width={CANVAS_WIDTH}
+          height={CANVAS_HEIGHT}
+          style={{
+            width: '100%',
+            height: 'auto',
+          }}
+          className={`${
+            isDragging ? 'cursor-grabbing' : 'cursor-grab'
+          }`}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        /></div>
 
       <div className="flex gap-2">
         <button

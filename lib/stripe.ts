@@ -20,7 +20,7 @@ export const PRICES = {
 // TIPOS DE PLANOS
 // ============================================================================
 
-export type PlanType = 'free' | 'starter' | 'pro' | 'studio';
+export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise';
 
 // ============================================================================
 // FEATURES DOS PLANOS

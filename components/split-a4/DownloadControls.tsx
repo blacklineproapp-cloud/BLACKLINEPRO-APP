@@ -18,7 +18,7 @@ export default function DownloadControls({
   orientation = 'portrait'
 }: DownloadControlsProps) {
   const [isDownloading, setIsDownloading] = useState(false);
-  const [downloadType, setDownloadType] = useState<'zip' | 'pdf' | 'single' | null>(null);
+  const [downloadType, setDownloadType] = useState<'zip' | 'pdf' | 'single' | 'all-png' | null>(null);
 
   const handleDownloadZip = async () => {
     setIsDownloading(true);
@@ -48,11 +48,22 @@ export default function DownloadControls({
     }
   };
 
-  const handleDownloadSingle = (tile: TileData) => {
+  const handleDownloadAllPng = async () => {
+    setIsDownloading(true);
+    setDownloadType('all-png');
+
     try {
-      downloadSingleTile(tile, filename);
+      // Baixar cada tile sequencialmente com delay de 200ms entre cada um
+      for (const tile of tiles) {
+        downloadSingleTile(tile, filename);
+        // Delay para evitar problemas de download simultâneo no navegador
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
     } catch (error: any) {
-      alert('Erro ao baixar página: ' + error.message);
+      alert('Erro ao baixar imagens: ' + error.message);
+    } finally {
+      setIsDownloading(false);
+      setDownloadType(null);
     }
   };
 
@@ -60,6 +71,25 @@ export default function DownloadControls({
     <div className="space-y-3">
       {/* Botões principais de download */}
       <div className="grid grid-cols-2 gap-2">
+        {/* Download Todas PNG */}
+        <button
+          onClick={handleDownloadAllPng}
+          disabled={isDownloading}
+          className="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isDownloading && downloadType === 'all-png' ? (
+            <>
+              <Loader2 size={18} className="animate-spin" />
+              Baixando...
+            </>
+          ) : (
+            <>
+              <Download size={18} />
+              Todas PNG
+            </>
+          )}
+        </button>
+
         {/* Download ZIP */}
         <button
           onClick={handleDownloadZip}
@@ -74,59 +104,37 @@ export default function DownloadControls({
           ) : (
             <>
               <FileArchive size={18} />
-              ZIP ({tiles.length} páginas)
-            </>
-          )}
-        </button>
-
-        {/* Download PDF */}
-        <button
-          onClick={handleDownloadPdf}
-          disabled={isDownloading}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isDownloading && downloadType === 'pdf' ? (
-            <>
-              <Loader2 size={18} className="animate-spin" />
-              Gerando...
-            </>
-          ) : (
-            <>
-              <FileText size={18} />
-              PDF ({tiles.length} páginas)
+              ZIP
             </>
           )}
         </button>
       </div>
 
-      {/* Download individual */}
-      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3">
-        <h4 className="text-white text-xs font-medium mb-2 flex items-center gap-1.5">
-          <Download size={12} className="text-blue-400" />
-          Download Individual
-        </h4>
-
-        <div className="grid grid-cols-4 gap-1.5">
-          {tiles.map((tile) => (
-            <button
-              key={tile.pageNumber}
-              onClick={() => handleDownloadSingle(tile)}
-              disabled={isDownloading}
-              className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-blue-600 text-zinc-400 hover:text-blue-400 py-2 px-1 rounded text-[10px] font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title={`Baixar página ${tile.pageNumber}`}
-            >
-              #{tile.pageNumber}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Segunda linha - PDF */}
+      <button
+        onClick={handleDownloadPdf}
+        disabled={isDownloading}
+        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isDownloading && downloadType === 'pdf' ? (
+          <>
+            <Loader2 size={18} className="animate-spin" />
+            Gerando...
+          </>
+        ) : (
+          <>
+            <FileText size={18} />
+            PDF ({tiles.length} páginas)
+          </>
+        )}
+      </button>
 
       {/* Informações */}
       <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-2.5">
         <p className="text-[10px] text-blue-300 leading-relaxed">
-          <strong>ZIP:</strong> Todas as páginas PNG + instruções de montagem<br />
-          <strong>PDF:</strong> Documento multi-página pronto para impressão<br />
-          <strong>Individual:</strong> Baixar página específica em PNG
+          <strong>Todas PNG:</strong> Baixa todas as páginas PNG sequencialmente<br />
+          <strong>ZIP:</strong> Todas as páginas PNG + instruções (compactado)<br />
+          <strong>PDF:</strong> Documento multi-página pronto para impressão
         </p>
       </div>
     </div>

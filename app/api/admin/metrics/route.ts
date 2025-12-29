@@ -1,9 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
-
-// Emails com acesso admin (case-insensitive)
-const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
 
 export async function GET(req: Request) {
   try {
@@ -13,7 +11,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    // Verificar se é admin (apenas por email, sem campo is_admin)
+    // Verificar se é admin
     const { data: user, error: userError } = await supabaseAdmin
       .from('users')
       .select('email')
@@ -27,12 +25,9 @@ export async function GET(req: Request) {
       error: userError?.message 
     });
 
-    // Comparação case-insensitive
-    const userEmailLower = user?.email?.toLowerCase() || '';
-    const isAdmin = user && ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
+    const userIsAdmin = await isAdmin(userId);
     
-    if (!isAdmin) {
-      console.log('[Admin Check] ACESSO NEGADO para:', user?.email);
+    if (!userIsAdmin) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 

@@ -3,11 +3,12 @@
 import { useState, useRef, useEffect } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import DownloadControls from '@/components/split-a4/DownloadControls';
-import { Wand2, Palette, Upload, Download, Copy, Check, ArrowRight, X, Droplet, ChevronUp, ChevronDown, Grid3x3, Image as ImageIcon } from 'lucide-react';
+import { Wand2, Palette, Upload, Download, Copy, Check, ArrowRight, X, Droplet, ChevronUp, ChevronDown, Grid3x3, Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { TileData } from '@/lib/download-helpers';
+import type { Area } from 'react-easy-crop';
 
-const InteractiveGridPreview = dynamic(() => import('@/components/InteractiveGridPreview'), { ssr: false });
+const ImageCropControl = dynamic(() => import('@/components/split-a4/ImageCropControl'), { ssr: false });
 
 type ToolMode = 'ENHANCE' | 'COLOR_MATCH' | 'SPLIT_A4';
 
@@ -45,9 +46,21 @@ export default function ToolsPage() {
   const [imageSource, setImageSource] = useState<'upload' | 'gallery'>('upload');
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
-  const [offsetX, setOffsetX] = useState<number>(0);
-  const [offsetY, setOffsetY] = useState<number>(0);
   const [imageAspectRatio, setImageAspectRatio] = useState<number>(1); // largura/altura real da imagem
+  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null); // Dimensões reais da imagem
+
+  // Estado para carousel de galeria de upload
+  const [currentGalleryPage, setCurrentGalleryPage] = useState<number>(0);
+  const IMAGES_PER_PAGE = 6; // 2 colunas x 3 linhas
+
+  // Estados do crop (react-easy-crop)
+  const [croppedArea, setCroppedArea] = useState<Area | null>(null);
+  const [cropRotation, setCropRotation] = useState<number>(0);
+  const [cropFlip, setCropFlip] = useState<{ horizontal: boolean; vertical: boolean }>({ horizontal: false, vertical: false });
+
+  // ✅ NOVO: Estados para offset (posicionamento no grid)
+  const [offsetXCm, setOffsetXCm] = useState<number>(0);
+  const [offsetYCm, setOffsetYCm] = useState<number>(0);
 
   // Dimensões A4: 21cm x 29.7cm
   const A4_WIDTH = 21;
@@ -66,10 +79,10 @@ export default function ToolsPage() {
   const calculateDimensions = () => {
     const layouts: Record<number, { cols: number; rows: number }> = {
       1: { cols: 1, rows: 1 },
-      2: orientation === 'portrait' ? { cols: 1, rows: 2 } : { cols: 2, rows: 1 },
+      2: orientation === 'portrait' ? { cols: 2, rows: 1 } : { cols: 1, rows: 2 },
       4: { cols: 2, rows: 2 },
-      6: orientation === 'portrait' ? { cols: 2, rows: 3 } : { cols: 3, rows: 2 },
-      8: orientation === 'portrait' ? { cols: 2, rows: 4 } : { cols: 4, rows: 2 },
+      6: { cols: 3, rows: 2 }, // 3 em cima, 3 embaixo
+      8: { cols: 4, rows: 2 }, // 4 em cima, 4 embaixo
     };
 
     const layout = layouts[numA4s];
@@ -81,19 +94,19 @@ export default function ToolsPage() {
     // Aspect ratio do grid
     const gridAspectRatio = gridWidth / gridHeight;
 
-    // ESCALAR imagem para CABER no grid (object-fit: contain)
-    // Mantém proporção da imagem, preenche o máximo possível sem estourar
+    // ✅ PREENCHER TODO O GRID (object-fit: cover)
+    // A imagem VAI COBRIR todo o grid, pode cortar bordas mas SEM espaços em branco!
     let tattooWidth: number;
     let tattooHeight: number;
 
     if (imageAspectRatio > gridAspectRatio) {
-      // Imagem mais LARGA que grid → limitar pela LARGURA
-      tattooWidth = gridWidth;
-      tattooHeight = gridWidth / imageAspectRatio;
-    } else {
-      // Imagem mais ALTA que grid → limitar pela ALTURA
+      // Imagem mais LARGA que grid → usar ALTURA completa, largura vai sobrar
       tattooHeight = gridHeight;
       tattooWidth = gridHeight * imageAspectRatio;
+    } else {
+      // Imagem mais ALTA que grid → usar LARGURA completa, altura vai sobrar
+      tattooWidth = gridWidth;
+      tattooHeight = gridWidth / imageAspectRatio;
     }
 
     return {
@@ -142,6 +155,50 @@ export default function ToolsPage() {
     checkToolsStatus();
   }, []);
 
+  // Converter URL para base64 - tenta canvas, fallback para proxy API
+  const urlToBase64 = async (url: string): Promise<string> => {
+    // Tentar método canvas primeiro (mais rápido)
+    try {
+      return await new Promise<string>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Failed to get canvas context'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0);
+          try {
+            const base64 = canvas.toDataURL('image/png');
+            resolve(base64);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        img.onerror = () => reject(new Error('Canvas method failed'));
+        img.src = url;
+      });
+    } catch (canvasError) {
+      // Fallback: usar API proxy
+      const response = await fetch('/api/proxy-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to proxy image');
+      }
+
+      const data = await response.json();
+      return data.base64;
+    }
+  };
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -157,7 +214,7 @@ export default function ToolsPage() {
         img.onload = () => {
           const aspectRatio = img.width / img.height;
           setImageAspectRatio(aspectRatio);
-          console.log(`📐 Imagem carregada: ${img.width}×${img.height}px, aspect ratio: ${aspectRatio.toFixed(2)}`);
+          setImageDimensions({ width: img.width, height: img.height }); // GUARDAR DIMENSÕES REAIS
         };
         img.src = imageUrl;
       };
@@ -211,22 +268,30 @@ export default function ToolsPage() {
         }
       } else if (activeMode === 'SPLIT_A4') {
         const paper = getPaperDimensions();
+
+        // ✅ react-easy-crop JÁ retorna croppedArea na escala da imagem original
+        // Não precisa re-escalar!
+
         const res = await fetch('/api/tools/split-a4', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             image: inputImage,
-            tattooWidth: gridWidth, // Grid TOTAL, não imagem escalada
-            tattooHeight: gridHeight, // Grid TOTAL, não imagem escalada
-            offsetX,
-            offsetY,
+            tattooWidth: tattooWidth, // ✅ CORRIGIDO: Usar dimensões REAIS da imagem escalada
+            tattooHeight: tattooHeight, // ✅ CORRIGIDO: Usar dimensões REAIS da imagem escalada
+            offsetX: offsetXCm, // ✅ NOVO: Offset controlado pelo usuário
+            offsetY: offsetYCm, // ✅ NOVO: Offset controlado pelo usuário
             paperWidth: paper.width,
             paperHeight: paper.height,
             overlap: overlapCm,
             processMode,
             // Forçar grid fixo baseado na seleção do usuário
             forcedCols: cols,
-            forcedRows: rows
+            forcedRows: rows,
+            // ✅ Transformações do ImageCropControl (JÁ na escala correta!)
+            croppedArea: croppedArea,
+            rotation: cropRotation,
+            flip: cropFlip
           }),
         });
         const data = await res.json();
@@ -264,8 +329,16 @@ export default function ToolsPage() {
     setSplitResult(null);
     setShowInput(true);
     setImageSource('upload');
-    setOffsetX(0);
-    setOffsetY(0);
+    // Reset crop states
+    setCroppedArea(null);
+    setCropRotation(0);
+    setCropFlip({ horizontal: false, vertical: false });
+    setImageDimensions(null); // Reset dimensões
+    // ✅ NOVO: Reset offset
+    setOffsetXCm(0);
+    setOffsetYCm(0);
+    // Reset carousel da galeria
+    setCurrentGalleryPage(0);
   };
 
   // Carregar galeria quando o modo Split A4 e source=gallery
@@ -466,8 +539,8 @@ export default function ToolsPage() {
                       <p className="text-zinc-600 text-xs mt-2">JPG ou PNG</p>
                     </div>
                   ) : (
-                    /* Gallery Grid */
-                    <div className="flex-1 overflow-y-auto">
+                    /* Gallery Grid com Carousel */
+                    <div className="flex-1 flex flex-col">
                       {loadingGallery ? (
                         <div className="flex items-center justify-center h-full"><LoadingSpinner /></div>
                       ) : galleryImages.length === 0 ? (
@@ -476,27 +549,83 @@ export default function ToolsPage() {
                           <p className="text-sm">Galeria vazia</p>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-2">
-                          {galleryImages.map((img: any) => (
-                            <div
-                              key={img.id}
-                              onClick={() => {
-                                setInputImage(img.url);
-                                // Carregar imagem da galeria para obter dimensões
-                                const image = new Image();
-                                image.onload = () => {
-                                  const aspectRatio = image.width / image.height;
-                                  setImageAspectRatio(aspectRatio);
-                                  console.log(`📐 Imagem da galeria: ${image.width}×${image.height}px, aspect ratio: ${aspectRatio.toFixed(2)}`);
-                                };
-                                image.src = img.url;
-                              }}
-                              className="aspect-square bg-zinc-950 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
-                            >
-                              <img src={img.url} alt="Gallery" className="w-full h-full object-cover" />
+                        <>
+                          {/* Navegação - só mostra se tiver mais de 6 imagens */}
+                          {galleryImages.length > IMAGES_PER_PAGE && (
+                            <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                              <button
+                                onClick={() => setCurrentGalleryPage(Math.max(0, currentGalleryPage - 1))}
+                                disabled={currentGalleryPage === 0}
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-purple-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs"
+                              >
+                                <ChevronLeft size={12} /> Ant.
+                              </button>
+
+                              <div className="flex items-center gap-2">
+                                <div className="flex gap-1">
+                                  {Array.from({ length: Math.ceil(galleryImages.length / IMAGES_PER_PAGE) }).map((_, idx) => (
+                                    <button
+                                      key={idx}
+                                      onClick={() => setCurrentGalleryPage(idx)}
+                                      className={`w-1 h-1 rounded-full transition-all ${
+                                        idx === currentGalleryPage ? 'bg-purple-500 w-3' : 'bg-zinc-700'
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-[9px] text-zinc-500 font-mono">
+                                  {currentGalleryPage * IMAGES_PER_PAGE + 1}-{Math.min((currentGalleryPage + 1) * IMAGES_PER_PAGE, galleryImages.length)} de {galleryImages.length}
+                                </span>
+                              </div>
+
+                              <button
+                                onClick={() => setCurrentGalleryPage(Math.min(Math.ceil(galleryImages.length / IMAGES_PER_PAGE) - 1, currentGalleryPage + 1))}
+                                disabled={currentGalleryPage >= Math.ceil(galleryImages.length / IMAGES_PER_PAGE) - 1}
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-purple-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs"
+                              >
+                                Próx. <ChevronRight size={12} />
+                              </button>
                             </div>
-                          ))}
-                        </div>
+                          )}
+
+                          {/* Grid com apenas as imagens da página atual */}
+                          <div className="flex-1 overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-2">
+                              {galleryImages
+                                .slice(currentGalleryPage * IMAGES_PER_PAGE, (currentGalleryPage + 1) * IMAGES_PER_PAGE)
+                                .map((img: any) => (
+                                  <div
+                                    key={img.id}
+                                    onClick={async () => {
+                                      try {
+                                        // Converter URL para base64
+                                        const base64 = await urlToBase64(img.url);
+                                        setInputImage(base64);
+                                        setResultImage(null);
+                                        setColorResult(null);
+                                        setSplitResult(null);
+
+                                        // Carregar imagem da galeria para obter dimensões
+                                        const image = new Image();
+                                        image.onload = () => {
+                                          const aspectRatio = image.width / image.height;
+                                          setImageAspectRatio(aspectRatio);
+                                          setImageDimensions({ width: image.width, height: image.height }); // GUARDAR DIMENSÕES REAIS
+                                        };
+                                        image.src = base64;
+                                      } catch (error) {
+                                        console.error('❌ Erro ao carregar da galeria:', error);
+                                        alert('Erro ao carregar imagem da galeria');
+                                      }
+                                    }}
+                                    className="aspect-square bg-zinc-950 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
+                                  >
+                                    <img src={img.url} alt="Gallery" className="w-full h-full object-cover" />
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        </>
                       )}
                     </div>
                   )}
@@ -556,72 +685,70 @@ export default function ToolsPage() {
                 {activeMode === 'SPLIT_A4' && (
                   <div className="mt-3 lg:mt-4 space-y-2.5">
 
-                    {/* Preview Interativo - DESTAQUE NO TOPO */}
+                    {/* Preview Interativo - Manipulação de Imagem */}
                     <div>
-                      <InteractiveGridPreview
-                        key={`${numA4s}-${orientation}-${paperSize}`}
+                      <ImageCropControl
+                        key={`${numA4s}-${orientation}-${paperSize}-${overlapCm}`}
                         imageUrl={inputImage || ''}
-                        tattooWidthCm={tattooWidth}
-                        tattooHeightCm={tattooHeight}
                         paperWidthCm={getPaperDimensions().width}
                         paperHeightCm={getPaperDimensions().height}
+                        cols={cols}
+                        rows={rows}
                         overlapCm={overlapCm}
-                        initialX={offsetX}
-                        initialY={offsetY}
-                        forcedCols={cols}
-                        forcedRows={rows}
-                        onPositionChange={(x, y) => {
-                          setOffsetX(x);
-                          setOffsetY(y);
+                        onCropComplete={(area, rotation, flip) => {
+                          setCroppedArea(area);
+                          setCropRotation(rotation);
+                          setCropFlip(flip);
                           setSplitResult(null);
                         }}
                       />
                     </div>
 
-                    {/* Controles Compactos */}
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Papel */}
-                      <div>
-                        <label className="block text-[10px] text-zinc-500 mb-1">Papel</label>
+                    {/* ━━━ CONFIGURAÇÕES ━━━ */}
+
+                    {/* 1. Papel e Orientação */}
+                    <div>
+                      <label className="block text-[10px] text-zinc-500 mb-1.5 font-medium">📄 Papel e Orientação</label>
+                      <div className="grid grid-cols-2 gap-2">
                         <select
                           value={paperSize}
                           onChange={(e) => {
                             setPaperSize(e.target.value as any);
                             setSplitResult(null);
+                            setCroppedArea(null);
+                            setCropRotation(0);
+                            setCropFlip({ horizontal: false, vertical: false });
+                            setOffsetXCm(0);
+                            setOffsetYCm(0);
                           }}
                           className="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-xs text-white"
                         >
-                          <option value="A4">A4</option>
-                          <option value="A3">A3</option>
-                          <option value="Letter">Letter</option>
+                          <option value="A4">A4 (21×30cm)</option>
+                          <option value="A3">A3 (30×42cm)</option>
+                          <option value="Letter">Letter (22×28cm)</option>
                         </select>
-                      </div>
-
-                      {/* Orientação */}
-                      <div>
-                        <label className="block text-[10px] text-zinc-500 mb-1">Orientação</label>
                         <select
                           value={orientation}
                           onChange={(e) => {
                             setOrientation(e.target.value as any);
                             setSplitResult(null);
-                            setOffsetX(0);
-                            setOffsetY(0);
+                            setCroppedArea(null);
+                            setCropRotation(0);
+                            setCropFlip({ horizontal: false, vertical: false });
+                            setOffsetXCm(0);
+                            setOffsetYCm(0);
                           }}
                           className="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-xs text-white"
                         >
-                          <option value="portrait">Portrait 📄</option>
-                          <option value="landscape">Landscape 📃</option>
+                          <option value="portrait">Retrato 📄</option>
+                          <option value="landscape">Paisagem 📃</option>
                         </select>
                       </div>
                     </div>
 
-                    {/* Seletor de Quantidade de A4s */}
+                    {/* 2. Grid - Quantidade de Folhas */}
                     <div>
-                      <label className="block text-[10px] text-zinc-500 mb-1.5 flex items-center gap-1">
-                        <span>Quantidade de A4s</span>
-                        <span className="text-[9px] bg-purple-900/30 text-purple-400 px-1.5 py-0.5 rounded">auto-dimensionado</span>
-                      </label>
+                      <label className="block text-[10px] text-zinc-500 mb-1.5 font-medium">📐 Grid de Páginas</label>
                       <div className="grid grid-cols-5 gap-1.5">
                         {([1, 2, 4, 6, 8] as const).map((num) => (
                           <button
@@ -629,10 +756,13 @@ export default function ToolsPage() {
                             onClick={() => {
                               setNumA4s(num);
                               setSplitResult(null);
-                              setOffsetX(0);
-                              setOffsetY(0);
+                              setCroppedArea(null);
+                              setCropRotation(0);
+                              setCropFlip({ horizontal: false, vertical: false });
+                              setOffsetXCm(0);
+                              setOffsetYCm(0);
                             }}
-                            className={`py-2 rounded-lg text-xs font-bold border-2 transition-all ${
+                            className={`py-2.5 rounded-lg text-xs font-bold border-2 transition-all ${
                               numA4s === num
                                 ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/30'
                                 : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300'
@@ -643,64 +773,118 @@ export default function ToolsPage() {
                         ))}
                       </div>
 
-                      {/* Dimensões Calculadas - Read-only */}
-                      <div className="mt-2 p-2.5 bg-purple-950/30 border border-purple-800/30 rounded-lg space-y-1.5">
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-purple-300/70">Grid Total:</span>
-                          <span className="text-zinc-400 font-mono text-[9px]">
-                            {gridWidth.toFixed(1)}×{gridHeight.toFixed(1)}cm
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-purple-300">Imagem Escalada:</span>
-                          <span className="text-purple-400 font-mono font-bold">
-                            {tattooWidth.toFixed(1)}cm × {tattooHeight.toFixed(1)}cm
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-purple-300/70">Layout:</span>
-                          <span className="text-emerald-400 font-mono font-semibold">
-                            {cols} × {rows} = {numA4s} A4{numA4s > 1 ? 's' : ''}
-                          </span>
-                        </div>
-                        <div className="text-[9px] text-purple-400/60 italic pt-1 border-t border-purple-800/20">
-                          ✓ Proporção mantida • Cabe em {((tattooWidth * tattooHeight) / (gridWidth * gridHeight) * 100).toFixed(0)}% do grid
+                      {/* Info Consolidada do Grid */}
+                      <div className="mt-2 p-2.5 bg-purple-950/30 border border-purple-800/30 rounded-lg">
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-purple-300/70">Layout:</span>
+                            <span className="text-emerald-400 font-mono font-semibold">
+                              {cols}×{rows}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-purple-300/70">Total:</span>
+                            <span className="text-purple-400 font-mono font-bold">
+                              {numA4s} folha{numA4s > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between col-span-2">
+                            <span className="text-purple-300/70">Imagem:</span>
+                            <span className="text-purple-400 font-mono">
+                              {tattooWidth.toFixed(1)}×{tattooHeight.toFixed(1)}cm
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Overlap */}
+                    {/* 3. Ajustes Finos - Overlap e Offset */}
                     <div>
-                      <label className="block text-[10px] text-zinc-500 mb-1">
-                        Overlap: {overlapCm.toFixed(1)} cm
-                      </label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="3"
-                        step="0.1"
-                        value={overlapCm}
-                        onChange={(e) => {
-                          setOverlapCm(Number(e.target.value));
-                          setSplitResult(null);
-                        }}
-                        className="w-full"
-                      />
+                      <label className="block text-[10px] text-zinc-500 mb-1.5 font-medium">🎯 Ajustes Finos</label>
+
+                      <div className="space-y-2">
+                        {/* Overlap */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] text-zinc-400">Overlap (sobreposição)</span>
+                            <span className="text-[10px] text-purple-400 font-mono">{overlapCm.toFixed(1)}cm</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="3"
+                            step="0.1"
+                            value={overlapCm}
+                            onChange={(e) => {
+                              setOverlapCm(Number(e.target.value));
+                              setSplitResult(null);
+                            }}
+                            className="w-full accent-purple-500"
+                          />
+                        </div>
+
+                        {/* Offset X e Y */}
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* Offset X */}
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] text-zinc-400">Offset X</span>
+                              <span className="text-[10px] text-amber-400 font-mono">{offsetXCm.toFixed(1)}cm</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={gridWidth}
+                              step="0.1"
+                              value={offsetXCm}
+                              onChange={(e) => {
+                                setOffsetXCm(Number(e.target.value));
+                                setSplitResult(null);
+                              }}
+                              className="w-full accent-amber-500"
+                            />
+                          </div>
+
+                          {/* Offset Y */}
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] text-zinc-400">Offset Y</span>
+                              <span className="text-[10px] text-amber-400 font-mono">{offsetYCm.toFixed(1)}cm</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max={gridHeight}
+                              step="0.1"
+                              value={offsetYCm}
+                              onChange={(e) => {
+                                setOffsetYCm(Number(e.target.value));
+                                setSplitResult(null);
+                              }}
+                              className="w-full accent-amber-500"
+                            />
+                          </div>
+                        </div>
+
+                        <p className="text-[9px] text-zinc-500 italic mt-1">
+                          💡 Overlap facilita colagem das folhas. Offset ajusta posição inicial no grid.
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Process Mode */}
+                    {/* 4. Modo de Processamento */}
                     <div>
-                      <label className="block text-[10px] text-zinc-500 mb-1">Processamento</label>
+                      <label className="block text-[10px] text-zinc-500 mb-1.5 font-medium">🎨 Processamento</label>
                       <div className="grid grid-cols-3 gap-1.5">
                         <button
                           onClick={() => {
                             setProcessMode('reference');
                             setSplitResult(null);
                           }}
-                          className={`p-2 rounded text-[10px] font-medium transition-all ${
+                          className={`p-2.5 rounded text-[10px] font-medium transition-all ${
                             processMode === 'reference'
-                              ? 'bg-purple-600 text-white'
-                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800'
+                              ? 'bg-purple-600 text-white border-2 border-purple-400'
+                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
                           }`}
                         >
                           🖼️ Original
@@ -710,10 +894,10 @@ export default function ToolsPage() {
                             setProcessMode('topographic');
                             setSplitResult(null);
                           }}
-                          className={`p-2 rounded text-[10px] font-medium transition-all ${
+                          className={`p-2.5 rounded text-[10px] font-medium transition-all ${
                             processMode === 'topographic'
-                              ? 'bg-purple-600 text-white'
-                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800'
+                              ? 'bg-purple-600 text-white border-2 border-purple-400'
+                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
                           }`}
                         >
                           🗺️ Topo
@@ -723,10 +907,10 @@ export default function ToolsPage() {
                             setProcessMode('perfect_lines');
                             setSplitResult(null);
                           }}
-                          className={`p-2 rounded text-[10px] font-medium transition-all ${
+                          className={`p-2.5 rounded text-[10px] font-medium transition-all ${
                             processMode === 'perfect_lines'
-                              ? 'bg-purple-600 text-white'
-                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800'
+                              ? 'bg-purple-600 text-white border-2 border-purple-400'
+                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
                           }`}
                         >
                           📐 Linhas
@@ -762,7 +946,7 @@ export default function ToolsPage() {
           </div>
 
           {/* Output Area */}
-          <div className="lg:flex-1 p-4 lg:p-8 bg-zinc-950/30 flex flex-col min-h-[300px] lg:min-h-0">
+          <div className="lg:flex-1 p-4 lg:p-8 bg-zinc-950/30 flex flex-col min-h-[300px] lg:min-h-0 overflow-hidden">
             {/* Mobile toggle */}
             {(resultImage || colorResult || splitResult) && (
               <button
@@ -778,7 +962,18 @@ export default function ToolsPage() {
               <div className="flex-1 flex flex-col items-center justify-center text-zinc-600">
                 {isProcessing ? (
                   <div className="text-center">
-                    <LoadingSpinner text={activeMode === 'COLOR_MATCH' ? "Consultando catálogo..." : activeMode === 'SPLIT_A4' ? "Dividindo imagem..." : "Processando..."} />
+                    <LoadingSpinner text={
+                      activeMode === 'COLOR_MATCH'
+                        ? "Consultando catálogo..."
+                        : activeMode === 'SPLIT_A4'
+                          ? processMode === 'reference'
+                            ? "⚡ Dividindo (modo rápido)..."
+                            : `🎨 Processando ${processMode === 'topographic' ? 'topográfico' : 'linhas'}... (10-15s)`
+                          : "Processando..."
+                    } />
+                    {activeMode === 'SPLIT_A4' && processMode !== 'reference' && (
+                      <p className="text-xs text-zinc-500 mt-2">Gerando stencil de alta qualidade, aguarde...</p>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -788,12 +983,12 @@ export default function ToolsPage() {
                 )}
               </div>
             ) : (
-              <div className="h-full flex flex-col animate-in fade-in duration-500">
+              <div className="flex-1 flex flex-col animate-in fade-in duration-500 min-h-0">
                 
                 {/* Result for Enhance Mode */}
                 {activeMode === 'ENHANCE' && resultImage && (
-                  <>
-                    <div className="flex justify-between items-center mb-3 lg:mb-4">
+                  <div className="flex flex-col h-full max-h-full">
+                    <div className="flex justify-between items-center mb-3 lg:mb-4 flex-shrink-0">
                       <h3 className="text-blue-400 font-medium text-sm flex items-center gap-2">
                         <Wand2 size={16} /> Resultado Aprimorado
                       </h3>
@@ -801,16 +996,16 @@ export default function ToolsPage() {
                         <Download size={14} /> Baixar
                       </a>
                     </div>
-                    <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-hidden">
-                      <img src={resultImage} alt="Enhanced" className="max-w-full max-h-[250px] lg:max-h-[400px] object-contain rounded shadow-2xl" />
+                    <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-0">
+                      <img src={resultImage} alt="Enhanced" className="max-w-full max-h-full object-contain rounded shadow-2xl" />
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {/* Result for Color Match Mode */}
                 {activeMode === 'COLOR_MATCH' && colorResult && (
-                  <div className="h-full flex flex-col">
-                    <div className="mb-4 lg:mb-6">
+                  <div className="flex flex-col h-full max-h-full">
+                    <div className="mb-4 lg:mb-6 flex-shrink-0">
                       <h3 className="text-pink-400 font-medium text-base lg:text-lg mb-1 flex items-center gap-2">
                         <Palette size={18} /> Tintas Recomendadas
                       </h3>
@@ -822,7 +1017,7 @@ export default function ToolsPage() {
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-2 lg:space-y-3">
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-2 lg:space-y-3 min-h-0">
                       {colorResult.colors?.map((c: any, idx: number) => (
                         <div key={idx} className="bg-zinc-900 border border-zinc-800 p-2.5 lg:p-3 rounded-lg flex items-center gap-3 lg:gap-4 hover:border-zinc-700 transition-colors group">
                           <div
@@ -845,7 +1040,7 @@ export default function ToolsPage() {
                       ))}
                     </div>
 
-                    <div className="mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-zinc-800">
+                    <div className="mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-zinc-800 flex-shrink-0">
                       <p className="text-[10px] text-zinc-600 text-center">
                         * Sugestões aproximadas. O tom real pode variar.
                       </p>
@@ -855,8 +1050,8 @@ export default function ToolsPage() {
 
                 {/* Result for Split A4 Mode */}
                 {activeMode === 'SPLIT_A4' && splitResult && (
-                  <div className="h-full flex flex-col">
-                    <div className="mb-4">
+                  <div className="flex flex-col h-full max-h-full">
+                    <div className="mb-4 flex-shrink-0">
                       <h3 className="text-purple-400 font-medium text-base lg:text-lg mb-1 flex items-center gap-2">
                         <Grid3x3 size={18} /> Divisão em A4s
                       </h3>
@@ -865,12 +1060,12 @@ export default function ToolsPage() {
                           {splitResult.pages?.length || 0} folha(s) A4 · Grid {splitResult.gridInfo?.cols || 0} × {splitResult.gridInfo?.rows || 0}
                         </p>
                         <p className="text-zinc-500 text-[10px]">
-                          ✓ Proporção mantida · {offsetX > 0 || offsetY > 0 ? `Deslocado ${offsetX}cm × ${offsetY}cm` : 'Centralizado'}
+                          ✓ Proporção mantida · Ajustado com controles avançados
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-2">
+                    <div className="flex-1 overflow-y-auto pr-2 min-h-0">
                       <div className="grid grid-cols-2 gap-2 lg:gap-3">
                         {splitResult.pages?.map((page: any) => (
                           <div key={page.pageNumber} className="bg-zinc-900 border border-zinc-800 rounded-lg p-2 hover:border-purple-500 transition-all group">
@@ -906,7 +1101,7 @@ export default function ToolsPage() {
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-3 border-t border-zinc-800 space-y-3">
+                    <div className="mt-3 pt-3 border-t border-zinc-800 space-y-3 flex-shrink-0">
                       {/* Download Controls (ZIP/PDF/Individual) */}
                       <DownloadControls
                         tiles={splitResult.pages?.map((page: any) => ({

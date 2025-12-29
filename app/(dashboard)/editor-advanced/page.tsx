@@ -213,7 +213,7 @@ export default function EditorAdvancedPage() {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Criar novo timer (300ms de debounce)
+    // Criar novo timer (200ms de debounce - otimizado para responsividade)
     debounceTimerRef.current = setTimeout(async () => {
       setIsAdjusting(true);
 
@@ -229,7 +229,7 @@ export default function EditorAdvancedPage() {
       } finally {
         setIsAdjusting(false);
       }
-    }, 300);
+    }, 200);
   }, [generatedStencil, history]);
 
   // Handler de mudança de controles
@@ -486,7 +486,25 @@ export default function EditorAdvancedPage() {
                   opacity: comparisonMode === 'overlay' ? sliderPosition / 100 : 1
                 }}
               >
-                <img src={currentStencil} alt="Stencil" className="w-full h-full object-contain" draggable={false} />
+                <img 
+                  src={currentStencil} 
+                  alt="Stencil" 
+                  className="w-full h-full object-contain" 
+                  draggable={false}
+                  style={{
+                    // Preview instantâneo com CSS filters (enquanto API processa)
+                    filter: `
+                      brightness(${1 + (adjustControls.brightness / 100)})
+                      contrast(${1 + (adjustControls.contrast / 100)})
+                      ${adjustControls.invert ? 'invert(1)' : ''}
+                    `.trim(),
+                    transform: `
+                      rotate(${adjustControls.rotation}deg)
+                      scaleX(${adjustControls.flipHorizontal ? -1 : 1})
+                      scaleY(${adjustControls.flipVertical ? -1 : 1})
+                    `.trim()
+                  }}
+                />
               </div>
 
               {/* Wipe handle */}
@@ -658,7 +676,6 @@ export default function EditorAdvancedPage() {
                         controls={adjustControls}
                         onChange={handleAdjustChange}
                         onReset={handleResetAdjustments}
-                        onApplyPreset={handleApplyPreset}
                         isProcessing={isAdjusting}
                       />
                     </div>

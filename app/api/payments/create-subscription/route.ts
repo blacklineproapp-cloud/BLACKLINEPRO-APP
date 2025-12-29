@@ -15,7 +15,7 @@ import { CustomerService } from '@/lib/stripe';
 import { getPriceIdFromPlan } from '@/lib/billing/stripe-plan-mapping';
 import type { BillingCycle } from '@/lib/stripe/types';
 
-type CheckoutPlan = 'starter' | 'pro' | 'studio';
+type CheckoutPlan = 'starter' | 'pro' | 'studio' | 'enterprise';
 
 export async function POST(req: Request) {
   try {
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const { plan, cycle = 'monthly' } = await req.json();
 
     // Validar plano
-    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio') {
+    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio' && plan !== 'enterprise') {
       return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
     }
 
@@ -148,7 +148,7 @@ export async function POST(req: Request) {
       amount,
       currency: 'brl',
       customer: stripeCustomerId,
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'boleto'],
       setup_future_usage: 'off_session', // Para cobranças recorrentes
       metadata: {
         clerk_id: userId,
