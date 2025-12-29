@@ -95,16 +95,16 @@ export default function HeroSection() {
           </div>
 
           {/* Social proof icons - stylized */}
-          <div className="grid grid-cols-3 gap-8 pt-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8 pt-4">
             {[
               { label: 'Fidelidade Total', sub: 'Traços Nítidos' },
               { label: 'Stencil Flow', sub: 'Tecnologia Própria' },
               { label: 'Pronto para A4', sub: 'Imprima na hora' }
             ].map((item, i) => (
-              <div key={i} className="space-y-1">
+              <div key={i} className={`space-y-1 ${i === 2 ? 'col-span-2 md:col-span-1' : ''}`}>
                 <div className="h-px w-8 bg-emerald-500/50 mb-3" />
-                <p className="text-white font-bold text-sm tracking-tight">{item.label}</p>
-                <p className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">{item.sub}</p>
+                <p className="text-white font-bold text-xs md:text-sm tracking-tight">{item.label}</p>
+                <p className="text-zinc-500 text-[9px] md:text-[10px] uppercase font-bold tracking-widest">{item.sub}</p>
               </div>
             ))}
           </div>
@@ -165,14 +165,14 @@ export default function HeroSection() {
             <div className="bg-zinc-900 border border-zinc-700/50 rounded-3xl shadow-[0_0_100px_rgba(16,185,129,0.15)] overflow-hidden transition-all duration-500">
               
               {/* Window Header */}
-              <div className="bg-zinc-800/50 px-6 py-4 flex items-center justify-between border-b border-zinc-700/50">
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                  <div className="w-3 h-3 rounded-full bg-amber-500/50" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-500" />
+              <div className="bg-zinc-800/50 px-3 md:px-6 py-2 md:py-4 flex items-center justify-between border-b border-zinc-700/50">
+                <div className="flex gap-1.5 md:gap-2 shrink-0">
+                  <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-red-500/50" />
+                  <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-amber-500/50" />
+                  <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-500" />
                 </div>
-                <div className="flex-1 text-center">
-                  <div className="inline-block bg-zinc-900 px-4 py-1 rounded-lg text-[10px] text-zinc-500 font-mono border border-zinc-700/30">
+                <div className="flex-1 text-center px-4 min-w-0">
+                  <div className="inline-block bg-zinc-900 px-3 md:px-4 py-1 rounded-lg text-[9px] md:text-[10px] text-zinc-500 font-mono border border-zinc-700/30 truncate max-w-[150px] md:max-w-none">
                     stencilflow.com.br / {features[activeFeature].title.toLowerCase().replace(' ', '-')}
                   </div>
                 </div>
@@ -213,29 +213,31 @@ export default function HeroSection() {
             </div>
 
             {/* Navigation Controls - Custom and Elegant */}
-            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-zinc-900/80 backdrop-blur-xl border border-zinc-700/50 p-3 rounded-[24px] shadow-2xl z-20">
+            <div className="absolute -bottom-6 md:-bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1.5 md:gap-4 bg-zinc-900/90 backdrop-blur-2xl border border-zinc-700/50 p-2 md:p-3 rounded-full md:rounded-[24px] shadow-2xl z-20 w-[max-content] max-w-[95vw]">
               {features.map((feature, idx) => {
                 const Icon = feature.icon;
                 return (
                   <button
                     key={idx}
                     onClick={() => setActiveFeature(idx)}
-                    className={`group relative flex items-center gap-3 px-5 py-3 rounded-2xl transition-all duration-300 ${
+                    className={`group relative flex items-center gap-2 md:gap-3 px-3.5 md:px-6 py-2.5 md:py-3.5 rounded-full md:rounded-2xl transition-all duration-300 ${
                       activeFeature === idx 
-                        ? 'bg-emerald-500 text-black' 
-                        : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
+                        ? 'bg-emerald-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.4)]' 
+                        : 'text-zinc-500 hover:text-white hover:bg-zinc-800/50'
                     }`}
                   >
-                    <Icon size={18} strokeWidth={activeFeature === idx ? 3 : 2} />
-                    <span className={`text-xs font-bold uppercase tracking-widest overflow-hidden transition-all duration-300 ${
-                      activeFeature === idx ? 'max-w-[120px] opacity-100' : 'max-w-0 opacity-0'
+                    <Icon size={16} className="md:w-[18px] md:h-[18px]" strokeWidth={activeFeature === idx ? 3 : 2} />
+                    <span className={`text-[10px] md:text-xs font-bold uppercase tracking-widest overflow-hidden transition-all duration-500 ease-out whitespace-nowrap ${
+                      activeFeature === idx ? 'max-w-[120px] opacity-100 ml-1.5 md:ml-0' : 'max-w-0 opacity-0'
                     }`}>
                       {feature.title.split(' ')[0]}
                     </span>
                     
                     {/* Progress Bar for active tab */}
                     {activeFeature === idx && (
-                      <div className="absolute bottom-0 left-0 h-1 bg-black/20 w-0 animate-[progress_5s_linear_infinite] rounded-full" />
+                      <div className="absolute bottom-1 left-1.5 right-1.5 h-0.5 bg-black/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-black/40 w-0 animate-[progress_5s_linear_infinite]" />
+                      </div>
                     )}
                   </button>
                 );
