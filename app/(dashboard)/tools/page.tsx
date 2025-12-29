@@ -222,16 +222,53 @@ export default function ToolsPage() {
     }
   };
 
+  // ✅ Helper para comprimir imagem no cliente antes do envio (evita Erro 413)
+  const compressImageIfNeeded = async (base64: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX_WIDTH = 2500; // Limite seguro para Gemini e Body do Next.js
+        const MAX_HEIGHT = 2500;
+        
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+          if (width > height) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          } else {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Comprimir como JPEG 0.9 (alta qualidade mas reduz drasticamente o peso do base64)
+          resolve(canvas.toDataURL('image/jpeg', 0.9));
+        } else {
+          resolve(base64);
+        }
+      };
+      img.src = base64;
+    });
+  };
+
   const handleProcess = async () => {
     if (!inputImage) return;
     setIsProcessing(true);
 
     try {
       if (activeMode === 'ENHANCE') {
+        const processingImage = await compressImageIfNeeded(inputImage);
         const res = await fetch('/api/tools/enhance', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: inputImage }),
+          body: JSON.stringify({ image: processingImage }),
         });
         const data = await res.json();
         if (res.ok) {
@@ -248,10 +285,11 @@ export default function ToolsPage() {
           alert(data.error || 'Erro ao aprimorar imagem');
         }
       } else if (activeMode === 'COLOR_MATCH') {
+        const processingImage = await compressImageIfNeeded(inputImage);
         const res = await fetch('/api/tools/color-match', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: inputImage, brand: selectedBrand }),
+          body: JSON.stringify({ image: processingImage, brand: selectedBrand }),
         });
         const data = await res.json();
         if (res.ok) {
