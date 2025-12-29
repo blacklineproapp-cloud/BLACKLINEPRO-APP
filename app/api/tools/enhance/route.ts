@@ -144,12 +144,3 @@ export async function POST(req: Request) {
 }
 
 export const maxDuration = 60;
-
-// Configuração para aumentar o limite do body (Next.js)
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-};
