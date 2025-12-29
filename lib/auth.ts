@@ -187,11 +187,13 @@ export async function getOrCreateUser(clerkId: string) {
 // ============================================
 
 /**
- * Verifica se um usuário é admin usando Clerk Public Metadata
+ * Verifica se um usuário é admin usando Clerk Public Metadata OU email
  *
  * Configure no Clerk Dashboard:
  * Users → [Usuário] → Metadata → Public metadata:
  * { "role": "admin" } ou { "role": "superadmin" }
+ *
+ * OU adicione o email na lista ADMIN_EMAILS abaixo
  *
  * @param userId - Clerk user ID (opcional, se não passar usa currentUser)
  * @returns true se for admin ou superadmin
@@ -209,14 +211,30 @@ export async function isAdmin(userId?: string): Promise<boolean> {
       return false;
     }
 
+    // Verificar por role no Clerk metadata
     const role = user.publicMetadata?.role as string | undefined;
     const isAdminRole = role === 'admin' || role === 'superadmin';
 
     if (isAdminRole) {
-      console.log('[Auth] ✅ Admin verificado:', user.emailAddresses[0]?.emailAddress, 'role:', role);
+      console.log('[Auth] ✅ Admin verificado (Clerk metadata):', user.emailAddresses[0]?.emailAddress, 'role:', role);
+      return true;
     }
 
-    return isAdminRole;
+    // Fallback: verificar por email
+    const ADMIN_EMAILS = [
+      'erickrussomat@gmail.com',
+      'yurilojavirtual@gmail.com',
+    ];
+
+    const userEmail = user.emailAddresses[0]?.emailAddress?.toLowerCase() || '';
+    const isAdminEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
+
+    if (isAdminEmail) {
+      console.log('[Auth] ✅ Admin verificado (email):', userEmail);
+      return true;
+    }
+
+    return false;
   } catch (error) {
     console.error('❌ Erro ao verificar admin:', error);
     return false;

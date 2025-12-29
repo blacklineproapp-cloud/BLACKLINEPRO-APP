@@ -146,4 +146,86 @@ export class CheckoutService {
       throw error;
     }
   }
+
+  /**
+   * Cria uma sessão de checkout iniciada pelo admin
+   * Para enviar link de pagamento ao usuário
+   */
+  static async createAdminCheckoutSession(params: {
+    userEmail: string;
+    userName?: string;
+    priceId: string;
+    planType: 'starter' | 'pro' | 'studio';
+    adminId: string;
+    clerkId: string;
+  }): Promise<CreateCheckoutSessionResponse> {
+    const { userEmail, userName, priceId, planType, adminId, clerkId } = params;
+
+    try {
+      // 1. Buscar ou criar customer no Stripe
+      let customerId: string;
+
+      // Tentar buscar customer existente por email
+      const existingCustomers = await stripe.customers.list({
+        email: userEmail,
+        limit: 1
+      });
+
+      if (existingCustomers.data.length > 0) {
+        customerId = existingCustomers.data[0].id;
+        console.log('[CheckoutService] Customer existente encontrado:', customerId);
+      } else {
+        // Criar novo customer
+        const customer = await stripe.customers.create({
+          email: userEmail,
+          name: userName,
+          metadata: {
+            clerk_id: clerkId,
+            created_by_admin: 'true',
+            admin_id: adminId
+          }
+        });
+        customerId = customer.id;
+        console.log('[CheckoutService] Novo customer criado:', customerId);
+      }
+
+      // 2. Criar checkout session
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: 'subscription',
+        payment_method_types: ['card', 'boleto'],
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1
+          }
+        ],
+        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
+        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=cancelled`,
+        metadata: {
+          admin_initiated: 'true',
+          admin_id: adminId,
+          plan: planType,
+          clerk_id: clerkId
+        },
+        client_reference_id: clerkId,
+        allow_promotion_codes: true,
+        billing_address_collection: 'auto',
+        customer_update: {
+          address: 'auto',
+          name: 'auto'
+        }
+      });
+
+      console.log('[CheckoutService] Admin checkout session criada:', session.id);
+
+      return {
+        url: session.url,
+        sessionId: session.id
+      };
+    } catch (error: any) {
+      console.error('[CheckoutService] Erro ao criar admin checkout:', error);
+      throw error;
+    }
+  }
 }

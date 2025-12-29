@@ -181,21 +181,35 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     customer = newCustomer;
   }
 
-  // 3. Se é assinatura, processar
+  // 3. Verificar se foi iniciado pelo admin
+  const isAdminInitiated = session.metadata?.admin_initiated === 'true';
+  const adminId = session.metadata?.admin_id;
+
+  // 4. Se é assinatura, processar
   if (session.subscription) {
     const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
 
-    // Atualizar usuário (compatibilidade com código legado)
+    // Preparar updates
+    const userUpdates: any = {
+      subscription_status: subscription.status,
+      subscription_id: subscription.id,
+      subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
+      is_paid: true,
+      plan: plan || 'starter',
+      tools_unlocked: plan === 'pro' || plan === 'studio' || plan === 'enterprise'
+    };
+
+    // Se foi iniciado pelo admin, remover flag de cortesia
+    if (isAdminInitiated) {
+      userUpdates.admin_courtesy = false;
+      userUpdates.admin_courtesy_granted_by = null;
+      userUpdates.admin_courtesy_granted_at = null;
+    }
+
+    // Atualizar usuário
     await supabaseAdmin
       .from('users')
-      .update({
-        subscription_status: subscription.status,
-        subscription_id: subscription.id,
-        subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
-        is_paid: true,
-        plan: plan || 'starter',
-        tools_unlocked: plan === 'pro' || plan === 'studio' || plan === 'enterprise'
-      })
+      .update(userUpdates)
       .eq('id', user.id);
 
     // Registrar pagamento
@@ -212,6 +226,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       description: `Assinatura ${plan === 'studio' ? 'Studio' : plan === 'pro' ? 'Pro' : 'Starter'}`,
       plan_type: plan || 'starter'
     });
+
+    // Log se foi iniciado pelo admin
+    if (isAdminInitiated && adminId) {
+      await supabaseAdmin.from('admin_logs').insert({
+        admin_user_id: adminId,
+        action: 'user_completed_payment',
+        target_user_id: user.id,
+        details: { plan: plan || 'starter', subscription_id: subscription.id }
+      });
+    }
 
     // TODO: Enviar email de boas-vindas
     // await sendWelcomeEmail(user.email, user.name);

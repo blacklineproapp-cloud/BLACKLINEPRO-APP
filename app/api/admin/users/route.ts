@@ -187,6 +187,8 @@ export async function POST(req: Request) {
       }
 
       case 'change_plan': {
+        const { isCourtesy, sendPaymentLink } = body;
+
         if (!newPlan || !['free', 'starter', 'pro', 'studio'].includes(newPlan)) {
           return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
         }
@@ -197,14 +199,29 @@ export async function POST(req: Request) {
           updates.is_paid = false;
           updates.tools_unlocked = false;
           updates.subscription_status = 'inactive';
+          updates.admin_courtesy = false;
+          updates.admin_courtesy_granted_by = null;
+          updates.admin_courtesy_granted_at = null;
         } else if (newPlan === 'starter') {
           updates.is_paid = true;
           updates.tools_unlocked = false;
           updates.subscription_status = 'active';
+          
+          if (isCourtesy) {
+            updates.admin_courtesy = true;
+            updates.admin_courtesy_granted_by = adminCheck.adminId;
+            updates.admin_courtesy_granted_at = new Date().toISOString();
+          }
         } else if (newPlan === 'pro' || newPlan === 'studio') {
           updates.is_paid = true;
           updates.tools_unlocked = true;
           updates.subscription_status = 'active';
+          
+          if (isCourtesy) {
+            updates.admin_courtesy = true;
+            updates.admin_courtesy_granted_by = adminCheck.adminId;
+            updates.admin_courtesy_granted_at = new Date().toISOString();
+          }
         }
 
         await supabaseAdmin
@@ -228,12 +245,15 @@ export async function POST(req: Request) {
 
         await supabaseAdmin.from('admin_logs').insert({
           admin_user_id: adminCheck.adminId!,
-          action: 'change_plan',
+          action: isCourtesy ? 'grant_courtesy_plan' : 'change_plan',
           target_user_id: targetUserId,
-          details: { newPlan },
+          details: { newPlan, isCourtesy: isCourtesy || false },
         });
 
-        return NextResponse.json({ message: 'Plano alterado' });
+        return NextResponse.json({ 
+          message: isCourtesy ? 'Plano cortesia ativado' : 'Plano alterado',
+          success: true
+        });
       }
 
       default:

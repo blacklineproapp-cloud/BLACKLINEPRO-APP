@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Users, DollarSign, Activity, TrendingUp, Search, RefreshCw, Shield,
   Ban, CheckCircle, Clock, Zap, AlertTriangle, Filter, Eye, X as XIcon,
-  ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp
+  ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, Sparkles
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -73,6 +73,16 @@ export default function AdminPage() {
   const [blockModal, setBlockModal] = useState<{ show: boolean; userId: string; email: string } | null>(null);
   const [blockReason, setBlockReason] = useState('');
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+
+  // Modal de mudança de plano
+  const [planChangeModal, setPlanChangeModal] = useState<{ userId: string; email: string; currentPlan: string } | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<'free' | 'starter' | 'pro' | 'studio'>('starter');
+  const [planChangeMode, setPlanChangeMode] = useState<'courtesy' | 'recurring'>('courtesy');
+  const [sendEmail, setSendEmail] = useState(false);
+  const [planChangeLoading, setPlanChangeLoading] = useState(false);
+
+  // Modal de link de pagamento
+  const [paymentLinkModal, setPaymentLinkModal] = useState<{ url: string; email: string } | null>(null);
 
   // Limpeza de duplicados
   const [duplicatesInfo, setDuplicatesInfo] = useState<any>(null);
@@ -181,6 +191,62 @@ export default function AdminPage() {
       setBlockModal(null);
       setBlockReason('');
     }
+  };
+
+  // Handler para mudança de plano
+  const handlePlanChange = async () => {
+    if (!planChangeModal) return;
+
+    setPlanChangeLoading(true);
+
+    try {
+      if (planChangeMode === 'courtesy') {
+        // Modo cortesia - ativar plano diretamente
+        const success = await handleUserAction('change_plan', planChangeModal.userId, {
+          newPlan: selectedPlan,
+          isCourtesy: true
+        });
+
+        if (success) {
+          alert(`Plano ${selectedPlan} ativado como cortesia!`);
+          setPlanChangeModal(null);
+        }
+      } else {
+        // Modo recorrente - gerar link de pagamento
+        const res = await fetch('/api/admin/create-payment-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            targetUserId: planChangeModal.userId,
+            planType: selectedPlan,
+            sendEmail: sendEmail
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Erro ao gerar link');
+        }
+
+        // Mostrar modal com link
+        setPaymentLinkModal({
+          url: data.checkoutUrl,
+          email: planChangeModal.email
+        });
+        setPlanChangeModal(null);
+      }
+    } catch (error: any) {
+      alert(error.message || 'Erro ao processar mudança de plano');
+    } finally {
+      setPlanChangeLoading(false);
+    }
+  };
+
+  // Copiar link para clipboard
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert('Link copiado para a área de transferência!');
   };
 
   // Funções de limpeza de duplicados
@@ -679,23 +745,23 @@ export default function AdminPage() {
                             </button>
                           )}
 
-                          <select
-                            onChange={(e) => {
-                              if (e.target.value) {
-                                handleUserAction('change_plan', user.id, {
-                                  newPlan: e.target.value,
-                                });
-                                e.target.value = '';
-                              }
+
+                          <button
+                            onClick={() => {
+                              setPlanChangeModal({
+                                userId: user.id,
+                                email: user.email,
+                                currentPlan: user.plan
+                              });
+                              setSelectedPlan(user.plan as any || 'starter');
+                              setPlanChangeMode('courtesy');
+                              setSendEmail(false);
                             }}
-                            className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-medium transition outline-none cursor-pointer"
+                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium transition"
                           >
-                            <option value="">Alterar Plano</option>
-                            <option value="free">→ Free</option>
-                            <option value="starter">→ Starter</option>
-                            <option value="pro">→ Pro</option>
-                            <option value="studio">→ Studio</option>
-                          </select>
+                            Alterar Plano
+                          </button>
+
 
                           <button
                             onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}
@@ -793,6 +859,183 @@ export default function AdminPage() {
                 className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition"
               >
                 Bloquear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Mudança de Plano */}
+      {planChangeModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold">Alterar Plano</h3>
+              <button
+                onClick={() => setPlanChangeModal(null)}
+                className="p-1 hover:bg-zinc-800 rounded-lg transition"
+              >
+                <XIcon size={20} />
+              </button>
+            </div>
+
+            <p className="text-zinc-400 mb-4">
+              Usuário: <strong className="text-white">{planChangeModal.email}</strong>
+            </p>
+
+            {/* Seletor de Plano */}
+            <div className="mb-4">
+              <label className="block mb-2 text-sm font-medium text-zinc-300">
+                Selecione o Plano
+              </label>
+              <select
+                value={selectedPlan}
+                onChange={(e) => setSelectedPlan(e.target.value as any)}
+                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm focus:border-blue-500 outline-none"
+              >
+                <option value="free">Free (Gratuito)</option>
+                <option value="starter">Starter (R$ 50/mês)</option>
+                <option value="pro">Pro (R$ 100/mês)</option>
+                <option value="studio">Studio (R$ 300/mês)</option>
+              </select>
+            </div>
+
+            {/* Modo de Ativação */}
+            {selectedPlan !== 'free' && (
+              <div className="mb-4">
+                <label className="block mb-3 text-sm font-medium text-zinc-300">
+                  Modo de Ativação
+                </label>
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 p-3 bg-zinc-950 border border-zinc-700 rounded-lg cursor-pointer hover:border-zinc-600 transition">
+                    <input
+                      type="radio"
+                      name="mode"
+                      value="courtesy"
+                      checked={planChangeMode === 'courtesy'}
+                      onChange={(e) => setPlanChangeMode(e.target.value as any)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium flex items-center gap-2">
+                        🎁 Cortesia (Grátis Permanente)
+                      </div>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        O usuário terá acesso sem cobrança
+                      </p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 p-3 bg-zinc-950 border border-zinc-700 rounded-lg cursor-pointer hover:border-zinc-600 transition">
+                    <input
+                      type="radio"
+                      name="mode"
+                      value="recurring"
+                      checked={planChangeMode === 'recurring'}
+                      onChange={(e) => setPlanChangeMode(e.target.value as any)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium flex items-center gap-2">
+                        💳 Cobrança Recorrente
+                      </div>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        Gerar link de pagamento Stripe
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* Opção de Email (apenas para modo recorrente) */}
+            {planChangeMode === 'recurring' && selectedPlan !== 'free' && (
+              <div className="mb-4">
+                <label className="flex items-center gap-2 text-sm text-zinc-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={sendEmail}
+                    onChange={(e) => setSendEmail(e.target.checked)}
+                    className="rounded"
+                  />
+                  📧 Enviar email automático com link de pagamento
+                </label>
+              </div>
+            )}
+
+            {/* Botões */}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setPlanChangeModal(null)}
+                disabled={planChangeLoading}
+                className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 rounded-lg font-medium transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handlePlanChange}
+                disabled={planChangeLoading}
+                className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded-lg font-medium transition flex items-center justify-center gap-2"
+              >
+                {planChangeLoading ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    {selectedPlan === 'free' 
+                      ? 'Reverter para Free' 
+                      : planChangeMode === 'courtesy' 
+                      ? 'Ativar Cortesia' 
+                      : 'Gerar Link de Pagamento'}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Link de Pagamento */}
+      {paymentLinkModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl max-w-lg w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <CheckCircle size={24} className="text-green-500" />
+                Link de Pagamento Gerado
+              </h3>
+              <button
+                onClick={() => setPaymentLinkModal(null)}
+                className="p-1 hover:bg-zinc-800 rounded-lg transition"
+              >
+                <XIcon size={20} />
+              </button>
+            </div>
+
+            <p className="text-zinc-400 mb-4">
+              Envie este link para: <strong className="text-white">{paymentLinkModal.email}</strong>
+            </p>
+
+            <div className="bg-zinc-950 border border-zinc-700 rounded-lg p-4 mb-4">
+              <code className="text-xs text-blue-400 break-all">
+                {paymentLinkModal.url}
+              </code>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => copyToClipboard(paymentLinkModal.url)}
+                className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 rounded-lg font-medium transition flex items-center justify-center gap-2"
+              >
+                📋 Copiar Link
+              </button>
+              <button
+                onClick={() => setPaymentLinkModal(null)}
+                className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-medium transition"
+              >
+                Fechar
               </button>
             </div>
           </div>
