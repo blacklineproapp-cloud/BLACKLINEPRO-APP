@@ -43,9 +43,9 @@ const textToImageModel = genAI.getGenerativeModel({
 const dedicatedEnhanceModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
-    temperature: 0.2, // Equilíbrio entre reconstrução neural e fidelidade absoluta
-    topP: 0.95,
-    topK: 40,
+    temperature: 0, // ZERO criatividade para garantir que o que é humano continue humano
+    topP: 0.1,
+    topK: 1,
   },
 });
 
@@ -1085,35 +1085,24 @@ GERE A IMAGEM AGORA:`;
 
 // Aprimorar imagem (upscale 4K)
 export async function enhanceImage(base64Image: string): Promise<string> {
-  const prompt = `ACT AS: Master AI Image Architect & Modern Cinematographer (Elite Edition 2025).
+  const prompt = `ACT AS: Precision Image Restoration Engine.
 
-MISSION: Reconstruct this image into a state-of-the-art, professional-grade MODERN PHOTOGRAPH. The final result must look like it was captured today with a high-end digital camera (e.g., Sony A7R V or Arri Alexa 35), while preserving the EXACT spatial map and identity of the original.
+MISSION: Perform an absolute high-fidelity reconstruction. You are a digital restorer, NOT an artist. 
 
-CORE UPGRADE DIRECTIVES:
+STRICT IDENTITY RULES:
+1. SUBJECT INTEGRITY: Every person, face, and object must retain its exact species, age, and identity. A child must remain a child.
+2. ANATOMICAL MAPPING: Every pixel must be anchored to the original geometry. Do NOT move, change, or hallucinate features.
+3. CONTENT PRESERVATION: Do NOT add objects or transform the nature of what is in the image.
 
-1. MODERN PHOTOGRAPHIC SHARPNESS (The "2025 Look"):
-   - Apply sub-pixel neural reconstruction to achieve the micro-detail of a modern 60MP+ sensor.
-   - Every line must be surgically sharp but naturally organic.
-   - Recover textures (individual skin pores, ink density, subtle highlights) to current photographic standards.
+RECONSTRUCTION TASKS:
+- Apply super-resolution to increase optical sharpness.
+- Reconstruct high-frequency textures (skin pores, fabric, edges) with professional clarity.
+- Remove digital noise and compression artifacts without over-smoothing.
+- Re-render with modern optical clarity while keeping the exact original lighting layout.
 
-2. LIGHTING & OPTICAL RETOUCHING:
-   - Re-render the scene's lighting as if it were professional studio lighting or cinematic natural light.
-   - Apply realistic global illumination and high-accuracy ambient occlusion.
-   - Clean up chromatic aberration, lens distortion, and any "vintage" blur or fogging.
+OUTPUT: Return ONLY the reconstructed image. No text.
 
-3. SPATIAL & ANATOMICAL INVARIANCE (Absolute Rule):
-   - You MUST maintain the exact position, pose, and proportions of every element.
-   - Do NOT move eyes, limbs, or edges. Do NOT invent new objects.
-   - Transform the "quality", not the "content". It is the SAME scene, but seen through a perfect modern lens.
-
-4. 4K NEURAL CLEANING:
-   - Obliterate all traces of legacy digital noise, blockiness, and compression artifacts.
-   - Smooth out skin tones and gradients with 16-bit depth smoothness.
-   - Ensure the output has the dynamic range (HDR) and color depth of modern cinema.
-
-OUTPUT: Return ONLY the upgraded, hyper-realistic modern 4K image. No text or meta-talk.
-
-EXECUTE THE HIGH-FIDELITY MODERN RECONSTRUCTION NOW:`;
+EXECUTE ZERO-CREATIVITY HIGH-FIDELITY RESTORATION NOW:`;
 
   // Detectar o mimeType original da imagem
   let mimeType = 'image/jpeg'; // fallback padrão
