@@ -1,6 +1,20 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
+CREATE TABLE public.admin_users (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL UNIQUE,
+  role text NOT NULL CHECK (role = ANY (ARRAY['admin'::text, 'superadmin'::text])),
+  granted_by uuid,
+  granted_at timestamp with time zone NOT NULL DEFAULT now(),
+  expires_at timestamp with time zone,
+  notes text,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT admin_users_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_users_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT admin_users_granted_by_fkey FOREIGN KEY (granted_by) REFERENCES public.users(id)
+);
 CREATE TABLE public.ai_usage (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   user_id uuid NOT NULL,
@@ -11,6 +25,7 @@ CREATE TABLE public.ai_usage (
   processing_time_ms integer,
   created_at timestamp with time zone DEFAULT now(),
   usage_type character varying,
+  metadata jsonb DEFAULT '{}'::jsonb,
   CONSTRAINT ai_usage_pkey PRIMARY KEY (id),
   CONSTRAINT ai_usage_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
@@ -130,6 +145,8 @@ CREATE TABLE public.users (
   plan character varying DEFAULT 'free'::character varying CHECK (plan::text = ANY (ARRAY['free'::character varying, 'starter'::character varying, 'pro'::character varying, 'studio'::character varying]::text[])),
   usage_this_month jsonb DEFAULT '{}'::jsonb,
   daily_usage jsonb DEFAULT '{}'::jsonb,
+  grace_period_until timestamp with time zone,
+  auto_bill_after_grace boolean DEFAULT false,
   CONSTRAINT users_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.webhook_logs (

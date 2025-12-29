@@ -152,21 +152,26 @@ export async function isAdmin(userId: string): Promise<boolean> {
     const cached = await getOrSetCache(
       cacheKey,
       async () => {
+        // IMPORTANTE: admin_users.user_id é UUID (users.id), não clerk_id!
+        // Precisamos fazer JOIN para converter clerk_id → UUID
         const { data, error } = await supabaseAdmin
           .from('admin_users')
-          .select('role, expires_at')
-          .eq('user_id', userId)
+          .select('role, expires_at, user_id, users!inner(clerk_id)')
+          .eq('users.clerk_id', userId)
           .single();
 
         if (error || !data) {
+          console.log('[Auth] Usuário não é admin:', userId, error?.message);
           return { isAdmin: false };
         }
 
         // Verificar se expirou
         if (data.expires_at && new Date(data.expires_at) < new Date()) {
+          console.log('[Auth] Admin expirado:', userId);
           return { isAdmin: false };
         }
 
+        console.log('[Auth] ✅ Admin verificado:', userId, 'role:', data.role);
         return { isAdmin: true, role: data.role };
       },
       {
@@ -190,10 +195,11 @@ export async function isAdmin(userId: string): Promise<boolean> {
  */
 export async function isSuperAdmin(userId: string): Promise<boolean> {
   try {
+    // JOIN com users para converter clerk_id → UUID
     const { data, error } = await supabaseAdmin
       .from('admin_users')
-      .select('role, expires_at')
-      .eq('user_id', userId)
+      .select('role, expires_at, users!inner(clerk_id)')
+      .eq('users.clerk_id', userId)
       .eq('role', 'superadmin')
       .single();
 
