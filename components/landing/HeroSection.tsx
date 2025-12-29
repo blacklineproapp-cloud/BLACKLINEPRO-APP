@@ -207,10 +207,6 @@ export default function HeroSection() {
                       />
                     )}
                     
-                    {/* Feature Label Floating */}
-                    <div className="absolute top-8 left-8 p-4 bg-emerald-500 text-black rounded-2xl font-bold text-sm uppercase tracking-tighter shadow-2xl transform rotate-[-2deg] z-20">
-                      {feature.title}
-                    </div>
                   </div>
                 ))}
               </div>
