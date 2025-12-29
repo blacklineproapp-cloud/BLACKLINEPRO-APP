@@ -699,7 +699,7 @@ export default function ToolsPage() {
                           setCroppedArea(area);
                           setCropRotation(rotation);
                           setCropFlip(flip);
-                          setSplitResult(null);
+                          // setSplitResult(null); // REMOVIDO: não resetar resultado quando crop muda
                         }}
                       />
                     </div>
@@ -946,7 +946,9 @@ export default function ToolsPage() {
           </div>
 
           {/* Output Area */}
-          <div className="lg:flex-1 p-4 lg:p-8 bg-zinc-950/30 flex flex-col min-h-[400px] lg:min-h-0 lg:overflow-hidden">
+          <div className={`p-4 lg:p-8 bg-zinc-950/30 flex flex-col min-h-[400px] lg:min-h-0 ${
+            (resultImage || colorResult || splitResult) ? 'flex-1' : 'lg:flex-1'
+          }`}>
             {/* Mobile toggle */}
             {(resultImage || colorResult || splitResult) && (
               <button
@@ -1050,7 +1052,7 @@ export default function ToolsPage() {
 
                 {/* Result for Split A4 Mode */}
                 {activeMode === 'SPLIT_A4' && splitResult && (
-                  <div className="flex flex-col h-full lg:max-h-full">
+                  <div className="flex flex-col min-h-screen lg:h-full lg:max-h-full">
                     <div className="mb-4 flex-shrink-0">
                       <h3 className="text-purple-400 font-medium text-base lg:text-lg mb-1 flex items-center gap-2">
                         <Grid3x3 size={18} /> Divisão em A4s
@@ -1065,8 +1067,8 @@ export default function ToolsPage() {
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-2 lg:min-h-0">
-                      <div className="grid grid-cols-2 gap-2 lg:gap-3 pb-4 lg:pb-0">
+                    <div className="flex-1 overflow-y-auto pr-2 min-h-[400px]">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
                         {splitResult.pages?.map((page: any) => (
                           <div key={page.pageNumber} className="bg-zinc-900 border border-zinc-800 rounded-lg p-2 hover:border-purple-500 transition-all group">
                             <div className="aspect-[210/297] bg-white rounded overflow-hidden mb-2 relative">

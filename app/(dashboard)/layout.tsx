@@ -4,7 +4,7 @@ import { useUser } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, PenTool, Sparkles, Package } from 'lucide-react';
+import { LayoutGrid, PenTool, Sparkles, Package, CreditCard } from 'lucide-react';
 import { InstallBanner } from '@/components/InstallBanner';
 
 // Carregar UserButton apenas no cliente para evitar hydration mismatch
@@ -85,6 +85,12 @@ export default function DashboardLayout({
           active={pathname === '/tools'}
           icon={<Package size={24} />}
           label="Ferramentas"
+        />
+        <NavItem
+          href="/assinatura"
+          active={pathname === '/assinatura'}
+          icon={<CreditCard size={24} />}
+          label="Assinatura"
         />
 
         {/* Botão Upgrade - Destacado */}
