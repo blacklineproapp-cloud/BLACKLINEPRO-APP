@@ -27,8 +27,8 @@ export default function PricingCTA() {
       popular: true,
       features: [
         'Tudo do Starter',
-        'Geração de designs do zero',
-        'Color Match + Enhance 4K',
+        'Geração de designs profissional',
+        'Color Match + Aprimoramento 4K',
         'Dividir A4'
       ]
     },

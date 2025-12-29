@@ -175,13 +175,15 @@ export async function ensureBucketExists(): Promise<void> {
 
     const bucketExists = buckets?.some(bucket => bucket.name === BUCKET_NAME);
 
+    const bucketOptions = {
+      public: true, // Imagens são públicas
+      fileSizeLimit: 52428800, // 50MB por arquivo (aumentado para suportar imagens refinadas)
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
+    };
+
     if (!bucketExists) {
       // Criar bucket
-      const { error: createError } = await supabaseAdmin.storage.createBucket(BUCKET_NAME, {
-        public: true, // Imagens são públicas
-        fileSizeLimit: 10485760, // 10MB por arquivo
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp'],
-      });
+      const { error: createError } = await supabaseAdmin.storage.createBucket(BUCKET_NAME, bucketOptions);
 
       if (createError) {
         console.error('Erro ao criar bucket:', createError);
@@ -190,6 +192,15 @@ export async function ensureBucketExists(): Promise<void> {
 
       console.log('✅ Bucket criado com sucesso!');
     } else {
+      // Atualizar bucket existente para garantir que o limite de tamanho está correto
+      const { error: updateError } = await supabaseAdmin.storage.updateBucket(BUCKET_NAME, bucketOptions);
+      
+      if (updateError) {
+        console.warn('Aviso ao atualizar bucket (pode ser ignorado se não for crítico):', updateError);
+      } else {
+        console.log('✅ Configuração do bucket atualizada (limite 50MB)!');
+      }
+      
       console.log('✅ Bucket já existe!');
     }
   } catch (error) {

@@ -11,8 +11,8 @@ export default function HowItWorks() {
     },
     {
       number: 2,
-      title: 'IA Processa',
-      description: 'Nossa IA converte em stencil perfeito em segundos',
+      title: 'Stencil Flow Processa',
+      description: 'Nossa tecnologia converte em stencil perfeito em segundos',
       icon: Sparkles,
       color: 'purple'
     },

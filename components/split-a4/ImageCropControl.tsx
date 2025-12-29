@@ -86,8 +86,9 @@ function ImageCropControl({
   }, [rotation, flipHorizontal, flipVertical, croppedAreaPixels]);
 
   // ✅ OTIMIZADO: Memoizar todos os handlers
-  const handleZoomIn = useCallback(() => setZoom(prev => Math.min(prev + 0.1, 3)), []);
-  const handleZoomOut = useCallback(() => setZoom(prev => Math.max(prev - 0.1, 0.5)), []); // ✅ CORRIGIDO: min 0.5
+  // ✅ OTIMIZADO: Memoizar todos os handlers
+  const handleZoomIn = useCallback(() => setZoom(prev => Math.min(prev + 0.1, 10)), []);
+  const handleZoomOut = useCallback(() => setZoom(prev => Math.max(prev - 0.1, 0.1)), []); // ✅ CORRIGIDO: min 0.1
   const handleZoomReset = useCallback(() => setZoom(1), []);
   const handleRotationReset = useCallback(() => setRotation(0), []);
   const handleFlipH = useCallback(() => setFlipHorizontal(prev => !prev), []);
@@ -117,6 +118,8 @@ function ImageCropControl({
           restrictPosition={false}
           showGrid={false}
           zoomWithScroll={true}
+          minZoom={0.1}
+          maxZoom={10}
           style={{
             containerStyle: {
               background: '#18181b',
@@ -231,15 +234,15 @@ function ImageCropControl({
               <button
                 onClick={handleZoomOut}
                 className="p-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded transition-colors disabled:opacity-30"
-                disabled={zoom <= 0.5}
+                disabled={zoom <= 0.1}
                 title="Zoom Out"
               >
                 <ZoomOut size={16} />
               </button>
               <input
                 type="range"
-                min={0.5}
-                max={3}
+                min={0.1}
+                max={10}
                 step={0.1}
                 value={zoom}
                 onChange={(e) => setZoom(Number(e.target.value))}
@@ -248,7 +251,7 @@ function ImageCropControl({
               <button
                 onClick={handleZoomIn}
                 className="p-2 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded transition-colors disabled:opacity-30"
-                disabled={zoom >= 3}
+                disabled={zoom >= 10}
                 title="Zoom In"
               >
                 <ZoomIn size={16} />

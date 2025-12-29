@@ -1,15 +1,15 @@
 export default function ComparisonTable() {
   const features = [
     { name: 'Editor de Stencil', stencilflow: 'Completo', ghostline: 'Básico', tattooStencilPro: 'Limitado' },
-    { name: 'IA para Gerar Ideias', stencilflow: 'Gemini 2.5', ghostline: false, tattooStencilPro: false },
+    { name: 'Geração de Designs profissional', stencilflow: 'Tecnologia Stencil Flow', ghostline: false, tattooStencilPro: false },
     { name: 'Modo Topográfico', stencilflow: true, ghostline: false, tattooStencilPro: true },
     { name: 'Modo Linhas Perfeitas', stencilflow: true, ghostline: true, tattooStencilPro: false },
     { name: 'Ajuste de Tamanho (cm)', stencilflow: true, ghostline: false, tattooStencilPro: true },
     { name: 'Color Match de Tintas', stencilflow: true, ghostline: false, tattooStencilPro: false },
     { name: 'Dividir em A4', stencilflow: true, ghostline: false, tattooStencilPro: false },
     { name: 'Aprimorar 4K', stencilflow: true, ghostline: false, tattooStencilPro: false },
-    { name: 'Preço Mensal', stencilflow: 'R$ 50-100', ghostline: '$15 USD', tattooStencilPro: '$20 USD' },
-    { name: 'Plano Grátis', stencilflow: true, ghostline: false, tattooStencilPro: false },
+    { name: 'Preço Mensal', stencilflow: 'A partir de R$ 50', ghostline: 'R$ 97+', tattooStencilPro: 'R$ 145+' },
+    { name: 'Plano Grátis', stencilflow: false, ghostline: false, tattooStencilPro: false },
   ];
 
   const renderCell = (value: boolean | string) => {

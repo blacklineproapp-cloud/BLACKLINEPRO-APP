@@ -175,14 +175,27 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
 
   }
 
-  // ---------------------------------------------------------------------------
-  // USAR EXATAMENTE as dimensões fornecidas pelo frontend (usuário controla zoom)
-  // ---------------------------------------------------------------------------
+  // ✅ CORREÇÃO WYSIWYG: Se houver crop, o resultado deve preencher o GRID, não o tattooWidth original do fit:cover
+  let actualTargetWidthCm = tattooWidthCm;
+  let actualTargetHeightCm = tattooHeightCm;
+  let actualOffsetXCm = offsetXCm;
+  let actualOffsetYCm = offsetYCm;
 
-  // O frontend já calculou tattooWidthCm e tattooHeightCm baseado no zoom do usuário
-  // Não forçar fit: cover - apenas usar as dimensões exatas que o usuário escolheu
-  let imageWidthPx = Math.round(tattooWidthCm * CM_TO_PX);
-  let imageHeightPx = Math.round(tattooHeightCm * CM_TO_PX);
+  if (croppedArea) {
+    // Calcular tamanho REAL do grid (área total a ser preenchida pelo crop)
+    const gridCols = forcedCols || Math.ceil(tattooWidthCm / (paperWidthCm - overlapCm));
+    const gridRows = forcedRows || Math.ceil(tattooHeightCm / (paperHeightCm - overlapCm));
+    
+    actualTargetWidthCm = gridCols * paperWidthCm - (gridCols - 1) * overlapCm;
+    actualTargetHeightCm = gridRows * paperHeightCm - (gridRows - 1) * overlapCm;
+    
+    // Quando usamos o Crop do frontend, a imagem já está "encaixada" no grid na posição (0,0) do mosaico
+    actualOffsetXCm = 0;
+    actualOffsetYCm = 0;
+  }
+
+  let imageWidthPx = Math.round(actualTargetWidthCm * CM_TO_PX);
+  let imageHeightPx = Math.round(actualTargetHeightCm * CM_TO_PX);
 
   // Resize para tamanho EXATO calculado pelo frontend
   let processedBuffer = await sharp(imageBuffer)
@@ -268,8 +281,8 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
   const effectiveHeightPx = paperHeightPx - overlapPx;
 
   // Offset em pixels
-  const offsetXPx = Math.round(offsetXCm * CM_TO_PX);
-  const offsetYPx = Math.round(offsetYCm * CM_TO_PX);
+  const offsetXPx = Math.round(actualOffsetXCm * CM_TO_PX);
+  const offsetYPx = Math.round(actualOffsetYCm * CM_TO_PX);
 
   // Área total necessária
   const totalWidthPx = offsetXPx + imageWidthPx;

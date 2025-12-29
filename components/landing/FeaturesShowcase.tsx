@@ -1,4 +1,5 @@
 import { PenTool, Sparkles, Map, Package } from 'lucide-react';
+import BeforeAfterSlider from './BeforeAfterSlider';
 
 export default function FeaturesShowcase() {
   return (
@@ -31,20 +32,44 @@ export default function FeaturesShowcase() {
               ))}
             </ul>
           </div>
-          <div className="bg-gradient-to-br from-emerald-900/30 to-zinc-900/50 border border-zinc-800 rounded-2xl p-8 aspect-square flex items-center justify-center">
-            <div className="text-zinc-600 text-center">
-              <PenTool className="w-24 h-24 mx-auto mb-4" />
-              <p className="text-sm">Screenshot do Editor</p>
-            </div>
+          <div className="bg-gradient-to-br from-emerald-900/30 to-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
+            <img 
+              src="/screenshots/editor-screenshot.png" 
+              alt="Interface do Editor de Stencil StencilFlow"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
 
         {/* Feature 2: Geração de Designs - Imagem esquerda */}
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div className="order-2 lg:order-1 bg-gradient-to-br from-purple-900/30 to-zinc-900/50 border border-zinc-800 rounded-2xl p-8 aspect-square flex items-center justify-center">
-            <div className="text-zinc-600 text-center">
-              <Sparkles className="w-24 h-24 mx-auto mb-4" />
-              <p className="text-sm">Geração de Designs</p>
+          <div className="order-2 lg:order-1 relative group">
+            <div className="bg-gradient-to-br from-purple-900/30 to-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
+              <img 
+                src="/screenshots/generator-result.png" 
+                alt="Johnny Bravo gerado no StencilFlow"
+                className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500"
+              />
+            </div>
+            {/* Prompt Montage Overlay */}
+            <div className="absolute -top-8 -left-6 md:-left-12 max-w-[280px] bg-zinc-900/90 backdrop-blur-md border border-purple-500/50 rounded-xl p-4 shadow-2xl transform hover:scale-105 transition-transform duration-300 hidden md:block z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
+                <span className="text-[10px] uppercase tracking-wider text-purple-400 font-bold">Input do Usuário</span>
+              </div>
+              <img 
+                src="/screenshots/generator-prompt.png" 
+                alt="Prompt: Jhonny bravo realista surfando"
+                className="rounded-lg border border-zinc-800"
+              />
+              <p className="mt-3 text-xs text-zinc-400 italic">
+                "Jhonny bravo realista surfando"
+              </p>
+            </div>
+            
+            {/* Mobile Prompt Label */}
+            <div className="absolute bottom-4 left-4 right-4 md:hidden bg-zinc-900/90 backdrop-blur-md border border-purple-500/50 rounded-lg p-2 text-center">
+              <p className="text-xs text-purple-400 font-bold">Prompt: Jhonny bravo realista surfando</p>
             </div>
           </div>
           <div className="order-1 lg:order-2">
@@ -74,7 +99,7 @@ export default function FeaturesShowcase() {
           </div>
         </div>
 
-        {/* Feature 3: Modos - Imagem direita */}
+        {/* Feature 3: Modos - DOIS SLIDERS LADO A LADO */}
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="w-14 h-14 rounded-xl bg-blue-600/10 border border-blue-600/20 flex items-center justify-center mb-6">
@@ -103,16 +128,35 @@ export default function FeaturesShowcase() {
               ))}
             </ul>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gradient-to-br from-blue-900/30 to-zinc-900/50 border border-zinc-800 rounded-xl p-6 aspect-square flex items-center justify-center">
-              <div className="text-zinc-600 text-center text-xs">
-                <p>Topográfico</p>
-              </div>
+          
+          {/* Comparações Interativas Antes/Depois - DOIS MODOS */}
+          <div className="space-y-6">
+            {/* Modo Topográfico */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                Modo Topográfico
+              </h3>
+              <BeforeAfterSlider
+                beforeImage="/screenshots/topografico.jpeg"
+                afterImage="/screenshots/Topografico1.png"
+                beforeLabel="Original"
+                afterLabel="Topográfico"
+              />
             </div>
-            <div className="bg-gradient-to-br from-blue-900/30 to-zinc-900/50 border border-zinc-800 rounded-xl p-6 aspect-square flex items-center justify-center">
-              <div className="text-zinc-600 text-center text-xs">
-                <p>Linhas Perfeitas</p>
-              </div>
+
+            {/* Modo Linhas Perfeitas */}
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                Modo Linhas Perfeitas
+              </h3>
+              <BeforeAfterSlider
+                beforeImage="/screenshots/lines-before.png"
+                afterImage="/screenshots/lines-after.png"
+                beforeLabel="Original"
+                afterLabel="Linhas"
+              />
             </div>
           </div>
         </div>
@@ -145,7 +189,7 @@ export default function FeaturesShowcase() {
               },
               {
                 title: 'Aprimorar 4K',
-                description: 'Upscale inteligente mantendo qualidade',
+                description: 'Aprimoramento inteligente mantendo qualidade',
                 icon: '✨'
               }
             ].map((tool, i) => (

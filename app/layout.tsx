@@ -5,25 +5,25 @@ import type { Metadata, Viewport } from 'next';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 
 export const metadata: Metadata = {
-  title: 'StencilFlow - Crie Stencils de Tatuagem com IA | Editor Profissional',
-  description: 'Transforme qualquer imagem em stencil de tatuagem profissional com IA Gemini 2.5. Editor completo, modo topográfico, linhas perfeitas e ferramentas premium. Grátis para começar.',
+  title: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
+  description: 'Transforme qualquer imagem em stencil de tatuagem profissional com a Tecnologia StencilFlow. Editor completo, modo topográfico, linhas perfeitas e ferramentas premium. Grátis para começar.',
   applicationName: 'StencilFlow',
-  authors: [{ name: 'StencilFlow Team' }],
+  authors: [{ name: 'StencilFlow' }],
   generator: 'Next.js',
   keywords: [
     'stencil tatuagem',
     'tattoo stencil',
-    'ia tattoo',
     'editor stencil',
+    'stencil profissional',
     'tatuagem',
     'design tattoo',
-    'gemini ia',
     'converter imagem stencil',
     'topográfico tattoo',
     'linhas perfeitas',
     'color match tattoo',
     'dividir a4',
     'aprimorar 4k',
+    'ferramentas tatuador',
     'stencilflow'
   ],
   referrer: 'origin-when-cross-origin',
@@ -43,9 +43,11 @@ export const metadata: Metadata = {
     ],
   },
   appleWebApp: {
-    capable: true,
     statusBarStyle: 'black-translucent',
     title: 'StencilFlow',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
   },
   formatDetection: {
     telephone: false,
@@ -53,14 +55,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'StencilFlow',
-    title: 'StencilFlow - Crie Stencils de Tatuagem com IA',
-    description: 'Editor profissional de stencils com IA Gemini 2.5. Modo topográfico, linhas perfeitas, Color Match e mais. Grátis para começar.',
+    title: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
+    description: 'Editor profissional de stencils com Tecnologia StencilFlow. Modo topográfico, linhas perfeitas, Color Match e mais. Grátis para começar.',
     locale: 'pt_BR',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'StencilFlow - Crie Stencils com IA',
-    description: 'Editor profissional de stencils de tatuagem. IA Gemini 2.5 + Ferramentas premium. Grátis para começar.',
+    title: 'StencilFlow - Editor Profissional de Stencils',
+    description: 'Editor profissional de stencils de tatuagem com Tecnologia StencilFlow e ferramentas premium. Grátis para começar.',
   },
 };
 

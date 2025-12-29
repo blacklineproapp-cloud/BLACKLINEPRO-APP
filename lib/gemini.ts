@@ -17,11 +17,7 @@ const topographicModel = genAI.getGenerativeModel({
   },
 });
 
-// Modelo para LINHAS - MÁXIMA CONSISTÊNCIA (temperature 0 + topP/topK baixos)
-// Baseado em: https://cloud.google.com/vertex-ai/generative-ai/docs/learn/prompts/adjust-parameter-values
-// Temperature 0 = sempre escolhe token de maior probabilidade (determinístico)
-// topP 0.1 = considera apenas top 10% dos tokens (menos variação)
-// topK 5 = considera apenas top 5 tokens (máxima consistência)
+// Modelo para LINHAS - MÁXIMA CONSISTÊNCIA
 const linesModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
@@ -37,6 +33,17 @@ const textToImageModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
     temperature: 0.8,
+    topP: 0.95,
+    topK: 40,
+  },
+});
+
+// Modelo DEDICADO para Aprimoramento - Gemini 2.5 Flash Image
+// Revertido para 2.5 para evitar erro 404, mas com configuração otimizada para detalhes
+const dedicatedEnhanceModel = genAI.getGenerativeModel({
+  model: 'gemini-2.5-flash-image',
+  generationConfig: {
+    temperature: 0.2, // Equilíbrio entre reconstrução neural e fidelidade absoluta
     topP: 0.95,
     topK: 40,
   },
@@ -97,13 +104,13 @@ O stencil topográfico é um MAPA EXTREMAMENTE DETALHADO que mostra ONDE e QUANT
 - Quanto MAIS DETALHES você capturar, MELHOR será o resultado final
 - Tatuador vai usar isso para saber EXATAMENTE a intensidade do sombreamento em cada milímetro
 
-🔬 MISSÃO: EXTRAIR O MÁXIMO DE DETALHES POSSÍVEL
-- OBSERVAR a foto com ATENÇÃO EXTREMA
-- CAPTURAR cada variação tonal, por menor que seja
-- MAPEAR cada textura, poro, ruga, imperfeição
-- CRIAR um mapa tão rico que o tatuador veja TODOS os detalhes sutis
-- PROFUNDIDADE 3D é PRIORIDADE - cada superfície deve mostrar seu volume
-
+- 🔬 MISSÃO: TEXTURAS E MICRO-DETALHES COM EXCELÊNCIA
+- OBSERVAR a foto com ATENÇÃO MICROSCÓPICA
+- CAPTURAR cada textura única: poros da pele, rugas finas, tramas de tecido, veias, etc.
+- MAPEAR cada micro-variação tonal que define a TEXTURA da superfície.
+- **CRIAR UM STENCIL 100% MONOCROMÁTICO (PRETO E BRANCO PURO)**. ZERO CORES, ZERO CINZAS.
+- PROFUNDIDADE 3D + TEXTURA: A textura deve "vestir" o volume 3D da forma.
+- **FOCO TOTAL NOS OLHOS E TEXTURAS SUTIS:** Devem ser ultra-realistas.
 SISTEMA DE DENSIDADE MULTI-NÍVEL (7 NÍVEIS DE PROFUNDIDADE):
 
 📍 NÍVEL 1 - SOMBRAS ULTRA DENSAS (preto profundo):
@@ -166,20 +173,19 @@ LAYER 1 - ESTRUTURA VOLUMÉTRICA 3D (PROFUNDIDADE):
 
 LAYER 2 - MAPA TONAL COMPLETO (7 NÍVEIS):
 - Usar TODOS os 7 níveis de densidade (ultra-denso até highlight)
-- TRANSIÇÕES GRADUAIS entre níveis (nunca saltar níveis)
+- TRANSIÇÕES GRADUAIS entre níveis (never saltar níveis)
 - Observar MICRO-VARIAÇÕES tonais (cada mudança sutil importa)
 - Áreas de sombra: usar Níveis 1-3 com gradientes internos
 - Áreas neutras: usar Níveis 4-5 com variações sutis
 - Áreas de luz: usar Níveis 6-7 com highlights precisos
 - DENSIDADE VARIÁVEL EXTREMA é a chave do realismo
 
-LAYER 3 - TEXTURAS E SUPERFÍCIES (DETALHAMENTO):
-- PELE: micro-poros (pontos 0.3-0.4pt), textura granulada sutil
-- RUGAS/LINHAS: cada ruga fina mapeada (0.3-0.4pt) seguindo direção exata
-- CABELOS: CADA FIO com direção, curvatura, espessura individual
-- TECIDOS: trama do tecido, dobras, vincos, padrões
-- SUPERFÍCIES: brilho/opacidade, reflexividade, aspereza
-- IMPERFEIÇÕES: cicatrizes, manchas, marcas, veias, qualquer detalhe único
+LAYER 3 - EXCELÊNCIA EM TEXTURAS E SUPERFÍCIES (MICRO-DETALHAMENTO):
+- PELE: Mapear micro-poros individualmente (pixels/pontos pretos precisos 0.2-0.3pt).
+- RUGAS: Capturar cada vinco, mesmo os micro-vincos de expressão, com linhas ultrafinas.
+- MATERIAIS: Diferenciar visualmente metal (reflexos duros), tecido (trama/hachura cruzada) e pele (pontilhado tonal).
+- IMPERFEIÇÕES: Cicatrizes, sardas, manchas e veias devem ser mapeadas com precisão 1:1.
+- TEXTURA TÁTIL: Ao olhar o stencil, o tatuador deve "sentir" a aspereza ou suavidade da superfície.
 
 LAYER 4 - MICRO-DETALHES E PROFUNDIDADE FINAL (REALISMO EXTREMO):
 - TRANSIÇÕES tonais micro-graduadas (cada mm conta)
@@ -605,7 +611,7 @@ DIFERENCIAL DESTE MODO:
 - Sistema de 3 tons CLARO e DIRETO
 - Menos microdetalhes de poros/texturas (foco em formas e volumes principais)
 - Mais LIMPO e LEGÍVEL para transfer térmico
-
+- **CRÍTICO: SAÍDA 100% MONOCROMÁTICA (PRETO#000000 E BRANCO#FFFFFF).**
 ═══════════════════════════════════════════════════════════════════
 🖋️ CONTORNOS (Base estrutural do stencil)
 ═══════════════════════════════════════════════════════════════════
@@ -1079,117 +1085,35 @@ GERE A IMAGEM AGORA:`;
 
 // Aprimorar imagem (upscale 4K)
 export async function enhanceImage(base64Image: string): Promise<string> {
-  const prompt = `ATUE COMO: Especialista em AI Image Super-Resolution e Photo Restoration (baseado em Real-ESRGAN + GFPGAN 2025).
+  const prompt = `ACT AS: Master AI Image Architect & Modern Cinematographer (Elite Edition 2025).
 
-MISSÃO: Restaurar e transformar esta imagem em ULTRA HD 4K com qualidade profissional máxima usando técnicas state-of-the-art.
+MISSION: Reconstruct this image into a state-of-the-art, professional-grade MODERN PHOTOGRAPH. The final result must look like it was captured today with a high-end digital camera (e.g., Sony A7R V or Arri Alexa 35), while preserving the EXACT spatial map and identity of the original.
 
-ESPECIFICAÇÕES TÉCNICAS:
-- Resolução final: 4096x4096px (4K Ultra HD) ou superior se necessário
-- Qualidade: Máxima definição possível
-- Formato: Sem perda de qualidade
-- Método: Reconstrução inteligente de detalhes (NÃO apenas esticar pixels)
+CORE UPGRADE DIRECTIVES:
 
-PROCESSOS DE RESTAURAÇÃO E APRIMORAMENTO (Baseado em Real-ESRGAN + GFPGAN):
+1. MODERN PHOTOGRAPHIC SHARPNESS (The "2025 Look"):
+   - Apply sub-pixel neural reconstruction to achieve the micro-detail of a modern 60MP+ sensor.
+   - Every line must be surgically sharp but naturally organic.
+   - Recover textures (individual skin pores, ink density, subtle highlights) to current photographic standards.
 
-1. RESTAURAÇÃO DE DANOS (PRIORIDADE MÁXIMA):
-   - Corrigir RASGOS, DOBRAS e AMASSADOS na foto
-   - Remover RANHURAS, ARRANHÕES e RISCOS
-   - CORRIGIR MANCHAS de qualquer tipo (água, tinta, sujeira)
-   - REMOVER QUEIMADURAS e marcas de fogo/calor
-   - Reconstruir áreas DANIFICADAS ou FALTANDO
-   - Restaurar fotos ANTIGAS e DETERIORADAS
-   - Recuperar áreas DESBOTADAS ou com perda de cor
-   - Suavizar IMPERFEIÇÕES mantendo naturalidade
+2. LIGHTING & OPTICAL RETOUCHING:
+   - Re-render the scene's lighting as if it were professional studio lighting or cinematic natural light.
+   - Apply realistic global illumination and high-accuracy ambient occlusion.
+   - Clean up chromatic aberration, lens distortion, and any "vintage" blur or fogging.
 
-2. CORREÇÃO DE PIXELIZAÇÃO (Técnica Real-ESRGAN):
-   - Eliminar PIXELS visíveis e BLOCKY ARTIFACTS
-   - Suavizar bordas SERRILHADAS/DENTADAS
-   - Reconstruir detalhes PERDIDOS por compressão usando AI
-   - Transformar imagens de BAIXA RESOLUÇÃO em Ultra HD
-   - Lidar com degradação complexa do mundo real
+3. SPATIAL & ANATOMICAL INVARIANCE (Absolute Rule):
+   - You MUST maintain the exact position, pose, and proportions of every element.
+   - Do NOT move eyes, limbs, or edges. Do NOT invent new objects.
+   - Transform the "quality", not the "content". It is the SAME scene, but seen through a perfect modern lens.
 
-3. RESTAURAÇÃO DE FACES (Técnica GFPGAN - SE HOUVER ROSTOS):
-   - Detectar e aprimorar faces automaticamente
-   - Sharpen olhos, dentes e cabelo com precisão cirúrgica
-   - Melhorar estrutura facial mantendo identidade original
-   - Reconstruir detalhes faciais perdidos de forma realista
-   - CRÍTICO: Preservar características faciais originais (não inventar novos rostos)
+4. 4K NEURAL CLEANING:
+   - Obliterate all traces of legacy digital noise, blockiness, and compression artifacts.
+   - Smooth out skin tones and gradients with 16-bit depth smoothness.
+   - Ensure the output has the dynamic range (HDR) and color depth of modern cinema.
 
-4. UPSCALING INTELIGENTE (Deep Learning Super-Resolution + imglarger.com Methodology):
+OUTPUT: Return ONLY the upgraded, hyper-realistic modern 4K image. No text or meta-talk.
 
-   📐 NÍVEIS DE UPSCALING (Progressive Enhancement):
-   - Aplicar upscaling progressivo: 2x → 4x → 8x se necessário
-   - Cada nível melhora qualidade sem perder fidelidade
-   - Para imagens pequenas (<500px): usar até 8x
-   - Para imagens médias (500-1000px): usar 4x
-   - Para imagens grandes (>1000px): usar 2x
-   - Meta final: 4096px ou superior mantendo qualidade
-
-   🎯 TÉCNICA "GUESS AND PROJECT" (imglarger.com):
-   - ADICIONAR pixels inteligentemente ENTRE pixels existentes
-   - ESTIMAR valores de pixels faltantes baseado em:
-     a. Pixels vizinhos (contexto local)
-     b. Padrões similares na imagem (contexto global)
-     c. Conhecimento pré-treinado sobre texturas/objetos
-   - PROJETAR detalhes perdidos usando deep learning
-   - NÃO apenas duplicar ou interpolar linearmente
-
-   🔬 RECONSTRUÇÃO INTELIGENTE:
-   - PREVER e RECONSTRUIR detalhes perdidos (não apenas esticar)
-   - Gerar texturas realistas baseadas no contexto da imagem
-   - Reconstruir padrões e microdetalhes inteligentemente
-   - Usar conhecimento pré-treinado sobre como objetos/faces devem parecer
-   - Adicionar sub-pixel details que provavelmente existiam originalmente
-
-   ⚙️ PRESERVAÇÃO DE CARACTERÍSTICAS:
-   - Manter proporções EXATAS da imagem original
-   - Preservar cores, tons e contraste originais
-   - NÃO introduzir artefatos ou distorções
-   - Resultado deve parecer "versão HD do original", não uma nova imagem
-
-5. NITIDEZ E CLAREZA (Sem Oversharpening):
-   - Aumentar nitidez de forma NATURAL e gradual
-   - Melhorar definição de bordas sem criar halos artificiais
-   - Restaurar detalhes finos (cabelos, texturas, poros) de forma realista
-   - Clarificar áreas embaçadas usando reconstrução inteligente
-   - Evitar artefatos de sharpening excessivo
-
-6. REDUÇÃO DE RUÍDO (Preserve Details):
-   - Remover grain/noise digital preservando texturas importantes
-   - Eliminar artefatos de compressão JPEG sem perder detalhes
-   - Limpar imperfeições técnicas mantendo estrutura original
-   - Balance entre limpeza e preservação de detalhes
-
-7. OTIMIZAÇÃO DE CORES (Colorização Inteligente):
-   - Ajustar balanço de brancos
-   - Corrigir saturação (cores vibrantes mas naturais)
-   - Melhorar contraste de forma equilibrada
-   - Restaurar profundidade tonal
-
-8. RESTAURAÇÃO DE DETALHES (Recovery):
-   - Recuperar informações em áreas escuras (shadow recovery)
-   - Recuperar informações em áreas claras (highlight recovery)
-   - Melhorar textura e profundidade usando AI context
-   - Reconstruir áreas danificadas/faltando de forma inteligente
-   - MANTER ORIGINALIDADE e autenticidade da imagem
-
-⚠️ REGRAS CRÍTICAS (Evitar Hallucinations):
-- NÃO adicione elementos que NÃO existem na imagem original
-- NÃO mude a composição ou enquadramento
-- NÃO altere identidade de pessoas (em rostos, preserve características)
-- NÃO invente detalhes - apenas RECONSTRUA o que provavelmente estava lá
-- PRESERVE a originalidade - você está RESTAURANDO, não RECRIANDO
-- Se uma área está muito danificada para reconstruir: deixe em branco ou suavize
-- Foco em QUALIDADE TÉCNICA e FIDELIDADE à imagem original
-
-🎯 TÉCNICAS 2025 (Real-ESRGAN + GFPGAN):
-- Use reconstrução baseada em contexto (analyze era, subject, environment)
-- Aplique super-resolution com degradação complexa em mente
-- Para faces: preserve identidade enquanto melhora qualidade
-- Para backgrounds: melhore clareza sem inventar objetos
-- Balance entre enhancement e authenticity
-
-RETORNE: A imagem restaurada e aprimorada em 4K+ Ultra HD com máxima qualidade e fidelidade ao original.`;
+EXECUTE THE HIGH-FIDELITY MODERN RECONSTRUCTION NOW:`;
 
   // Detectar o mimeType original da imagem
   let mimeType = 'image/jpeg'; // fallback padrão
@@ -1223,7 +1147,7 @@ RETORNE: A imagem restaurada e aprimorada em 4K+ Ultra HD com máxima qualidade 
   }
 
   try {
-    const result = await topographicModel.generateContent([
+    const result = await dedicatedEnhanceModel.generateContent([
       prompt,
       {
         inlineData: {
