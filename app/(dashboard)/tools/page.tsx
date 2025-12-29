@@ -227,33 +227,43 @@ export default function ToolsPage() {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        const MAX_WIDTH = 2500; // Limite seguro para Gemini e Body do Next.js
-        const MAX_HEIGHT = 2500;
-        
+        const MAX_DIM = 1800; // 1800px é o "sweet spot" para o Gemini 2.5 e limites de body
         let width = img.width;
         let height = img.height;
 
-        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+        // Calcular novas dimensões mantendo proporção
+        if (width > MAX_DIM || height > MAX_DIM) {
           if (width > height) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
+            height *= MAX_DIM / width;
+            width = MAX_DIM;
           } else {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
+            width *= MAX_DIM / height;
+            height = MAX_DIM;
           }
-
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Comprimir como JPEG 0.9 (alta qualidade mas reduz drasticamente o peso do base64)
-          resolve(canvas.toDataURL('image/jpeg', 0.9));
-        } else {
-          resolve(base64);
         }
+
+        // Criar canvas para compressão
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(base64); // Fallback caso dê erro no context
+          return;
+        }
+
+        // Fundo branco para garantir que transparências (PNG) não fiquem pretas no JPEG
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Exportar como JPEG com qualidade 0.8 (Equilíbrio perfeito entre peso e nitidez)
+        // Isso reduz o peso em até 90% comparado a um PNG original
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        resolve(compressedBase64);
       };
+      
+      img.onerror = () => resolve(base64);
       img.src = base64;
     });
   };
