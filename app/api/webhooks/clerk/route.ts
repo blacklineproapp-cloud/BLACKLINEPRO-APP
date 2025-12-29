@@ -67,48 +67,108 @@ async function handleUserCreated(data: any) {
     const email = data.email_addresses[0]?.email_address;
     const name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Usuário';
 
-    // PROTEÇÃO CONTRA DUPLICAÇÃO:
+    console.log(`[Webhook] user.created: ${email} (clerk_id: ${data.id})`);
+
+    // PROTEÇÃO CONTRA DUPLICAÇÃO APRIMORADA:
     // 1. Verificar se usuário já existe (por clerk_id OU email)
-    const { data: existing } = await supabaseAdmin
+    // Normalizar email para lowercase (match com DB trigger)
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const { data: existingUsers } = await supabaseAdmin
       .from('users')
-      .select('id, clerk_id, email')
-      .or(`clerk_id.eq.${data.id},email.eq.${email}`)
-      .maybeSingle();
+      .select('id, clerk_id, email, created_at')
+      .or(`clerk_id.eq.${data.id},email.ilike.${normalizedEmail}`);
+
+    // Se encontrou múltiplos usuários com mesmo email = PROBLEMA!
+    if (existingUsers && existingUsers.length > 1) {
+      console.error('⚠️ ALERTA: Múltiplos usuários encontrados com mesmo email:', {
+        email: normalizedEmail,
+        count: existingUsers.length,
+        users: existingUsers.map(u => ({ id: u.id, clerk_id: u.clerk_id, email: u.email }))
+      });
+      // Usar o mais antigo como base
+      existingUsers.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    }
+
+    const existing = existingUsers?.[0];
 
     if (existing) {
+      console.log(`[Webhook] Usuário já existe (${existing.email}), atualizando dados...`);
 
       // Atualizar dados do usuário existente
       const { error: updateError } = await supabaseAdmin
         .from('users')
         .update({
           clerk_id: data.id, // Atualizar clerk_id caso email já existia
-          email: email,
+          email: normalizedEmail,
           name: name,
           picture: data.image_url || null,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', existing.id);
 
       if (updateError) {
-        console.error('Erro ao atualizar usuário existente:', updateError);
+        console.error('❌ Erro ao atualizar usuário existente:', updateError);
       } else {
+        console.log(`✅ Usuário atualizado: ${normalizedEmail}`);
       }
       return;
     }
 
     // 2. Inserir apenas se NÃO existir
-    const { error } = await supabaseAdmin.from('users').insert({
-      clerk_id: data.id,
-      email: email,
-      name: name,
-      picture: data.image_url || null,
-      subscription_status: 'inactive',
-      is_paid: false,
-      tools_unlocked: false,
-    });
+    console.log(`[Webhook] Criando novo usuário: ${normalizedEmail}`);
+
+    const { error, data: newUser } = await supabaseAdmin
+      .from('users')
+      .insert({
+        clerk_id: data.id,
+        email: normalizedEmail,
+        name: name,
+        picture: data.image_url || null,
+        subscription_status: 'inactive',
+        is_paid: false,
+        tools_unlocked: false,
+        plan: 'free',
+        credits: 0,
+        usage_this_month: {},
+        daily_usage: {},
+      })
+      .select()
+      .single();
 
     if (error) {
-      console.error('❌ Erro ao criar usuário:', error);
+      // Verificar se é erro de duplicação (UNIQUE constraint)
+      if (error.code === '23505') {
+        console.error('⚠️ Tentativa de criar usuário duplicado (constraint violation):', {
+          email: normalizedEmail,
+          clerk_id: data.id,
+          error: error.message
+        });
+
+        // Tentar buscar e atualizar o usuário existente
+        const { data: duplicateUser } = await supabaseAdmin
+          .from('users')
+          .select('id')
+          .eq('email', normalizedEmail)
+          .single();
+
+        if (duplicateUser) {
+          await supabaseAdmin
+            .from('users')
+            .update({
+              clerk_id: data.id,
+              name: name,
+              picture: data.image_url || null,
+            })
+            .eq('id', duplicateUser.id);
+
+          console.log(`✅ Usuário duplicado atualizado: ${normalizedEmail}`);
+        }
+      } else {
+        console.error('❌ Erro ao criar usuário:', error);
+      }
     } else {
+      console.log(`✅ Novo usuário criado: ${normalizedEmail} (ID: ${newUser?.id})`);
     }
   } catch (error) {
     console.error('❌ Erro em handleUserCreated:', error);

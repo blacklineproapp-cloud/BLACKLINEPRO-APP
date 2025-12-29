@@ -79,8 +79,40 @@ export async function getOrCreateUser(clerkId: string) {
         }
 
         const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+        const normalizedEmail = email.toLowerCase().trim();
         const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Usuário';
         const picture = clerkUser.imageUrl || null;
+
+        // Verificar se já existe usuário com este email (proteção extra)
+        const { data: emailUser } = await supabaseAdmin
+          .from('users')
+          .select('*')
+          .eq('email', normalizedEmail)
+          .maybeSingle();
+
+        if (emailUser) {
+          console.log(`⚠️ Usuário com email ${normalizedEmail} já existe, atualizando clerk_id...`);
+
+          // Atualizar clerk_id do usuário existente
+          const { data: updated, error: updateError } = await supabaseAdmin
+            .from('users')
+            .update({
+              clerk_id: clerkId,
+              name: name,
+              picture: picture,
+            })
+            .eq('id', emailUser.id)
+            .select()
+            .single();
+
+          if (updateError) {
+            console.error('Erro ao atualizar usuário existente:', updateError);
+            throw updateError;
+          }
+
+          console.log(`✅ Usuário existente atualizado: ${normalizedEmail}`);
+          return updated;
+        }
 
         // Criar usuário no Supabase com retry
         const newUser = await retryWithBackoff(async () => {
@@ -88,7 +120,7 @@ export async function getOrCreateUser(clerkId: string) {
             .from('users')
             .insert({
               clerk_id: clerkId,
-              email: email,
+              email: normalizedEmail,
               name: name,
               picture: picture,
               subscription_status: 'inactive',
@@ -103,6 +135,20 @@ export async function getOrCreateUser(clerkId: string) {
             .single();
 
           if (error) {
+            // Se for erro de duplicação, tentar buscar o usuário
+            if (error.code === '23505') {
+              console.log('⚠️ Duplicate key error, tentando buscar usuário...');
+              const { data: existingByEmail } = await supabaseAdmin
+                .from('users')
+                .select('*')
+                .eq('email', normalizedEmail)
+                .single();
+
+              if (existingByEmail) {
+                return existingByEmail;
+              }
+            }
+
             console.error('Erro ao criar usuário:', {
               message: error.message,
               details: error.details || 'Sem detalhes',
@@ -115,7 +161,7 @@ export async function getOrCreateUser(clerkId: string) {
           return data;
         });
 
-        console.log(`✅ Usuário criado automaticamente: ${email}`);
+        console.log(`✅ Usuário criado automaticamente: ${normalizedEmail}`);
         return newUser;
       },
       {

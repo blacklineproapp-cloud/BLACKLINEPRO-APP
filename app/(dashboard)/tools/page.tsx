@@ -946,7 +946,7 @@ export default function ToolsPage() {
           </div>
 
           {/* Output Area */}
-          <div className="lg:flex-1 p-4 lg:p-8 bg-zinc-950/30 flex flex-col min-h-[300px] lg:min-h-0 overflow-hidden">
+          <div className="lg:flex-1 p-4 lg:p-8 bg-zinc-950/30 flex flex-col min-h-[400px] lg:min-h-0 lg:overflow-hidden">
             {/* Mobile toggle */}
             {(resultImage || colorResult || splitResult) && (
               <button
@@ -983,11 +983,11 @@ export default function ToolsPage() {
                 )}
               </div>
             ) : (
-              <div className="flex-1 flex flex-col animate-in fade-in duration-500 min-h-0">
+              <div className="flex-1 flex flex-col animate-in fade-in duration-500 lg:min-h-0">
                 
                 {/* Result for Enhance Mode */}
                 {activeMode === 'ENHANCE' && resultImage && (
-                  <div className="flex flex-col h-full max-h-full">
+                  <div className="flex flex-col h-full lg:max-h-full">
                     <div className="flex justify-between items-center mb-3 lg:mb-4 flex-shrink-0">
                       <h3 className="text-blue-400 font-medium text-sm flex items-center gap-2">
                         <Wand2 size={16} /> Resultado Aprimorado
@@ -996,7 +996,7 @@ export default function ToolsPage() {
                         <Download size={14} /> Baixar
                       </a>
                     </div>
-                    <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-0">
+                    <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-[200px] lg:min-h-0">
                       <img src={resultImage} alt="Enhanced" className="max-w-full max-h-full object-contain rounded shadow-2xl" />
                     </div>
                   </div>
@@ -1004,7 +1004,7 @@ export default function ToolsPage() {
 
                 {/* Result for Color Match Mode */}
                 {activeMode === 'COLOR_MATCH' && colorResult && (
-                  <div className="flex flex-col h-full max-h-full">
+                  <div className="flex flex-col h-full lg:max-h-full">
                     <div className="mb-4 lg:mb-6 flex-shrink-0">
                       <h3 className="text-pink-400 font-medium text-base lg:text-lg mb-1 flex items-center gap-2">
                         <Palette size={18} /> Tintas Recomendadas
@@ -1017,7 +1017,7 @@ export default function ToolsPage() {
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-2 lg:space-y-3 min-h-0">
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-2 lg:space-y-3 lg:min-h-0 pb-4 lg:pb-0">
                       {colorResult.colors?.map((c: any, idx: number) => (
                         <div key={idx} className="bg-zinc-900 border border-zinc-800 p-2.5 lg:p-3 rounded-lg flex items-center gap-3 lg:gap-4 hover:border-zinc-700 transition-colors group">
                           <div
@@ -1050,7 +1050,7 @@ export default function ToolsPage() {
 
                 {/* Result for Split A4 Mode */}
                 {activeMode === 'SPLIT_A4' && splitResult && (
-                  <div className="flex flex-col h-full max-h-full">
+                  <div className="flex flex-col h-full lg:max-h-full">
                     <div className="mb-4 flex-shrink-0">
                       <h3 className="text-purple-400 font-medium text-base lg:text-lg mb-1 flex items-center gap-2">
                         <Grid3x3 size={18} /> Divisão em A4s
@@ -1065,8 +1065,8 @@ export default function ToolsPage() {
                       </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto pr-2 min-h-0">
-                      <div className="grid grid-cols-2 gap-2 lg:gap-3">
+                    <div className="flex-1 overflow-y-auto pr-2 lg:min-h-0">
+                      <div className="grid grid-cols-2 gap-2 lg:gap-3 pb-4 lg:pb-0">
                         {splitResult.pages?.map((page: any) => (
                           <div key={page.pageNumber} className="bg-zinc-900 border border-zinc-800 rounded-lg p-2 hover:border-purple-500 transition-all group">
                             <div className="aspect-[210/297] bg-white rounded overflow-hidden mb-2 relative">
