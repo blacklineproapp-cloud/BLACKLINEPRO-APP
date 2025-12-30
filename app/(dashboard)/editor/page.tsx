@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEditorHistory } from '@/hooks/useEditorHistory';
 import { DEFAULT_ADJUST_CONTROLS, type AdjustControls } from '@/lib/stencil-types';
 import { applyAdjustments, resetControls } from '@/lib/stencil-adjustments';
+import { storage } from '@/lib/client-storage';
 
 type Style = 'standard' | 'perfect_lines';
 type ComparisonMode = 'wipe' | 'overlay' | 'split';
@@ -74,34 +75,43 @@ export default function EditorPage() {
     );
   };
 
-  // Load image from sessionStorage (from Generator or Edit from Dashboard)
+  // Load image from storage (from Generator or Edit from Dashboard)
   useEffect(() => {
-    // Check if editing existing project
-    const editProject = sessionStorage.getItem('stencilflow_edit_project');
-    if (editProject) {
+    const loadImages = async () => {
+      // Check if editing existing project
       try {
-        const project = JSON.parse(editProject);
-        setOriginalImage(project.original_image);
-        setGeneratedStencil(project.stencil_image);
-        setSelectedStyle(project.style || 'standard');
-        if (project.width_cm) setWidthCm(project.width_cm);
-        if (project.height_cm) setHeightCm(project.height_cm);
-        if (project.prompt_details) setPromptText(project.prompt_details);
-        sessionStorage.removeItem('stencilflow_edit_project');
-        setShowControls(true); // Abrir painel ao carregar projeto
-        return;
+        const editProject = await storage.get<any>('edit_project');
+        if (editProject) {
+          setOriginalImage(editProject.original_image);
+          setGeneratedStencil(editProject.stencil_image);
+          setSelectedStyle(editProject.style || 'standard');
+          if (editProject.width_cm) setWidthCm(editProject.width_cm);
+          if (editProject.height_cm) setHeightCm(editProject.height_cm);
+          if (editProject.prompt_details) setPromptText(editProject.prompt_details);
+          
+          // await storage.remove('edit_project'); // Keep for persistence
+          setShowControls(true);
+          return;
+        }
       } catch (e) {
         console.error('Erro ao carregar projeto:', e);
       }
-    }
 
-    // Check if coming from Generator
-    const savedImage = sessionStorage.getItem('stencilflow_generated_image');
-    if (savedImage) {
-      setOriginalImage(savedImage);
-      sessionStorage.removeItem('stencilflow_generated_image');
-      setShowControls(true); // Abrir painel ao carregar imagem
-    }
+      // Check if coming from Generator
+      try {
+        const savedImage = await storage.get<string>('generated_image');
+        if (savedImage) {
+          setOriginalImage(savedImage);
+          // Don't remove to allow refresh/restart
+          // await storage.remove('generated_image'); 
+          setShowControls(true);
+        }
+      } catch (e) {
+        console.error('Erro ao carregar imagem gerada:', e);
+      }
+    };
+
+    loadImages();
 
     // Desktop sempre mostra controles
     if (window.innerWidth >= 1024) {

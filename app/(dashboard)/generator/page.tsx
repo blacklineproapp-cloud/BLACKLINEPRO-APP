@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { storage } from '@/lib/client-storage';
 import { Sparkles, Download, MoveRight, FileOutput, Settings, ChevronUp, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -59,9 +60,9 @@ export default function GeneratorPage() {
     }
   };
 
-  const handleUseAsBase = () => {
+  const handleUseAsBase = async () => {
     if (generatedImage) {
-      sessionStorage.setItem('stencilflow_generated_image', generatedImage);
+      await storage.set('generated_image', generatedImage);
       router.push('/editor');
     }
   };
