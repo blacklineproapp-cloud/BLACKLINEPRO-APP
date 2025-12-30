@@ -11,9 +11,9 @@ const genAI = new GoogleGenerativeAI(apiKey);
 const topographicModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
-    temperature: 0,    // ZERO criatividade (mantém fidelidade)
-    topP: 0.15,        // 15% dos tokens (captura mais detalhes)
-    topK: 10,          // Top 10 tokens (máxima riqueza de profundidade)
+    temperature: 0,    // Determinístico - sempre escolhe token mais provável
+    topP: 0.1,         // Apenas 10% dos tokens mais prováveis
+    topK: 5,           // Apenas top 5 escolhas
   },
 });
 
