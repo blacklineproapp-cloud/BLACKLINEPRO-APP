@@ -1,9 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Variáveis com fallback para Railway workers
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl) {
+  console.error('[Supabase] Variáveis de ambiente não configuradas:');
+  console.error('  NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_URL');
+  throw new Error('supabaseUrl is required. Set NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL');
+}
+
 // Cliente Supabase para uso no servidor (service role)
 export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  supabaseUrl,
+  supabaseServiceKey || supabaseAnonKey || '',
   {
     auth: {
       autoRefreshToken: false,
@@ -22,8 +33,8 @@ export const supabaseAdmin = createClient(
 
 // Cliente Supabase para uso no cliente (anon key)
 export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  supabaseUrl,
+  supabaseAnonKey || '',
   {
     global: {
       fetch: (url, options = {}) => {
