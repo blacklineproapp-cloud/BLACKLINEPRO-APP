@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Plus, Clock, Upload, Zap, Printer, Crown, X, Download, Edit2, Trash2, Maximize2, Activity, TrendingUp, Infinity as InfinityIcon } from 'lucide-react';
 
@@ -247,11 +248,15 @@ export default function DashboardClient({ projects, isSubscribed, currentUsage, 
               >
                 <div className="aspect-square bg-white p-3 lg:p-4 flex items-center justify-center relative">
                   <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                  <img 
-                    src={project.stencil_image || project.original_image} 
-                    alt={project.name} 
-                    className="max-w-full max-h-full object-contain relative z-10 group-hover:scale-105 transition-transform duration-300"
-                  />
+                  <div className="relative w-full h-full z-10 group-hover:scale-105 transition-transform duration-300">
+                    <Image 
+                      src={project.stencil_image || project.original_image} 
+                      alt={project.name} 
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                    />
+                  </div>
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors z-20 flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <Maximize2 size={24} className="text-white drop-shadow-lg" />
                   </div>

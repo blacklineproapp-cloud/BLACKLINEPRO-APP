@@ -111,7 +111,7 @@ export async function POST(req: Request) {
 
     // 2.3 Gamma (meios-tons) - APENAS UMA VEZ
     if (gamma !== 1.0) {
-      const safeGamma = Math.max(1.0, Math.min(3.0, gamma));
+      const safeGamma = Math.max(0.5, Math.min(2.5, gamma));
       processed = processed.gamma(safeGamma);
       console.log('[Adjust] Gamma aplicado:', safeGamma);
     }
