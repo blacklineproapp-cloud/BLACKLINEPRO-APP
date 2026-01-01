@@ -6,7 +6,7 @@ import StencilAdjustControls from '@/components/editor/StencilAdjustControls';
 
 import QualityIndicator from '@/components/editor/QualityIndicator';
 import ResizeModal from '@/components/editor/ResizeModal';
-import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Printer, Settings, ChevronUp, Ruler, Undo, Redo } from 'lucide-react';
+import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Printer, Settings, ChevronUp, Ruler, Undo, Redo, CheckCircle, AlertCircle, XCircle, Copy } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEditorHistory } from '@/hooks/useEditorHistory';
 import { DEFAULT_ADJUST_CONTROLS, type AdjustControls } from '@/lib/stencil-types';
@@ -55,6 +55,14 @@ export default function EditorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isRestoringHistoryRef = useRef(false); // Flag para ignorar mudanças do histórico
+
+  // Toast notifications
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Imagem atual para exibir (ajustada ou gerada)
   const currentStencil = adjustedStencil || generatedStencil;
@@ -365,19 +373,43 @@ export default function EditorPage() {
       const data = await res.json();
 
       if (res.ok) {
-        setGeneratedStencil(data.image);
+        let finalStencil = data.image;
+
+        // 📐 RESIZE: Redimensionar stencil para o tamanho físico escolhido
+        try {
+          const resizeRes = await fetch('/api/image-resize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              image: data.image,
+              targetWidthCm: widthCm,
+              dpi: 300,
+              maintainAspect: true,
+            }),
+          });
+
+          if (resizeRes.ok) {
+            const resizeData = await resizeRes.json();
+            finalStencil = resizeData.image;
+            console.log('[Editor] Stencil redimensionado:', resizeData.metadata);
+          }
+        } catch (resizeError) {
+          console.warn('[Editor] Resize falhou, usando stencil original:', resizeError);
+        }
+
+        setGeneratedStencil(finalStencil);
         setSliderPosition(100);
         setComparisonMode('overlay');
 
         // Adicionar ao histórico
         history.clear();
-        history.pushState(data.image, DEFAULT_ADJUST_CONTROLS);
+        history.pushState(finalStencil, DEFAULT_ADJUST_CONTROLS);
 
         // Resetar controles
         setAdjustControls(DEFAULT_ADJUST_CONTROLS);
 
         // AUTO-SAVE após gerar com sucesso
-        autoSaveProject(data.image);
+        autoSaveProject(finalStencil);
       } else if (data.requiresSubscription) {
         if (confirm(`${data.message}\n\nDeseja assinar agora?`)) {
           window.location.href = '/api/payments/create-checkout?plan=' + data.subscriptionType;
@@ -447,13 +479,13 @@ export default function EditorPage() {
       });
 
       if (res.ok) {
-        alert('Salvo!');
-        router.push('/dashboard');
+        showToast('Projeto salvo com sucesso!', 'success');
+        setTimeout(() => router.push('/dashboard'), 1500);
       } else {
-        alert('Erro ao salvar');
+        showToast('Erro ao salvar projeto', 'error');
       }
     } catch (error) {
-      alert('Erro ao salvar');
+      showToast('Erro ao salvar projeto', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -476,12 +508,15 @@ export default function EditorPage() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+      
+      showToast('Download iniciado!', 'success');
     } catch (error) {
       // Fallback
       const link = document.createElement('a');
       link.href = currentStencil;
       link.download = fileName;
       link.click();
+      showToast('Download iniciado!', 'success');
     }
   };
 
@@ -493,6 +528,17 @@ export default function EditorPage() {
     setShowControls(true);
     setAdjustControls(DEFAULT_ADJUST_CONTROLS);
     history.clear();
+  };
+
+  // Regenerar: mantém configurações, gera novo stencil
+  const handleRegenerate = () => {
+    setGeneratedStencil(null);
+    setAdjustedStencil(null);
+    setSliderPosition(50);
+    setAdjustControls(DEFAULT_ADJUST_CONTROLS);
+    history.clear();
+    // Chama handleGenerate após limpar
+    setTimeout(() => handleGenerate(), 100);
   };
 
   const handleNewUpload = () => {
@@ -508,7 +554,25 @@ export default function EditorPage() {
     history.clear();
   };
 
-  // Presets de tamanho
+  // Copiar stencil para clipboard
+  const handleCopyToClipboard = async () => {
+    if (!currentStencil) return;
+    
+    try {
+      const response = await fetch(currentStencil);
+      const blob = await response.blob();
+      
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [blob.type]: blob
+        })
+      ]);
+      
+      showToast('Copiado para a área de transferência!', 'success');
+    } catch (error) {
+      showToast('Erro ao copiar - tente o download', 'error');
+    }
+  };
   const applyPreset = (preset: string) => {
     switch(preset) {
       case 'A4':
@@ -549,7 +613,7 @@ export default function EditorPage() {
           
           {/* Processing State */}
           {originalImage && isProcessing && (
-            <LoadingSpinner text={selectedStyle === 'perfect_lines' ? "Mapeando tons..." : "Mapeando topografia..."} />
+            <LoadingSpinner size="lg" showSteps />
           )}
           
           {/* Original Image (before generation) */}
@@ -839,12 +903,19 @@ export default function EditorPage() {
             {generatedStencil && (
               <>
                 {/* Botões de Ação - Desktop */}
-                <div className="hidden lg:grid grid-cols-2 gap-2">
+                <div className="hidden lg:grid grid-cols-3 gap-2">
                   <button
                     onClick={handleDownload}
                     className="bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
                   >
                     <Download size={16} /> Baixar
+                  </button>
+                  <button
+                    onClick={handleCopyToClipboard}
+                    className="bg-zinc-700 hover:bg-zinc-600 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
+                    title="Copiar para área de transferência"
+                  >
+                    <Copy size={16} /> Copiar
                   </button>
                   <button
                     onClick={handleSave}
@@ -885,9 +956,24 @@ export default function EditorPage() {
 
 
 
-                <button onClick={handleReset} className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-xl font-medium flex items-center justify-center gap-2 text-sm mt-3">
-                  <RotateCcw size={14} /> Gerar Novo
-                </button>
+                {/* Botões de ação */}
+                <div className="flex gap-2 mt-3">
+                  <button 
+                    onClick={handleRegenerate} 
+                    disabled={isProcessing}
+                    className="flex-1 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white py-2 rounded-xl font-medium flex items-center justify-center gap-2 text-sm transition-colors"
+                    title="Regenerar com mesmas configurações"
+                  >
+                    <Zap size={14} /> Regenerar
+                  </button>
+                  <button 
+                    onClick={handleReset} 
+                    className="px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-xl font-medium flex items-center justify-center gap-2 text-sm"
+                    title="Limpar e começar novo"
+                  >
+                    <RotateCcw size={14} />
+                  </button>
+                </div>
               </>
             )}
           </div>
@@ -903,6 +989,25 @@ export default function EditorPage() {
         currentHeightCm={heightCm}
         onResizeComplete={handleResizeComplete}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div 
+          className={`fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5 fade-in duration-300 ${
+            toast.type === 'success' ? 'bg-emerald-600 text-white' :
+            toast.type === 'error' ? 'bg-red-600 text-white' :
+            'bg-zinc-800 text-white border border-zinc-700'
+          }`}
+        >
+          {toast.type === 'success' && <CheckCircle size={20} />}
+          {toast.type === 'error' && <XCircle size={20} />}
+          {toast.type === 'info' && <AlertCircle size={20} />}
+          <span className="font-medium text-sm">{toast.message}</span>
+          <button onClick={() => setToast(null)} className="ml-2 hover:opacity-70">
+            <X size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

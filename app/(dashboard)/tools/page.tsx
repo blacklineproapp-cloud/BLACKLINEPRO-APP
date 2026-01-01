@@ -3,14 +3,14 @@
 import { useState, useRef, useEffect } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import DownloadControls from '@/components/split-a4/DownloadControls';
-import { Wand2, Palette, Upload, Download, Copy, Check, ArrowRight, X, Droplet, ChevronUp, ChevronDown, Grid3x3, Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Wand2, Palette, Upload, Download, Copy, Check, ArrowRight, X, Droplet, ChevronUp, ChevronDown, Grid3x3, Image as ImageIcon, ChevronLeft, ChevronRight, FlipHorizontal, FlipVertical, CheckCircle, XCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { TileData } from '@/lib/download-helpers';
 import type { Area } from 'react-easy-crop';
 
 const ImageCropControl = dynamic(() => import('@/components/split-a4/ImageCropControl'), { ssr: false });
 
-type ToolMode = 'ENHANCE' | 'COLOR_MATCH' | 'SPLIT_A4';
+type ToolMode = 'ENHANCE' | 'COLOR_MATCH' | 'SPLIT_A4' | 'REMOVE_BG';
 
 const INK_BRANDS = [
   "Genérico (Sem marca específica)",
@@ -35,6 +35,18 @@ export default function ToolsPage() {
   const [selectedBrand, setSelectedBrand] = useState<string>(INK_BRANDS[0]);
   const [isLocked, setIsLocked] = useState(false);
   const [showInput, setShowInput] = useState(true);
+  
+  // Toast notification
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  
+  // Espelhar imagem
+  const [flipHorizontal, setFlipHorizontal] = useState(false);
+  const [flipVertical, setFlipVertical] = useState(false);
+  
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Estados para Split A4
   const [splitResult, setSplitResult] = useState<any | null>(null);
@@ -153,7 +165,29 @@ export default function ToolsPage() {
       }
     };
     checkToolsStatus();
+    
+    // Carregar configurações salvas
+    const savedConfig = localStorage.getItem('stencilflow_tools_config');
+    if (savedConfig) {
+      try {
+        const config = JSON.parse(savedConfig);
+        if (config.paperSize) setPaperSize(config.paperSize);
+        if (config.numA4s) setNumA4s(config.numA4s);
+        if (config.orientation) setOrientation(config.orientation);
+        if (config.overlapCm !== undefined) setOverlapCm(config.overlapCm);
+        if (config.processMode) setProcessMode(config.processMode);
+      } catch (e) {
+        console.error('Erro ao carregar config:', e);
+      }
+    }
   }, []);
+  
+  // Salvar configurações quando mudar
+  useEffect(() => {
+    const config = { paperSize, numA4s, orientation, overlapCm, processMode };
+    localStorage.setItem('stencilflow_tools_config', JSON.stringify(config));
+  }, [paperSize, numA4s, orientation, overlapCm, processMode]);
+
 
   // Converter URL para base64 - tenta canvas, fallback para proxy API
   const urlToBase64 = async (url: string): Promise<string> => {
@@ -281,6 +315,7 @@ export default function ToolsPage() {
         const data = await res.json();
         if (res.ok) {
           setResultImage(data.image);
+          showToast('Imagem aprimorada com sucesso!', 'success');
           // Esconder input em mobile após resultado
           if (window.innerWidth < 1024) {
             setShowInput(false);
@@ -290,7 +325,7 @@ export default function ToolsPage() {
             window.location.href = '/api/payments/create-checkout?plan=' + data.subscriptionType;
           }
         } else {
-          alert(data.error || 'Erro ao aprimorar imagem');
+          showToast(data.error || 'Erro ao aprimorar imagem', 'error');
         }
       } else if (activeMode === 'COLOR_MATCH') {
         const processingImage = await compressImageIfNeeded(inputImage);
@@ -302,6 +337,7 @@ export default function ToolsPage() {
         const data = await res.json();
         if (res.ok) {
           setColorResult(data);
+          showToast('Cores analisadas com sucesso!', 'success');
           if (window.innerWidth < 1024) {
             setShowInput(false);
           }
@@ -310,7 +346,7 @@ export default function ToolsPage() {
             window.location.href = '/api/payments/create-checkout?plan=' + data.subscriptionType;
           }
         } else {
-          alert(data.error || 'Erro ao analisar cores');
+          showToast(data.error || 'Erro ao analisar cores', 'error');
         }
       } else if (activeMode === 'SPLIT_A4') {
         const paper = getPaperDimensions();
@@ -343,6 +379,7 @@ export default function ToolsPage() {
         const data = await res.json();
         if (res.ok) {
           setSplitResult(data);
+          showToast(`Imagem dividida em ${data.tiles?.length || 'várias'} partes!`, 'success');
           if (window.innerWidth < 1024) {
             setShowInput(false);
           }
@@ -351,12 +388,33 @@ export default function ToolsPage() {
             window.location.href = '/api/payments/create-checkout?plan=' + data.subscriptionType;
           }
         } else {
-          alert(data.error || 'Erro ao dividir imagem');
+          showToast(data.error || 'Erro ao dividir imagem', 'error');
+        }
+      } else if (activeMode === 'REMOVE_BG') {
+        const processingImage = await compressImageIfNeeded(inputImage);
+        const res = await fetch('/api/tools/remove-bg', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: processingImage }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setResultImage(data.image);
+          showToast('Fundo removido com sucesso!', 'success');
+          if (window.innerWidth < 1024) {
+            setShowInput(false);
+          }
+        } else if (data.requiresSubscription) {
+          if (confirm(`${data.message}\n\nDeseja ${data.subscriptionType === 'tools' ? 'desbloquear ferramentas' : 'assinar'}?`)) {
+            window.location.href = '/api/payments/create-checkout?plan=' + data.subscriptionType;
+          }
+        } else {
+          showToast(data.error || 'Erro ao remover fundo', 'error');
         }
       }
     } catch (error) {
       console.error(error);
-      alert("Erro no processamento. Tente novamente.");
+      showToast('Erro no processamento. Tente novamente.', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -380,6 +438,9 @@ export default function ToolsPage() {
     setCropRotation(0);
     setCropFlip({ horizontal: false, vertical: false });
     setImageDimensions(null); // Reset dimensões
+    // Reset flip states
+    setFlipHorizontal(false);
+    setFlipVertical(false);
     // ✅ NOVO: Reset offset
     setOffsetXCm(0);
     setOffsetYCm(0);
@@ -484,7 +545,7 @@ export default function ToolsPage() {
         </div>
 
         {/* Tool Selector - responsive grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-4 mb-4 lg:mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 mb-4 lg:mb-8">
           <button
             onClick={() => { setActiveMode('ENHANCE'); reset(); }}
             className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${
@@ -521,7 +582,7 @@ export default function ToolsPage() {
 
           <button
             onClick={() => { setActiveMode('SPLIT_A4'); reset(); }}
-            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all col-span-2 lg:col-span-1 ${
+            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${
               activeMode === 'SPLIT_A4'
                 ? 'bg-purple-900/20 border-purple-500 text-white'
                 : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
@@ -533,6 +594,23 @@ export default function ToolsPage() {
             <div className="text-left">
               <div className="font-semibold text-sm lg:text-base">Dividir A4</div>
               <div className="text-[10px] lg:text-xs opacity-70 hidden sm:block">Múltiplas folhas</div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => { setActiveMode('REMOVE_BG'); reset(); }}
+            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${
+              activeMode === 'REMOVE_BG'
+                ? 'bg-emerald-900/20 border-emerald-500 text-white'
+                : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
+            }`}
+          >
+            <div className={`p-1.5 lg:p-2 rounded-lg ${activeMode === 'REMOVE_BG' ? 'bg-emerald-500 text-white' : 'bg-zinc-800'}`}>
+              <ImageIcon size={18} />
+            </div>
+            <div className="text-left">
+              <div className="font-semibold text-sm lg:text-base">Remover Fundo</div>
+              <div className="text-[10px] lg:text-xs opacity-70 hidden sm:block">IA Remove BG</div>
             </div>
           </button>
         </div>
@@ -691,12 +769,44 @@ export default function ToolsPage() {
               <div className="flex-col h-full flex">
                 <div className="flex justify-between items-center mb-3 lg:mb-4">
                   <h3 className="text-zinc-300 font-medium text-sm">Imagem Original</h3>
-                  <button onClick={reset} className="text-zinc-500 hover:text-red-400 transition-colors">
-                    <X size={20} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {/* Botões de Espelhar */}
+                    <button 
+                      onClick={() => setFlipHorizontal(!flipHorizontal)}
+                      className={`p-1.5 rounded-lg border transition-colors ${
+                        flipHorizontal 
+                          ? 'bg-purple-900/40 border-purple-500 text-purple-300' 
+                          : 'border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
+                      }`}
+                      title="Espelhar Horizontal"
+                    >
+                      <FlipHorizontal size={16} />
+                    </button>
+                    <button 
+                      onClick={() => setFlipVertical(!flipVertical)}
+                      className={`p-1.5 rounded-lg border transition-colors ${
+                        flipVertical 
+                          ? 'bg-purple-900/40 border-purple-500 text-purple-300' 
+                          : 'border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
+                      }`}
+                      title="Espelhar Vertical"
+                    >
+                      <FlipVertical size={16} />
+                    </button>
+                    <button onClick={reset} className="text-zinc-500 hover:text-red-400 transition-colors">
+                      <X size={20} />
+                    </button>
+                  </div>
                 </div>
                 <div className="flex-1 bg-zinc-950 rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-hidden relative min-h-[150px] lg:min-h-0">
-                  <img src={inputImage} alt="Input" className="max-w-full max-h-[200px] lg:max-h-[400px] object-contain rounded shadow-lg" />
+                  <img 
+                    src={inputImage} 
+                    alt="Input" 
+                    className="max-w-full max-h-[200px] lg:max-h-[400px] object-contain rounded shadow-lg transition-transform"
+                    style={{ 
+                      transform: `${flipHorizontal ? 'scaleX(-1)' : ''} ${flipVertical ? 'scaleY(-1)' : ''}`.trim() || 'none'
+                    }}
+                  />
                 </div>
                 
                 {/* Brand Selector for Color Match */}
@@ -969,7 +1079,7 @@ export default function ToolsPage() {
 
                 <button
                   onClick={handleProcess}
-                  disabled={isProcessing || (activeMode === 'ENHANCE' && !!resultImage) || (activeMode === 'COLOR_MATCH' && !!colorResult) || (activeMode === 'SPLIT_A4' && !!splitResult)}
+                  disabled={isProcessing || (activeMode === 'ENHANCE' && !!resultImage) || (activeMode === 'COLOR_MATCH' && !!colorResult) || (activeMode === 'SPLIT_A4' && !!splitResult) || (activeMode === 'REMOVE_BG' && !!resultImage)}
                   className={`mt-3 lg:mt-4 w-full py-2.5 lg:py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-sm lg:text-base ${
                     isProcessing
                       ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
@@ -977,13 +1087,15 @@ export default function ToolsPage() {
                         ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
                         : activeMode === 'COLOR_MATCH'
                           ? 'bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-900/20'
-                          : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/20'
+                          : activeMode === 'REMOVE_BG'
+                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20'
+                            : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/20'
                   }`}
                 >
                   {isProcessing ? <LoadingSpinner /> : (
                     <>
-                      {activeMode === 'ENHANCE' ? <Wand2 size={18} /> : activeMode === 'COLOR_MATCH' ? <Palette size={18} /> : <Grid3x3 size={18} />}
-                      {activeMode === 'ENHANCE' ? 'Aprimorar Agora' : activeMode === 'COLOR_MATCH' ? 'Identificar Tintas' : 'Dividir em A4s'}
+                      {activeMode === 'ENHANCE' ? <Wand2 size={18} /> : activeMode === 'COLOR_MATCH' ? <Palette size={18} /> : activeMode === 'REMOVE_BG' ? <ImageIcon size={18} /> : <Grid3x3 size={18} />}
+                      {activeMode === 'ENHANCE' ? 'Aprimorar Agora' : activeMode === 'COLOR_MATCH' ? 'Identificar Tintas' : activeMode === 'REMOVE_BG' ? 'Remover Fundo Agora' : 'Dividir em A4s'}
                     </>
                   )}
                 </button>
@@ -1017,7 +1129,9 @@ export default function ToolsPage() {
                           ? processMode === 'reference'
                             ? "⚡ Dividindo (modo rápido)..."
                             : `🎨 Processando ${processMode === 'topographic' ? 'topográfico' : 'linhas'}... (10-15s)`
-                          : "Processando..."
+                          : activeMode === 'REMOVE_BG'
+                            ? "✂️ Removendo fundo..."
+                            : "Processando..."
                     } />
                     {activeMode === 'SPLIT_A4' && processMode !== 'reference' && (
                       <p className="text-xs text-zinc-500 mt-2">Gerando stencil de alta qualidade, aguarde...</p>
@@ -1046,6 +1160,23 @@ export default function ToolsPage() {
                     </div>
                     <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-[200px] lg:min-h-0">
                       <img src={resultImage} alt="Enhanced" className="max-w-full max-h-full object-contain rounded shadow-2xl" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Result for Remove BG Mode */}
+                {activeMode === 'REMOVE_BG' && resultImage && (
+                  <div className="flex flex-col h-full lg:max-h-full">
+                    <div className="flex justify-between items-center mb-3 lg:mb-4 flex-shrink-0">
+                      <h3 className="text-emerald-400 font-medium text-sm flex items-center gap-2">
+                        <ImageIcon size={16} /> Fundo Removido
+                      </h3>
+                      <a href={resultImage} download="no-background.png" className="text-zinc-400 hover:text-white text-xs flex items-center gap-1">
+                        <Download size={14} /> Baixar
+                      </a>
+                    </div>
+                    <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-[200px] lg:min-h-0">
+                      <img src={resultImage} alt="No Background" className="max-w-full max-h-full object-contain rounded shadow-2xl" />
                     </div>
                   </div>
                 )}
@@ -1183,6 +1314,21 @@ export default function ToolsPage() {
 
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div 
+          className={`fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5 fade-in duration-300 ${
+            toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+          }`}
+        >
+          {toast.type === 'success' ? <CheckCircle size={20} /> : <XCircle size={20} />}
+          <span className="font-medium text-sm">{toast.message}</span>
+          <button onClick={() => setToast(null)} className="ml-2 hover:opacity-70">
+            <X size={16} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

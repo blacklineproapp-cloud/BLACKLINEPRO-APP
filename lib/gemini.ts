@@ -4,26 +4,28 @@ import { retryGeminiAPI } from './retry';
 const apiKey = process.env.GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Modelo para TOPOGRÁFICO - MÁXIMA RIQUEZA DE DETALHES
+// Modelo para TOPOGRÁFICO - CONSISTÊNCIA MÁXIMA
 // Temperature 0 = sempre escolhe token mais provável (fidelidade)
-// topP 0.15 = considera top 15% dos tokens (permite capturar mais detalhes sutis)
-// topK 10 = considera top 10 tokens (permite mais nuances e profundidade)
+// topP 0.1 = mais conservador para linhas precisas
+// topK 5 = escolhas limitadas para consistência
 const topographicModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
     temperature: 0,    // Determinístico - sempre escolhe token mais provável
-    topP: 0.1,         // Apenas 10% dos tokens mais prováveis
-    topK: 5,           // Apenas top 5 escolhas
+    topP: 0.1,         // Conservador - linhas precisas
+    topK: 5,           // Top 5 escolhas - máxima consistência
   },
 });
 
-// Modelo para LINHAS - MÁXIMA CONSISTÊNCIA
+// Modelo para LINHAS - MÁXIMA RIQUEZA DE DETALHES
+// topP 0.3 = considera mais opções para detalhes sutis
+// topK 20 = permite nuances e profundidade
 const linesModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
     temperature: 0,    // Determinístico - sempre escolhe token mais provável
-    topP: 0.1,         // Apenas 10% dos tokens mais prováveis
-    topK: 5,           // Apenas top 5 escolhas
+    topP: 0.3,         // Top 30% - mais detalhes de olhos/texturas
+    topK: 20,          // Top 20 escolhas - captura profundidade
   },
 });
 
@@ -194,6 +196,53 @@ LAYER 4 - MICRO-DETALHES E PROFUNDIDADE FINAL (REALISMO EXTREMO):
 - DETALHES SUTIS: pelos finos, veias superficiais, manchas de pele
 - PROFUNDIDADE ATMOSFÉRICA: áreas mais distantes levemente mais suaves
 - CADA DETALHE ÚNICO da foto deve estar no mapa
+
+LAYER 5 - EFEITOS ESPECIAIS E ELEMENTOS DECORATIVOS (⚠️ CRÍTICO):
+🩸 GOTAS DE SANGUE, LÁGRIMAS E LÍQUIDOS:
+- OBSERVAR formato EXATO de cada gota na foto (forma única, não genérica)
+- Contorno da gota: linha definida 0.5-0.8pt seguindo forma orgânica
+- REFLEXO/BRILHO na gota: área BRANCA (líquidos refletem luz intensamente)
+- Sombra INTERNA da gota: hachuras densas (0.3-0.5mm) na parte inferior
+- TRANSPARÊNCIA: onde a gota está sobre outra superfície, mostrar elementos por baixo levemente
+- Volume 3D da gota: é uma ESFERA/ELIPSE com curvatura - linhas seguem isso
+- CADA GOTA INDIVIDUAL: não agrupar, cada uma tem formato único
+
+💧 RESPINGOS E SPLATTERS:
+- CADA RESPINGO é único - NUNCA use padrão genérico
+- Borda do respingo: contorno orgânico irregular 0.6-1.0pt
+- Centro mais denso (mais tinta) + bordas mais finas (tinta espalhou)
+- GOTÍCULAS MENORES ao redor: pontos e pequenas formas 0.3-0.5pt
+- Direção do respingo: indica movimento - preservar exatamente
+- Linha de trajeto (se visível): linha fina mostrando caminho
+
+🌊 TEXTURAS LÍQUIDAS (água, óleos, substâncias):
+- Reflexos especulares: áreas BRANCAS bem definidas
+- Ondulações: linhas curvas paralelas seguindo superfície
+- Distorções: elementos vistos através do líquido ficam levemente deslocados
+- Brilho intenso: highlights maiores que em superfícies opacas
+
+🔥 FUMAÇA, NÉVOA E EFEITOS ATMOSFÉRICOS:
+- Bordas SUAVES e DIFUSAS (não contornos definidos)
+- Densidade gradual: mais opaco no centro, transparente nas bordas
+- Hachuras MUITO ESPAÇADAS (3-4mm) e CURVAS seguindo fluxo
+- NUNCA contornos rígidos - fumaça é amorfa
+
+⚡ EFEITOS ARTÍSTICOS (ornamentos, grafismos, elementos decorativos):
+- PRESERVAR linhas EXATAMENTE como estão (são intencionais)
+- Elementos geométricos: manter precisão de ângulos e curvas
+- Padrões decorativos: capturar cada repetição fielmente
+- Lineart existente: NÃO converter, apenas REPLICAR
+
+🩹 CICATRIZES, MARCAS E IMPERFEIÇÕES INTENCIONAIS:
+- Cicatrizes: textura diferenciada com hachuras em direção específica
+- Marcas de nascença: contornos orgânicos com densidade variável
+- Tatuagens existentes na foto: replicar EXATAMENTE as linhas
+
+⚠️ REGRA CRÍTICA PARA EFEITOS ESPECIAIS:
+- NUNCA simplifique ou remova elementos que parecem "complexos"
+- Se está na foto, DEVE estar no stencil com MESMA complexidade
+- Gotas, respingos e efeitos SÃO elementos importantes da arte
+- CADA detalhe desses elementos diferencia trabalho amador de profissional
 
 DIRETRIZES PROFISSIONAIS PARA MÁXIMA PROFUNDIDADE:
 
@@ -1163,6 +1212,75 @@ EXECUTE ZERO-CREATIVITY HIGH-FIDELITY RESTORATION NOW:`;
   } catch (error: any) {
     console.error('Erro ao aprimorar imagem:', error);
     throw new Error(`Falha ao aprimorar imagem: ${error.message || 'Erro desconhecido'}`);
+  }
+}
+
+// Remover fundo da imagem
+export async function removeBackground(base64Image: string): Promise<string> {
+  const removeBackgroundInstruction = `
+You are an AI specialized in removing backgrounds from images.
+
+TASK: Remove the background from this image and return ONLY the main subject(s) on a transparent/white background.
+
+REQUIREMENTS:
+- Keep the main subject(s) intact with clean edges
+- Remove ALL background elements
+- Output should have a clean, white background (since PNG transparency isn't always supported)
+- Preserve all details of the main subject
+- Clean, precise edges around the subject
+- Do NOT modify the subject itself - only remove the background
+
+OUTPUT: A clean image with the subject on white background, ready for stencil conversion or further processing.
+`;
+
+  try {
+    // Limpar base64
+    const cleanBase64 = base64Image.replace(/^data:image\/[a-z]+;base64,/, '');
+    
+    console.log('[Remove BG] Iniciando remoção de fundo...');
+
+    // Usar o modelo dedicado para processamento de imagem
+    const result = await retryGeminiAPI(async () => {
+      return await dedicatedEnhanceModel.generateContent({
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: removeBackgroundInstruction },
+              {
+                inlineData: {
+                  mimeType: 'image/jpeg',
+                  data: cleanBase64,
+                },
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    // Processar resposta
+    const response = result.response;
+    const candidates = response.candidates;
+
+    if (candidates && candidates.length > 0) {
+      const parts = candidates[0].content?.parts;
+      if (parts) {
+        for (const part of parts) {
+          if (part.inlineData) {
+            const imageData = part.inlineData.data;
+            const mimeType = part.inlineData.mimeType || 'image/png';
+            console.log('[Remove BG] Fundo removido com sucesso');
+            return `data:${mimeType};base64,${imageData}`;
+          }
+        }
+      }
+    }
+
+    throw new Error('Modelo não retornou imagem no formato esperado');
+  } catch (error: any) {
+    console.error('Erro ao remover fundo:', error);
+    throw new Error(`Falha ao remover fundo: ${error.message || 'Erro desconhecido'}`);
   }
 }
 

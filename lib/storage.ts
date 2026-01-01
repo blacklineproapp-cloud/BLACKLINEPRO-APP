@@ -1,4 +1,5 @@
 import { supabaseAdmin } from './supabase';
+import sharp from 'sharp';
 
 /**
  * SUPABASE STORAGE HELPER
@@ -10,10 +11,16 @@ import { supabaseAdmin } from './supabase';
  */
 
 const BUCKET_NAME = 'project-images';
+const THUMBNAIL_SIZE = 300; // 300x300px para thumbnails
 
 export interface UploadImageResult {
   publicUrl: string;
   path: string;
+}
+
+export interface UploadImageWithThumbResult extends UploadImageResult {
+  thumbnailUrl: string;
+  thumbnailPath: string;
 }
 
 /**
@@ -74,6 +81,89 @@ export async function uploadImage(
     throw error;
   }
 }
+
+/**
+ * Faz upload de uma imagem + gera thumbnail 300x300 WebP
+ * Ideal para o Dashboard (carregamento rápido no mobile)
+ *
+ * @param base64Image - Imagem em Base64
+ * @param userId - ID do usuário
+ * @param projectId - ID do projeto
+ * @param type - Tipo da imagem ('original' ou 'stencil')
+ * @returns URL pública da imagem + URL do thumbnail
+ */
+export async function uploadImageWithThumbnail(
+  base64Image: string,
+  userId: string,
+  projectId: string,
+  type: 'original' | 'stencil'
+): Promise<UploadImageWithThumbResult> {
+  try {
+    // Converter Base64 para Buffer
+    const buffer = base64ToBuffer(base64Image);
+
+    // Gerar thumbnail 300x300 em WebP (muito menor que PNG)
+    const thumbnailBuffer = await sharp(buffer)
+      .resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, {
+        fit: 'contain',
+        background: { r: 255, g: 255, b: 255, alpha: 1 }
+      })
+      .webp({ quality: 80 })
+      .toBuffer();
+
+    // Caminhos
+    const filePath = `${userId}/${projectId}/${type}.png`;
+    const thumbPath = `${userId}/${projectId}/${type}_thumb.webp`;
+
+    // Upload da imagem full
+    const { error: fullError } = await supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .upload(filePath, buffer, {
+        contentType: 'image/png',
+        upsert: true,
+      });
+
+    if (fullError) {
+      console.error('Erro no upload full:', fullError);
+      throw new Error(`Erro ao fazer upload: ${fullError.message}`);
+    }
+
+    // Upload do thumbnail
+    const { error: thumbError } = await supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .upload(thumbPath, thumbnailBuffer, {
+        contentType: 'image/webp',
+        upsert: true,
+      });
+
+    if (thumbError) {
+      console.error('Erro no upload thumbnail:', thumbError);
+      // Não falha se thumbnail der erro, continua
+    }
+
+    // Obter URLs públicas
+    const { data: publicUrlData } = supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(filePath);
+
+    const { data: thumbUrlData } = supabaseAdmin.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(thumbPath);
+
+    console.log(`[Storage] Upload com thumb: ${type} (${buffer.length}B → thumb ${thumbnailBuffer.length}B)`);
+
+    return {
+      publicUrl: publicUrlData.publicUrl,
+      path: filePath,
+      thumbnailUrl: thumbUrlData.publicUrl,
+      thumbnailPath: thumbPath,
+    };
+  } catch (error) {
+    console.error('Erro ao fazer upload com thumbnail:', error);
+    throw error;
+  }
+}
+
 
 /**
  * Deleta uma imagem do Storage

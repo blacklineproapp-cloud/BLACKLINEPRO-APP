@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { uploadImage, ensureBucketExists } from '@/lib/storage';
+import { uploadImage, uploadImageWithThumbnail, ensureBucketExists } from '@/lib/storage';
 import { v4 as uuidv4 } from 'uuid';
 import { getOrSetCache, invalidateCache } from '@/lib/cache';
 
@@ -103,6 +103,7 @@ export async function POST(req: Request) {
     const projectId = uuidv4();
 
     // Upload das imagens para o Storage
+    // Original: sem thumbnail (não aparece no dashboard)
     const originalImageResult = await uploadImage(
       originalImage,
       user.id,
@@ -110,7 +111,8 @@ export async function POST(req: Request) {
       'original'
     );
 
-    const stencilImageResult = await uploadImage(
+    // Stencil: COM thumbnail para carregamento rápido no Dashboard mobile
+    const stencilImageResult = await uploadImageWithThumbnail(
       stencilImage,
       user.id,
       projectId,
@@ -124,9 +126,10 @@ export async function POST(req: Request) {
         id: projectId, // Usar o mesmo UUID gerado
         user_id: user.id,
         name,
-        // Salvar URLs do Storage nas colunas existentes
+        // Salvar URLs do Storage
         original_image: originalImageResult.publicUrl,
         stencil_image: stencilImageResult.publicUrl,
+        thumbnail_url: stencilImageResult.thumbnailUrl, // 🆕 Thumbnail para Dashboard
         style: style || 'standard',
         width_cm: Math.round(widthCm) || null,
         height_cm: Math.round(heightCm) || null,

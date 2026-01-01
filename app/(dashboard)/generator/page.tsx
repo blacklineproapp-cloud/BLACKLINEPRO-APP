@@ -7,6 +7,53 @@ import { Sparkles, Download, MoveRight, FileOutput, Settings, ChevronUp, X } fro
 import { useRouter } from 'next/navigation';
 
 type ImageSize = 'A4' | 'A3' | '1K' | '2K' | '4K';
+type TattooStyle = 'blackwork' | 'fineline' | 'neo_traditional' | 'realism' | 'dotwork' | 'old_school';
+
+// Estilos com prompts otimizados para qualidade
+const TATTOO_STYLES: Record<TattooStyle, { name: string; icon: string; promptSuffix: string }> = {
+  blackwork: {
+    name: 'Blackwork',
+    icon: '⬛',
+    promptSuffix: 'blackwork tattoo style, solid black ink, bold geometric shapes, high contrast, no shading gradients, vector-like clean lines'
+  },
+  fineline: {
+    name: 'Fine Line',
+    icon: '✒️',
+    promptSuffix: 'fine line tattoo style, delicate thin lines, minimal shading, elegant detailed linework, single needle aesthetic'
+  },
+  neo_traditional: {
+    name: 'Neo Trad',
+    icon: '🌹',
+    promptSuffix: 'neo traditional tattoo style, bold outlines, vibrant colors, modern interpretation of classic tattoo art, decorative elements'
+  },
+  realism: {
+    name: 'Realismo',
+    icon: '📷',
+    promptSuffix: 'realistic tattoo style, photorealistic details, smooth gradients, lifelike shading, high detail portrait quality'
+  },
+  dotwork: {
+    name: 'Dotwork',
+    icon: '•••',
+    promptSuffix: 'dotwork tattoo style, stippling technique, geometric patterns, mandala elements, dots creating shading and texture'
+  },
+  old_school: {
+    name: 'Old School',
+    icon: '⚓',
+    promptSuffix: 'american traditional tattoo style, bold black outlines, limited color palette, classic sailor tattoo iconography, vintage flash art'
+  },
+};
+
+// Composições/Regiões do corpo
+type Composition = 'free' | 'arm' | 'chest' | 'back' | 'leg' | 'ribs';
+
+const COMPOSITIONS: Record<Composition, { name: string; icon: string; hint: string }> = {
+  free: { name: 'Livre', icon: '✨', hint: 'Sem restrição de formato' },
+  arm: { name: 'Braço', icon: '💪', hint: 'Alongado, design vertical' },
+  chest: { name: 'Peito', icon: '👔', hint: 'Design amplo e centrado' },
+  back: { name: 'Costa', icon: '🦴', hint: 'Canvas grande, detalhado' },
+  leg: { name: 'Perna', icon: '🦵', hint: 'Longo, envolve a curva' },
+  ribs: { name: 'Costela', icon: '↔️', hint: 'Vertical alongado' },
+};
 
 export default function GeneratorPage() {
   const router = useRouter();
@@ -15,10 +62,19 @@ export default function GeneratorPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [size, setSize] = useState<ImageSize>('A4');
+  const [selectedStyle, setSelectedStyle] = useState<TattooStyle | null>(null);
   const [showControls, setShowControls] = useState(true);
+  const [promptHistory, setPromptHistory] = useState<string[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [negativePrompt, setNegativePrompt] = useState('');
+  const [selectedComposition, setSelectedComposition] = useState<Composition>('free');
 
-  // Garantir que controles estejam visíveis ao iniciar
+  // Carregar histórico do localStorage
   useEffect(() => {
+    const savedHistory = localStorage.getItem('stencilflow_prompt_history');
+    if (savedHistory) {
+      setPromptHistory(JSON.parse(savedHistory));
+    }
     // Sempre iniciar com controles abertos (especialmente importante no mobile)
     setShowControls(true);
   }, []);
@@ -32,17 +88,44 @@ export default function GeneratorPage() {
       setShowControls(false); // Esconder controles durante geração apenas no desktop
     }
     
+    // Construir prompt completo
+    let fullPrompt = prompt;
+    
+    // Adicionar estilo
+    if (selectedStyle) {
+      fullPrompt += `, ${TATTOO_STYLES[selectedStyle].promptSuffix}`;
+    }
+    
+    // Adicionar composição/região
+    if (selectedComposition !== 'free') {
+      const comp = COMPOSITIONS[selectedComposition];
+      fullPrompt += `, designed for ${comp.name.toLowerCase()} placement, ${comp.hint.toLowerCase()}`;
+    }
+    
+    // Adicionar negative prompt
+    if (negativePrompt.trim()) {
+      fullPrompt += `. Avoid: ${negativePrompt.trim()}`;
+    }
+    
     try {
       const res = await fetch('/api/stencil/generate-idea', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt, size }),
+        body: JSON.stringify({ prompt: fullPrompt, size }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
         setGeneratedImage(data.image);
+        
+        // Salvar prompt no histórico (máximo 10)
+        const trimmedPrompt = prompt.trim();
+        if (trimmedPrompt) {
+          const newHistory = [trimmedPrompt, ...promptHistory.filter(p => p !== trimmedPrompt)].slice(0, 10);
+          setPromptHistory(newHistory);
+          localStorage.setItem('stencilflow_prompt_history', JSON.stringify(newHistory));
+        }
       } else if (data.requiresSubscription) {
         setError(data.message || 'Este recurso requer um plano pago.');
         setTimeout(() => {
@@ -62,6 +145,9 @@ export default function GeneratorPage() {
 
   const handleUseAsBase = async () => {
     if (generatedImage) {
+      // Limpar cache de projeto do Dashboard para evitar conflito
+      await storage.remove('edit_project');
+      // Salvar imagem gerada
       await storage.set('generated_image', generatedImage);
       router.push('/editor');
     }
@@ -71,6 +157,9 @@ export default function GeneratorPage() {
     setGeneratedImage(null);
     setPrompt('');
     setError(null);
+    setSelectedStyle(null);
+    setSelectedComposition('free');
+    setNegativePrompt('');
     setShowControls(true);
   };
 
@@ -95,7 +184,7 @@ export default function GeneratorPage() {
           {/* Loading State */}
           {loading && (
             <div className="text-center">
-              <LoadingSpinner text="Gerando arte com IA..." />
+              <LoadingSpinner size="lg" showSteps mode="image" />
             </div>
           )}
           
@@ -175,6 +264,109 @@ export default function GeneratorPage() {
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="Ex: Caveira mexicana com rosas..."
                     className="w-full h-16 lg:h-20 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs lg:text-sm text-white placeholder-zinc-600 focus:border-indigo-500 outline-none resize-none"
+                  />
+                  
+                  {/* Histórico de Prompts */}
+                  {promptHistory.length > 0 && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowHistory(!showHistory)}
+                        className="text-[10px] text-zinc-500 hover:text-indigo-400 flex items-center gap-1 mt-1 transition-colors"
+                      >
+                        <ChevronUp size={12} className={`transition-transform ${showHistory ? 'rotate-180' : ''}`} />
+                        Histórico ({promptHistory.length})
+                      </button>
+                      
+                      {showHistory && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl z-50 max-h-32 overflow-y-auto">
+                          {promptHistory.map((p, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setPrompt(p);
+                                setShowHistory(false);
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-white border-b border-zinc-800 last:border-0 truncate transition-colors"
+                            >
+                              {p}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Estilos de Tattoo */}
+                <div>
+                  <label className="text-[9px] text-zinc-500 font-medium block mb-1.5">Estilo (opcional)</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {(Object.keys(TATTOO_STYLES) as TattooStyle[]).map((styleKey) => {
+                      const style = TATTOO_STYLES[styleKey];
+                      const isSelected = selectedStyle === styleKey;
+                      return (
+                        <button
+                          key={styleKey}
+                          onClick={() => setSelectedStyle(isSelected ? null : styleKey)}
+                          className={`py-2 px-2 rounded-lg text-[10px] font-medium border transition-all flex flex-col items-center gap-0.5 ${
+                            isSelected
+                              ? 'bg-indigo-900/40 border-indigo-500 text-indigo-300'
+                              : 'border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400'
+                          }`}
+                        >
+                          <span className="text-sm">{style.icon}</span>
+                          <span>{style.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selectedStyle && (
+                    <p className="text-[9px] text-indigo-400 mt-1.5 flex items-center gap-1">
+                      ✨ {TATTOO_STYLES[selectedStyle].name} aplicado
+                    </p>
+                  )}
+                </div>
+
+                {/* Composição / Região do Corpo */}
+                <div>
+                  <label className="text-[9px] text-zinc-500 font-medium block mb-1.5">Região do Corpo</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {(Object.keys(COMPOSITIONS) as Composition[]).map((compKey) => {
+                      const comp = COMPOSITIONS[compKey];
+                      const isSelected = selectedComposition === compKey;
+                      return (
+                        <button
+                          key={compKey}
+                          onClick={() => setSelectedComposition(compKey)}
+                          className={`py-1.5 px-2 rounded-lg text-[10px] font-medium border transition-all flex items-center justify-center gap-1 ${
+                            isSelected
+                              ? 'bg-purple-900/40 border-purple-500 text-purple-300'
+                              : 'border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400'
+                          }`}
+                          title={comp.hint}
+                        >
+                          <span>{comp.icon}</span>
+                          <span>{comp.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {selectedComposition !== 'free' && (
+                    <p className="text-[9px] text-purple-400 mt-1">
+                      📐 {COMPOSITIONS[selectedComposition].hint}
+                    </p>
+                  )}
+                </div>
+
+                {/* Negative Prompt */}
+                <div>
+                  <label className="text-[9px] text-zinc-500 font-medium block mb-1">Evitar (opcional)</label>
+                  <input
+                    type="text"
+                    value={negativePrompt}
+                    onChange={(e) => setNegativePrompt(e.target.value)}
+                    placeholder="Ex: cores, fundo, texto..."
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-2 py-1.5 text-[11px] text-white placeholder-zinc-600 focus:border-red-500 outline-none"
                   />
                 </div>
 
