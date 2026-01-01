@@ -97,7 +97,8 @@ export default function EditorPage() {
           if (editProject.height_cm) setHeightCm(editProject.height_cm);
           if (editProject.prompt_details) setPromptText(editProject.prompt_details);
           
-          // await storage.remove('edit_project'); // Keep for persistence
+          // Limpar cache após carregar para evitar conflitos
+          await storage.remove('edit_project');
           setShowControls(true);
           return;
         }
@@ -110,8 +111,8 @@ export default function EditorPage() {
         const savedImage = await storage.get<string>('generated_image');
         if (savedImage) {
           setOriginalImage(savedImage);
-          // Don't remove to allow refresh/restart
-          // await storage.remove('generated_image'); 
+          // Limpar cache após carregar para evitar imagens antigas
+          await storage.remove('generated_image');
           setShowControls(true);
         }
       } catch (e) {
@@ -328,9 +329,13 @@ export default function EditorPage() {
     };
   }, [currentStencil, handleUndo, handleRedo, handleResetAdjustments]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Limpar cache anterior para evitar conflitos
+      await storage.remove('edit_project');
+      await storage.remove('generated_image');
+      
       const reader = new FileReader();
       reader.onload = (ev) => {
         setOriginalImage(ev.target?.result as string);
@@ -752,6 +757,16 @@ export default function EditorPage() {
             </div>
           )}
         </main>
+
+        {/* MOBILE: Botão flutuante para abrir painel quando fechado */}
+        {!showControls && !currentStencil && (
+          <button
+            onClick={() => setShowControls(true)}
+            className="lg:hidden fixed bottom-20 right-4 w-12 h-12 bg-purple-600 hover:bg-purple-500 text-white rounded-full flex items-center justify-center shadow-lg z-50"
+          >
+            <ChevronUp size={20} />
+          </button>
+        )}
 
         {/* MOBILE: Barra de ações fixa quando stencil está gerado */}
         {currentStencil && (

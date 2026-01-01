@@ -4,7 +4,7 @@ import { useUser } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, PenTool, Sparkles, Package, CreditCard, Menu, X, Rocket } from 'lucide-react';
+import { LayoutGrid, PenTool, Sparkles, Package, CreditCard, Menu, X, Rocket, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 import { InstallBanner } from '@/components/InstallBanner';
 
@@ -94,6 +94,15 @@ export default function DashboardLayout({
                </Link>
                
                <Link 
+                 href="/suporte" 
+                 onClick={() => setIsMenuOpen(false)} 
+                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-800 transition-colors"
+               >
+                  <HelpCircle size={16} className="text-zinc-400" />
+                  <span className="text-xs text-zinc-300 font-medium">Suporte</span>
+               </Link>
+               
+               <Link 
                  href="/pricing" 
                  onClick={() => setIsMenuOpen(false)} 
                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors border border-emerald-500/10"
@@ -142,6 +151,13 @@ export default function DashboardLayout({
         />
 
         {/*Desktop Only Items */}
+        <NavItem
+          href="/suporte"
+          active={pathname?.startsWith('/suporte')}
+          icon={<HelpCircle size={24} />}
+          label="Suporte"
+          className="hidden md:flex"
+        />
         <NavItem
           href="/assinatura"
           active={pathname === '/assinatura'}

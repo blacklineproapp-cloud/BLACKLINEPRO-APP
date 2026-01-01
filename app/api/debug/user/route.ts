@@ -26,12 +26,10 @@ export async function GET() {
       .eq('clerk_id', userId)
       .single();
 
-    // Lista de emails admin
-    const ADMIN_EMAILS = ['erickrussomat@gmail.com', 'yurilojavirtual@gmail.com'];
+    // Verificar admin usando config centralizada
+    const { isAdminEmail, ADMIN_EMAILS } = await import('@/lib/admin-config');
     
-    // Verificar admin apenas por email
-    const userEmailLower = user?.email?.toLowerCase() || '';
-    const isAdminByEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
+    const isAdminByEmail = isAdminEmail(user?.email || '');
     const hasAdminAccess = user && isAdminByEmail;
 
     return NextResponse.json({
@@ -40,7 +38,7 @@ export async function GET() {
       supabaseError: error?.message || null,
       adminCheck: {
         userEmail: user?.email,
-        userEmailLower,
+        userEmailLower: user?.email?.toLowerCase() || '',
         isAdminByEmail,
         hasAdminAccess,
         adminEmails: ADMIN_EMAILS,

@@ -40,6 +40,13 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
+    // Buscar admin que está executando a ação
+    const { data: adminUser } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('clerk_id', userId)
+      .single();
+
     // Deletar
     const { error } = await supabaseAdmin
       .from('users')
@@ -49,6 +56,19 @@ export async function DELETE(req: Request) {
     if (error) {
       console.error('[Delete] Erro:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Registrar ação no log de admin (para auditoria)
+    if (adminUser?.id) {
+      await supabaseAdmin.from('admin_logs').insert({
+        admin_user_id: adminUser.id,
+        action: 'delete_user',
+        target_user_id: userIdToDelete,
+        details: { 
+          deleted_email: user.email,
+          deleted_clerk_id: user.clerk_id 
+        },
+      });
     }
 
     console.log('[Delete] ✅ Usuário deletado:', user.email);

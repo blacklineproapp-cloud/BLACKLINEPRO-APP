@@ -95,6 +95,7 @@ CREATE TABLE public.projects (
   prompt_details text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  thumbnail_url text,
   CONSTRAINT projects_pkey PRIMARY KEY (id),
   CONSTRAINT projects_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
@@ -147,7 +148,11 @@ CREATE TABLE public.users (
   daily_usage jsonb DEFAULT '{}'::jsonb,
   grace_period_until timestamp with time zone,
   auto_bill_after_grace boolean DEFAULT false,
-  CONSTRAINT users_pkey PRIMARY KEY (id)
+  admin_courtesy boolean DEFAULT false,
+  admin_courtesy_granted_by uuid,
+  admin_courtesy_granted_at timestamp with time zone,
+  CONSTRAINT users_pkey PRIMARY KEY (id),
+  CONSTRAINT users_admin_courtesy_granted_by_fkey FOREIGN KEY (admin_courtesy_granted_by) REFERENCES public.users(id)
 );
 CREATE TABLE public.webhook_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

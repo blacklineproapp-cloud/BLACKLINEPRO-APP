@@ -200,6 +200,16 @@ export default function GeneratorPage() {
           )}
         </main>
 
+        {/* MOBILE: Botão flutuante para abrir painel quando fechado */}
+        {!showControls && !generatedImage && (
+          <button
+            onClick={() => setShowControls(true)}
+            className="lg:hidden fixed bottom-20 right-4 w-12 h-12 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full flex items-center justify-center shadow-lg z-50"
+          >
+            <ChevronUp size={20} />
+          </button>
+        )}
+
         {/* MOBILE: Barra de ações fixa quando imagem está gerada */}
         {generatedImage && !loading && (
           <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 p-3">

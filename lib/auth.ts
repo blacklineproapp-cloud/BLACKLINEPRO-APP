@@ -220,16 +220,12 @@ export async function isAdmin(userId?: string): Promise<boolean> {
       return true;
     }
 
-    // Fallback: verificar por email
-    const ADMIN_EMAILS = [
-      'erickrussomat@gmail.com',
-      'yurilojavirtual@gmail.com',
-    ];
+    // Fallback: verificar por email (usando config centralizada)
+    const { isAdminEmail } = await import('./admin-config');
 
     const userEmail = user.emailAddresses[0]?.emailAddress?.toLowerCase() || '';
-    const isAdminEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
 
-    if (isAdminEmail) {
+    if (isAdminEmail(userEmail)) {
       console.log('[Auth] ✅ Admin verificado (email):', userEmail);
       return true;
     }

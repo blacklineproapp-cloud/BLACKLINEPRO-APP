@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import {
   Users, DollarSign, Activity, TrendingUp, Search, RefreshCw, Shield,
   Ban, CheckCircle, Clock, Zap, AlertTriangle, Filter, Eye, X as XIcon,
-  ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, Sparkles
+  ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp, Sparkles, HelpCircle
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import Link from 'next/link';
 
 interface Metrics {
   general: {
@@ -87,6 +88,9 @@ export default function AdminPage() {
   // Limpeza de duplicados
   const [duplicatesInfo, setDuplicatesInfo] = useState<any>(null);
   const [cleanupLog, setCleanupLog] = useState<string[]>([]);
+  
+  // Tickets de suporte
+  const [ticketCount, setTicketCount] = useState<number>(0);
 
   // Auto-refresh métricas a cada 30s
   useEffect(() => {
@@ -117,6 +121,15 @@ export default function AdminPage() {
       if (!res.ok) throw new Error('Erro ao carregar métricas');
       const data = await res.json();
       setMetrics(data);
+      
+      // Carregar contagem de tickets pendentes
+      try {
+        const ticketRes = await fetch('/api/admin/support?status=open&limit=1');
+        if (ticketRes.ok) {
+          const ticketData = await ticketRes.json();
+          setTicketCount((ticketData.counts?.open || 0) + (ticketData.counts?.in_progress || 0));
+        }
+      } catch (e) { /* ignore */ }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -418,6 +431,24 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Card de Tickets Pendentes */}
+        {ticketCount > 0 && (
+          <Link href="/admin/suporte" className="block mb-8">
+            <div className="bg-gradient-to-r from-orange-600/20 to-red-600/20 border border-orange-500/30 rounded-xl p-4 flex items-center justify-between hover:border-orange-500/50 transition">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500/20 rounded-lg">
+                  <HelpCircle size={24} className="text-orange-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-orange-400">{ticketCount} Ticket(s) Pendente(s)</p>
+                  <p className="text-sm text-zinc-400">Clique para gerenciar</p>
+                </div>
+              </div>
+              <ArrowUpRight size={20} className="text-orange-400" />
+            </div>
+          </Link>
+        )}
+
         {/* Distribuição de Planos + Horário de Pico */}
         {metrics && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
@@ -519,23 +550,28 @@ export default function AdminPage() {
                 Verificar Duplicados
               </button>
 
-              {duplicatesInfo?.duplicates?.[0] && (
+              {duplicatesInfo?.duplicates?.[0] && duplicatesInfo.duplicates[0].users && (
                 <>
-                  <button
-                    onClick={() => activateUser('513f6d62-5ae1-46ab-8a8f-3830e4fcf5f6')}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <CheckCircle size={18} />
-                    Ativar Usuário Atual
-                  </button>
+                  {/* Usar dinamicamente os usuários duplicados encontrados */}
+                  {duplicatesInfo.duplicates[0].users.length >= 2 && (
+                    <>
+                      <button
+                        onClick={() => activateUser(duplicatesInfo.duplicates[0].users[0].id)}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle size={18} />
+                        Ativar: {duplicatesInfo.duplicates[0].users[0].email?.substring(0, 20)}...
+                      </button>
 
-                  <button
-                    onClick={() => deleteUser('f2e31886-328a-4ede-bd7c-0d9c220b1b29')}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Ban size={18} />
-                    Deletar Usuário Antigo
-                  </button>
+                      <button
+                        onClick={() => deleteUser(duplicatesInfo.duplicates[0].users[1].id)}
+                        className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Ban size={18} />
+                        Deletar Duplicado
+                      </button>
+                    </>
+                  )}
                 </>
               )}
 

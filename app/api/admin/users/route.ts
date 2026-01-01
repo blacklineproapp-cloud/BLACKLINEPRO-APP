@@ -1,16 +1,10 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { isAdmin as checkIsAdmin } from '@/lib/auth';
-
+import { isAdminEmail } from '@/lib/admin-config';
 import { supabaseAdmin } from '@/lib/supabase';
 
-// Lista de emails com acesso admin (case-insensitive)
-const ADMIN_EMAILS = [
-  'erickrussomat@gmail.com',
-  'yurilojavirtual@gmail.com',
-];
-
-// Middleware para verificar admin
+// Middleware para verificar admin (usando config centralizada)
 async function userIsAdmin(userId: string): Promise<{ userIsAdmin: boolean; adminId?: string }> {
   const { data: user, error } = await supabaseAdmin
     .from('users')
@@ -18,9 +12,8 @@ async function userIsAdmin(userId: string): Promise<{ userIsAdmin: boolean; admi
     .eq('clerk_id', userId)
     .single();
 
-  // Comparação case-insensitive (apenas por email, sem campo is_admin no banco)
-  const userEmailLower = user?.email?.toLowerCase() || '';
-  const hasAccess = !!(user && ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower));
+  // Comparação case-insensitive usando config centralizada
+  const hasAccess = !!(user && isAdminEmail(user.email || ''));
   
   console.log('[Admin Users] Check:', { email: user?.email, hasAccess, error: error?.message });
   
