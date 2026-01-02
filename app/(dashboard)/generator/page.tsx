@@ -111,6 +111,7 @@ export default function GeneratorPage() {
     try {
       const res = await fetch('/api/stencil/generate-idea', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: fullPrompt, size }),
       });

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { analyzeImageColors } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
+import { checkToolsLimit, checkColorMatchLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 
 
@@ -52,24 +53,39 @@ export async function POST(req: Request) {
     const userIsAdmin = await checkIsAdmin(userId);
 
     if (!userIsAdmin) {
-      // Verificar assinatura (apenas para não-admins)
-      if (!user.is_paid || user.subscription_status !== 'active') {
-        return NextResponse.json({
-          error: 'Assinatura necessária',
-          message: 'Assine o plano básico primeiro.',
-          requiresSubscription: true,
-          subscriptionType: 'subscription'
-        }, { status: 403 });
-      }
+      // Verificar se tem assinatura ativa OU ferramentas desbloqueadas
+      const hasFullAccess = (user.is_paid && user.subscription_status === 'active' && user.tools_unlocked);
 
-      // Verificar ferramentas (apenas para não-admins)
-      if (!user.tools_unlocked) {
-        return NextResponse.json({
-          error: 'Ferramentas premium não desbloqueadas',
-          message: 'Desbloqueie as ferramentas premium por R$ 50.',
-          requiresSubscription: true,
-          subscriptionType: 'tools'
-        }, { status: 403 });
+      if (hasFullAccess) {
+        // ✅ VERIFICAR LIMITE DE USO DO PLANO (100/500 por plano)
+        const limitCheck = await checkToolsLimit(user.id);
+        if (!limitCheck.allowed) {
+          const message = getLimitMessage('tool_usage', limitCheck.limit, limitCheck.resetDate);
+          return NextResponse.json(
+            {
+              error: 'Limite atingido',
+              message,
+              remaining: limitCheck.remaining,
+              limit: limitCheck.limit,
+              resetDate: limitCheck.resetDate,
+              requiresSubscription: true,
+              subscriptionType: 'credits',
+            },
+            { status: 429 }
+          );
+        }
+      } else {
+        // 🎁 MODO TRIAL: Usuários Free ou sem ferramentas desbloqueadas
+        const trialCheck = await checkColorMatchLimit(user.id);
+        
+        if (!trialCheck.allowed) {
+          return NextResponse.json({
+            error: 'Trial encerrado',
+            message: 'Você já usou seus 2 testes gratuitos de Color Match. Assine para desbloquear acesso ilimitado!',
+            requiresSubscription: true,
+            subscriptionType: 'tools'
+          }, { status: 403 });
+        }
       }
     }
 
@@ -84,13 +100,17 @@ export async function POST(req: Request) {
 
     // Registrar uso (ignorar erros)
     try {
-      await supabaseAdmin.from('ai_usage').insert({
-        user_id: user.id,
-        operation_type: 'color_match',
-        tokens_used: 500,
-        cost: 0.08,
-        model_used: 'gemini-2.0-flash-exp',
-      });
+      if (!userIsAdmin) {
+        await recordUsage({
+          userId: user.id,
+          type: 'tool_usage',
+          operationType: 'color_match',
+          metadata: {
+            tool: 'color_match',
+            brand
+          }
+        });
+      }
     } catch (e) {
       console.warn('Erro ao registrar uso de IA:', e);
     }

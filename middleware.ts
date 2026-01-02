@@ -38,13 +38,16 @@ export default clerkMiddleware(async (auth, request) => {
       const origin = request.headers.get('origin');
       const referer = request.headers.get('referer');
 
-      // Lista de origens permitidas
+      // Lista de origens permitidas (Otimizado para Produção)
       const allowedOrigins = [
         process.env.NEXT_PUBLIC_APP_URL,
+        'https://www.stencilflow.com.br',
+        'https://stencilflow.com.br',
+        'https://stencilflow-nextjs.vercel.app', // Vercel preview/prod
         process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
-        'http://localhost:3000', // Dev local
+        'http://localhost:3000',
         'https://localhost:3000'
-      ].filter(Boolean) as string[];
+      ].filter(Boolean).map(url => url!.replace(/\/$/, '')) as string[];
 
       // Validar Origin (preferência) ou Referer (fallback)
       const requestOrigin = origin || (referer ? new URL(referer).origin : null);

@@ -43,16 +43,21 @@ export async function POST(req: Request) {
     const limitCheck = await checkEditorLimit(userData.id);
 
     if (!limitCheck.allowed) {
-      const message = getLimitMessage('editor_generation', limitCheck.limit, limitCheck.resetDate);
+      // Diferenciar mensagem para usuários Free (Trial) vs Assinantes
+      const isFreePlan = (userData.plan === 'free' || !userData.plan);
+      const message = isFreePlan 
+        ? 'Você já usou seus 2 testes gratuitos do Editor. Assine para desbloquear acesso ilimitado!'
+        : getLimitMessage('editor_generation', limitCheck.limit, limitCheck.resetDate);
+
       return NextResponse.json(
         {
-          error: 'Limite atingido',
+          error: isFreePlan ? 'Trial encerrado' : 'Limite atingido',
           message,
           remaining: limitCheck.remaining,
           limit: limitCheck.limit,
           resetDate: limitCheck.resetDate,
           requiresSubscription: true,
-          subscriptionType: 'credits',
+          subscriptionType: 'subscription', // Para editor, o upgrade é para assinatura
         },
         { status: 429 }
       );

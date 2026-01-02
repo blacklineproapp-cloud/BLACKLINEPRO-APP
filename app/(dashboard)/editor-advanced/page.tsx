@@ -190,6 +190,7 @@ export default function EditorAdvancedPage() {
     try {
       const res = await fetch('/api/stencil/generate', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: originalImage,
@@ -280,6 +281,7 @@ export default function EditorAdvancedPage() {
     try {
       const res = await fetch('/api/projects', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: `Estêncil ${new Date().toLocaleTimeString()}`,

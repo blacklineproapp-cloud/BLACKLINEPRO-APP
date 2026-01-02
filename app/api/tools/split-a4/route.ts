@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateStencilFromImage } from '@/lib/gemini';
-import { checkToolsLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { checkToolsLimit, checkSplitA4Limit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 import sharp from 'sharp';
 
@@ -513,24 +513,39 @@ export async function POST(req: Request) {
     const userIsAdmin = await checkIsAdmin(userId);
 
     if (!userIsAdmin) {
-      // Verificar assinatura (apenas para não-admins)
-      if (!userData.is_paid || userData.subscription_status !== 'active') {
-        return NextResponse.json({
-          error: 'Assinatura necessária',
-          message: 'Assine o plano básico primeiro.',
-          requiresSubscription: true,
-          subscriptionType: 'subscription',
-        }, { status: 403 });
-      }
+      // Verificar se tem assinatura ativa OU ferramentas desbloqueadas
+      const hasFullAccess = (userData.is_paid && userData.subscription_status === 'active' && userData.tools_unlocked);
 
-      // Verificar ferramentas desbloqueadas (apenas para não-admins)
-      if (!userData.tools_unlocked) {
-        return NextResponse.json({
-          error: 'Ferramentas premium não desbloqueadas',
-          message: 'Desbloqueie as ferramentas premium por R$ 50.',
-          requiresSubscription: true,
-          subscriptionType: 'tools',
-        }, { status: 403 });
+      if (hasFullAccess) {
+        // ✅ VERIFICAR LIMITE DE USO DO PLANO (100/500 por plano)
+        const limitCheck = await checkToolsLimit(userData.id);
+        if (!limitCheck.allowed) {
+          const message = getLimitMessage('tool_usage', limitCheck.limit, limitCheck.resetDate);
+          return NextResponse.json(
+            {
+              error: 'Limite atingido',
+              message,
+              remaining: limitCheck.remaining,
+              limit: limitCheck.limit,
+              resetDate: limitCheck.resetDate,
+              requiresSubscription: true,
+              subscriptionType: 'credits',
+            },
+            { status: 429 }
+          );
+        }
+      } else {
+        // 🎁 MODO TRIAL: Usuários Free ou sem ferramentas desbloqueadas
+        const trialCheck = await checkSplitA4Limit(userData.id);
+        
+        if (!trialCheck.allowed) {
+          return NextResponse.json({
+            error: 'Trial encerrado',
+            message: 'Você já usou seus 2 testes gratuitos de Divisão em A4. Assine para desbloquear acesso ilimitado!',
+            requiresSubscription: true,
+            subscriptionType: 'tools',
+          }, { status: 403 });
+        }
       }
     }
 

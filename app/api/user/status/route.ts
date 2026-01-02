@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { getOrCreateUser } from '@/lib/auth';
+import { hasAnyTrialRemaining } from '@/lib/billing/limits';
 
 // GET - Retorna status do usuário (assinatura, tools, etc)
 export async function GET() {
@@ -17,6 +18,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
+    // ✅ Desbloqueia ferramentas se já pagou OU se ainda tem trial
+    const trialRemaining = await hasAnyTrialRemaining(user.id);
+    const toolsUnlocked = user.tools_unlocked || trialRemaining;
+
     return NextResponse.json({
       id: user.id,
       email: user.email,
@@ -25,7 +30,8 @@ export async function GET() {
       isSubscribed: user.is_paid && user.subscription_status === 'active',
       subscriptionStatus: user.subscription_status,
       subscriptionExpiresAt: user.subscription_expires_at,
-      toolsUnlocked: user.tools_unlocked,
+      toolsUnlocked,
+      trialRemaining, // Opcional: Para o frontend saber se é trial
       createdAt: user.created_at,
     });
   } catch (error: any) {

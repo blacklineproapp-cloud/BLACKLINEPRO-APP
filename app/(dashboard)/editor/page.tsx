@@ -367,6 +367,7 @@ export default function EditorPage() {
     try {
       const res = await fetch('/api/stencil/generate', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: originalImage,
@@ -386,6 +387,7 @@ export default function EditorPage() {
         try {
           const resizeRes = await fetch('/api/image-resize', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               image: data.image,
@@ -440,6 +442,7 @@ export default function EditorPage() {
     try {
       const res = await fetch('/api/projects', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: `Estêncil ${new Date().toLocaleTimeString()}`,
@@ -473,6 +476,7 @@ export default function EditorPage() {
     try {
       const res = await fetch('/api/projects', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
@@ -699,6 +703,7 @@ export default function EditorPage() {
               )}
 
               {/* Background (Original) */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={originalImage}
                 alt="Original"
@@ -722,6 +727,7 @@ export default function EditorPage() {
                   opacity: showOriginalPreview ? 0 : (comparisonMode === 'overlay' ? sliderPosition / 100 : 1)
                 }}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={currentStencil} alt="Stencil" className="w-full h-full object-contain" draggable={false} />
               </div>
 

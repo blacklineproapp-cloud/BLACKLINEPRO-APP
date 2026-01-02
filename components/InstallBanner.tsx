@@ -81,12 +81,11 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
             <div className="flex items-start gap-3">
               {/* Ícone do App */}
               <div className="flex-shrink-0 w-14 h-14 bg-black rounded-xl border border-zinc-800 flex items-center justify-center overflow-hidden">
-                <Image 
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
                   src="/icon-192.png" 
                   alt="StencilFlow" 
-                  width={40}
-                  height={40}
-                  className="w-10 h-10"
+                  className="w-10 h-10 object-contain"
                 />
               </div>
 

@@ -22,34 +22,60 @@ export const STUDIO_WARNING_THRESHOLD = 0.80;  // Alerta aos 80% (6.000 geraçõ
 export interface UsageLimits {
   editorGenerations: number;  // -1 = ilimitado verdadeiro, 0 = bloqueado, >0 = limite
   aiRequests: number;
-  toolsUsage: number;
+  toolsUsage: number;          // DEPRECATED: Mantido para backward compatibility
+  // 🆕 Limites individuais por ferramenta
+  removeBackground?: number;   // Remove fundo
+  enhance4K?: number;          // Aprimorar 4K
+  colorMatch?: number;         // Combinar cores
+  splitA4?: number;            // Dividir A4
 }
 
 export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
   free: {
-    editorGenerations: 0,    // Não tem acesso
-    aiRequests: 0,           // Não tem acesso
-    toolsUsage: 0            // Não tem acesso
+    editorGenerations: 2,    // 🎁 2 testes gratuitos
+    aiRequests: 2,           // 🎁 2 testes gratuitos de IA Generativa
+    toolsUsage: 0,           // DEPRECATED
+    // 🎁 TRIAL: 2 usos de cada ferramenta para testar
+    removeBackground: 2,
+    enhance4K: 2,
+    colorMatch: 2,
+    splitA4: 2
   },
   starter: {
     editorGenerations: 100,  // 100 gerações por mês
     aiRequests: 0,           // Não tem acesso à IA avançada
-    toolsUsage: 100          // Uso básico de ferramentas
+    toolsUsage: 100,         // Uso básico de ferramentas
+    removeBackground: 100,
+    enhance4K: 100,
+    colorMatch: 100,
+    splitA4: 100
   },
   pro: {
     editorGenerations: 500,  // 500 gerações por mês
     aiRequests: 100,         // 100 requests IA por mês
-    toolsUsage: 500          // Ferramentas completas
+    toolsUsage: 500,         // Ferramentas completas
+    removeBackground: 500,
+    enhance4K: 500,
+    colorMatch: 500,
+    splitA4: 500
   },
   studio: {
     editorGenerations: STUDIO_SOFT_LIMIT,  // 🛡️ SOFT LIMIT: 7.500 gerações/mês
     aiRequests: STUDIO_SOFT_LIMIT,         // 🛡️ SOFT LIMIT aplicado
-    toolsUsage: STUDIO_SOFT_LIMIT          // 🛡️ SOFT LIMIT aplicado
+    toolsUsage: STUDIO_SOFT_LIMIT,         // 🛡️ SOFT LIMIT aplicado
+    removeBackground: STUDIO_SOFT_LIMIT,
+    enhance4K: STUDIO_SOFT_LIMIT,
+    colorMatch: STUDIO_SOFT_LIMIT,
+    splitA4: STUDIO_SOFT_LIMIT
   },
   enterprise: {
     editorGenerations: -1,   // 🏢 VERDADEIRAMENTE ILIMITADO
     aiRequests: -1,          // 🏢 VERDADEIRAMENTE ILIMITADO
-    toolsUsage: -1           // 🏢 VERDADEIRAMENTE ILIMITADO
+    toolsUsage: -1,          // 🏢 VERDADEIRAMENTE ILIMITADO
+    removeBackground: -1,
+    enhance4K: -1,
+    colorMatch: -1,
+    splitA4: -1
   }
 };
 
@@ -98,12 +124,36 @@ export async function checkToolsLimit(userId: string): Promise<LimitCheckResult>
 }
 
 /**
+ * 🆕 Verificadores específicos por ferramenta (para TRIAL Free)
+ */
+export async function checkRemoveBackgroundLimit(userId: string): Promise<LimitCheckResult> {
+  return checkLimit(userId, 'tool_usage', 'removeBackground', 'remove_bg');
+}
+
+export async function checkEnhance4KLimit(userId: string): Promise<LimitCheckResult> {
+  return checkLimit(userId, 'tool_usage', 'enhance4K', 'enhance_image');
+}
+
+export async function checkColorMatchLimit(userId: string): Promise<LimitCheckResult> {
+  return checkLimit(userId, 'tool_usage', 'colorMatch', 'color_match');
+}
+
+export async function checkGenerateIdeaLimit(userId: string): Promise<LimitCheckResult> {
+  return checkLimit(userId, 'ai_request', 'aiRequests', 'generate_idea');
+}
+
+export async function checkSplitA4Limit(userId: string): Promise<LimitCheckResult> {
+  return checkLimit(userId, 'tool_usage', 'splitA4', ['split_only', 'split_with_gemini']); 
+}
+
+/**
  * Função genérica para verificar limites
  */
 async function checkLimit(
   userId: string,
   usageType: UsageType,
-  limitKey: keyof UsageLimits
+  limitKey: keyof UsageLimits,
+  operationTypeFilter?: string | string[] // 🆕 Filtro opcional por operação(ões)
 ): Promise<LimitCheckResult> {
   try {
     // 1. Buscar plano do usuário
@@ -142,16 +192,28 @@ async function checkLimit(
     const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
     // 3. Contar uso no mês atual
-    const { count } = await supabaseAdmin
+    let query = supabaseAdmin
       .from('ai_usage')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('usage_type', usageType)
       .gte('created_at', firstDayOfMonth.toISOString());
 
+    // 🆕 Se fornecido filtro por operação, aplicar
+    if (operationTypeFilter) {
+      if (Array.isArray(operationTypeFilter)) {
+        query = query.in('operation_type', operationTypeFilter);
+      } else {
+        query = query.eq('operation_type', operationTypeFilter);
+      }
+    }
+
+    const { count } = await query;
+
     const usage = count || 0;
-    const remaining = Math.max(0, limit - usage);
-    const usagePercentage = (usage / limit) * 100;
+    const limitValue = limit || 0;
+    const remaining = Math.max(0, limitValue - usage);
+    const usagePercentage = limitValue > 0 ? (usage / limitValue) * 100 : 0;
 
     // 🛡️ SISTEMA DE WARNING: Alerta quando próximo ao limite
     const isNearLimit = usagePercentage >= (STUDIO_WARNING_THRESHOLD * 100);
@@ -167,9 +229,9 @@ async function checkLimit(
     }
 
     return {
-      allowed: usage < limit,
+      allowed: usage < limitValue,
       remaining,
-      limit,
+      limit: limitValue,
       resetDate: nextReset,
       warning: isNearLimit,
       warningMessage,
@@ -271,6 +333,23 @@ export async function getAllLimits(userId: string) {
     ai,
     tools
   };
+}
+
+export async function hasAnyTrialRemaining(userId: string): Promise<boolean> {
+  try {
+    const [editor, idea, removeBg, enhance, color, split] = await Promise.all([
+      checkEditorLimit(userId),
+      checkGenerateIdeaLimit(userId),
+      checkRemoveBackgroundLimit(userId),
+      checkEnhance4KLimit(userId),
+      checkColorMatchLimit(userId),
+      checkSplitA4Limit(userId)
+    ]);
+
+    return editor.allowed || idea.allowed || removeBg.allowed || enhance.allowed || color.allowed || split.allowed;
+  } catch (error) {
+    return false;
+  }
 }
 
 // ============================================================================
