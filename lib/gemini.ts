@@ -1,31 +1,33 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { retryGeminiAPI } from './retry';
-import { TOPOGRAPHIC_INSTRUCTION_OPTIMIZED, PERFECT_LINES_INSTRUCTION_OPTIMIZED } from './prompts-optimized';
+import { TOPOGRAPHIC_INSTRUCTION_OPTIMIZED, PERFECT_LINES_INSTRUCTION_OPTIMIZED, SIMPLIFY_TOPOGRAPHIC_TO_LINES } from './prompts-optimized';
 
 const apiKey = process.env.GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Modelo para TOPOGRÁFICO - CONSISTÊNCIA + DETALHES
-// Temperature 0 = determinístico
-// topP 0.05 = muito conservador para consistência
-// topK 3 = top 3 tokens para manter algum detalhe mas consistente
+// Modelo para TOPOGRÁFICO V3.0 - MÁXIMA RIQUEZA DE DETALHES
+// Temperature 0 = mantém fidelidade (não inventa)
+// topP 0.15 = permite explorar mais variações de densidade (captura mais detalhes)
+// topK 10 = permite mais nuances na representação de profundidade e texturas
 const topographicModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
-    temperature: 0,    // Determinístico - sempre escolhe token mais provável
-    topP: 0.05,        // Conservador - máxima consistência
-    topK: 3,           // Top 3 escolhas - balanceia detalhe e consistência
+    temperature: 0,    // Determinístico - fidelidade 100% ao original
+    topP: 0.15,        // Máxima riqueza - captura micro-detalhes e variações tonais
+    topK: 10,          // Top 10 tokens - permite 7 níveis de profundidade distintos
   },
 });
 
-// Modelo para LINHAS - CONSISTÊNCIA COM LEVE AUMENTO (+10%)
-// Mantém consistência mas com margem mínima para detalhes sutis
+// Modelo para LINHAS - SIMPLICIDADE E LIMPEZA
+// Parâmetros mais restritivos para manter simplicidade
+// topP 0.08 = moderado - simples mas funcional
+// topK 4 = limitado - menos variação = mais limpo
 const linesModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
-    temperature: 0,    // Determinístico - sempre escolhe token mais provável
-    topP: 0.011,       // Mínima variação (+10%) - consistência com leve flexibilidade
-    topK: 2,           // Top 2 escolhas (+10%) - quase idêntico mas com margem
+    temperature: 0,    // Determinístico - fidelidade estrutural
+    topP: 0.08,        // Moderado - simplicidade com clareza
+    topK: 4,           // Limitado - mantém linhas limpas e simples
   },
 });
 
@@ -74,11 +76,11 @@ export async function generateStencilFromImage(
 
   // INVERTIDO: standard = linesModel, perfect_lines = topographicModel
   const model = style === 'standard' ? linesModel : topographicModel;
-  
-  // Log detalhado para debug - VALORES ATUALIZADOS (consistência máxima)
+
+  // Log detalhado para debug - V3.0
   const modeInfo = style === 'standard'
-    ? 'LINHAS (temp: 0, topP: 0.1, topK: 5) - CONSISTÊNCIA MÁXIMA'
-    : 'TOPOGRÁFICO (temp: 0, topP: 0.15, topK: 8) - CONSISTÊNCIA MÁXIMA';
+    ? 'LINHAS (temp: 0, topP: 0.08, topK: 4) - SIMPLES E LIMPO'
+    : 'TOPOGRÁFICO V3.0 (temp: 0, topP: 0.15, topK: 10) - 7 NÍVEIS, MÁXIMA RIQUEZA';
 
   // Construir prompt final
   const fullPrompt = `${systemInstruction}\n\n${promptDetails ? `DETALHES ADICIONAIS: ${promptDetails}\n\n` : ''}Converta esta imagem em estêncil de tatuagem seguindo as instruções acima.`;
@@ -525,5 +527,86 @@ ANALISE A IMAGEM AGORA:`;
   } catch (error: any) {
     console.error('Erro ao analisar cores:', error);
     throw new Error(`Falha ao analisar cores: ${error.message || 'Erro desconhecido'}`);
+  }
+}
+
+// Pipeline 2-etapas: Topográfico → Linhas (Modo Experimental)
+export async function generateLinesFromTopographic(
+  base64Image: string,
+  promptDetails: string = ''
+): Promise<{ topographic: string; lines: string; totalTime: number }> {
+  const startTime = Date.now();
+
+  console.log('[Pipeline 2-Etapas] Iniciando: Topográfico → Linhas');
+
+  try {
+    // ETAPA 1: Gerar topográfico detalhado (7 níveis)
+    console.log('[Pipeline 2-Etapas] ETAPA 1: Gerando topográfico...');
+    const topographicStencil = await generateStencilFromImage(
+      base64Image,
+      promptDetails,
+      'perfect_lines' // Topográfico V3.0
+    );
+    console.log('[Pipeline 2-Etapas] ✅ Topográfico gerado');
+
+    // ETAPA 2: Simplificar topográfico para linhas
+    console.log('[Pipeline 2-Etapas] ETAPA 2: Simplificando para linhas...');
+
+    // Construir prompt de simplificação
+    const simplifyPrompt = `${SIMPLIFY_TOPOGRAPHIC_TO_LINES}\n\n${promptDetails ? `DETALHES ADICIONAIS: ${promptDetails}\n\n` : ''}Simplifique este estêncil topográfico detalhado para um estêncil de linhas simples.`;
+
+    // Limpar base64 do topográfico
+    const cleanTopoBase64 = topographicStencil.replace(/^data:image\/[a-z]+;base64,/, '');
+
+    // Usar modelo de linhas (mais simples) para simplificação
+    const result = await retryGeminiAPI(async () => {
+      return await linesModel.generateContent({
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: simplifyPrompt },
+              {
+                inlineData: {
+                  mimeType: 'image/png',
+                  data: cleanTopoBase64,
+                },
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    // Processar resposta
+    const response = result.response;
+    const candidates = response.candidates;
+
+    if (candidates && candidates.length > 0) {
+      const parts = candidates[0].content?.parts;
+      if (parts) {
+        for (const part of parts) {
+          if (part.inlineData) {
+            const imageData = part.inlineData.data;
+            const mimeType = part.inlineData.mimeType || 'image/png';
+            const linesStencil = `data:${mimeType};base64,${imageData}`;
+
+            const totalTime = Date.now() - startTime;
+            console.log(`[Pipeline 2-Etapas] ✅ Concluído em ${(totalTime / 1000).toFixed(1)}s`);
+
+            return {
+              topographic: topographicStencil,
+              lines: linesStencil,
+              totalTime
+            };
+          }
+        }
+      }
+    }
+
+    throw new Error('Modelo não retornou imagem simplificada');
+  } catch (error: any) {
+    console.error('[Pipeline 2-Etapas] Erro:', error);
+    throw error;
   }
 }

@@ -56,6 +56,7 @@ export default function EditorPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isRestoringHistoryRef = useRef(false); // Flag para ignorar mudanças do histórico
+  const rafIdRef = useRef<number | null>(null); // RequestAnimationFrame para slider suave
 
   // Toast notifications
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -639,7 +640,7 @@ export default function EditorPage() {
 
           {/* Comparison View (after generation) */}
           {originalImage && !isProcessing && currentStencil && (
-            <div className="relative select-none shadow-2xl rounded-lg overflow-hidden bg-white w-full h-[45vh] lg:h-[70vh]">
+            <div className="relative select-none shadow-2xl rounded-lg overflow-hidden bg-white max-w-full max-h-[45vh] lg:max-h-[70vh]">
               {/* Mode Toggle */}
               <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-zinc-900/95 border border-zinc-700 rounded-full p-0.5 flex gap-0.5 shadow-xl">
                 <button
@@ -698,15 +699,11 @@ export default function EditorPage() {
               )}
 
               {/* Background (Original) */}
-              <Image
+              <img
                 src={originalImage}
                 alt="Original"
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
-                className="block object-contain"
+                className="block max-w-full max-h-[45vh] lg:max-h-[70vh] object-contain"
                 draggable={false}
-                unoptimized
-                priority
                 style={{
                   opacity: showOriginalPreview ? 1 : (comparisonMode === 'overlay' ? 0.5 : 1),
                   display: showOriginalPreview ? 'block' : 'block'
@@ -725,16 +722,7 @@ export default function EditorPage() {
                   opacity: showOriginalPreview ? 0 : (comparisonMode === 'overlay' ? sliderPosition / 100 : 1)
                 }}
               >
-                <Image
-                  src={currentStencil}
-                  alt="Stencil"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
-                  className="object-contain"
-                  draggable={false}
-                  unoptimized
-                  priority
-                />
+                <img src={currentStencil} alt="Stencil" className="w-full h-full object-contain" draggable={false} />
               </div>
 
               {/* Wipe handle - Horizontal */}
@@ -760,7 +748,15 @@ export default function EditorPage() {
                 min="0"
                 max="100"
                 value={sliderPosition}
-                onChange={(e) => setSliderPosition(Number(e.target.value))}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (rafIdRef.current) {
+                    cancelAnimationFrame(rafIdRef.current);
+                  }
+                  rafIdRef.current = requestAnimationFrame(() => {
+                    setSliderPosition(value);
+                  });
+                }}
                 className={`absolute inset-0 w-full h-full opacity-0 z-30 ${
                   comparisonMode === 'wipe' ? 'cursor-ew-resize' :
                   comparisonMode === 'split' ? 'cursor-ns-resize' :

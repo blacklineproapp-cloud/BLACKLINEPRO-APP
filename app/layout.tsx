@@ -48,6 +48,7 @@ export const metadata: Metadata = {
   },
   other: {
     'mobile-web-app-capable': 'yes',
+    'facebook-domain-verification': 'qtmtkry0hg77gejaacaw88z3g6l2nb',
   },
   formatDetection: {
     telephone: false,
