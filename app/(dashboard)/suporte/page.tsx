@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -51,11 +52,7 @@ export default function SuportePage() {
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    loadTickets();
-  }, []);
-
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
     try {
       const res = await fetch('/api/support/tickets');
       if (!res.ok) throw new Error('Erro ao carregar');
@@ -66,7 +63,11 @@ export default function SuportePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -294,7 +295,13 @@ export default function SuportePage() {
                     <div className="flex gap-3">
                       {attachments.map((att, i) => (
                         <div key={i} className="relative w-32 h-32 rounded-xl overflow-hidden border border-zinc-700">
-                          <img src={att} alt={`Anexo ${i + 1}`} className="w-full h-full object-cover" />
+                          <Image 
+                            src={att} 
+                            alt={`Anexo ${i + 1}`} 
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
                           <button
                             onClick={() => removeAttachment(i)}
                             className="absolute top-1 right-1 p-1 bg-red-600 rounded-lg"
@@ -344,8 +351,14 @@ export default function SuportePage() {
                           <p className="text-xs text-zinc-500 mb-2">Anexos ({attachments.length})</p>
                           <div className="flex gap-2">
                             {attachments.map((att, i) => (
-                              <div key={i} className="w-16 h-16 rounded-lg overflow-hidden">
-                                <img src={att} alt="" className="w-full h-full object-cover" />
+                              <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden">
+                                <Image 
+                                  src={att} 
+                                  alt="" 
+                                  fill
+                                  className="object-cover"
+                                  unoptimized
+                                />
                               </div>
                             ))}
                           </div>

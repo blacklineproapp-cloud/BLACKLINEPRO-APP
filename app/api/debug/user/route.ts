@@ -7,15 +7,24 @@ import { supabaseAdmin } from '@/lib/supabase';
 /**
  * DEBUG ENDPOINT - Verificar estado do usuário
  * GET /api/debug/user
+ *
+ * 🔒 SEGURANÇA: Apenas disponível em desenvolvimento
  */
 export async function GET() {
+  // 🔒 SEGURANÇA: Bloquear em produção
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({
+      error: 'Endpoint de debug não disponível em produção'
+    }, { status: 403 });
+  }
+
   try {
     const { userId } = await auth();
-    
+
     if (!userId) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Não autenticado no Clerk',
-        clerkUserId: null 
+        clerkUserId: null
       }, { status: 401 });
     }
 

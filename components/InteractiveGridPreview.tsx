@@ -17,6 +17,12 @@ interface InteractiveGridPreviewProps {
   forcedRows?: number; // Grid fixo do frontend
 }
 
+// Constants (mesmo DPI da API para cálculo)
+const CANVAS_WIDTH = 600;
+const CANVAS_HEIGHT = 400;
+const DPI = 100; // Preview
+const CM_TO_PX = DPI / 2.54;
+
 export default function InteractiveGridPreview({
   imageUrl,
   tattooWidthCm,
@@ -41,11 +47,7 @@ export default function InteractiveGridPreview({
 
   const dragStart = useRef({ mouseX: 0, mouseY: 0, offsetX: 0, offsetY: 0 });
 
-  // Constants (mesmo DPI da API para cálculo)
-  const CANVAS_WIDTH = 600;
-  const CANVAS_HEIGHT = 400;
-  const DPI = 100; // Preview
-  const CM_TO_PX = DPI / 2.54;
+
 
   // Load image
   useEffect(() => {

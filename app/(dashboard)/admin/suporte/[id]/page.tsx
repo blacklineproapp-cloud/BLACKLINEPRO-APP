@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -78,11 +79,7 @@ export default function AdminTicketDetailPage() {
   const [submitting, setSubmitting] = useState(false);
   const [imageModal, setImageModal] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTicket();
-  }, [ticketId]);
-
-  const loadTicket = async () => {
+  const loadTicket = useCallback(async () => {
     try {
       const res = await fetch(`/api/admin/support/${ticketId}`);
       if (!res.ok) {
@@ -110,7 +107,11 @@ export default function AdminTicketDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [ticketId, router]);
+
+  useEffect(() => {
+    loadTicket();
+  }, [loadTicket]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,7 +224,13 @@ export default function AdminTicketDetailPage() {
                       onClick={() => setImageModal(att)}
                       className="w-20 h-20 rounded-lg overflow-hidden border border-zinc-700 hover:border-zinc-500"
                     >
-                      <img src={att} alt="" className="w-full h-full object-cover" />
+                      <Image 
+                        src={att} 
+                        alt="Attachment" 
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
                     </button>
                   ))}
                 </div>
@@ -352,7 +359,13 @@ export default function AdminTicketDetailPage() {
             className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
             onClick={() => setImageModal(null)}
           >
-            <img src={imageModal} alt="" className="max-w-full max-h-full object-contain rounded-lg" />
+            <Image 
+              src={imageModal} 
+              alt="Attachment Full" 
+              fill
+              className="object-contain rounded-lg"
+              unoptimized
+            />
           </div>
         )}
       </div>

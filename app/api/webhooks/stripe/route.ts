@@ -37,7 +37,57 @@ export async function POST(req: Request) {
   }
 
   // ========================================
-  // 2. REGISTRAR WEBHOOK NO LOG
+  // 2. VERIFICAR IDEMPOTÊNCIA (prevenir duplicatas)
+  // ========================================
+
+  try {
+    // Verificar se evento já foi processado
+    const { data: existingEvent } = await supabaseAdmin
+      .from('webhook_events')
+      .select('*')
+      .eq('event_id', event.id)
+      .single();
+
+    if (existingEvent) {
+      if (existingEvent.status === 'completed') {
+        console.log(`[Webhook] ✅ Evento ${event.id} já processado. Ignorando.`);
+        return new NextResponse('Event already processed', { status: 200 });
+      }
+
+      if (existingEvent.status === 'processing') {
+        // Evento está sendo processado em paralelo (race condition)
+        console.warn(`[Webhook] ⚠️ Evento ${event.id} já está em processamento.`);
+        return new NextResponse('Event currently processing', { status: 200 });
+      }
+
+      // Status 'failed' - permitir retry incrementando contador
+      await supabaseAdmin
+        .from('webhook_events')
+        .update({
+          status: 'processing',
+          retry_count: (existingEvent.retry_count || 0) + 1
+        })
+        .eq('event_id', event.id);
+    } else {
+      // Primeira vez processando este evento
+      await supabaseAdmin
+        .from('webhook_events')
+        .insert({
+          event_id: event.id,
+          event_type: event.type,
+          source: 'stripe',
+          status: 'processing',
+          payload: event as any
+        });
+    }
+  } catch (idempotencyError: any) {
+    console.error('[Webhook] Erro ao verificar idempotência:', idempotencyError.message);
+    // Se falhar verificação de idempotência, retornar 500 para retry
+    return new NextResponse('Idempotency check failed', { status: 500 });
+  }
+
+  // ========================================
+  // 3. REGISTRAR WEBHOOK NO LOG (legado - manter para compatibilidade)
   // ========================================
 
   let logId: string | null = null;
@@ -97,7 +147,16 @@ export async function POST(req: Request) {
       default:
     }
 
-    // Marcar log como processado
+    // Marcar evento como completed (idempotência)
+    await supabaseAdmin
+      .from('webhook_events')
+      .update({
+        status: 'completed',
+        processed_at: new Date().toISOString()
+      })
+      .eq('event_id', event.id);
+
+    // Marcar log como processado (legado)
     if (logId) {
       await supabaseAdmin
         .from('webhook_logs')
@@ -108,24 +167,50 @@ export async function POST(req: Request) {
         .eq('id', logId);
     }
 
+    console.log(`[Webhook] ✅ Evento ${event.type} (${event.id}) processado com sucesso`);
     return new NextResponse('OK', { status: 200 });
 
   } catch (error: any) {
     console.error(`❌ [Webhook] Erro ao processar ${event.type}:`, error);
 
-    // Registrar erro no log
+    // Marcar evento como failed (idempotência)
+    await supabaseAdmin
+      .from('webhook_events')
+      .update({
+        status: 'failed',
+        error_message: JSON.stringify({
+          message: error.message,
+          stack: error.stack,
+          type: error.type,
+          code: error.code
+        })
+      })
+      .eq('event_id', event.id);
+
+    // Registrar erro no log (legado)
     if (logId) {
       await supabaseAdmin
         .from('webhook_logs')
         .update({
           processed: false,
-          error: error.message
+          error: JSON.stringify({
+            message: error.message,
+            stack: error.stack,
+            type: error.type,
+            code: error.code,
+            statusCode: error.statusCode
+          })
         })
         .eq('id', logId);
     }
 
-    // Retornar 200 mesmo com erro para não retrigar o webhook
-    return new NextResponse('Error logged', { status: 200 });
+    // 🔒 SEGURANÇA: Retornar 500 para Stripe RETENTAR automaticamente
+    // Stripe fará retry com exponential backoff (1h, 2h, 4h, etc.)
+    // Isso garante que dados não sejam perdidos em caso de falha temporária
+    return new NextResponse(
+      `Webhook processing failed: ${error.message}`,
+      { status: 500 }
+    );
   }
 }
 

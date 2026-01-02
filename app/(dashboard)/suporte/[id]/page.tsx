@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -60,11 +61,7 @@ export default function TicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [imageModal, setImageModal] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadTicket();
-  }, [ticketId]);
-
-  const loadTicket = async () => {
+  const loadTicket = useCallback(async () => {
     try {
       const res = await fetch(`/api/support/tickets/${ticketId}`);
       if (!res.ok) {
@@ -82,7 +79,11 @@ export default function TicketDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [ticketId, router]);
+
+  useEffect(() => {
+    loadTicket();
+  }, [loadTicket]);
 
   const handleClose = async () => {
     if (!confirm('Tem certeza que deseja fechar este ticket?')) return;
@@ -202,9 +203,15 @@ export default function TicketDetailPage() {
                   <button
                     key={i}
                     onClick={() => setImageModal(att)}
-                    className="w-24 h-24 rounded-lg overflow-hidden border border-zinc-700 hover:border-zinc-500 transition"
+                    className="relative w-24 h-24 rounded-lg overflow-hidden border border-zinc-700 hover:border-zinc-500 transition"
                   >
-                    <img src={att} alt="" className="w-full h-full object-cover" />
+                    <Image 
+                      src={att} 
+                      alt="" 
+                      fill
+                      className="object-cover" 
+                      unoptimized
+                    />
                   </button>
                 ))}
               </div>
@@ -282,11 +289,15 @@ export default function TicketDetailPage() {
             className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
             onClick={() => setImageModal(null)}
           >
-            <img 
-              src={imageModal} 
-              alt="Anexo" 
-              className="max-w-full max-h-full object-contain rounded-lg"
-            />
+            <div className="relative w-full h-full max-w-4xl max-h-[90vh]">
+              <Image 
+                src={imageModal} 
+                alt="Anexo" 
+                fill
+                className="object-contain rounded-lg"
+                unoptimized
+              />
+            </div>
           </div>
         )}
       </div>

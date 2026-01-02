@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import Image from 'next/image';
 
 interface BeforeAfterSliderProps {
   beforeImage: string;
@@ -69,11 +70,13 @@ export default function BeforeAfterSlider({
     >
       {/* Imagem "Depois" (fundo completo) */}
       <div className="absolute inset-0">
-        <img
+        <Image
           src={afterImage}
           alt={afterLabel}
-          className="w-full h-full object-cover object-center"
+          fill
+          className="object-cover object-center"
           draggable={false}
+          unoptimized
         />
         {/* Label "Depois" */}
         <div className="absolute top-4 right-4 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg">
@@ -89,11 +92,13 @@ export default function BeforeAfterSlider({
           willChange: isDragging ? 'clip-path' : 'auto'
         }}
       >
-        <img
+        <Image
           src={beforeImage}
           alt={beforeLabel}
-          className="w-full h-full object-cover object-center"
+          fill
+          className="object-cover object-center"
           draggable={false}
+          unoptimized
         />
         {/* Label "Antes" */}
         {sliderPosition > 20 && (

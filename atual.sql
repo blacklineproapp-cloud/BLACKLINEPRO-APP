@@ -118,6 +118,35 @@ CREATE TABLE public.subscriptions (
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
   CONSTRAINT subscriptions_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id)
 );
+CREATE TABLE public.support_tickets (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  subject character varying NOT NULL,
+  category character varying DEFAULT 'general'::character varying CHECK (category::text = ANY (ARRAY['billing'::character varying, 'technical'::character varying, 'account'::character varying, 'feature'::character varying, 'general'::character varying]::text[])),
+  priority character varying DEFAULT 'normal'::character varying CHECK (priority::text = ANY (ARRAY['low'::character varying, 'normal'::character varying, 'high'::character varying, 'urgent'::character varying]::text[])),
+  status character varying DEFAULT 'open'::character varying CHECK (status::text = ANY (ARRAY['open'::character varying, 'in_progress'::character varying, 'waiting_user'::character varying, 'resolved'::character varying, 'closed'::character varying]::text[])),
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  resolved_at timestamp with time zone,
+  resolved_by uuid,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  CONSTRAINT support_tickets_pkey PRIMARY KEY (id),
+  CONSTRAINT support_tickets_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id),
+  CONSTRAINT support_tickets_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.ticket_messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  ticket_id uuid NOT NULL,
+  sender_id uuid NOT NULL,
+  sender_type character varying NOT NULL CHECK (sender_type::text = ANY (ARRAY['user'::character varying, 'admin'::character varying]::text[])),
+  message text NOT NULL,
+  attachments jsonb DEFAULT '[]'::jsonb,
+  action_taken jsonb,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT ticket_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT ticket_messages_ticket_id_fkey FOREIGN KEY (ticket_id) REFERENCES public.support_tickets(id),
+  CONSTRAINT ticket_messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.users(id)
+);
 CREATE TABLE public.usage_logs (
   id uuid NOT NULL DEFAULT uuid_generate_v4(),
   user_id character varying NOT NULL,
@@ -151,8 +180,29 @@ CREATE TABLE public.users (
   admin_courtesy boolean DEFAULT false,
   admin_courtesy_granted_by uuid,
   admin_courtesy_granted_at timestamp with time zone,
+  is_blocked boolean DEFAULT false,
+  blocked_reason text,
+  blocked_at timestamp with time zone,
+  blocked_by uuid,
+  is_admin boolean DEFAULT false,
+  total_ai_requests integer DEFAULT 0,
+  last_active_at timestamp with time zone DEFAULT now(),
   CONSTRAINT users_pkey PRIMARY KEY (id),
   CONSTRAINT users_admin_courtesy_granted_by_fkey FOREIGN KEY (admin_courtesy_granted_by) REFERENCES public.users(id)
+);
+CREATE TABLE public.webhook_events (
+  id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  event_id text NOT NULL UNIQUE,
+  event_type text NOT NULL,
+  source text NOT NULL CHECK (source = ANY (ARRAY['stripe'::text, 'clerk'::text])),
+  status text NOT NULL DEFAULT 'processing'::text CHECK (status = ANY (ARRAY['processing'::text, 'completed'::text, 'failed'::text])),
+  received_at timestamp with time zone NOT NULL DEFAULT now(),
+  processed_at timestamp with time zone,
+  payload jsonb,
+  error_message text,
+  retry_count integer DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT webhook_events_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.webhook_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

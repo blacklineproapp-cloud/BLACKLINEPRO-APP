@@ -9,6 +9,7 @@ const nextConfig = {
   // Experimental features para performance
   experimental: {
     optimizePackageImports: ['lucide-react'], // Tree-shaking agressivo
+    serverComponentsExternalPackages: ['bullmq'], // BullMQ tem dependências dinâmicas
   },
 
   // AUMENTAR LIMITE DE BODY (para imagens grandes)

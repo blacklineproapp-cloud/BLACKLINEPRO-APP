@@ -5,6 +5,8 @@ import { removeBackground } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkToolsLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
+import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
+import { logger } from '@/lib/logger';
 
 
 export async function POST(req: Request) {
@@ -104,9 +106,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Imagem não fornecida' }, { status: 400 });
     }
 
-    console.log('[Remove BG API] Iniciando remoção de fundo:', {
-      imageLength: image.length,
-      userIsAdmin
+    // 🚀 CORREÇÃO #1: Validar imagem ANTES de processar (previne OOM e erros Gemini)
+    const validation = await validateImage(image);
+    if (!validation.valid) {
+      logger.warn('[Remove BG] Validação falhou', { error: validation.error });
+      return NextResponse.json(
+        createValidationErrorResponse(validation),
+        { status: 413 }
+      );
+    }
+
+    logger.info('[Remove BG] Iniciando remoção de fundo', {
+      ...validation.metadata,
+      userIsAdmin,
     });
 
     // Remover fundo
@@ -140,4 +152,6 @@ export async function POST(req: Request) {
   }
 }
 
-export const maxDuration = 60;
+// 🚀 CORREÇÃO #2: Timeout aumentado de 60s → 120s
+// Gemini pode levar 90-120s para processar imagens grandes em produção
+export const maxDuration = 120;

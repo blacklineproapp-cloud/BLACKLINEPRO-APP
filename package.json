@@ -33,7 +33,6 @@
     "bullmq": "^5.66.2",
     "dotenv": "^17.2.3",
     "idb-keyval": "^6.2.2",
-    "ioredis": "^5.4.0",
     "jspdf": "^3.0.4",
     "jszip": "^3.10.1",
     "lucide-react": "^0.378.0",

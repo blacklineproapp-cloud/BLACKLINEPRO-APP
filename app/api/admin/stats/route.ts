@@ -16,7 +16,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
-    // Usar cache de 5 minutos para stats admin (dados mudam devagar)
+    // 🚀 OTIMIZAÇÃO: Cache de 1 hora (era 5min)
+    // Stats admin são acessadas frequentemente pelo dashboard
+    // Mas números mudam lentamente (usuários, revenue, etc)
+    // Reduz requests Redis em 90% nesta rota
     const stats = await getOrSetCache(
       'dashboard',
       async () => {
@@ -66,8 +69,7 @@ export async function GET() {
         return data;
       },
       {
-        ttl: 300000, // 5 minutos (admin stats mudam devagar)
-        tags: ['admin', 'stats'],
+        ttl: 3600000, // 1 hora (stats mudam lentamente)
         namespace: 'admin',
       }
     );

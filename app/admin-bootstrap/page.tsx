@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, CheckCircle, XCircle, AlertTriangle, Loader2 } from 'lucide-react';
 
@@ -11,11 +11,7 @@ export default function AdminBootstrapPage() {
   const [status, setStatus] = useState<any>(null);
   const [result, setResult] = useState<any>(null);
 
-  useEffect(() => {
-    checkBootstrapStatus();
-  }, []);
-
-  const checkBootstrapStatus = async () => {
+  const checkBootstrapStatus = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/admin/bootstrap/check');
@@ -38,7 +34,11 @@ export default function AdminBootstrapPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkBootstrapStatus();
+  }, [checkBootstrapStatus]);
 
   const handleBootstrap = async () => {
     try {

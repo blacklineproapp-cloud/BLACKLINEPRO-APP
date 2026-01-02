@@ -139,6 +139,14 @@ export async function POST(req: Request) {
 
     switch (action) {
       case 'block': {
+        // 🔒 SEGURANÇA: Prevenir admin de bloquear própria conta
+        if (targetUserId === adminCheck.adminId) {
+          console.warn(`[Admin Users] ⚠️ Admin tentou bloquear própria conta: ${adminCheck.adminId}`);
+          return NextResponse.json({
+            error: 'Você não pode bloquear sua própria conta.'
+          }, { status: 403 });
+        }
+
         await supabaseAdmin
           .from('users')
           .update({
@@ -180,6 +188,14 @@ export async function POST(req: Request) {
       }
 
       case 'change_plan': {
+        // 🔒 SEGURANÇA: Prevenir admin de editar própria conta
+        if (targetUserId === adminCheck.adminId) {
+          console.warn(`[Admin Users] ⚠️ Admin tentou editar própria conta: ${adminCheck.adminId}`);
+          return NextResponse.json({
+            error: 'Você não pode alterar o plano da sua própria conta. Solicite a outro administrador.'
+          }, { status: 403 });
+        }
+
         const { isCourtesy, sendPaymentLink } = body;
 
         if (!newPlan || !['free', 'starter', 'pro', 'studio'].includes(newPlan)) {

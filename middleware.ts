@@ -22,6 +22,63 @@ const isAdminRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
+  // ========================================
+  // 🔒 PROTEÇÃO CSRF - Validar Origin/Referer
+  // ========================================
+
+  const method = request.method;
+  const isModifyingRequest = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
+
+  // Apenas validar em requisições que modificam dados
+  if (isModifyingRequest) {
+    // Ignorar webhooks (eles têm própria validação de assinatura)
+    const isWebhook = request.nextUrl.pathname.startsWith('/api/webhooks/');
+
+    if (!isWebhook) {
+      const origin = request.headers.get('origin');
+      const referer = request.headers.get('referer');
+
+      // Lista de origens permitidas
+      const allowedOrigins = [
+        process.env.NEXT_PUBLIC_APP_URL,
+        process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+        'http://localhost:3000', // Dev local
+        'https://localhost:3000'
+      ].filter(Boolean) as string[];
+
+      // Validar Origin (preferência) ou Referer (fallback)
+      const requestOrigin = origin || (referer ? new URL(referer).origin : null);
+
+      if (!requestOrigin) {
+        console.warn('[Middleware] ⚠️ CSRF: Request sem Origin/Referer', {
+          path: request.nextUrl.pathname,
+          method
+        });
+        return NextResponse.json({
+          error: 'Requisição inválida: Origin ausente'
+        }, { status: 403 });
+      }
+
+      const isAllowedOrigin = allowedOrigins.some(allowed =>
+        requestOrigin.startsWith(allowed)
+      );
+
+      if (!isAllowedOrigin) {
+        console.warn('[Middleware] 🚨 CSRF ATTACK DETECTADO!', {
+          requestOrigin,
+          allowedOrigins,
+          path: request.nextUrl.pathname,
+          method
+        });
+        return NextResponse.json({
+          error: 'Origem não autorizada'
+        }, { status: 403 });
+      }
+
+      console.log('[Middleware] ✅ CSRF validado:', { origin: requestOrigin });
+    }
+  }
+
   // Verificar rotas de admin PRIMEIRO
   if (isAdminRoute(request)) {
     const { userId, sessionClaims } = auth();

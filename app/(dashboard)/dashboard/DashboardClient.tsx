@@ -635,12 +635,18 @@ export default function DashboardClient({ projects, isSubscribed, currentUsage, 
             </div>
 
             {/* Image */}
-            <div className="p-4 lg:p-6 flex items-center justify-center bg-white min-h-[300px] max-h-[50vh]">
-              <img 
-                src={showStencil ? selectedProject.stencil_image : selectedProject.original_image} 
-                alt={selectedProject.name}
-                className="max-w-full max-h-[45vh] object-contain"
-              />
+            <div className="p-4 lg:p-6 bg-white">
+              <div className="relative w-full h-[45vh] lg:h-[50vh]">
+                <Image
+                  src={showStencil ? selectedProject.stencil_image : selectedProject.original_image}
+                  alt={selectedProject.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+                  className="object-contain"
+                  unoptimized
+                  priority
+                />
+              </div>
             </div>
 
             {/* Actions */}

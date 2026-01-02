@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import StencilAdjustControls from '@/components/editor/StencilAdjustControls';
 import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, ChevronUp, Ruler, Undo, Redo } from 'lucide-react';
@@ -84,12 +85,12 @@ export default function EditorAdvancedPage() {
     if (window.innerWidth >= 1024) {
       setShowControls(true);
     }
-  }, []);
+  }, [history]);
 
   // Calculate height based on aspect ratio
   useEffect(() => {
     if (originalImage) {
-      const img = new Image();
+      const img = new window.Image();
       img.src = originalImage;
       img.onload = () => {
         const ratio = img.naturalWidth / img.naturalHeight;
@@ -98,6 +99,35 @@ export default function EditorAdvancedPage() {
       };
     }
   }, [widthCm, originalImage]);
+
+  // Reset de ajustes
+  const handleResetAdjustments = useCallback(() => {
+    const controls = resetControls();
+    setAdjustControls(controls);
+    setAdjustedStencil(null);
+  }, []);
+
+  // Undo
+  const handleUndo = useCallback(() => {
+    if (!history.canUndo) return;
+
+    const previousState = history.undo();
+    if (previousState) {
+      setAdjustedStencil(previousState.image);
+      setAdjustControls(previousState.controls);
+    }
+  }, [history]);
+
+  // Redo
+  const handleRedo = useCallback(() => {
+    if (!history.canRedo) return;
+
+    const nextState = history.redo();
+    if (nextState) {
+      setAdjustedStencil(nextState.image);
+      setAdjustControls(nextState.controls);
+    }
+  }, [history]);
 
   // Keyboard shortcuts (Undo/Redo)
   useEffect(() => {
@@ -127,7 +157,7 @@ export default function EditorAdvancedPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [adjustedStencil, generatedStencil]);
+  }, [handleRedo, handleUndo, handleResetAdjustments]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -238,40 +268,13 @@ export default function EditorAdvancedPage() {
     applyAdjustmentsDebounced(newControls);
   };
 
-  // Reset de ajustes
-  const handleResetAdjustments = () => {
-    const controls = resetControls();
-    setAdjustControls(controls);
-    setAdjustedStencil(null);
-  };
-
   // Aplicar preset
   const handleApplyPreset = (presetKey: string) => {
     const newControls = applyPreset(adjustControls, presetKey);
     handleAdjustChange(newControls);
   };
 
-  // Undo
-  const handleUndo = () => {
-    if (!history.canUndo) return;
 
-    const previousState = history.undo();
-    if (previousState) {
-      setAdjustedStencil(previousState.image);
-      setAdjustControls(previousState.controls);
-    }
-  };
-
-  // Redo
-  const handleRedo = () => {
-    if (!history.canRedo) return;
-
-    const nextState = history.redo();
-    if (nextState) {
-      setAdjustedStencil(nextState.image);
-      setAdjustControls(nextState.controls);
-    }
-  };
 
   const autoSaveProject = async (stencilImage: string) => {
     try {
@@ -420,7 +423,15 @@ export default function EditorAdvancedPage() {
 
           {/* Original Image (before generation) */}
           {originalImage && !isProcessing && !currentStencil && (
-            <img src={originalImage} alt="Original" className="max-w-full max-h-[45vh] lg:max-h-[70vh] object-contain shadow-2xl rounded-lg" />
+            <div className="relative w-full h-[45vh] lg:h-[70vh]">
+              <Image 
+                src={originalImage} 
+                alt="Original" 
+                fill
+                className="object-contain shadow-2xl rounded-lg"
+                unoptimized
+              />
+            </div>
           )}
 
           {/* Comparison View (after generation) */}
@@ -469,11 +480,13 @@ export default function EditorAdvancedPage() {
               )}
 
               {/* Background (Original) */}
-              <img
+              <Image
                 src={originalImage}
                 alt="Original"
-                className="block max-w-full max-h-[45vh] lg:max-h-[70vh] object-contain"
+                fill
+                className="block object-contain"
                 draggable={false}
+                unoptimized
                 style={{ opacity: comparisonMode === 'overlay' ? 0.5 : 1 }}
               />
 
@@ -486,11 +499,13 @@ export default function EditorAdvancedPage() {
                   opacity: comparisonMode === 'overlay' ? sliderPosition / 100 : 1
                 }}
               >
-                <img 
+                <Image 
                   src={currentStencil} 
                   alt="Stencil" 
-                  className="w-full h-full object-contain" 
+                  fill
+                  className="object-contain" 
                   draggable={false}
+                  unoptimized
                   style={{
                     // Preview instantâneo com CSS filters (enquanto API processa)
                     filter: `

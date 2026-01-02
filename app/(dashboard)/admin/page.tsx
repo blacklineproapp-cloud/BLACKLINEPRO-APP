@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Users, DollarSign, Activity, TrendingUp, Search, RefreshCw, Shield,
@@ -92,26 +92,7 @@ export default function AdminPage() {
   // Tickets de suporte
   const [ticketCount, setTicketCount] = useState<number>(0);
 
-  // Auto-refresh métricas a cada 30s
-  useEffect(() => {
-    loadMetrics();
-    const interval = setInterval(loadMetrics, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    loadUsers();
-  }, [page, filterPlan, filterStatus]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPage(1);
-      loadUsers();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  const loadMetrics = async () => {
+  const loadMetrics = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/metrics');
       if (res.status === 403) {
@@ -135,9 +116,9 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoadingUsers(true);
       const params = new URLSearchParams({
@@ -162,7 +143,26 @@ export default function AdminPage() {
     } finally {
       setLoadingUsers(false);
     }
-  };
+  }, [page, search, filterPlan, filterStatus, router]);
+
+  // Auto-refresh métricas a cada 30s
+  useEffect(() => {
+    loadMetrics();
+    const interval = setInterval(loadMetrics, 30000);
+    return () => clearInterval(interval);
+  }, [loadMetrics]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      // loadUsers será chamado pelo useEffect acima quando o estado mudar
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const handleUserAction = async (action: string, userId: string, extra?: any) => {
     try {

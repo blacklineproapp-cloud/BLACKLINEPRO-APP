@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { X, Loader2, Crown, Zap, Sparkles, LogIn } from 'lucide-react';
@@ -61,23 +61,7 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
   const totalPrice = PLAN_PRICING[plan][cycle];
   const cycleInfo = BILLING_CYCLES[cycle];
 
-  useEffect(() => {
-    if (isOpen && isLoaded) {
-      // Só cria payment intent se estiver logado
-      if (isSignedIn) {
-        createPaymentIntent();
-      } else {
-        setIsLoading(false);
-      }
-      // Bloquear scroll do body quando modal está aberto
-      document.body.style.overflow = 'hidden';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen, plan, isSignedIn, isLoaded]);
-
-  const createPaymentIntent = async () => {
+  const createPaymentIntent = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -114,7 +98,23 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [plan, cycle, router, onClose]);
+
+  useEffect(() => {
+    if (isOpen && isLoaded) {
+      // Só cria payment intent se estiver logado
+      if (isSignedIn) {
+        createPaymentIntent();
+      } else {
+        setIsLoading(false);
+      }
+      // Bloquear scroll do body quando modal está aberto
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, isSignedIn, isLoaded, createPaymentIntent]);
 
   const handleSuccess = () => {
     router.push('/success?plan=' + plan + '&cycle=' + cycle);

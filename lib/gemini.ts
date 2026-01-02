@@ -297,31 +297,34 @@ EXECUTE ZERO-CREATIVITY HIGH-FIDELITY RESTORATION NOW:`;
     cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
   }
 
+  // 🚀 CORREÇÃO #3: Adicionar retry para falhas temporárias do Gemini
   try {
-    const result = await dedicatedEnhanceModel.generateContent([
-      prompt,
-      {
-        inlineData: {
-          data: cleanBase64,
-          mimeType: mimeType,
+    return await retryGeminiAPI(async () => {
+      const result = await dedicatedEnhanceModel.generateContent([
+        prompt,
+        {
+          inlineData: {
+            data: cleanBase64,
+            mimeType: mimeType,
+          },
         },
-      },
-    ]);
+      ]);
 
-    const response = result.response;
-    const parts = response.candidates?.[0]?.content?.parts;
+      const response = result.response;
+      const parts = response.candidates?.[0]?.content?.parts;
 
-    if (parts) {
-      for (const part of parts) {
-        // @ts-ignore
-        if (part.inlineData) {
+      if (parts) {
+        for (const part of parts) {
           // @ts-ignore
-          return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+          if (part.inlineData) {
+            // @ts-ignore
+            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+          }
         }
       }
-    }
 
-    throw new Error('Modelo não retornou imagem no formato esperado');
+      throw new Error('Modelo não retornou imagem no formato esperado');
+    }, 'Gemini Enhance');
   } catch (error: any) {
     console.error('Erro ao aprimorar imagem:', error);
     throw new Error(`Falha ao aprimorar imagem: ${error.message || 'Erro desconhecido'}`);

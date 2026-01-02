@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { SignInButton, useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { PenTool, Sparkles, Map, Package, ChevronRight } from 'lucide-react';
 import BeforeAfterSlider from './BeforeAfterSlider';
@@ -200,10 +201,12 @@ export default function HeroSection() {
                         />
                       </div>
                     ) : (
-                      <img 
+                      <Image 
                         src={feature.image} 
                         alt={feature.title}
+                        fill
                         className="w-full h-full object-contain md:object-cover object-top"
+                        priority={idx === 0}
                       />
                     )}
                     

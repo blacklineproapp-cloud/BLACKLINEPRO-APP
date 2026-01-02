@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, Image, TrendingUp } from 'lucide-react';
+import { Users, Image as ImageIcon, TrendingUp } from 'lucide-react';
 
 interface StatsData {
   totalUsers: number;
@@ -67,7 +67,7 @@ export default function StatsSection({ stats }: { stats: StatsData }) {
           {/* Card 2: Projetos */}
           <div className="bg-gradient-to-br from-purple-900/20 to-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-purple-600/10 border border-purple-600/20 flex items-center justify-center mx-auto mb-4">
-              <Image className="text-purple-500" size={32} />
+              <ImageIcon className="text-purple-500" size={32} />
             </div>
             <div className="text-5xl font-bold text-white mb-2">
               <AnimatedCounter end={stats.totalProjects} />+

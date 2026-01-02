@@ -121,6 +121,25 @@ export async function POST(req: Request) {
 
     if (existingCustomer?.stripe_customer_id) {
       stripeCustomerId = existingCustomer.stripe_customer_id;
+
+      // 🔒 VERIFICAÇÃO: Checar se customer existe e não foi deletado
+      const customer = await stripe.customers.retrieve(stripeCustomerId);
+
+      if ('deleted' in customer && customer.deleted) {
+        return NextResponse.json({
+          error: 'Customer foi deletado no Stripe. Entre em contato com suporte.'
+        }, { status: 400 });
+      }
+
+      // ℹ️ Verificar se tem payment method (cartão) para cobranças automáticas
+      const hasDefaultPaymentMethod = customer.invoice_settings?.default_payment_method ||
+                                     customer.default_source;
+
+      if (!hasDefaultPaymentMethod) {
+        console.warn(`[Create Subscription] ⚠️ Customer ${stripeCustomerId} sem cartão cadastrado - precisará pagar boleto todo mês`);
+      } else {
+        console.log(`[Create Subscription] ✅ Customer ${stripeCustomerId} tem cartão configurado para cobrança automática`);
+      }
     } else {
       // Criar customer no Stripe
       const customer = await stripe.customers.create({
@@ -148,8 +167,8 @@ export async function POST(req: Request) {
       amount,
       currency: 'brl',
       customer: stripeCustomerId,
-      payment_method_types: ['card', 'boleto'],
-      setup_future_usage: 'off_session', // Para cobranças recorrentes
+      payment_method_types: ['card', 'boleto'], // ✅ Boleto e cartão disponíveis
+      setup_future_usage: 'off_session', // Para cobranças recorrentes automáticas
       metadata: {
         clerk_id: userId,
         user_id: user.id,

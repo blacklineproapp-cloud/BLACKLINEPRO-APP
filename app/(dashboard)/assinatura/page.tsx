@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { 
@@ -26,18 +26,7 @@ export default function AssinaturaPage() {
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
 
-  useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push('/');
-      return;
-    }
-
-    if (isLoaded && isSignedIn) {
-      loadUserData();
-    }
-  }, [isLoaded, isSignedIn]);
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       const res = await fetch('/api/user/me');
       if (!res.ok) throw new Error('Erro ao carregar dados');
@@ -48,7 +37,18 @@ export default function AssinaturaPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      router.push('/');
+      return;
+    }
+
+    if (isLoaded && isSignedIn) {
+      loadUserData();
+    }
+  }, [isLoaded, isSignedIn, router, loadUserData]);
 
   const handleManageSubscription = async () => {
     setPortalLoading(true);

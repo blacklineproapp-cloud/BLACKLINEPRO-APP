@@ -234,18 +234,56 @@ export async function retryGeminiAPI<T>(
     backoffMultiplier: 2,
     maxDelay: 15000, // Max 15s de espera
     shouldRetry: (error, attempt) => {
-      // Rate limit do Gemini
-      if (error?.status === 429 || error?.message?.includes('quota')) {
-        return attempt <= 2; // Tentar no máximo 2 vezes em rate limit
+      const errorCode = error?.code || error?.status;
+      const errorMessage = error?.message?.toLowerCase() || '';
+
+      // 🚀 CORREÇÃO #4: Tratamento específico de erros Gemini
+
+      // ❌ NÃO RETRY: Quota excedida (precisa esperar reset ou upgrade)
+      if (errorCode === 'RESOURCE_EXHAUSTED' || errorMessage.includes('quota exceeded')) {
+        console.error(`[${operationType}] Quota Gemini excedida - NÃO fará retry`);
+        return false;
       }
 
-      // Timeout
-      if (error?.status === 504 || error?.message?.includes('timeout')) {
+      // ❌ NÃO RETRY: Imagem inválida/muito grande (erro do usuário)
+      if (errorCode === 'INVALID_ARGUMENT' || errorMessage.includes('invalid')) {
+        console.error(`[${operationType}] Argumento inválido - NÃO fará retry`);
+        return false;
+      }
+
+      // ❌ NÃO RETRY: API key inválida (configuração)
+      if (errorCode === 'PERMISSION_DENIED' || errorMessage.includes('api key')) {
+        console.error(`[${operationType}] Permissão negada - NÃO fará retry`);
+        return false;
+      }
+
+      // ✅ RETRY: Timeout do Gemini (pode resolver em nova tentativa)
+      if (errorCode === 'DEADLINE_EXCEEDED' || errorMessage.includes('deadline')) {
+        console.warn(`[${operationType}] Timeout Gemini - tentará novamente`);
+        return attempt <= 3;
+      }
+
+      // ✅ RETRY: Gemini temporariamente indisponível
+      if (errorCode === 'UNAVAILABLE' || errorMessage.includes('unavailable')) {
+        console.warn(`[${operationType}] Gemini indisponível - tentará novamente`);
+        return attempt <= 3;
+      }
+
+      // ✅ RETRY: Rate limit (429)
+      if (error?.status === 429 || errorMessage.includes('rate limit')) {
+        console.warn(`[${operationType}] Rate limit - tentará novamente`);
+        return attempt <= 2;
+      }
+
+      // ✅ RETRY: Timeout HTTP (504)
+      if (error?.status === 504 || errorMessage.includes('timeout')) {
+        console.warn(`[${operationType}] HTTP timeout - tentará novamente`);
         return true;
       }
 
-      // Server errors
+      // ✅ RETRY: Server errors (500+)
       if (error?.status >= 500) {
+        console.warn(`[${operationType}] Server error ${error.status} - tentará novamente`);
         return true;
       }
 

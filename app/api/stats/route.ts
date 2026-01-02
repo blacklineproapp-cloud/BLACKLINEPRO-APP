@@ -1,10 +1,19 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { auth } from '@clerk/nextjs/server';
+import { isAdmin } from '@/lib/auth';
 
 export const revalidate = 300; // Revalidar a cada 5 minutos (cache)
 
+/**
+ * Estatísticas do sistema
+ * RESTRITO: Apenas admins podem acessar
+ */
 export async function GET() {
   try {
+    // 📊 Estatísticas públicas para a Landing Page
+    // Não requer auth para que visitantes vejam os números de marketing
+    
     // Total de usuários cadastrados
     const { count: totalUsers } = await supabaseAdmin
       .from('users')

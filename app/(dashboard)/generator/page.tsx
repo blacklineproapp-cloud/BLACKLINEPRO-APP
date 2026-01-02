@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { storage } from '@/lib/client-storage';
 import { Sparkles, Download, MoveRight, FileOutput, Settings, ChevronUp, X } from 'lucide-react';
@@ -190,11 +191,13 @@ export default function GeneratorPage() {
           
           {/* Generated Image */}
           {generatedImage && !loading && (
-            <div className="relative">
-              <img 
+            <div className="relative w-full h-[45vh] lg:h-[70vh]">
+              <Image 
                 src={generatedImage} 
                 alt="Generated Art" 
-                className="max-w-full max-h-[45vh] lg:max-h-[70vh] object-contain rounded-lg shadow-2xl"
+                fill
+                className="object-contain rounded-lg shadow-2xl"
+                unoptimized
               />
             </div>
           )}

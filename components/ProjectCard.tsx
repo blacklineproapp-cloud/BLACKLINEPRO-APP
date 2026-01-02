@@ -4,6 +4,7 @@ import { Project } from '@/lib/supabase';
 import { Trash2, Download } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import ConfirmModal from './ui/ConfirmModal';
 
@@ -61,10 +62,12 @@ export default function ProjectCard({ project }: { project: Project }) {
       <div className="aspect-square bg-white p-4 flex items-center justify-center relative">
         {/* Checkerboard pattern */}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
-        <img 
+        <Image 
           src={project.stencil_image || project.original_image} 
           alt={project.name} 
-          className="max-w-full max-h-full object-contain relative z-10 drop-shadow-sm group-hover:scale-105 transition-transform duration-300"
+          fill
+          className="p-4 object-contain relative z-10 drop-shadow-sm group-hover:scale-105 transition-transform duration-300"
+          unoptimized
         />
 
         {/* Overlay com ações */}

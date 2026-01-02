@@ -1,4 +1,5 @@
 import { PenTool, Sparkles, Map, Package } from 'lucide-react';
+import Image from 'next/image';
 import BeforeAfterSlider from './BeforeAfterSlider';
 
 export default function FeaturesShowcase() {
@@ -33,9 +34,11 @@ export default function FeaturesShowcase() {
             </ul>
           </div>
           <div className="bg-gradient-to-br from-emerald-900/30 to-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
-            <img 
+            <Image 
               src="/screenshots/editor-screenshot.png" 
               alt="Interface do Editor de Stencil StencilFlow"
+              width={1200}
+              height={800}
               className="w-full h-full object-cover"
             />
           </div>
@@ -45,9 +48,11 @@ export default function FeaturesShowcase() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="order-2 lg:order-1 relative group">
             <div className="bg-gradient-to-br from-purple-900/30 to-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
-              <img 
+              <Image 
                 src="/screenshots/generator-result.png" 
                 alt="Johnny Bravo gerado no StencilFlow"
+                width={1200}
+                height={800}
                 className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500"
               />
             </div>
@@ -57,9 +62,11 @@ export default function FeaturesShowcase() {
                 <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
                 <span className="text-[10px] uppercase tracking-wider text-purple-400 font-bold">Input do Usuário</span>
               </div>
-              <img 
+              <Image 
                 src="/screenshots/generator-prompt.png" 
                 alt="Prompt: Jhonny bravo realista surfando"
+                width={400}
+                height={300}
                 className="rounded-lg border border-zinc-800"
               />
               <p className="mt-3 text-xs text-zinc-400 italic">

@@ -9,6 +9,8 @@ import {
   withRateLimit,
 } from '@/lib/rate-limit';
 import { checkEditorLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: Request) {
   try {
@@ -76,11 +78,25 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
     return NextResponse.json({ error: 'Imagem não fornecida' }, { status: 400 });
   }
 
+  // 🚀 CORREÇÃO #1: Validar imagem ANTES de processar (previne OOM e erros Gemini)
+  const validation = await validateImage(image);
+  if (!validation.valid) {
+    logger.warn('[Generate] Validação falhou', { error: validation.error });
+    return NextResponse.json(
+      createValidationErrorResponse(validation),
+      { status: 413 }
+    );
+  }
+
   // VALIDAÇÃO: Garantir que style é um valor válido
   const validStyles = ['standard', 'perfect_lines'] as const;
   const selectedStyle = validStyles.includes(style) ? style : 'standard';
 
-  // Log para debug - verificar qual modo foi selecionado
+  logger.info('[Generate] Gerando stencil', {
+    ...validation.metadata,
+    style: selectedStyle,
+    isAdmin,
+  });
 
   // Gerar stencil no modo selecionado pelo usuário
   const stencilImage = await generateStencilFromImage(image, promptDetails, selectedStyle);
@@ -101,4 +117,6 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
   return NextResponse.json({ image: stencilImage });
 }
 
-export const maxDuration = 60;
+// 🚀 CORREÇÃO #2: Timeout aumentado de 60s → 120s
+// Gemini pode levar 90-120s para processar imagens grandes em produção
+export const maxDuration = 120;

@@ -3,23 +3,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { CheckoutService } from '@/lib/stripe';
 import { PRICES } from '@/lib/stripe';
-
-// Lista de emails admin
-const ADMIN_EMAILS = [
-  'erickrussomat@gmail.com',
-  'yurilojavirtual@gmail.com',
-];
-
-async function isAdmin(userId: string): Promise<boolean> {
-  const { data: user } = await supabaseAdmin
-    .from('users')
-    .select('email')
-    .eq('clerk_id', userId)
-    .single();
-
-  const userEmailLower = user?.email?.toLowerCase() || '';
-  return ADMIN_EMAILS.some(e => e.toLowerCase() === userEmailLower);
-}
+import { isAdmin } from '@/lib/auth'; // ✅ Importar função centralizada
 
 export async function POST(req: Request) {
   try {
@@ -29,9 +13,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    // 2. Verificar se é admin
+    // 2. Verificar se é admin (usando função centralizada)
     const userIsAdmin = await isAdmin(userId);
     if (!userIsAdmin) {
+      console.warn(`[Create Payment Link] ⚠️ Acesso negado para userId: ${userId}`);
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 

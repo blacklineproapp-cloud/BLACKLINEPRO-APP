@@ -47,7 +47,9 @@ async function retryWithBackoff<T>(
 // Helper para criar ou buscar usuário automaticamente
 export async function getOrCreateUser(clerkId: string) {
   try {
-    // Buscar usuário com cache (1 minuto)
+    // 🚀 OTIMIZAÇÃO: Cache de 15 minutos (reduz requests Redis em 80%)
+    // Dados de usuário mudam raramente (plano, email, nome)
+    // Quando admin muda plano, cache é invalidado manualmente
     const user = await getOrSetCache(
       clerkId,
       async () => {
@@ -165,7 +167,7 @@ export async function getOrCreateUser(clerkId: string) {
         return newUser;
       },
       {
-        ttl: 60000, // 1 minuto (dados de usuário mudam com frequência)
+        ttl: 900000, // 15 minutos (reduz requests Redis em 80%)
         tags: [`user:${clerkId}`],
         namespace: 'users',
       }

@@ -18,12 +18,17 @@ const ALLOW_FREE_GENERATIONS = process.env.ALLOW_FREE_GENERATIONS === 'true';
 // UPSTASH_REDIS_REST_URL=https://...
 // UPSTASH_REDIS_REST_TOKEN=...
 
-const redis = process.env.UPSTASH_REDIS_REST_URL
-  ? new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-    })
-  : null;
+// 🚀 OTIMIZAÇÃO: Desabilitar rate limiting em desenvolvimento
+// Economiza ~100k requests/mês do limite Upstash (500k/mês free)
+// Em dev, rate limiting não é necessário (você é o único usuário)
+const redis =
+  process.env.NODE_ENV === 'production' &&
+  process.env.UPSTASH_REDIS_REST_URL
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL!,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+      })
+    : null;
 
 // Se não tiver Upstash configurado, usar mock (desenvolvimento)
 const mockRedis = {

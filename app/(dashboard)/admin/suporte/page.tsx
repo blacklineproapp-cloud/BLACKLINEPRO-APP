@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { 
   MessageSquare, Filter, Search, RefreshCw, AlertCircle,
@@ -76,19 +76,7 @@ export default function AdminSuportePage() {
   const [priority, setPriority] = useState('all');
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    loadTickets();
-  }, [page, status, priority]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPage(1);
-      loadTickets();
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -110,7 +98,18 @@ export default function AdminSuportePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, status, priority, search]);
+
+  useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const pendingCount = (counts?.open || 0) + (counts?.in_progress || 0);
   const urgentCount = tickets.filter(t => t.priority === 'urgent' && t.status !== 'closed').length;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import StencilAdjustControls from '@/components/editor/StencilAdjustControls';
 
@@ -131,7 +132,7 @@ export default function EditorPage() {
   // Calculate height based on aspect ratio
   useEffect(() => {
     if (originalImage) {
-      const img = new Image();
+      const img = new window.Image();
       img.src = originalImage;
       img.onload = () => {
         const ratio = img.naturalWidth / img.naturalHeight;
@@ -623,12 +624,22 @@ export default function EditorPage() {
           
           {/* Original Image (before generation) */}
           {originalImage && !isProcessing && !currentStencil && (
-            <img src={originalImage} alt="Original" className="max-w-full max-h-[45vh] lg:max-h-[70vh] object-contain shadow-2xl rounded-lg" />
+            <div className="relative w-full h-[45vh] lg:h-[70vh]">
+              <Image
+                src={originalImage}
+                alt="Original"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+                className="object-contain shadow-2xl rounded-lg"
+                unoptimized
+                priority
+              />
+            </div>
           )}
 
           {/* Comparison View (after generation) */}
           {originalImage && !isProcessing && currentStencil && (
-            <div className="relative select-none shadow-2xl rounded-lg overflow-hidden bg-white max-w-full max-h-[45vh] lg:max-h-[70vh]">
+            <div className="relative select-none shadow-2xl rounded-lg overflow-hidden bg-white w-full h-[45vh] lg:h-[70vh]">
               {/* Mode Toggle */}
               <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-zinc-900/95 border border-zinc-700 rounded-full p-0.5 flex gap-0.5 shadow-xl">
                 <button
@@ -687,11 +698,15 @@ export default function EditorPage() {
               )}
 
               {/* Background (Original) */}
-              <img
+              <Image
                 src={originalImage}
                 alt="Original"
-                className="block max-w-full max-h-[45vh] lg:max-h-[70vh] object-contain"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+                className="block object-contain"
                 draggable={false}
+                unoptimized
+                priority
                 style={{
                   opacity: showOriginalPreview ? 1 : (comparisonMode === 'overlay' ? 0.5 : 1),
                   display: showOriginalPreview ? 'block' : 'block'
@@ -710,7 +725,16 @@ export default function EditorPage() {
                   opacity: showOriginalPreview ? 0 : (comparisonMode === 'overlay' ? sliderPosition / 100 : 1)
                 }}
               >
-                <img src={currentStencil} alt="Stencil" className="w-full h-full object-contain" draggable={false} />
+                <Image
+                  src={currentStencil}
+                  alt="Stencil"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+                  className="object-contain"
+                  draggable={false}
+                  unoptimized
+                  priority
+                />
               </div>
 
               {/* Wipe handle - Horizontal */}

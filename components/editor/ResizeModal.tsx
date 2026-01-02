@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, Maximize2, Info, Zap, Loader2 } from 'lucide-react';
 import { resizeImage, calculateDimensions } from '@/lib/image-resize';
 
@@ -74,6 +74,44 @@ export default function ResizeModal({
   const [actualWidthCm, setActualWidthCm] = useState(currentWidthCm);
   const [actualHeightCm, setActualHeightCm] = useState(currentHeightCm);
 
+  // Atualizar preview quando dimensões mudam
+  const updatePreview = useCallback((
+    origWidth: number,
+    origHeight: number,
+    widthCm: number,
+    heightCm: number,
+    dpi: number
+  ) => {
+    try {
+      // Validar inputs
+      if (!origWidth || !origHeight || !widthCm || widthCm <= 0) {
+        console.warn('[ResizeModal] Invalid dimensions for preview');
+        return;
+      }
+
+      const result = calculateDimensions(origWidth, origHeight, widthCm, heightCm, dpi);
+
+      const originalTotalPixels = origWidth * origHeight;
+      const finalTotalPixels = result.widthPx * result.heightPx;
+      const isUpscaling = finalTotalPixels > originalTotalPixels;
+      const algorithm = isUpscaling ? 'Lanczos3' : 'Mitchell';
+
+      // Calcular DPI original estimado usando actualWidthCm (tamanho real calculado)
+      const originalDpi = Math.round((origWidth / widthCm) * 2.54);
+
+      setPreviewInfo({
+        ...result,
+        isUpscaling,
+        algorithm,
+        originalDpi,
+        pixelChange: Math.round(((finalTotalPixels - originalTotalPixels) / originalTotalPixels) * 100)
+      });
+    } catch (error: any) {
+      console.error('Erro ao calcular preview:', error);
+      console.error('Params:', { origWidth, origHeight, widthCm, heightCm, dpi });
+    }
+  }, []);
+
   // Obter dimensões originais da imagem e calcular tamanho real
   useEffect(() => {
     if (!currentImage) return;
@@ -109,50 +147,13 @@ export default function ResizeModal({
       console.log('[ResizeModal] Imagem:', currentImage.substring(0, 100));
     };
     img.src = currentImage;
-  }, [currentImage]);
+  }, [currentImage, currentWidthCm, currentHeightCm, targetDpi, updatePreview]);
 
   // Atualizar preview quando dimensões mudam
   useEffect(() => {
     if (!originalDimensions) return;
     updatePreview(originalDimensions.width, originalDimensions.height, targetWidthCm, targetHeightCm, targetDpi);
-  }, [targetWidthCm, targetHeightCm, targetDpi, originalDimensions]);
-
-  const updatePreview = (
-    origWidth: number,
-    origHeight: number,
-    widthCm: number,
-    heightCm: number,
-    dpi: number
-  ) => {
-    try {
-      // Validar inputs
-      if (!origWidth || !origHeight || !widthCm || widthCm <= 0) {
-        console.warn('[ResizeModal] Invalid dimensions for preview');
-        return;
-      }
-
-      const result = calculateDimensions(origWidth, origHeight, widthCm, heightCm, dpi);
-
-      const originalTotalPixels = origWidth * origHeight;
-      const finalTotalPixels = result.widthPx * result.heightPx;
-      const isUpscaling = finalTotalPixels > originalTotalPixels;
-      const algorithm = isUpscaling ? 'Lanczos3' : 'Mitchell';
-
-      // Calcular DPI original estimado usando actualWidthCm (tamanho real calculado)
-      const originalDpi = Math.round((origWidth / widthCm) * 2.54);
-
-      setPreviewInfo({
-        ...result,
-        isUpscaling,
-        algorithm,
-        originalDpi,
-        pixelChange: Math.round(((finalTotalPixels - originalTotalPixels) / originalTotalPixels) * 100)
-      });
-    } catch (error: any) {
-      console.error('Erro ao calcular preview:', error);
-      console.error('Params:', { origWidth, origHeight, widthCm, heightCm, dpi });
-    }
-  };
+  }, [targetWidthCm, targetHeightCm, targetDpi, originalDimensions, updatePreview]);
 
   const handleResize = async () => {
     setIsProcessing(true);

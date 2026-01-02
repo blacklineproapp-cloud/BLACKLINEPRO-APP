@@ -2,6 +2,8 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import sharp from 'sharp';
 import { AdjustControls } from '@/lib/stencil-types';
+import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
+import { logger } from '@/lib/logger';
 
 /**
  * API Route: Ajustar Stencil com Sharp.js (SIMPLIFICADO E OTIMIZADO)
@@ -31,21 +33,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Controles não fornecidos' }, { status: 400 });
     }
 
-    // Converter base64 para Buffer
+    // 🚀 CORREÇÃO #1: Validar imagem ANTES de criar buffer (previne OOM)
+    const validation = await validateImage(image);
+    if (!validation.valid) {
+      logger.warn('[Adjust] Validação falhou', { error: validation.error });
+      return NextResponse.json(
+        createValidationErrorResponse(validation),
+        { status: 413 }
+      );
+    }
+
+    // Converter base64 para Buffer (agora seguro)
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
     const imageBuffer = Buffer.from(base64Data, 'base64');
 
-    // Validar imagem
-    try {
-      const metadata = await sharp(imageBuffer).metadata();
-      console.log('[Adjust] Processando imagem:', {
-        width: metadata.width,
-        height: metadata.height,
-        format: metadata.format
-      });
-    } catch (error) {
-      return NextResponse.json({ error: 'Imagem inválida' }, { status: 400 });
-    }
+    logger.info('[Adjust] Processando imagem', validation.metadata);
 
     // =========================================================================
     // PROCESSAR AJUSTES (ORDEM CORRETA E INDEPENDENTE)

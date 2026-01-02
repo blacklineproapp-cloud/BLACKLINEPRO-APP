@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import DownloadControls from '@/components/split-a4/DownloadControls';
 import { Wand2, Palette, Upload, Download, Copy, Check, ArrowRight, X, Droplet, ChevronUp, ChevronDown, Grid3x3, Image as ImageIcon, ChevronLeft, ChevronRight, FlipHorizontal, FlipVertical, CheckCircle, XCircle } from 'lucide-react';
@@ -194,7 +195,7 @@ export default function ToolsPage() {
     // Tentar método canvas primeiro (mais rápido)
     try {
       return await new Promise<string>((resolve, reject) => {
-        const img = new Image();
+        const img = new window.Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
           const canvas = document.createElement('canvas');
@@ -244,7 +245,7 @@ export default function ToolsPage() {
         setColorResult(null);
 
         // Carregar imagem para obter dimensões reais
-        const img = new Image();
+        const img = new window.Image();
         img.onload = () => {
           const aspectRatio = img.width / img.height;
           setImageAspectRatio(aspectRatio);
@@ -259,7 +260,7 @@ export default function ToolsPage() {
   // ✅ Helper de segurança extrema para evitar Erro 413 (Payload Too Large)
   const compressImageIfNeeded = async (base64: string): Promise<string> => {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         // 1024px é o tamanho perfeito: leve para o servidor e ideal para a IA fazer o upscale
         const MAX_DIM = 1024; 
@@ -448,14 +449,7 @@ export default function ToolsPage() {
     setCurrentGalleryPage(0);
   };
 
-  // Carregar galeria quando o modo Split A4 e source=gallery
-  useEffect(() => {
-    if (activeMode === 'SPLIT_A4' && imageSource === 'gallery' && galleryImages.length === 0) {
-      loadGallery();
-    }
-  }, [activeMode, imageSource]);
-
-  const loadGallery = async () => {
+  const loadGallery = useCallback(async () => {
     setLoadingGallery(true);
     try {
       const res = await fetch('/api/gallery');
@@ -468,7 +462,14 @@ export default function ToolsPage() {
     } finally {
       setLoadingGallery(false);
     }
-  };
+  }, []);
+
+  // Carregar galeria quando o modo Split A4 e source=gallery
+  useEffect(() => {
+    if (activeMode === 'SPLIT_A4' && imageSource === 'gallery' && galleryImages.length === 0) {
+      loadGallery();
+    }
+  }, [activeMode, imageSource, galleryImages, loadGallery]);
 
   const handleUnlock = async () => {
     window.location.href = '/pricing';
@@ -730,7 +731,7 @@ export default function ToolsPage() {
                                         setSplitResult(null);
 
                                         // Carregar imagem da galeria para obter dimensões
-                                        const image = new Image();
+                                        const image = new window.Image();
                                         image.onload = () => {
                                           const aspectRatio = image.width / image.height;
                                           setImageAspectRatio(aspectRatio);
@@ -744,7 +745,13 @@ export default function ToolsPage() {
                                     }}
                                     className="aspect-square bg-zinc-950 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
                                   >
-                                    <img src={img.url} alt="Gallery" className="w-full h-full object-cover" />
+                                    <Image 
+                                      src={img.url} 
+                                      alt="Gallery" 
+                                      fill
+                                      className="object-cover"
+                                      unoptimized
+                                    />
                                   </div>
                                 ))}
                             </div>
@@ -799,10 +806,12 @@ export default function ToolsPage() {
                   </div>
                 </div>
                 <div className="flex-1 bg-zinc-950 rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-hidden relative min-h-[150px] lg:min-h-0">
-                  <img 
+                  <Image 
                     src={inputImage} 
                     alt="Input" 
-                    className="max-w-full max-h-[200px] lg:max-h-[400px] object-contain rounded shadow-lg transition-transform"
+                    fill
+                    className="object-contain rounded shadow-lg transition-transform !relative"
+                    unoptimized
                     style={{ 
                       transform: `${flipHorizontal ? 'scaleX(-1)' : ''} ${flipVertical ? 'scaleY(-1)' : ''}`.trim() || 'none'
                     }}
@@ -1159,7 +1168,13 @@ export default function ToolsPage() {
                       </a>
                     </div>
                     <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-[200px] lg:min-h-0">
-                      <img src={resultImage} alt="Enhanced" className="max-w-full max-h-full object-contain rounded shadow-2xl" />
+                      <Image 
+                        src={resultImage} 
+                        alt="Enhanced" 
+                        fill
+                        className="object-contain rounded shadow-2xl !relative"
+                        unoptimized
+                      />
                     </div>
                   </div>
                 )}
@@ -1176,7 +1191,13 @@ export default function ToolsPage() {
                       </a>
                     </div>
                     <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-[200px] lg:min-h-0">
-                      <img src={resultImage} alt="No Background" className="max-w-full max-h-full object-contain rounded shadow-2xl" />
+                      <Image 
+                        src={resultImage} 
+                        alt="No Background" 
+                        fill
+                        className="object-contain rounded shadow-2xl !relative"
+                        unoptimized
+                      />
                     </div>
                   </div>
                 )}
@@ -1249,10 +1270,12 @@ export default function ToolsPage() {
                         {splitResult.pages?.map((page: any) => (
                           <div key={page.pageNumber} className="bg-zinc-900 border border-zinc-800 rounded-lg p-2 hover:border-purple-500 transition-all group">
                             <div className="aspect-[210/297] bg-white rounded overflow-hidden mb-2 relative">
-                              <img
+                              <Image
                                 src={page.imageData}
                                 alt={`Página ${page.pageNumber}`}
-                                className="w-full h-full object-contain"
+                                fill
+                                className="object-contain"
+                                unoptimized
                               />
                               <div className="absolute top-1 right-1 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg">
                                 #{page.pageNumber}
