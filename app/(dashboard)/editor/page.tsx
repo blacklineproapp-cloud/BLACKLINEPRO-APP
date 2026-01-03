@@ -13,6 +13,7 @@ import { useEditorHistory } from '@/hooks/useEditorHistory';
 import { DEFAULT_ADJUST_CONTROLS, type AdjustControls } from '@/lib/stencil-types';
 import { applyAdjustments, resetControls } from '@/lib/stencil-adjustments';
 import { storage } from '@/lib/client-storage';
+import { compressIfNeeded } from '@/lib/image-compress';
 
 type Style = 'standard' | 'perfect_lines';
 type ComparisonMode = 'wipe' | 'overlay' | 'split';
@@ -366,12 +367,15 @@ export default function EditorPage() {
     }
 
     try {
+      // 🔥 COMPRESSÃO: Evitar erro 413 (Payload Too Large)
+      const compressedImage = await compressIfNeeded(originalImage);
+      
       const res = await fetch('/api/stencil/generate', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          image: originalImage,
+          image: compressedImage,
           style: selectedStyle,
           promptDetails: promptText,
           widthCm, // Enviar tamanho
@@ -516,14 +520,18 @@ export default function EditorPage() {
   // Auto-save após gerar
   const autoSaveProject = async (stencilImage: string) => {
     try {
+      // 🔥 COMPRESSÃO: Evitar erro 413
+      const compressedOriginal = await compressIfNeeded(originalImage!);
+      const compressedStencil = await compressIfNeeded(stencilImage);
+      
       const res = await fetch('/api/projects', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: `Estêncil ${new Date().toLocaleTimeString()}`,
-          originalImage,
-          stencilImage,
+          originalImage: compressedOriginal,
+          stencilImage: compressedStencil,
           style: selectedStyle,
           widthCm,
           heightCm,
@@ -550,14 +558,18 @@ export default function EditorPage() {
 
     setIsSaving(true);
     try {
+      // 🔥 COMPRESSÃO: Evitar erro 413
+      const compressedOriginal = await compressIfNeeded(originalImage);
+      const compressedStencil = await compressIfNeeded(currentStencil);
+      
       const res = await fetch('/api/projects', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          originalImage,
-          stencilImage: currentStencil,
+          originalImage: compressedOriginal,
+          stencilImage: compressedStencil,
           style: selectedStyle,
           widthCm,
           heightCm,

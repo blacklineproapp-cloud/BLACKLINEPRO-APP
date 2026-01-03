@@ -1,4 +1,4 @@
-import { PenTool, Sparkles, Map, Package } from 'lucide-react';
+import { PenTool, Sparkles, Map, Package, Users } from 'lucide-react';
 import Image from 'next/image';
 import BeforeAfterSlider from './BeforeAfterSlider';
 
@@ -22,8 +22,9 @@ export default function FeaturesShowcase() {
               {[
                 'Controle de intensidade preciso',
                 'Ajuste de tamanho em centímetros',
+                'Ajustes avançados (brilho, contraste, nitidez)',
                 'Comparação antes/depois',
-                'Projetos ilimitados salvos',
+                'Galeria de projetos ilimitados',
                 'Download em alta qualidade'
               ].map((feature, i) => (
                 <li key={i} className="flex items-start gap-3 text-zinc-300">
@@ -182,7 +183,7 @@ export default function FeaturesShowcase() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 title: 'Color Match',
@@ -198,6 +199,11 @@ export default function FeaturesShowcase() {
                 title: 'Aprimorar 4K',
                 description: 'Aprimoramento inteligente mantendo qualidade',
                 icon: '✨'
+              },
+              {
+                title: 'Remover Fundo',
+                description: 'Remoção automática de fundo com IA avançada',
+                icon: '🎭'
               }
             ].map((tool, i) => (
               <div
@@ -209,6 +215,66 @@ export default function FeaturesShowcase() {
                 <p className="text-sm text-zinc-400">{tool.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Feature 5: Organizações (Teams) - Imagem direita */}
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div>
+            <div className="w-14 h-14 rounded-xl bg-indigo-600/10 border border-indigo-600/20 flex items-center justify-center mb-6">
+              <Users className="text-indigo-500" size={28} />
+            </div>
+            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
+              Trabalhe em Equipe com Organizações
+            </h2>
+            <p className="text-lg text-zinc-400 mb-8">
+              Crie organizações para seu estúdio, adicione membros da equipe e compartilhe créditos. Perfeito para estúdios com múltiplos tatuadores trabalhando juntos.
+            </p>
+            <ul className="space-y-3">
+              {[
+                'Até 5 membros por organização',
+                'Compartilhamento de créditos entre membros',
+                'Gerenciamento de permissões (owner/member)',
+                'Histórico centralizado de projetos',
+                'Planos Studio e Enterprise disponíveis'
+              ].map((feature, i) => (
+                <li key={i} className="flex items-start gap-3 text-zinc-300">
+                  <span className="text-indigo-500 mt-1">✓</span>
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="bg-gradient-to-br from-indigo-900/30 to-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl p-8">
+            {/* Placeholder visual para organizações */}
+            <div className="space-y-4">
+              <div className="bg-zinc-900/80 border border-indigo-500/30 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-full bg-indigo-600/20 border border-indigo-500/50 flex items-center justify-center">
+                    <Users className="text-indigo-400" size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-white font-semibold">Estúdio Ink Masters</h4>
+                    <p className="text-xs text-zinc-400">5 membros • Plano Studio</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {['João Silva (Owner)', 'Maria Santos', 'Pedro Costa', 'Ana Oliveira', 'Lucas Ferreira'].map((name, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm text-zinc-300 bg-zinc-800/50 rounded px-3 py-2">
+                      <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs text-indigo-300">
+                        {name[0]}
+                      </div>
+                      <span>{name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-zinc-900/50 border border-zinc-700 rounded-lg p-3 text-center">
+                <p className="text-sm text-zinc-400">
+                  <span className="text-indigo-400 font-bold">500 créditos</span> compartilhados
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
