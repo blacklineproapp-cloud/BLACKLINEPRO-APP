@@ -6,14 +6,14 @@
 /**
  * Comprime uma imagem base64 para um tamanho máximo
  * @param base64 - Imagem em base64 (data:image/...;base64,...)
- * @param maxSizeKB - Tamanho máximo em KB (padrão: 3000 = 3MB)
- * @param quality - Qualidade inicial (0.0-1.0, padrão: 0.9)
+ * @param maxSizeKB - Tamanho máximo em KB (padrão: 2500 = 2.5MB)
+ * @param quality - Qualidade inicial (0.0-1.0, padrão: 0.85)
  * @returns Promise<string> - Imagem comprimida em base64
  */
 export async function compressImage(
   base64: string,
-  maxSizeKB: number = 3000,
-  quality: number = 0.9
+  maxSizeKB: number = 2500,
+  quality: number = 0.85
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
@@ -43,32 +43,43 @@ export async function compressImage(
             return;
           }
 
-          // Calcular nova dimensão (reduzir proporcionalmente)
-          const scaleFactor = Math.sqrt(maxSizeKB / currentSizeKB);
-          const newWidth = Math.floor(img.width * scaleFactor);
-          const newHeight = Math.floor(img.height * scaleFactor);
+          // 🔧 CORREÇÃO: Reduzir dimensões AGRESSIVAMENTE se imagem muito grande
+          let targetWidth = img.width;
+          let targetHeight = img.height;
 
-          console.log('[Compress] Redimensionando:', {
-            original: `${img.width}x${img.height}`,
-            novo: `${newWidth}x${newHeight}`,
-            scaleFactor: scaleFactor.toFixed(2)
-          });
+          // Se maior que 4MB, reduzir dimensões primeiro
+          if (currentSizeKB > 4000) {
+            const reductionFactor = Math.sqrt(2500 / currentSizeKB); // Reduzir para ~2.5MB
+            targetWidth = Math.floor(img.width * reductionFactor);
+            targetHeight = Math.floor(img.height * reductionFactor);
+            
+            console.log('[Compress] 🔥 Imagem MUITO grande, reduzindo dimensões:', {
+              original: `${img.width}x${img.height}`,
+              novo: `${targetWidth}x${targetHeight}`,
+              fator: reductionFactor.toFixed(2)
+            });
+          }
 
           // Configurar canvas
-          canvas.width = newWidth;
-          canvas.height = newHeight;
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
 
-          // Desenhar imagem redimensionada
-          ctx.drawImage(img, 0, 0, newWidth, newHeight);
+          // Desenhar imagem redimensionada com suavização
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
-          // Tentar comprimir com qualidade decrescente até atingir o tamanho
+          // 🔧 CORREÇÃO CRÍTICA: Usar JPEG em vez de PNG para compressão real
+          // PNG ignora o parâmetro quality!
           let currentQuality = quality;
           let attempts = 0;
-          const maxAttempts = 5;
+          const maxAttempts = 8;
 
           const tryCompress = (): string => {
             attempts++;
-            const compressed = canvas.toDataURL('image/png', currentQuality);
+            
+            // USAR JPEG para compressão (PNG não comprime!)
+            const compressed = canvas.toDataURL('image/jpeg', currentQuality);
             const compressedSizeKB = Math.round((compressed.length * 0.75) / 1024);
 
             console.log('[Compress] Tentativa', attempts, '- Qualidade:', currentQuality.toFixed(2), '- Tamanho:', compressedSizeKB, 'KB');
@@ -79,9 +90,9 @@ export async function compressImage(
               return compressed;
             }
 
-            // Reduzir qualidade e tentar novamente
-            currentQuality -= 0.1;
-            if (currentQuality < 0.5) currentQuality = 0.5; // Mínimo de qualidade
+            // Reduzir qualidade mais agressivamente
+            currentQuality -= 0.15;
+            if (currentQuality < 0.3) currentQuality = 0.3; // Mínimo de qualidade
             return tryCompress();
           };
 
@@ -113,10 +124,11 @@ export async function compressImage(
 export async function compressIfNeeded(base64: string): Promise<string> {
   const sizeKB = Math.round((base64.length * 0.75) / 1024);
 
-  // Limite de 3MB (Vercel aceita até 4.5MB, mas deixamos margem)
-  if (sizeKB > 3000) {
+  // 🔧 CORREÇÃO: Limite mais conservador (2.5MB em vez de 3MB)
+  // Railway/Vercel têm limite de ~4.5MB, mas deixamos margem para headers
+  if (sizeKB > 2500) {
     console.log('[Compress] Imagem muito grande (' + sizeKB + 'KB), comprimindo...');
-    return await compressImage(base64, 3000);
+    return await compressImage(base64, 2500, 0.85);
   }
 
   return base64;
