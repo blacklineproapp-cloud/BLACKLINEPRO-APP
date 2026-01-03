@@ -9,6 +9,7 @@ import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { CustomerService, SubscriptionService } from '@/lib/stripe';
 import { getPlanFromPriceId } from '@/lib/billing';
+import { createOrganization } from '@/lib/organizations';
 import Stripe from 'stripe';
 
 export async function POST(req: Request) {
@@ -330,6 +331,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 /**
  * customer.subscription.created
  * Quando nova assinatura é criada
+ * ATUALIZADO: Cria organização automaticamente para Studio/Enterprise
  */
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
 
@@ -365,17 +367,74 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     metadata: subscription.metadata
   });
 
-  // Atualizar usuário
-  await supabaseAdmin
-    .from('users')
-    .update({
-      plan: planType,
-      subscription_status: subscription.status,
-      subscription_id: subscription.id,
-      is_paid: true,
-      tools_unlocked: planType === 'pro' || planType === 'studio' || planType === 'enterprise'
-    })
-    .eq('id', customer.user_id);
+  // =====================================================
+  // MULTI-USER: Criar organização para Studio/Enterprise
+  // =====================================================
+  if (planType === 'studio' || planType === 'enterprise') {
+    // Buscar dados completos do usuário
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('id, name, email')
+      .eq('id', customer.user_id)
+      .single();
+
+    if (user) {
+      // Criar organização automaticamente
+      const orgName = user.name
+        ? `${user.name}'s ${planType === 'studio' ? 'Studio' : 'Enterprise'}`
+        : `${user.email.split('@')[0]}'s ${planType === 'studio' ? 'Studio' : 'Enterprise'}`;
+
+      const result = await createOrganization({
+        name: orgName,
+        plan: planType as 'studio' | 'enterprise',
+        owner_id: user.id,
+        subscription_id: subscription.id,
+      });
+
+      if (result.success) {
+        console.log(`[Webhook] ✅ Organization created for ${planType}: ${result.organization?.id}`);
+
+        // Atualizar usuário (sem plan/subscription_id pois agora está na org)
+        await supabaseAdmin
+          .from('users')
+          .update({
+            subscription_status: subscription.status,
+            is_paid: true,
+            tools_unlocked: true
+          })
+          .eq('id', customer.user_id);
+      } else {
+        console.error(`[Webhook] ❌ Failed to create organization: ${result.error}`);
+        // Fallback: atualizar usuário normalmente
+        await supabaseAdmin
+          .from('users')
+          .update({
+            plan: planType,
+            subscription_status: subscription.status,
+            subscription_id: subscription.id,
+            is_paid: true,
+            tools_unlocked: true
+          })
+          .eq('id', customer.user_id);
+      }
+    }
+  }
+  // =====================================================
+  // PLANOS INDIVIDUAIS: Free/Starter/Pro
+  // =====================================================
+  else {
+    // Atualizar usuário (plano individual)
+    await supabaseAdmin
+      .from('users')
+      .update({
+        plan: planType,
+        subscription_status: subscription.status,
+        subscription_id: subscription.id,
+        is_paid: true,
+        tools_unlocked: planType === 'pro'
+      })
+      .eq('id', customer.user_id);
+  }
 
   // TODO: Enviar email de boas-vindas
   // await sendWelcomeEmail(customer.email, customer.nome);
@@ -405,6 +464,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 /**
  * customer.subscription.deleted
  * Quando assinatura é cancelada/deletada
+ * ATUALIZADO: Cancela organização para Studio/Enterprise
  */
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
@@ -420,16 +480,48 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     });
   }
 
-  // Reverter usuário para plano free
-  await supabaseAdmin
-    .from('users')
-    .update({
-      subscription_status: 'canceled',
-      is_paid: false,
-      plan: 'free',
-      tools_unlocked: false
-    })
-    .eq('subscription_id', subscription.id);
+  // =====================================================
+  // MULTI-USER: Cancelar organização se existir
+  // =====================================================
+  const { data: organization } = await supabaseAdmin
+    .from('organizations')
+    .select('*')
+    .eq('subscription_id', subscription.id)
+    .single();
+
+  if (organization) {
+    // Atualizar status da organização
+    await supabaseAdmin
+      .from('organizations')
+      .update({
+        subscription_status: 'canceled',
+        subscription_expires_at: new Date().toISOString()
+      })
+      .eq('id', organization.id);
+
+    console.log(`[Webhook] ✅ Organization subscription canceled: ${organization.id}`);
+
+    // Atualizar usuário (owner) sem reverter para free
+    await supabaseAdmin
+      .from('users')
+      .update({
+        subscription_status: 'canceled',
+        is_paid: false,
+        tools_unlocked: false
+      })
+      .eq('id', organization.owner_id);
+  } else {
+    // Sem organização = plano individual, reverter para free
+    await supabaseAdmin
+      .from('users')
+      .update({
+        subscription_status: 'canceled',
+        is_paid: false,
+        plan: 'free',
+        tools_unlocked: false
+      })
+      .eq('subscription_id', subscription.id);
+  }
 
   // TODO: Enviar email de cancelamento
   // await sendCancellationEmail(customer.email, customer.nome);

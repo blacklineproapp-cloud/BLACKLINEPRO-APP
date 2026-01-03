@@ -1,9 +1,11 @@
 import { supabaseAdmin } from './supabase';
+import { getActiveOrganization, incrementOrganizationUsage, decrementOrganizationCredits } from './organizations';
+import type { Organization } from './types/organization';
 
 /**
  * Sistema de Créditos StencilFlow
  *
- * ATUALIZADO: Dezembro 2025 - Custos REAIS da API Gemini 2.5 Flash Image
+ * ATUALIZADO: Janeiro 2026 - Suporte a Multi-Usuários (Organizations)
  *
  * Custo por operação (em créditos):
  * - Topográfico: 1 crédito
@@ -16,6 +18,11 @@ import { supabaseAdmin } from './supabase';
  * - Custo: $0.039 USD/imagem (~R$ 0,195 com dólar a R$ 5,00)
  * - Free Tier: 500 requisições/dia (Google AI Studio)
  * - Produção: Vertex AI (sem free tier)
+ *
+ * MULTI-USUÁRIOS:
+ * - Studio/Enterprise podem ter organizações
+ * - Organizações compartilham limites entre membros
+ * - Sistema verifica organização primeiro, depois usuário individual
  */
 
 export type OperationType = 'topographic' | 'lines' | 'ia_gen' | 'enhance' | 'color_match';
@@ -98,68 +105,108 @@ export const PLAN_LIMITS: Record<PlanType, Record<OperationType, number | null>>
   }
 };
 
-// Lista de emails admin com acesso ilimitado
+// =====================================================
+// MULTI-USER SUPPORT: Determinar source de créditos
+// =====================================================
+
+interface UsageSource {
+  type: 'organization' | 'user';
+  id: string;
+  plan: PlanType;
+  credits: number;
+  usage_this_month: Record<string, number>;
+  subscription_status?: string;
+  subscription_expires_at?: string | null;
+}
+
+/**
+ * Determina se deve usar organização ou usuário individual
+ * Priority: Organization (active) > User (individual)
+ */
+async function getUsageSource(clerkId: string): Promise<UsageSource | null> {
+  try {
+    // 1. Buscar usuário
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('id, clerk_id, plan, credits, usage_this_month, subscription_status, subscription_expires_at')
+      .eq('clerk_id', clerkId)
+      .single();
+
+    if (userError || !user) {
+      console.error('[getUsageSource] User not found:', clerkId);
+      return null;
+    }
+
+    // 2. Verificar se usuário está em organização ativa
+    const org = await getActiveOrganization(user.id);
+
+    if (org) {
+      // Usar organização (compartilhado)
+      return {
+        type: 'organization',
+        id: org.id,
+        plan: org.plan as PlanType,
+        credits: org.credits || 0,
+        usage_this_month: org.usage_this_month || {},
+        subscription_status: org.subscription_status,
+        subscription_expires_at: org.subscription_expires_at,
+      };
+    }
+
+    // 3. Usar plano individual
+    // Verificar se subscription expirou
+    let effectivePlan = user.plan as PlanType;
+    if (user.subscription_expires_at) {
+      const isExpired = new Date(user.subscription_expires_at) < new Date();
+      if (isExpired) {
+        effectivePlan = 'free';
+      }
+    }
+
+    return {
+      type: 'user',
+      id: user.id,
+      plan: effectivePlan,
+      credits: user.credits || 0,
+      usage_this_month: user.usage_this_month || {},
+      subscription_status: user.subscription_status,
+      subscription_expires_at: user.subscription_expires_at,
+    };
+  } catch (error) {
+    console.error('[getUsageSource] Fatal error:', error);
+    return null;
+  }
+}
 
 /**
  * Verifica se usuário tem créditos/limites suficientes
+ * ATUALIZADO: Suporta organizations
  */
 export async function canUseOperation(
   userId: string,
   operation: OperationType
-): Promise<{ allowed: boolean; reason?: string }> {
-  const { data: user, error } = await supabaseAdmin
-    .from('users')
-    .select('email, plan, credits, usage_this_month, subscription_expires_at, subscription_status')
-    .eq('clerk_id', userId)
-    .single();
+): Promise<{ allowed: boolean; reason?: string; source?: 'organization' | 'user' }> {
+  // Usar novo sistema de usage source
+  const source = await getUsageSource(userId);
 
-  if (error || !user) {
+  if (!source) {
     return { allowed: false, reason: 'Usuário não encontrado' };
   }
 
-  // 🔒 VERIFICAR EXPIRAÇÃO DA ASSINATURA
-  if (user.subscription_expires_at) {
-    const expiresAt = new Date(user.subscription_expires_at);
-    const now = new Date();
-    
-    if (expiresAt < now) {
-      // Assinatura expirou! Atualizar status e bloquear
-      await supabaseAdmin
-        .from('users')
-        .update({ 
-          subscription_status: 'expired',
-          is_paid: false,
-          plan: 'free'
-        })
-        .eq('clerk_id', userId);
-      
-      return { 
-        allowed: false, 
-        reason: 'Sua assinatura expirou. Renove para continuar gerando estêncils.' 
-      };
-    }
-  }
-
-  // Validar plano com fallback seguro - FREE para não pagantes!
-  let plan = user.plan as PlanType;
+  // Validar plano com fallback seguro
+  let plan = source.plan;
   if (!plan || !['free', 'starter', 'pro', 'studio', 'enterprise'].includes(plan)) {
-    plan = 'free'; // Default seguro - usuário não pagante!
-
-    // Atualizar no banco para evitar erro futuro
-    await supabaseAdmin
-      .from('users')
-      .update({ plan: 'free' })
-      .eq('clerk_id', userId);
+    plan = 'free';
   }
 
   // Enterprise e Studio = ilimitado
   if (plan === 'enterprise' || plan === 'studio') {
-    console.log(`[Credits] Plano ilimitado para: ${user.email}`);
-    return { allowed: true };
+    console.log(`[Credits] Plano ilimitado (${source.type}): ${plan}`);
+    return { allowed: true, source: source.type };
   }
 
-  const credits = user.credits || 0;
-  const usage = (user.usage_this_month || {}) as Record<OperationType, number>;
+  const credits = source.credits || 0;
+  const usage = source.usage_this_month as Record<OperationType, number>;
 
   // Verificar limite mensal do plano
   const planLimits = PLAN_LIMITS[plan];
@@ -176,50 +223,43 @@ export async function canUseOperation(
     const creditsNeeded = CREDITS_COST[operation];
 
     if (credits >= creditsNeeded) {
-      return { allowed: true }; // Vai usar créditos avulsos
+      return { allowed: true, source: source.type }; // Vai usar créditos avulsos
     }
 
     return {
       allowed: false,
       reason: `Limite mensal atingido (${limit}). Compre créditos ou faça upgrade.`,
+      source: source.type,
     };
   }
 
   // Dentro do limite do plano
-  return { allowed: true };
+  return { allowed: true, source: source.type };
 }
 
 /**
  * Consome créditos/limite ao realizar operação
+ * ATUALIZADO: Suporta organizations
  */
 export async function consumeOperation(
   userId: string,
   operation: OperationType
 ): Promise<{ success: boolean; error?: string }> {
-  const { data: user, error: fetchError } = await supabaseAdmin
-    .from('users')
-    .select('plan, credits, usage_this_month')
-    .eq('clerk_id', userId)
-    .single();
+  // Usar novo sistema de usage source
+  const source = await getUsageSource(userId);
 
-  if (fetchError || !user) {
+  if (!source) {
     return { success: false, error: 'Usuário não encontrado' };
   }
 
-  // Validar plano com fallback seguro - FREE para não pagantes!
-  let plan = user.plan as PlanType;
-  if (!plan || !['free', 'starter', 'pro', 'studio'].includes(plan)) {
-    plan = 'free'; // Default seguro - usuário não pagante!
-
-    // Atualizar no banco
-    await supabaseAdmin
-      .from('users')
-      .update({ plan: 'free' })
-      .eq('clerk_id', userId);
+  // Validar plano
+  let plan = source.plan;
+  if (!plan || !['free', 'starter', 'pro', 'studio', 'enterprise'].includes(plan)) {
+    plan = 'free';
   }
 
-  const credits = user.credits || 0;
-  const usage = (user.usage_this_month || {}) as Record<OperationType, number>;
+  const credits = source.credits || 0;
+  const usage = source.usage_this_month as Record<OperationType, number>;
   const currentUsage = usage[operation] || 0;
 
   const planLimits = PLAN_LIMITS[plan];
@@ -234,8 +274,8 @@ export async function consumeOperation(
   let newUsage = { ...usage };
   let usedCredits = 0;
 
-  // Studio = ilimitado, apenas registra uso
-  if (plan === 'studio') {
+  // Enterprise/Studio = ilimitado, apenas registra uso
+  if (plan === 'enterprise' || plan === 'studio') {
     newUsage[operation] = currentUsage + 1;
   }
   // Dentro do limite do plano
@@ -252,28 +292,58 @@ export async function consumeOperation(
     usedCredits = creditsNeeded;
   }
 
-  // Atualizar banco
-  const { error: updateError } = await supabaseAdmin
-    .from('users')
-    .update({
-      credits: newCredits,
-      usage_this_month: newUsage,
-    })
-    .eq('clerk_id', userId);
+  // Atualizar banco (organization ou user)
+  if (source.type === 'organization') {
+    // Atualizar organização
+    const updateSuccess = await incrementOrganizationUsage(source.id, operation);
+    if (!updateSuccess) {
+      return { success: false, error: 'Erro ao atualizar uso da organização' };
+    }
 
-  if (updateError) {
-    return { success: false, error: 'Erro ao atualizar créditos' };
+    // Deduzir créditos se necessário
+    if (usedCredits > 0) {
+      const creditSuccess = await decrementOrganizationCredits(source.id);
+      if (!creditSuccess) {
+        return { success: false, error: 'Créditos insuficientes' };
+      }
+    }
+
+    // Log com organization_id
+    await supabaseAdmin.from('usage_logs').insert({
+      user_id: userId,
+      organization_id: source.id,
+      source_type: 'organization',
+      operation_type: operation,
+      credits_used: usedCredits,
+      cost_usd: USD_COST[operation],
+      metadata: { plan, limit, current_usage: currentUsage },
+    });
+  } else {
+    // Atualizar usuário individual
+    const { error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({
+        credits: newCredits,
+        usage_this_month: newUsage,
+      })
+      .eq('id', source.id);
+
+    if (updateError) {
+      return { success: false, error: 'Erro ao atualizar créditos' };
+    }
+
+    // Log sem organization_id
+    await supabaseAdmin.from('usage_logs').insert({
+      user_id: userId,
+      source_type: 'user',
+      operation_type: operation,
+      credits_used: usedCredits,
+      cost_usd: USD_COST[operation],
+      metadata: { plan, limit, current_usage: currentUsage },
+    });
   }
 
-  // Registrar log de uso
-  await supabaseAdmin.from('usage_logs').insert({
-    user_id: userId,
-    operation_type: operation,
-    credits_used: usedCredits,
-    cost_usd: USD_COST[operation],
-    metadata: { plan, limit, current_usage: currentUsage },
-  });
-
+  console.log(`[consumeOperation] ✅ ${operation} consumed (${source.type}): ${userId}`);
   return { success: true };
 }
 
@@ -313,12 +383,23 @@ export async function addCredits(
 
 /**
  * Reseta limites mensais (executar todo dia 1 via cron)
+ * ATUALIZADO: Reseta também organizações
  */
 export async function resetMonthlyLimits(): Promise<void> {
+  // Resetar usuários individuais
   await supabaseAdmin
     .from('users')
     .update({ usage_this_month: {} })
-    .in('plan', ['starter', 'pro']); // Studio não tem limites (ilimitado)
+    .in('plan', ['starter', 'pro']); // Studio/Enterprise não resetam (ilimitado)
+
+  // Resetar organizações (se tivessem limites, mas Studio/Enterprise são ilimitados)
+  // Mantém por consistência
+  await supabaseAdmin
+    .from('organizations')
+    .update({ usage_this_month: {} })
+    .in('plan', ['studio', 'enterprise']);
+
+  console.log('[resetMonthlyLimits] ✅ Monthly limits reset');
 }
 
 /**

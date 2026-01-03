@@ -55,14 +55,12 @@ export async function GET(req: Request) {
       .select('*', { count: 'exact', head: true })
       .gte('last_active_at', sevenDaysAgo);
 
-    // Usuários online (últimos 5 minutos)
+    // Usuários online (últimos 5 minutos baseado em last_active_at)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const { data: onlineUsers } = await supabaseAdmin
-      .from('active_sessions')
-      .select('user_id', { count: 'exact' })
-      .gte('last_activity', fiveMinutesAgo);
-
-    const uniqueOnlineUsers = new Set(onlineUsers?.map(s => s.user_id)).size;
+    const { count: onlineUsersCount } = await supabaseAdmin
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .gte('last_active_at', fiveMinutesAgo);
 
     // Usuários bloqueados
     const { count: blockedUsers } = await supabaseAdmin
@@ -77,13 +75,14 @@ export async function GET(req: Request) {
     const { data: planStats } = await supabaseAdmin
       .from('users')
       .select('plan')
-      .in('plan', ['free', 'starter', 'pro', 'studio']);
+      .in('plan', ['free', 'starter', 'pro', 'studio', 'enterprise']);
 
     const planCounts = {
       free: 0,
       starter: 0,
       pro: 0,
       studio: 0,
+      enterprise: 0,
     };
 
     planStats?.forEach(u => {
@@ -172,6 +171,53 @@ export async function GET(req: Request) {
     });
 
     // =========================================================================
+    // CUSTOS DE IA (DIÁRIO, SEMANAL, MENSAL, ANUAL)
+    // =========================================================================
+
+    // Hoje
+    const { data: todayCosts } = await supabaseAdmin
+      .from('ai_usage')
+      .select('cost')
+      .gte('created_at', today.toISOString());
+
+    const todayCost = todayCosts?.reduce((sum, item) => sum + (Number(item.cost) || 0), 0) || 0;
+
+    // Últimos 7 dias
+    const { data: weekCosts } = await supabaseAdmin
+      .from('ai_usage')
+      .select('cost')
+      .gte('created_at', sevenDaysAgo);
+
+    const weekCost = weekCosts?.reduce((sum, item) => sum + (Number(item.cost) || 0), 0) || 0;
+
+    // Este mês
+    const { data: monthCosts } = await supabaseAdmin
+      .from('ai_usage')
+      .select('cost')
+      .gte('created_at', firstDayOfMonth.toISOString());
+
+    const monthCost = monthCosts?.reduce((sum, item) => sum + (Number(item.cost) || 0), 0) || 0;
+
+    // Este ano
+    const firstDayOfYear = new Date();
+    firstDayOfYear.setMonth(0, 1);
+    firstDayOfYear.setHours(0, 0, 0, 0);
+
+    const { data: yearCosts } = await supabaseAdmin
+      .from('ai_usage')
+      .select('cost')
+      .gte('created_at', firstDayOfYear.toISOString());
+
+    const yearCost = yearCosts?.reduce((sum, item) => sum + (Number(item.cost) || 0), 0) || 0;
+
+    // Total de todos os tempos
+    const { data: allCosts } = await supabaseAdmin
+      .from('ai_usage')
+      .select('cost');
+
+    const totalCost = allCosts?.reduce((sum, item) => sum + (Number(item.cost) || 0), 0) || 0;
+
+    // =========================================================================
     // RESPONSE
     // =========================================================================
 
@@ -180,7 +226,7 @@ export async function GET(req: Request) {
         totalUsers: totalUsers || 0,
         paidUsers: paidUsers || 0,
         activeUsers: activeUsers || 0,
-        onlineUsers: uniqueOnlineUsers,
+        onlineUsers: onlineUsersCount || 0,
         blockedUsers: blockedUsers || 0,
       },
       plans: planCounts,
@@ -192,6 +238,13 @@ export async function GET(req: Request) {
         totalRequests: totalAIRequests || 0,
         todayRequests: todayRequests || 0,
         operations,
+      },
+      aiCosts: {
+        today: todayCost,
+        week: weekCost,
+        month: monthCost,
+        year: yearCost,
+        total: totalCost,
       },
       activity: {
         hourlyActivity,

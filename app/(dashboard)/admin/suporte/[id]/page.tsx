@@ -222,11 +222,11 @@ export default function AdminTicketDetailPage() {
                     <button
                       key={i}
                       onClick={() => setImageModal(att)}
-                      className="w-20 h-20 rounded-lg overflow-hidden border border-zinc-700 hover:border-zinc-500"
+                      className="relative w-20 h-20 rounded-lg overflow-hidden border border-zinc-700 hover:border-zinc-500"
                     >
-                      <Image 
-                        src={att} 
-                        alt="Attachment" 
+                      <Image
+                        src={att}
+                        alt="Attachment"
                         fill
                         className="object-cover"
                         unoptimized
@@ -355,17 +355,19 @@ export default function AdminTicketDetailPage() {
 
         {/* Modal de Imagem */}
         {imageModal && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
             onClick={() => setImageModal(null)}
           >
-            <Image 
-              src={imageModal} 
-              alt="Attachment Full" 
-              fill
-              className="object-contain rounded-lg"
-              unoptimized
-            />
+            <div className="relative w-full h-full">
+              <Image
+                src={imageModal}
+                alt="Attachment Full"
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            </div>
           </div>
         )}
       </div>

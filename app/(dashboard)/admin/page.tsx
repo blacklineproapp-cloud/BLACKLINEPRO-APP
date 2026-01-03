@@ -23,6 +23,7 @@ interface Metrics {
     starter: number;
     pro: number;
     studio: number;
+    enterprise: number;
   };
   revenue: {
     total: number;
@@ -32,6 +33,13 @@ interface Metrics {
     totalRequests: number;
     todayRequests: number;
     operations: Record<string, number>;
+  };
+  aiCosts: {
+    today: number;
+    week: number;
+    month: number;
+    year: number;
+    total: number;
   };
   activity: {
     hourlyActivity: Record<number, number>;
@@ -77,7 +85,7 @@ export default function AdminPage() {
 
   // Modal de mudança de plano
   const [planChangeModal, setPlanChangeModal] = useState<{ userId: string; email: string; currentPlan: string } | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'starter' | 'pro' | 'studio'>('starter');
+  const [selectedPlan, setSelectedPlan] = useState<'free' | 'starter' | 'pro' | 'studio' | 'enterprise'>('starter');
   const [planChangeMode, setPlanChangeMode] = useState<'courtesy' | 'recurring'>('courtesy');
   const [sendEmail, setSendEmail] = useState(false);
   const [planChangeLoading, setPlanChangeLoading] = useState(false);
@@ -428,6 +436,83 @@ export default function AdminPage() {
               trend={`R$ ${metrics.revenue.thisMonth.toFixed(0)}`}
               color="yellow"
             />
+          </div>
+        )}
+
+        {/* Card de Custos de IA */}
+        {metrics && metrics.aiCosts && (
+          <div className="mb-8 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-orange-600/20 rounded-lg">
+                <DollarSign size={20} className="text-orange-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Custos de IA (Gemini)</h3>
+                <p className="text-xs text-zinc-400">Custo real das requisições à API Gemini</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+                <div className="text-xs text-zinc-400 mb-1">Hoje</div>
+                <div className="text-2xl font-bold text-orange-400">
+                  ${metrics.aiCosts.today.toFixed(3)}
+                </div>
+                <div className="text-xs text-zinc-500 mt-1">
+                  ≈ R$ {(metrics.aiCosts.today * 5).toFixed(2)}
+                </div>
+              </div>
+
+              <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+                <div className="text-xs text-zinc-400 mb-1">Últimos 7 dias</div>
+                <div className="text-2xl font-bold text-orange-400">
+                  ${metrics.aiCosts.week.toFixed(2)}
+                </div>
+                <div className="text-xs text-zinc-500 mt-1">
+                  ≈ R$ {(metrics.aiCosts.week * 5).toFixed(2)}
+                </div>
+              </div>
+
+              <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+                <div className="text-xs text-zinc-400 mb-1">Este mês</div>
+                <div className="text-2xl font-bold text-orange-400">
+                  ${metrics.aiCosts.month.toFixed(2)}
+                </div>
+                <div className="text-xs text-zinc-500 mt-1">
+                  ≈ R$ {(metrics.aiCosts.month * 5).toFixed(2)}
+                </div>
+              </div>
+
+              <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+                <div className="text-xs text-zinc-400 mb-1">Este ano</div>
+                <div className="text-2xl font-bold text-orange-400">
+                  ${metrics.aiCosts.year.toFixed(2)}
+                </div>
+                <div className="text-xs text-zinc-500 mt-1">
+                  ≈ R$ {(metrics.aiCosts.year * 5).toFixed(2)}
+                </div>
+              </div>
+
+              <div className="bg-zinc-950 border border-orange-900/50 rounded-lg p-4">
+                <div className="text-xs text-zinc-400 mb-1">Total (all time)</div>
+                <div className="text-2xl font-bold text-orange-300">
+                  ${metrics.aiCosts.total.toFixed(2)}
+                </div>
+                <div className="text-xs text-zinc-500 mt-1">
+                  ≈ R$ {(metrics.aiCosts.total * 5).toFixed(2)}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-zinc-900/50 border border-zinc-800 rounded-lg">
+              <div className="flex items-start gap-2">
+                <Sparkles size={14} className="text-orange-400 mt-0.5" />
+                <div className="text-xs text-zinc-400">
+                  <strong className="text-zinc-300">Nota:</strong> Valores em USD baseados no custo real da API Gemini 2.5 Flash Image ($0.039/requisição).
+                  Conversão para BRL aproximada (dólar a R$ 5,00).
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -932,7 +1017,8 @@ export default function AdminPage() {
                 <option value="free">Free (Gratuito)</option>
                 <option value="starter">Starter (R$ 50/mês)</option>
                 <option value="pro">Pro (R$ 100/mês)</option>
-                <option value="studio">Studio (R$ 300/mês)</option>
+                <option value="studio">Studio (R$ 300/mês) - Multi-usuário (3 usuários)</option>
+                <option value="enterprise">Enterprise (R$ 600/mês) - Multi-usuário (5 usuários)</option>
               </select>
             </div>
 

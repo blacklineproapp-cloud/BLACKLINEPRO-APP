@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import DownloadControls from '@/components/split-a4/DownloadControls';
 import { Wand2, Palette, Upload, Download, Copy, Check, ArrowRight, X, Droplet, ChevronUp, ChevronDown, Grid3x3, Image as ImageIcon, ChevronLeft, ChevronRight, FlipHorizontal, FlipVertical, CheckCircle, XCircle } from 'lucide-react';
@@ -745,12 +745,10 @@ export default function ToolsPage() {
                                     }}
                                     className="aspect-square bg-zinc-950 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
                                   >
-                                    <Image 
+                                    <img 
                                       src={img.url} 
                                       alt="Gallery" 
-                                      fill
-                                      className="object-cover"
-                                      unoptimized
+                                      className="w-full h-full object-cover"
                                     />
                                   </div>
                                 ))}
@@ -806,12 +804,10 @@ export default function ToolsPage() {
                   </div>
                 </div>
                 <div className="flex-1 bg-zinc-950 rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-hidden relative min-h-[150px] lg:min-h-0">
-                  <Image 
+                  <img 
                     src={inputImage} 
                     alt="Input" 
-                    fill
-                    className="object-contain rounded shadow-lg transition-transform !relative"
-                    unoptimized
+                    className="max-w-full max-h-full object-contain rounded shadow-lg transition-transform"
                     style={{ 
                       transform: `${flipHorizontal ? 'scaleX(-1)' : ''} ${flipVertical ? 'scaleY(-1)' : ''}`.trim() || 'none'
                     }}
@@ -1168,12 +1164,10 @@ export default function ToolsPage() {
                       </a>
                     </div>
                     <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-[200px] lg:min-h-0">
-                      <Image 
+                      <img 
                         src={resultImage} 
                         alt="Enhanced" 
-                        fill
-                        className="object-contain rounded shadow-2xl !relative"
-                        unoptimized
+                        className="max-w-full max-h-full object-contain rounded shadow-2xl"
                       />
                     </div>
                   </div>
@@ -1191,12 +1185,10 @@ export default function ToolsPage() {
                       </a>
                     </div>
                     <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-[200px] lg:min-h-0">
-                      <Image 
+                      <img 
                         src={resultImage} 
                         alt="No Background" 
-                        fill
-                        className="object-contain rounded shadow-2xl !relative"
-                        unoptimized
+                        className="max-w-full max-h-full object-contain rounded shadow-2xl"
                       />
                     </div>
                   </div>
@@ -1270,12 +1262,10 @@ export default function ToolsPage() {
                         {splitResult.pages?.map((page: any) => (
                           <div key={page.pageNumber} className="bg-zinc-900 border border-zinc-800 rounded-lg p-2 hover:border-purple-500 transition-all group">
                             <div className="aspect-[210/297] bg-white rounded overflow-hidden mb-2 relative">
-                              <Image
+                              <img
                                 src={page.imageData}
                                 alt={`Página ${page.pageNumber}`}
-                                fill
-                                className="object-contain"
-                                unoptimized
+                                className="w-full h-full object-contain"
                               />
                               <div className="absolute top-1 right-1 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg">
                                 #{page.pageNumber}
