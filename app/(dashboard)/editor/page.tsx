@@ -29,7 +29,6 @@ export default function EditorPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAdjusting, setIsAdjusting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isGeneratingLines, setIsGeneratingLines] = useState(false);
   const [promptText, setPromptText] = useState('');
   const [selectedStyle, setSelectedStyle] = useState<Style>('standard');
   const [sliderPosition, setSliderPosition] = useState(50);
@@ -439,81 +438,6 @@ export default function EditorPage() {
       setShowControls(true);
     } finally {
       setIsProcessing(false);
-    }
-  };
-
-  // Gerar linhas detalhadas a partir do topográfico
-  const handleGenerateLines = async () => {
-    if (!generatedStencil) return;
-
-    setIsGeneratingLines(true);
-    setAdjustedStencil(null);
-
-    try {
-      const res = await fetch('/api/stencil/generate', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: generatedStencil, // Usar topográfico como base
-          style: 'standard', // Gerar linhas
-          promptDetails: promptText,
-          widthCm,
-          heightCm,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        let finalStencil = data.image;
-
-        // 📐 RESIZE: Redimensionar stencil para o tamanho físico escolhido
-        try {
-          const resizeRes = await fetch('/api/image-resize', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              image: data.image,
-              targetWidthCm: widthCm,
-              dpi: 300,
-              maintainAspect: true,
-            }),
-          });
-
-          if (resizeRes.ok) {
-            const resizeData = await resizeRes.json();
-            finalStencil = resizeData.image;
-          }
-        } catch (resizeError) {
-          console.warn('[Editor] Resize falhou:', resizeError);
-        }
-
-        setGeneratedStencil(finalStencil);
-        setSelectedStyle('standard'); // Mudar para modo linhas
-
-        // Adicionar ao histórico
-        history.clear();
-        history.pushState(finalStencil, DEFAULT_ADJUST_CONTROLS);
-        setAdjustControls(DEFAULT_ADJUST_CONTROLS);
-
-        // AUTO-SAVE
-        autoSaveProject(finalStencil);
-
-        showToast('Linhas detalhadas geradas com sucesso!', 'success');
-      } else if (data.requiresSubscription) {
-        if (confirm(`${data.message}\n\nDeseja assinar agora?`)) {
-          window.location.href = '/api/payments/create-checkout?plan=' + data.subscriptionType;
-        }
-      } else {
-        alert(data.error || 'Erro ao gerar linhas.');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('Erro ao gerar linhas detalhadas.');
-    } finally {
-      setIsGeneratingLines(false);
     }
   };
 
@@ -1054,18 +978,6 @@ export default function EditorPage() {
                     <Save size={16} /> {isSaving ? 'Salvando...' : 'Salvar'}
                   </button>
                 </div>
-
-                {/* Botão Gerar Linhas Detalhadas (apenas modo topográfico) */}
-                {selectedStyle === 'perfect_lines' && (
-                  <button
-                    onClick={handleGenerateLines}
-                    disabled={isGeneratingLines}
-                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm disabled:opacity-50 shadow-lg shadow-purple-900/30"
-                  >
-                    <PenTool size={16} />
-                    {isGeneratingLines ? 'Gerando Linhas...' : 'Gerar Linhas Detalhadas'}
-                  </button>
-                )}
 
                 {/* Indicador de Qualidade/DPI */}
                 <QualityIndicator
