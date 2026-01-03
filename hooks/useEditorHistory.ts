@@ -4,11 +4,12 @@ import { EditorHistory, EditorHistoryState, AdjustControls } from '@/lib/stencil
 /**
  * Hook para gerenciar histórico de edições do editor (Undo/Redo)
  *
- * Mantém stack de até 20 estados com imagem + controles
+ * Mantém stack de até 10 estados com imagem + controles
+ * Reduzido de 20 para 10 para economizar RAM (~50MB em vez de ~100MB com imagens 8K)
  * Suporta Undo (Ctrl+Z) e Redo (Ctrl+Y)
  */
 
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 10;
 
 interface UseEditorHistoryReturn {
   // Estado atual

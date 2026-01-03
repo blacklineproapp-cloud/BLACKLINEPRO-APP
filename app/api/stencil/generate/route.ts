@@ -11,6 +11,7 @@ import {
 import { checkEditorLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
+import { trackTrialUsage, getClientIP } from '@/lib/abuse-prevention';
 
 export async function POST(req: Request) {
   try {
@@ -117,6 +118,25 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
         operation: 'generate_stencil'
       }
     });
+
+    // 🛡️ RASTREAR TRIAL USAGE POR IP (para detecção de abuso)
+    // Apenas para planos free (trials)
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('plan')
+      .eq('id', userUuid)
+      .single();
+
+    if (user?.plan === 'free') {
+      const ipAddress = await getClientIP();
+      await trackTrialUsage({
+        ipAddress,
+        userId: userUuid,
+        clerkId: clerkUserId,
+        actionType: 'editor_generation',
+        metadata: { style: selectedStyle }
+      });
+    }
   }
 
   return NextResponse.json({ image: stencilImage });

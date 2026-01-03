@@ -3,7 +3,9 @@
  * Estratégia: Network-first com fallback para cache
  */
 
-const CACHE_NAME = 'stencilflow-v2-fast';
+// ⚡ VERSÃO DO CACHE - Mudar a cada deploy para forçar atualização!
+const CACHE_VERSION = '5.2.1'; // Incrementar a cada deploy
+const CACHE_NAME = `stencilflow-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
 // ⚡ OTIMIZAÇÃO CRÍTICA: Cachear APENAS o mínimo no install
@@ -16,7 +18,7 @@ const PRECACHE_ASSETS = [
 
 // Install - Precache apenas essencial (super rápido!)
 self.addEventListener('install', (event) => {
-  console.log('[SW] 🚀 Instalando Service Worker OTIMIZADO...');
+  console.log('[SW] 🚀 Instalando Service Worker OTIMIZADO...', CACHE_VERSION);
 
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -26,7 +28,16 @@ self.addEventListener('install', (event) => {
       });
     })
     .then(() => {
-      console.log('[SW] ✅ Install completo - pulando espera');
+      console.log('[SW] ✅ Install completo - pulando espera e ativando');
+      // Notificar clientes que há uma nova versão disponível
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SW_UPDATED',
+            version: CACHE_VERSION
+          });
+        });
+      });
       return self.skipWaiting();
     })
   );

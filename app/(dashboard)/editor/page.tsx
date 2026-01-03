@@ -510,17 +510,40 @@ export default function EditorPage() {
     } catch (error) {
       showToast('Erro ao salvar projeto', 'error');
     } finally {
-      setIsSaving(false);
+    setIsSaving(false);
     }
   };
 
   const handleDownload = async () => {
-    if (!currentStencil) return;
+    if (!currentStencil) {
+      showToast('Nenhuma imagem para baixar', 'error');
+      return;
+    }
+
     const fileName = `stencil-${widthCm}x${heightCm}cm-${Date.now()}.png`;
 
     try {
+      // 🔧 CORREÇÃO: Se há ajustes aplicados mas não há adjustedStencil, aplicar antes de baixar
+      let imageToDownload = currentStencil;
+
+      // Verificar se há ajustes não-padrão que precisam ser aplicados
+      if (!isDefaultControls(adjustControls) && !adjustedStencil && generatedStencil) {
+        showToast('Aplicando ajustes antes do download...', 'info');
+        
+        try {
+          const result = await applyAdjustments(generatedStencil, adjustControls);
+          if (result) {
+            imageToDownload = result;
+            setAdjustedStencil(result); // Salvar para próximas ações
+          }
+        } catch (error) {
+          console.error('Erro ao aplicar ajustes:', error);
+          showToast('Aviso: Baixando sem ajustes', 'error');
+        }
+      }
+
       // Converter base64 para blob para forçar download
-      const response = await fetch(currentStencil);
+      const response = await fetch(imageToDownload);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
 
@@ -534,6 +557,7 @@ export default function EditorPage() {
       
       showToast('Download iniciado!', 'success');
     } catch (error) {
+      console.error('Erro no download:', error);
       // Fallback
       const link = document.createElement('a');
       link.href = currentStencil;

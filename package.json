@@ -8,6 +8,7 @@
     "start": "next start",
     "worker": "tsx scripts/railway-worker.ts",
     "lint": "next lint",
+    "populate-ip-history": "tsx scripts/populate-historical-ip-data.ts",
     "dev:activate-users": "node scripts/activate-test-users.js",
     "billing:setup": "tsx scripts/create-stripe-products.ts",
     "stripe:listen": "bash scripts/start-stripe-listener.sh",

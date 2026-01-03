@@ -155,7 +155,7 @@ export async function validateImageMetadata(
 
 /**
  * Validação completa: base64 + metadata
- * USO: Champar ANTES de qualquer processamento
+ * USO: Chamar ANTES de qualquer processamento
  */
 export async function validateImage(base64String: string): Promise<ImageValidationResult> {
   // 1. Validar tamanho base64 (rápido, evita criar buffer grande)
@@ -170,12 +170,47 @@ export async function validateImage(base64String: string): Promise<ImageValidati
       ? base64String.split(',')[1]
       : base64String;
 
-    const buffer = Buffer.from(base64Data, 'base64');
+    // 🔧 CORREÇÃO: Validar e sanitizar base64 ANTES de criar buffer
+    // Remove espaços, quebras de linha e caracteres inválidos
+    const sanitizedBase64 = base64Data.replace(/[^A-Za-z0-9+/=]/g, '');
+    
+    // Validar que é base64 válido (apenas caracteres permitidos)
+    const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+    if (!base64Regex.test(sanitizedBase64)) {
+      logger.error('[Image Validation] Base64 contém caracteres inválidos');
+      return {
+        valid: false,
+        error: 'Formato de imagem inválido (base64 corrompido)',
+      };
+    }
+
+    // Validar comprimento (deve ser múltiplo de 4)
+    if (sanitizedBase64.length % 4 !== 0) {
+      logger.error('[Image Validation] Base64 com comprimento inválido', {
+        length: sanitizedBase64.length,
+        remainder: sanitizedBase64.length % 4
+      });
+      return {
+        valid: false,
+        error: 'Formato de imagem inválido (base64 incompleto)',
+      };
+    }
+
+    const buffer = Buffer.from(sanitizedBase64, 'base64');
 
     // 3. Validar metadata (formato, dimensões, etc)
     return await validateImageMetadata(buffer);
   } catch (error: any) {
     logger.error('[Image Validation] Erro ao criar buffer', error);
+    
+    // Mensagem específica para erro de pattern
+    if (error.message?.includes('did not match') || error.message?.includes('pattern')) {
+      return {
+        valid: false,
+        error: 'Formato de imagem inválido. A imagem pode estar corrompida.',
+      };
+    }
+    
     return {
       valid: false,
       error: 'Base64 inválido ou corrompido',

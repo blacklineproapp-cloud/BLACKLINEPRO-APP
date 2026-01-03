@@ -518,7 +518,7 @@ export default function AdminPage() {
 
         {/* Card de Tickets Pendentes */}
         {ticketCount > 0 && (
-          <Link href="/admin/suporte" className="block mb-8">
+          <Link href="/admin/suporte" className="block mb-4">
             <div className="bg-gradient-to-r from-orange-600/20 to-red-600/20 border border-orange-500/30 rounded-xl p-4 flex items-center justify-between hover:border-orange-500/50 transition">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-orange-500/20 rounded-lg">
@@ -533,6 +533,22 @@ export default function AdminPage() {
             </div>
           </Link>
         )}
+
+        {/* Card de IP Abuse Stats */}
+        <Link href="/admin/ip-abuse" className="block mb-8">
+          <div className="bg-gradient-to-r from-red-600/20 to-pink-600/20 border border-red-500/30 rounded-xl p-4 flex items-center justify-between hover:border-red-500/50 transition">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-500/20 rounded-lg">
+                <Shield size={24} className="text-red-400" />
+              </div>
+              <div>
+                <p className="font-semibold text-red-400">Sistema Anti-Abuso por IP</p>
+                <p className="text-sm text-zinc-400">Monitorar múltiplas contas e trials</p>
+              </div>
+            </div>
+            <ArrowUpRight size={20} className="text-red-400" />
+          </div>
+        </Link>
 
         {/* Distribuição de Planos + Horário de Pico */}
         {metrics && (

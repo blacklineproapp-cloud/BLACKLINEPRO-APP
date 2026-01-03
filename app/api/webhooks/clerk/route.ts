@@ -2,6 +2,7 @@ import { Webhook } from 'svix';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { checkSignupAbuse, getClientIP } from '@/lib/abuse-prevention';
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
 
   switch (type) {
     case 'user.created':
-      await handleUserCreated(data);
+      await handleUserCreated(data, req);
       break;
 
     case 'user.updated':
@@ -62,12 +63,26 @@ export async function POST(req: Request) {
 }
 
 // Handler: Usuário criado
-async function handleUserCreated(data: any) {
+async function handleUserCreated(data: any, req: Request) {
   try {
     const email = data.email_addresses[0]?.email_address;
     const name = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'Usuário';
 
     console.log(`[Webhook] user.created: ${email} (clerk_id: ${data.id})`);
+
+    // 🛡️ ANTI-ABUSO: Verificar se IP está criando múltiplas contas
+    const ipAddress = await getClientIP(req);
+    const abuseCheck = await checkSignupAbuse(ipAddress, email, data.id);
+
+    if (abuseCheck.shouldBlock) {
+      console.warn(`[Webhook] 🚫 Signup bloqueado por abuso: ${email} (${ipAddress}) - ${abuseCheck.reason}`);
+      // Conta já foi deletada pelo checkSignupAbuse
+      return;
+    }
+
+    if (abuseCheck.accountsCount > 1) {
+      console.log(`[Webhook] ⚠️ Signup suspeito: ${email} (${ipAddress}) - ${abuseCheck.accountsCount} contas deste IP`);
+    }
 
     // PROTEÇÃO CONTRA DUPLICAÇÃO APRIMORADA:
     // 1. Verificar se usuário já existe (por clerk_id OU email)
