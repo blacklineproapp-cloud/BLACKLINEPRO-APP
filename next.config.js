@@ -12,20 +12,6 @@ const nextConfig = {
     serverComponentsExternalPackages: ['bullmq'], // BullMQ tem dependências dinâmicas
   },
 
-  // AUMENTAR LIMITE DE BODY (para imagens grandes)
-  // Next.js App Router tem limite padrão de 4MB
-  // 🔧 CORREÇÃO: Aumentar para 10MB para suportar imagens após compressão
-  serverRuntimeConfig: {
-    maxRequestBodySize: 10 * 1024 * 1024, // 10MB
-  },
-
-  // Configuração de body parser para API routes
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-
   images: {
     remotePatterns: [
       {

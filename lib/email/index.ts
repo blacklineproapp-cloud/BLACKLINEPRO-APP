@@ -4,6 +4,11 @@
  */
 
 import { Resend } from 'resend';
+import { render } from '@react-email/components';
+import RemarketingInitial from '@/emails/templates/RemarketingInitial';
+import RemarketingReminder from '@/emails/templates/RemarketingReminder';
+import RemarketingFinal from '@/emails/templates/RemarketingFinal';
+import CourtesyPaymentLink from '@/emails/templates/CourtesyPaymentLink';
 
 // Inicializar Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -340,5 +345,111 @@ export async function sendSubscriptionCanceledEmail(
     console.log(`[Email] Cancelamento enviado para: ${email}`);
   } catch (error: any) {
     console.error('[Email] Erro ao enviar cancelamento:', error.message);
+  }
+}
+
+/**
+ * Email de Remarketing para Usuários FREE (React Email Version)
+ * Enviado para converter usuários gratuitos em pagantes
+ */
+export async function sendRemarketingEmail(
+  email: string,
+  nome: string,
+  campaignType: 'initial' | 'reminder' | 'final' = 'initial'
+) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log('[Email] Resend não configurado, pulando envio');
+    return;
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://stencilflow.com.br';
+
+  // Mapear tipo de campanha para template React e assunto
+  const campaignConfig = {
+    initial: {
+      subject: 'A Arte do Estêncil - Desbloqueie o StencilFlow Completo',
+      template: RemarketingInitial,
+    },
+    reminder: {
+      subject: '48% mais barato que Ghostline - StencilFlow',
+      template: RemarketingReminder,
+    },
+    final: {
+      subject: 'Upload → IA → Download - Simples assim',
+      template: RemarketingFinal,
+    },
+  };
+
+  const config = campaignConfig[campaignType];
+  const Template = config.template;
+
+  try {
+    // Renderizar template React para HTML
+    const html = await render(
+      Template({
+        userName: nome,
+        userEmail: email,
+        appUrl,
+      })
+    );
+
+    // Enviar email via Resend
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: config.subject,
+      html,
+    });
+
+    console.log(`[Email] Remarketing (${campaignType}) enviado para: ${email}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Email] Erro ao enviar remarketing:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Email de Link de Pagamento para Usuários de Cortesia
+ * Enviado para usuários migrados que precisam configurar assinatura Stripe
+ */
+export async function sendCourtesyPaymentEmail(
+  email: string,
+  nome: string,
+  plan: string,
+  paymentLink: string
+) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log('[Email] Resend não configurado, pulando envio');
+    return { success: false, error: 'Resend não configurado' };
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://stencilflow.com.br';
+
+  try {
+    // Renderizar template React para HTML
+    const html = await render(
+      CourtesyPaymentLink({
+        userName: nome,
+        userEmail: email,
+        userPlan: plan,
+        paymentLink,
+        appUrl,
+      })
+    );
+
+    // Enviar email via Resend
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: 'Migração StencilFlow - Configure sua assinatura recorrente',
+      html,
+    });
+
+    console.log(`[Email] Link de pagamento (cortesia) enviado para: ${email}`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Email] Erro ao enviar link de cortesia:', error.message);
+    return { success: false, error: error.message };
   }
 }

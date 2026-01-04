@@ -2,6 +2,81 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-04-10',
+});
+
+// Cache simples em memória para emails pagantes do Stripe
+let stripePaidEmailsCache: {
+  emails: Set<string>;
+  timestamp: number;
+} | null = null;
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+async function getStripePaidEmails(): Promise<Set<string>> {
+  // Verificar cache
+  if (stripePaidEmailsCache && (Date.now() - stripePaidEmailsCache.timestamp) < CACHE_TTL) {
+    console.log('[Admin Metrics] 📦 Usando cache de emails Stripe');
+    return stripePaidEmailsCache.emails;
+  }
+
+  console.log('[Admin Metrics] 🔍 Buscando pagamentos do Stripe (cache expirado)...');
+
+  // Buscar do Stripe
+  let charges: Stripe.Charge[] = [];
+  let hasMore = true;
+  let startingAfter: string | undefined;
+
+  while (hasMore) {
+    const response = await stripe.charges.list({
+      limit: 100,
+      starting_after: startingAfter,
+      expand: ['data.customer'],
+    });
+
+    charges = [...charges, ...response.data];
+    hasMore = response.has_more;
+    if (response.data.length > 0) {
+      startingAfter = response.data[response.data.length - 1].id;
+    }
+  }
+
+  const successfulCharges = charges.filter(c => c.status === 'succeeded' && c.paid);
+
+  // Coletar emails
+  const paidEmailsSet = new Set<string>();
+
+  for (const charge of successfulCharges) {
+    let email = charge.billing_details?.email || charge.receipt_email || '';
+
+    if (!email && charge.customer) {
+      const customerId = typeof charge.customer === 'string' ? charge.customer : charge.customer.id;
+      try {
+        const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
+        if (!customer.deleted && customer.email) {
+          email = customer.email;
+        }
+      } catch (e) {}
+    }
+
+    if (email) {
+      paidEmailsSet.add(email.toLowerCase().trim());
+    }
+  }
+
+  // Atualizar cache
+  stripePaidEmailsCache = {
+    emails: paidEmailsSet,
+    timestamp: Date.now()
+  };
+
+  console.log('[Admin Metrics] 💳 Emails que pagaram via Stripe:', paidEmailsSet.size);
+
+  return paidEmailsSet;
+}
 
 export async function GET(req: Request) {
   try {
@@ -117,6 +192,55 @@ export async function GET(req: Request) {
     const monthRevenue = monthPayments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0;
 
     // =========================================================================
+    // DETALHAMENTO DE PAGANTES (STRIPE API = FONTE DA VERDADE)
+    // =========================================================================
+
+    // Buscar emails que pagaram via Stripe (com cache)
+    const paidEmailsSet = await getStripePaidEmails();
+
+    // 2. Buscar TODOS os usuários com is_paid = true no banco
+    const { data: allPaidUsers } = await supabaseAdmin
+      .from('users')
+      .select('id, email, name, plan, subscription_id, subscription_status, created_at, admin_courtesy, grace_period_until, auto_bill_after_grace, admin_courtesy_granted_at, admin_courtesy_granted_by')
+      .eq('is_paid', true)
+      .order('email');
+
+    console.log('[Admin Metrics] 📊 Total is_paid=true no banco:', allPaidUsers?.length || 0);
+
+    // 3. Separar: Stripe vs Cortesia vs Grace Period
+    const stripeCustomers: any[] = [];
+    const courtesyUsers: any[] = [];
+    const gracePeriodUsers: any[] = [];
+
+    for (const user of allPaidUsers || []) {
+      const emailLower = user.email?.toLowerCase().trim() || '';
+
+      // Se pagou via Stripe (fonte da verdade!)
+      if (paidEmailsSet.has(emailLower)) {
+        stripeCustomers.push(user);
+      }
+      // Se não pagou via Stripe, pode ser cortesia ou grace period
+      else {
+        // Tem grace period?
+        if (user.grace_period_until && user.auto_bill_after_grace) {
+          gracePeriodUsers.push(user);
+        }
+        // Senão, é cortesia (migração ou admin)
+        else {
+          courtesyUsers.push(user);
+        }
+      }
+    }
+
+    // Filtrar grace period para quem vai receber link dia 10/01
+    const usersToReceiveLink = gracePeriodUsers.filter(u => {
+      if (!u.grace_period_until) return false;
+      const graceDate = new Date(u.grace_period_until);
+      const jan10 = new Date('2025-01-10T23:59:59Z');
+      return graceDate <= jan10;
+    });
+
+    // =========================================================================
     // USO DE IA
     // =========================================================================
 
@@ -218,6 +342,18 @@ export async function GET(req: Request) {
     const totalCost = allCosts?.reduce((sum, item) => sum + (Number(item.cost) || 0), 0) || 0;
 
     // =========================================================================
+    // DEBUG: Validação de categorias
+    // =========================================================================
+    console.log('[Admin Metrics] ✅ Payment Categories (Stripe API as source of truth):');
+    console.log('  Total is_paid=true:', allPaidUsers?.length || 0);
+    console.log('  Stripe Customers (real payments):', stripeCustomers.length);
+    console.log('  Courtesy (migration):', courtesyUsers.length);
+    console.log('  Grace Period (all):', gracePeriodUsers.length);
+    console.log('  Grace Period (to receive link Jan 10):', usersToReceiveLink.length);
+    console.log('  SUM:', stripeCustomers.length + courtesyUsers.length + gracePeriodUsers.length);
+    console.log('  ✅ Math check:', (stripeCustomers.length + courtesyUsers.length + gracePeriodUsers.length) === (allPaidUsers?.length || 0) ? 'OK' : 'ERROR');
+
+    // =========================================================================
     // RESPONSE
     // =========================================================================
 
@@ -233,6 +369,43 @@ export async function GET(req: Request) {
       revenue: {
         total: totalRevenue,
         thisMonth: monthRevenue,
+      },
+      paymentDetails: {
+        stripeCustomers: {
+          count: stripeCustomers.length,
+          users: stripeCustomers.map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.name,
+            plan: u.plan,
+            subscription_id: u.subscription_id,
+            subscription_status: u.subscription_status,
+            created_at: u.created_at
+          })),
+        },
+        courtesyUsers: {
+          count: courtesyUsers.length,
+          users: courtesyUsers.map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.name,
+            plan: u.plan,
+            admin_courtesy_granted_at: u.admin_courtesy_granted_at,
+            admin_courtesy_granted_by: u.admin_courtesy_granted_by
+          })),
+        },
+        gracePeriod: {
+          total: gracePeriodUsers.length,
+          toReceiveLinkJan10: usersToReceiveLink.length,
+          users: usersToReceiveLink.map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.name,
+            plan: u.plan,
+            grace_period_until: u.grace_period_until,
+            created_at: u.created_at
+          })),
+        },
       },
       aiUsage: {
         totalRequests: totalAIRequests || 0,
@@ -260,3 +433,6 @@ export async function GET(req: Request) {
     );
   }
 }
+
+// Timeout maior porque faz chamadas ao Stripe API
+export const maxDuration = 60;

@@ -5,7 +5,7 @@
  * Página para aceitar convite de organização
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter, useParams } from 'next/navigation';
 
@@ -35,18 +35,7 @@ export default function AcceptInvitePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    if (!isLoaded) return;
-
-    if (!isSignedIn) {
-      router.push(`/sign-in?redirect_url=/invite/${token}`);
-      return;
-    }
-
-    loadInvite();
-  }, [isLoaded, isSignedIn, token]);
-
-  const loadInvite = async () => {
+  const loadInvite = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -65,7 +54,18 @@ export default function AcceptInvitePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!isSignedIn) {
+      router.push(`/sign-in?redirect_url=/invite/${token}`);
+      return;
+    }
+
+    loadInvite();
+  }, [isLoaded, isSignedIn, token, loadInvite, router]);
 
   const handleAccept = async () => {
     try {

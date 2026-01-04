@@ -6,6 +6,7 @@
  */
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { OrganizationMemberWithUser } from '@/lib/types/organization';
 
 interface MembersListProps {
@@ -59,10 +60,13 @@ export default function MembersList({
                 {/* Avatar */}
                 <div className="flex-shrink-0">
                   {member.user.picture ? (
-                    <img
+                    <Image
                       src={member.user.picture}
                       alt={member.user.name || 'User'}
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">

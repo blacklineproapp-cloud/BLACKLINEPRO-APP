@@ -215,3 +215,7 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+// Configuração de timeout para processar imagens grandes
+export const maxDuration = 60;
+export const runtime = 'nodejs';

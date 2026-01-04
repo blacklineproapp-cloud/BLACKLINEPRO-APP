@@ -23,7 +23,7 @@ export async function register() {
         }
         return event;
       },
-      debug: process.env.NODE_ENV === 'development',
+      debug: false, // Desabilita logs verbosos em todos os ambientes
     });
   }
 
