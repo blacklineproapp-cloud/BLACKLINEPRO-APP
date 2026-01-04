@@ -25,9 +25,9 @@ const topographicModel = genAI.getGenerativeModel({
 const linesModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
-    temperature: 0,    // Determinístico - fidelidade estrutural
-    topP: 0.08,        // Moderado - simplicidade com clareza
-    topK: 4,           // Limitado - mantém linhas limpas e simples
+    temperature: 0,    // Determinístico - fidelidade 100% ao original
+    topP: 0.15,        // Máxima riqueza - captura micro-detalhes e variações tonais
+    topK: 10,          // Top 10 tokens - permite 7 níveis de profundidade distintos
   },
 });
 
@@ -77,9 +77,9 @@ export async function generateStencilFromImage(
   // INVERTIDO: standard = linesModel, perfect_lines = topographicModel
   const model = style === 'standard' ? linesModel : topographicModel;
 
-  // Log detalhado para debug - V3.0
+  // Log detalhado para debug
   const modeInfo = style === 'standard'
-    ? 'LINHAS (temp: 0, topP: 0.08, topK: 4) - SIMPLES E LIMPO'
+    ? 'LINHAS DETALHADAS (temp: 0, topP: 0.15, topK: 10) - TODOS DETALHES, LINHAS LIMPAS'
     : 'TOPOGRÁFICO V3.0 (temp: 0, topP: 0.15, topK: 10) - 7 NÍVEIS, MÁXIMA RIQUEZA';
 
   // Construir prompt final

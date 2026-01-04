@@ -169,71 +169,106 @@ TECHNICAL:
 
 OUTPUT: Generate ONLY the ultra-detailed topographic stencil. No text, no legends. PNG black on white.`;
 
-// LINHAS - Simples, limpo, menos detalhes, foco em contornos
-export const PERFECT_LINES_INSTRUCTION_OPTIMIZED = `ROLE: Simple Line Stencil Converter
-FUNCTION: Convert photo → SIMPLE line stencil with MINIMAL details. Focus on CLEAN CONTOURS.
+// LINHAS - Detalhado, captura TODOS os detalhes, mas com linhas limpas e espaçadas
+export const PERFECT_LINES_INSTRUCTION_OPTIMIZED = `ROLE: Detailed Line Stencil Artist
+FUNCTION: Convert photo → DETAILED line stencil capturing ALL details with CLEAN, SEPARATED LINES.
 
 CRITICAL RULES:
 ❌ NEVER alter anatomy, proportions, positioning, expressions
 ❌ NEVER add/remove elements or "improve" the original
-✅ COPY structure EXACTLY as shown in photo
-✅ Simplify to ESSENTIAL lines only
+✅ COPY every detail EXACTLY as shown in photo
+✅ Capture ALL details using clean line work
 
-OUTPUT: 100% MONOCHROME (pure black lines on pure white). Clean and minimal.
-
-═══════════════════════════════════════════════════════════════
-LINE HIERARCHY (Simple & Clean)
-═══════════════════════════════════════════════════════════════
-MAIN OUTLINES: 1.0-1.5pt - Major shapes, silhouette, primary edges
-SECONDARY LINES: 0.5-0.8pt - Important internal features only
-MINIMAL SHADING: 0.3-0.5pt - Only essential shadows (use sparingly)
-
-PHILOSOPHY: Less is more. Focus on structural clarity, not tonal richness.
+OUTPUT: 100% MONOCHROME (pure black lines on pure white). Detailed but clean.
 
 ═══════════════════════════════════════════════════════════════
-BASIC 3-TONE SYSTEM (Minimal Shading)
+LINE HIERARCHY (Detailed & Clean)
 ═══════════════════════════════════════════════════════════════
-DARK (Level 1): Dense hatching 0.5-1mm spacing
-  → Use ONLY for deepest shadows (pupils, deep crevices)
-  → Keep minimal - just enough to indicate depth
+MAIN CONTOURS: 0.8-1.5pt - Define major shapes, strong and crisp
+SECONDARY CONTOURS: 0.5-0.8pt - Internal structures, anatomical divisions
+TERTIARY CONTOURS: 0.3-0.5pt - Fine details, subtle edges
+HATCHING: 0.3-0.6pt - Create depth/volume, ALWAYS directional following 3D form
 
-MEDIUM (Level 2): Sparse hatching 1.5-2.5mm spacing
-  → Use ONLY for major volume transitions
-  → Light touch - suggest form, don't render it fully
-
-LIGHT/WHITE (Level 3): No lines at all
-  → Most of the image should be clean white
-  → Highlights, lit areas, open spaces
-
-CRITICAL: Use shading SPARINGLY. This is a LINE mode, not a tonal mode.
+PHILOSOPHY: Capture ALL details with clean, separated lines (more spacing than topographic).
 
 ═══════════════════════════════════════════════════════════════
-EYES (Simplified but Recognizable)
+7-LEVEL TONAL SYSTEM (Maximum Detail with Clean Lines)
 ═══════════════════════════════════════════════════════════════
-PUPIL: Simple dark circle, exact position from photo
-IRIS: Basic radial lines OR simple shading (not both)
-REFLECTION: Leave WHITE - exact position from photo
-EYELIDS: Clean contour lines only
-LASHES: Suggest with a few grouped strokes (not individual)
-EYEBROW: Simplified shape outline + direction indication
+LEVEL 1 - DARKEST (0.5-0.8mm spacing, 0.4-0.6pt)
+  → Deepest areas: pupils, deep cavities, core shadows
+  → Clean separated lines (more spacing than topographic)
+
+LEVEL 2 - VERY DARK (0.8-1.2mm spacing, 0.4-0.5pt)
+  → Strong shadows, recessed forms
+  → Clear directional hatching following anatomy
+
+LEVEL 3 - DARK (1.2-1.8mm spacing, 0.4-0.5pt)
+  → Moderate shadows, transition zones
+  → Visible line separation
+
+LEVEL 4 - MEDIUM (1.8-2.5mm spacing, 0.3-0.5pt)
+  → Middle tones, neutral areas
+  → Balanced spacing
+
+LEVEL 5 - LIGHT (2.5-3.5mm spacing, 0.3-0.4pt)
+  → Light areas, gentle transitions
+  → Sparse but present
+
+LEVEL 6 - VERY LIGHT (3.5-5.0mm spacing, 0.3-0.4pt)
+  → Near highlights, soft light
+  → Very sparse lines
+
+LEVEL 7 - HIGHLIGHTS (5.0-6.0mm spacing OR pure white)
+  → Brightest areas, reflections
+  → Extremely sparse OR white
+
+CRITICAL: Use ALL 7 levels to capture ALL details. Lines MUST be clean and separated.
 
 ═══════════════════════════════════════════════════════════════
-HAIR (Grouped, Not Individual)
+EYES (MAXIMUM DETAIL with Clean Lines)
 ═══════════════════════════════════════════════════════════════
-- Follow GENERAL flow direction (don't trace every hair)
-- Group into SECTIONS with flowing directional lines
-- Dense areas: more grouped lines
-- Sparse areas: fewer grouped lines
-- NO individual strand detail - think "hair masses"
+ABSOLUTE RULE: COPY every detail from photo - NEVER alter!
+
+PUPIL: Exact size/position, Level 1 (0.5-0.8mm)
+IRIS: Complete radial pattern using Levels 2-5 for tonal variation
+  → Inner ring: denser (Level 2-3)
+  → Outer ring: medium (Level 4-5)
+  → Natural irregularities preserved
+REFLECTION: Exact position/shape, Level 7 (pure white or 5-6mm sparse). NEVER omit!
+SCLERA: Subtle volume - Levels 5-6, denser in corners Level 4
+EYELIDS: All creases, folds, shadow details
+LASHES: Individual curved strokes, natural grouping (not simplified!)
+EYEBROW: Individual hairs per direction zone, use Levels 2-4 for density
 
 ═══════════════════════════════════════════════════════════════
-SIMPLIFICATION APPROACH
+HAIR (Individual Strands with Clean Lines)
 ═══════════════════════════════════════════════════════════════
-- Capture STRUCTURE, not texture
-- Outline major forms clearly
-- Minimize internal details
-- Reduce tonal information to essential shadows only
-- Keep it CLEAN and EASY TO READ
+FLOW & DIRECTION: Follow EXACT pattern from photo, capture curves and twists
+DENSITY MAPPING:
+→ Dense masses: Levels 1-3 (0.5-1.5mm)
+→ Medium masses: Levels 3-5 (1.5-3.0mm)
+→ Sparse areas: Levels 5-6 (3.0-5.0mm)
+3D VOLUME OF HAIR MASS:
+→ Foreground strands: sharp, defined (Level 2-3)
+→ Interior depth: softer, shadowed (Level 1-2)
+→ Surface highlights: sparse or white (Level 6-7)
+→ Individual strands visible (not grouped masses!)
+Each strand = individual tattoo needle path
+
+═══════════════════════════════════════════════════════════════
+DETAIL CAPTURE APPROACH
+═══════════════════════════════════════════════════════════════
+SKIN & MICRO-TEXTURES:
+→ Pores: tiny dots at Level 5-6 spacing
+→ Wrinkles/creases: fine lines with adjacent Level 2-3 shadow
+→ Every unique mark, freckle, irregularity mapped
+→ Subtle tonal variations using appropriate levels
+
+3D DEPTH & VOLUME:
+→ Lines wrap around 3D forms (never straight on curves)
+→ Use ALL 7 levels for smooth gradients
+→ Spatial hierarchy clear (near/far relationships)
+→ Shadow types: core, cast, ambient occlusion all mapped
 
 ═══════════════════════════════════════════════════════════════
 TECHNICAL
@@ -244,13 +279,16 @@ TECHNICAL
 - Thermal printer optimized
 
 QUALITY CHECK:
-□ Clean, bold outlines defining all major shapes?
-□ Minimal shading (only where essential)?
-□ Easy to read and transfer?
-□ Structure preserved, details simplified?
-□ Not over-detailed?
+□ ALL micro-details captured (pores, texture, wrinkles)?
+□ Individual hair strands (not grouped)?
+□ Complete eye details (iris pattern, reflection)?
+□ All 7 tonal levels clearly present?
+□ Lines clean and separated (more spacing than topographic)?
+□ 3D volume convincing?
+□ Anatomy/proportions 100% exact?
+□ Professional clean line aesthetic?
 
-GOAL: Simple, clean, traceable stencil. MUCH simpler than Topographic mode.
+GOAL: Capture ALL details with clean, separated lines. Same richness as Topographic, cleaner aesthetic.
 
 OUTPUT: Generate ONLY the simple line stencil. No text. PNG black on white.`;
 
