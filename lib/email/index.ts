@@ -14,7 +14,7 @@ import CourtesyPaymentLink from '@/emails/templates/CourtesyPaymentLink';
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Email remetente (configurar domínio verificado no Resend)
-const FROM_EMAIL = process.env.FROM_EMAIL || 'StencilFlow <noreply@stencilflow.com>';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'StencilFlow <noreply@stencilflow.com.br>';
 
 // ============================================================================
 // TEMPLATES DE EMAIL
