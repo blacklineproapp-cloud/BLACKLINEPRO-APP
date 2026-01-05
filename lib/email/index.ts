@@ -17,6 +17,30 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = process.env.FROM_EMAIL || 'StencilFlow <noreply@stencilflow.com.br>';
 
 // ============================================================================
+// UTILITIES
+// ============================================================================
+
+/**
+ * Converter HTML para Plain Text
+ * Remove tags HTML e mantém apenas texto para melhor deliverability
+ */
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<style[^>]*>.*?<\/style>/gi, '')
+    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .replace(/\n\s*\n/g, '\n\n')
+    .trim();
+}
+
+// ============================================================================
 // TEMPLATES DE EMAIL
 // ============================================================================
 
@@ -364,18 +388,18 @@ export async function sendRemarketingEmail(
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://stencilflow.com.br';
 
-  // Mapear tipo de campanha para template React e assunto
+  // Mapear tipo de campanha para template React e assunto (SEM emojis ou spam words)
   const campaignConfig = {
     initial: {
-      subject: 'A Arte do Estêncil - Desbloqueie o StencilFlow Completo',
+      subject: 'Desbloqueie o StencilFlow Completo',
       template: RemarketingInitial,
     },
     reminder: {
-      subject: '48% mais barato que Ghostline - StencilFlow',
+      subject: 'Comparação: StencilFlow vs Ghostline',
       template: RemarketingReminder,
     },
     final: {
-      subject: 'Upload → IA → Download - Simples assim',
+      subject: 'Simplifique seu workflow de estêncil',
       template: RemarketingFinal,
     },
   };
@@ -393,12 +417,25 @@ export async function sendRemarketingEmail(
       })
     );
 
-    // Enviar email via Resend
+    // Criar versão plain text para melhor deliverability
+    const text = htmlToPlainText(html);
+
+    // Enviar email via Resend com headers otimizados
     await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject: config.subject,
       html,
+      text, // Versão plain text
+      headers: {
+        'List-Unsubscribe': `<${appUrl}/unsubscribe?email=${encodeURIComponent(email)}>`,
+        'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+        'Precedence': 'bulk',
+      },
+      tags: [
+        { name: 'campaign', value: campaignType },
+        { name: 'type', value: 'remarketing' },
+      ],
     });
 
     console.log(`[Email] Remarketing (${campaignType}) enviado para: ${email}`);

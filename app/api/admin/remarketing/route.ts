@@ -183,6 +183,30 @@ export async function POST(req: Request) {
       });
     }
 
+    // Buscar emails que deram unsubscribe
+    const { data: unsubscribes } = await supabaseAdmin
+      .from('email_unsubscribes')
+      .select('email');
+
+    const unsubscribeEmails = new Set(
+      (unsubscribes || []).map(u => u.email.toLowerCase())
+    );
+
+    // Filtrar usuários que deram unsubscribe
+    const usersWithoutUnsubscribe = users.filter(
+      user => !unsubscribeEmails.has(user.email.toLowerCase())
+    );
+
+    if (usersWithoutUnsubscribe.length === 0) {
+      return NextResponse.json({
+        success: true,
+        message: 'Nenhum usuário elegível (todos deram unsubscribe)',
+        sent: 0,
+        errors: 0,
+        unsubscribed: users.length
+      });
+    }
+
     // Buscar usuários que já receberam esta campanha
     const { data: alreadySent } = await supabaseAdmin
       .from('remarketing_campaigns')
@@ -192,14 +216,15 @@ export async function POST(req: Request) {
     const alreadySentIds = new Set((alreadySent || []).map(r => r.user_id));
 
     // Filtrar usuários que ainda não receberam
-    const eligibleUsers = users.filter(user => !alreadySentIds.has(user.id));
+    const eligibleUsers = usersWithoutUnsubscribe.filter(user => !alreadySentIds.has(user.id));
 
     if (eligibleUsers.length === 0) {
       return NextResponse.json({
         success: true,
         message: 'Todos os usuários elegíveis já receberam esta campanha',
         sent: 0,
-        errors: 0
+        errors: 0,
+        unsubscribed: users.length - usersWithoutUnsubscribe.length
       });
     }
 
