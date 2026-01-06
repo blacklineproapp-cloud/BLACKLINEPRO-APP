@@ -4,6 +4,7 @@ import { isAdmin as checkIsAdmin } from '@/lib/auth';
 import { removeBackground } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkToolsLimit, checkRemoveBackgroundLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { BRL_COST } from '@/lib/credits';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
@@ -131,6 +132,7 @@ export async function POST(req: Request) {
         userId: userData.id,
         type: 'tool_usage',
         operationType: 'remove_bg',
+        cost: BRL_COST.remove_bg,
         metadata: {
           tool: 'remove_bg',
           operation: 'remove_bg'

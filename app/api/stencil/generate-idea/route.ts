@@ -4,6 +4,7 @@ import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { generateTattooIdea } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkAILimit, checkGenerateIdeaLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { BRL_COST } from '@/lib/credits';
 
 export async function POST(req: Request) {
   try {
@@ -75,6 +76,7 @@ export async function POST(req: Request) {
           userId: user.id,
           type: 'ai_request',
           operationType: 'generate_idea',
+          cost: BRL_COST.ia_gen,
           metadata: {
             tool: 'generate_idea',
             operation: 'generate_idea',

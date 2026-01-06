@@ -9,6 +9,7 @@ import {
   withRateLimit,
 } from '@/lib/rate-limit';
 import { checkEditorLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { BRL_COST } from '@/lib/credits';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
 import { trackTrialUsage, getClientIP } from '@/lib/abuse-prevention';
@@ -128,6 +129,7 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
       userId: userUuid,
       type: 'editor_generation',
       operationType: 'generate_stencil',
+      cost: selectedStyle === 'perfect_lines' ? BRL_COST.lines : BRL_COST.topographic,
       metadata: {
         style: selectedStyle,
         operation: 'generate_stencil'

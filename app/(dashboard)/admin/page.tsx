@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Users, DollarSign, Activity, TrendingUp, Search, RefreshCw, Shield,
@@ -158,6 +158,11 @@ export default function AdminPage() {
   const [blockModal, setBlockModal] = useState<{ show: boolean; userId: string; email: string } | null>(null);
   const [blockReason, setBlockReason] = useState('');
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [userActivities, setUserActivities] = useState<Record<string, {
+    loading: boolean;
+    data: any[] | null;
+    stats: any | null;
+  }>>({});
 
   // Modal de mudança de plano
   const [planChangeModal, setPlanChangeModal] = useState<{ userId: string; email: string; currentPlan: string } | null>(null);
@@ -312,6 +317,47 @@ export default function AdminPage() {
     if (success) {
       setBlockModal(null);
       setBlockReason('');
+    }
+  };
+
+  // Carregar atividades do usuário
+  const loadUserActivity = async (userId: string) => {
+    // Se já está expandido, fechar
+    if (expandedUser === userId) {
+      setExpandedUser(null);
+      return;
+    }
+
+    // Expandir
+    setExpandedUser(userId);
+
+    // Se já tem dados em cache, não recarregar
+    if (userActivities[userId]?.data) {
+      return;
+    }
+
+    // Carregar dados
+    setUserActivities(prev => ({
+      ...prev,
+      [userId]: { loading: true, data: null, stats: null }
+    }));
+
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/activity`);
+      if (!res.ok) throw new Error('Erro ao carregar atividades');
+      
+      const data = await res.json();
+      
+      setUserActivities(prev => ({
+        ...prev,
+        [userId]: { loading: false, data: data.activities, stats: data.stats }
+      }));
+    } catch (error) {
+      console.error('Erro ao carregar atividades:', error);
+      setUserActivities(prev => ({
+        ...prev,
+        [userId]: { loading: false, data: null, stats: null }
+      }));
     }
   };
 
@@ -1340,133 +1386,240 @@ export default function AdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user) => (
-                    <tr
-                      key={user.id}
-                      className="border-b border-zinc-800 hover:bg-zinc-800/30 transition"
-                    >
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="font-medium text-sm">{user.email}</div>
-                          <div className="text-xs text-zinc-500">
-                            {user.name || 'Sem nome'}
+                  {users.map((u) => (
+                    <Fragment key={u.id}>
+                      <tr
+                        className="border-b border-zinc-800 hover:bg-zinc-800/30 transition"
+                      >
+                        <td className="px-6 py-4">
+                          <div>
+                            <div className="font-medium text-sm">{u.email}</div>
+                            <div className="text-xs text-zinc-500">
+                              {u.name || 'Sem nome'}
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                            user.plan === 'enterprise'
-                              ? 'bg-blue-900/30 text-blue-400 border border-blue-800/30'
-                              : user.plan === 'studio'
-                              ? 'bg-amber-900/30 text-amber-400 border border-amber-800/30'
-                              : user.plan === 'pro'
-                              ? 'bg-purple-900/30 text-purple-400 border border-purple-800/30'
-                              : user.plan === 'starter'
-                              ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/30'
-                              : user.plan === 'legacy'
-                              ? 'bg-orange-900/30 text-orange-400 border border-orange-800/30'
-                              : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-                          }`}
-                        >
-                          {user.plan === 'enterprise'
-                            ? '🏢 Enterprise'
-                            : user.plan === 'studio'
-                            ? 'Studio'
-                            : user.plan === 'pro'
-                            ? 'Pro'
-                            : user.plan === 'starter'
-                            ? 'Starter'
-                            : user.plan === 'legacy'
-                            ? '🎁 Legacy'
-                            : 'Free'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-semibold">{user.total_requests || 0}</div>
-                        <div className="text-xs text-zinc-500">total</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {user.is_blocked ? (
-                          <div className="flex items-center gap-2">
-                            <Ban size={16} className="text-red-400" />
-                            <div>
-                              <div className="text-sm text-red-400 font-medium">Bloqueado</div>
-                              {user.blocked_reason && (
-                                <div className="text-xs text-zinc-500 max-w-[150px] truncate">
-                                  {user.blocked_reason}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                              u.plan === 'enterprise'
+                                ? 'bg-blue-900/30 text-blue-400 border border-blue-800/30'
+                                : u.plan === 'studio'
+                                ? 'bg-amber-900/30 text-amber-400 border border-amber-800/30'
+                                : u.plan === 'pro'
+                                ? 'bg-purple-900/30 text-purple-400 border border-purple-800/30'
+                                : u.plan === 'starter'
+                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/30'
+                                : u.plan === 'legacy'
+                                ? 'bg-orange-900/30 text-orange-400 border border-orange-800/30'
+                                : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                            }`}
+                          >
+                            {u.plan === 'enterprise'
+                              ? '🏢 Enterprise'
+                              : u.plan === 'studio'
+                              ? 'Studio'
+                              : u.plan === 'pro'
+                              ? 'Pro'
+                              : u.plan === 'starter'
+                              ? 'Starter'
+                              : u.plan === 'legacy'
+                              ? '🎁 Legacy'
+                              : 'Free'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-semibold">{u.total_requests || 0}</div>
+                          <div className="text-xs text-zinc-500">total</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          {u.is_blocked ? (
+                            <div className="flex items-center gap-2">
+                              <Ban size={16} className="text-red-400" />
+                              <div>
+                                <div className="text-sm text-red-400 font-medium">Bloqueado</div>
+                                {u.blocked_reason && (
+                                  <div className="text-xs text-zinc-500 max-w-[150px] truncate">
+                                    {u.blocked_reason}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-green-400">
+                              <CheckCircle size={16} />
+                              <span className="text-sm font-medium">Ativo</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-zinc-400">
+                          {u.last_active_at
+                            ? new Date(u.last_active_at).toLocaleDateString('pt-BR', {
+                                day: '2-digit',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : '-'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 justify-end">
+                            {u.is_blocked ? (
+                              <button
+                                onClick={() => handleUserAction('unblock', u.id)}
+                                className="px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg text-xs font-medium transition"
+                              >
+                                Desbloquear
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() =>
+                                  setBlockModal({ show: true, userId: u.id, email: u.email })
+                                }
+                                className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-xs font-medium transition"
+                              >
+                                Bloquear
+                              </button>
+                            )}
+
+
+                            <button
+                              onClick={() => {
+                                setPlanChangeModal({
+                                  userId: u.id,
+                                  email: u.email,
+                                  currentPlan: u.plan
+                                });
+                                setSelectedPlan(u.plan as any || 'starter');
+                                setPlanChangeMode('courtesy');
+                                setSendEmail(false);
+                              }}
+                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium transition"
+                            >
+                              Alterar Plano
+                            </button>
+
+
+                            <button
+                              onClick={() => loadUserActivity(u.id)}
+                              className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition"
+                              title="Ver histórico de atividades"
+                            >
+                              {expandedUser === u.id ? (
+                                <ChevronUp size={16} />
+                              ) : (
+                                <ChevronDown size={16} />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* Linha expandível com histórico de atividades */}
+                      {expandedUser === u.id && (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-4 bg-zinc-950/50 border-t border-zinc-800">
+                            <div className="space-y-4">
+                              {/* Header com estatísticas */}
+                              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                                <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+                                  <Activity size={16} className="text-emerald-400" />
+                                  Histórico de Atividades - {u.email}
+                                </h3>
+                                {userActivities[u.id]?.stats && (
+                                  <div className="flex items-center gap-4 text-xs text-zinc-400">
+                                    <span className="flex items-center gap-1">
+                                      <span className="text-zinc-500">Total:</span>
+                                      <span className="text-zinc-300 font-medium">{userActivities[u.id]?.stats?.total}</span>
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <span className="text-blue-400">●</span>
+                                      <span>Editor: {userActivities[u.id]?.stats?.byType.editor}</span>
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <span className="text-purple-400">●</span>
+                                      <span>IA: {userActivities[u.id]?.stats?.byType.ai}</span>
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <span className="text-emerald-400">●</span>
+                                      <span>Tools: {userActivities[u.id]?.stats?.byType.tools}</span>
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <DollarSign size={12} className="text-yellow-400" />
+                                      <span>R$ {userActivities[u.id]?.stats?.totalCost.toFixed(2)}</span>
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Loading */}
+                              {userActivities[u.id]?.loading && (
+                                <div className="flex items-center justify-center py-8">
+                                  <RefreshCw className="animate-spin text-emerald-400" size={20} />
+                                  <span className="ml-2 text-sm text-zinc-400">Carregando histórico...</span>
+                                </div>
+                              )}
+
+                              {/* Tabela de atividades */}
+                              {(userActivities[u.id]?.data?.length ?? 0) > 0 && (
+                                <div className="overflow-x-auto">
+                                  <table className="w-full">
+                                    <thead>
+                                      <tr className="text-xs text-zinc-500 border-b border-zinc-800">
+                                        <th className="text-left py-2 px-3 font-medium">Data/Hora</th>
+                                        <th className="text-left py-2 px-3 font-medium">Tipo</th>
+                                        <th className="text-left py-2 px-3 font-medium">Operação</th>
+                                        <th className="text-right py-2 px-3 font-medium">Custo</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {userActivities[u.id]?.data?.map((activity: any) => (
+                                        <tr key={activity.id} className="text-sm border-b border-zinc-800/50 hover:bg-zinc-900/50 transition">
+                                          <td className="py-2 px-3 text-zinc-400">
+                                            {new Date(activity.created_at).toLocaleString('pt-BR', {
+                                              day: '2-digit',
+                                              month: 'short',
+                                              hour: '2-digit',
+                                              minute: '2-digit'
+                                            })}
+                                          </td>
+                                          <td className="py-2 px-3">
+                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                              activity.usage_type === 'editor_generation' 
+                                                ? 'bg-blue-500/20 text-blue-400'
+                                                : activity.usage_type === 'ai_request'
+                                                ? 'bg-purple-500/20 text-purple-400'
+                                                : 'bg-emerald-500/20 text-emerald-400'
+                                            }`}>
+                                              {activity.usage_type === 'editor_generation' ? 'Editor' :
+                                               activity.usage_type === 'ai_request' ? 'IA Gen' : 'Tool'}
+                                            </span>
+                                          </td>
+                                          <td className="py-2 px-3 text-zinc-300 font-mono text-xs">
+                                            {activity.operation_type}
+                                          </td>
+                                          <td className="py-2 px-3 text-right text-zinc-400 font-mono text-xs">
+                                            R$ {(activity.cost || 0).toFixed(4)}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              )}
+
+                              {/* Empty state */}
+                              {userActivities[u.id]?.data?.length === 0 && (
+                                <div className="text-center py-8 text-zinc-500 text-sm">
+                                  <Activity size={32} className="mx-auto mb-2 opacity-50" />
+                                  <p>Nenhuma atividade registrada</p>
                                 </div>
                               )}
                             </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 text-green-400">
-                            <CheckCircle size={16} />
-                            <span className="text-sm font-medium">Ativo</span>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-zinc-400">
-                        {user.last_active_at
-                          ? new Date(user.last_active_at).toLocaleDateString('pt-BR', {
-                              day: '2-digit',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '-'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 justify-end">
-                          {user.is_blocked ? (
-                            <button
-                              onClick={() => handleUserAction('unblock', user.id)}
-                              className="px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg text-xs font-medium transition"
-                            >
-                              Desbloquear
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() =>
-                                setBlockModal({ show: true, userId: user.id, email: user.email })
-                              }
-                              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-xs font-medium transition"
-                            >
-                              Bloquear
-                            </button>
-                          )}
-
-
-                          <button
-                            onClick={() => {
-                              setPlanChangeModal({
-                                userId: user.id,
-                                email: user.email,
-                                currentPlan: user.plan
-                              });
-                              setSelectedPlan(user.plan as any || 'starter');
-                              setPlanChangeMode('courtesy');
-                              setSendEmail(false);
-                            }}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium transition"
-                          >
-                            Alterar Plano
-                          </button>
-
-
-                          <button
-                            onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}
-                            className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition"
-                          >
-                            {expandedUser === user.id ? (
-                              <ChevronUp size={16} />
-                            ) : (
-                              <ChevronDown size={16} />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
                   ))}
                 </tbody>
               </table>

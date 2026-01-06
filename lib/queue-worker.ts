@@ -7,6 +7,7 @@ import {
 } from './queue';
 import { generateStencilFromImage, enhanceImage, generateTattooIdea, analyzeImageColors } from './gemini';
 import { recordUsage } from './billing/limits';
+import { BRL_COST } from './credits';
 import { supabaseAdmin } from './supabase';
 import { Redis } from 'ioredis';
 
@@ -69,6 +70,8 @@ export const stencilWorker = new Worker<StencilJobData>(
         await recordUsage({
           userId: user.id,
           type: 'editor_generation',
+          operationType: operationType || 'generate_stencil',
+          cost: style === 'perfect_lines' ? BRL_COST.lines : BRL_COST.topographic,
           metadata: {
             style: style === 'perfect_lines' ? 'perfect_lines' : 'standard',
             operation: operationType,
@@ -141,9 +144,12 @@ export const enhanceWorker = new Worker<EnhanceJobData>(
         await recordUsage({
           userId: user.id,
           type: 'tool_usage',
+          operationType: 'enhance_image',
+          cost: BRL_COST.enhance,
           metadata: {
             tool: 'enhance',
-            via: 'queue'
+            via: 'queue',
+            operation: 'enhance_image'
           }
         });
       }
@@ -194,6 +200,8 @@ export const iaGenWorker = new Worker<IaGenJobData>(
         await recordUsage({
           userId: user.id,
           type: 'ai_request',
+          operationType: 'ia_gen',
+          cost: BRL_COST.ia_gen,
           metadata: {
             operation: 'ia_gen',
             prompt_length: prompt.length,
@@ -248,9 +256,12 @@ export const colorMatchWorker = new Worker<ColorMatchJobData>(
         await recordUsage({
           userId: user.id,
           type: 'tool_usage',
+          operationType: 'color_match',
+          cost: BRL_COST.color_match,
           metadata: {
             tool: 'color_match',
-            via: 'queue'
+            via: 'queue',
+            operation: 'color_match'
           }
         });
       }

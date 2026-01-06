@@ -4,6 +4,7 @@ import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { enhanceImage } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkToolsLimit, checkEnhance4KLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { BRL_COST } from '@/lib/credits';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
@@ -134,6 +135,7 @@ export async function POST(req: Request) {
         userId: userData.id,
         type: 'tool_usage',
         operationType: 'enhance_image',
+        cost: BRL_COST.enhance,
         metadata: {
           tool: 'enhance',
           operation: 'enhance_image'

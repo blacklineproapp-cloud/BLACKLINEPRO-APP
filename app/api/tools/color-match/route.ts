@@ -4,6 +4,7 @@ import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { analyzeImageColors } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkToolsLimit, checkColorMatchLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { BRL_COST } from '@/lib/credits';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 
 
@@ -105,6 +106,7 @@ export async function POST(req: Request) {
           userId: user.id,
           type: 'tool_usage',
           operationType: 'color_match',
+          cost: BRL_COST.color_match,
           metadata: {
             tool: 'color_match',
             brand

@@ -4,6 +4,7 @@ import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateStencilFromImage } from '@/lib/gemini';
 import { checkToolsLimit, checkSplitA4Limit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { BRL_COST } from '@/lib/credits';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 import sharp from 'sharp';
 
@@ -241,6 +242,7 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
           userId: userUuid,
           type: 'tool_usage',
           operationType: 'split_with_gemini',
+          cost: BRL_COST.split_a4,
           metadata: {
             tool: 'split_a4',
             processMode: processMode,
@@ -261,6 +263,7 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
         userId: userUuid,
         type: 'tool_usage',
         operationType: 'split_only',
+        cost: BRL_COST.split_a4,
         metadata: {
           tool: 'split_a4',
           processMode: 'reference',

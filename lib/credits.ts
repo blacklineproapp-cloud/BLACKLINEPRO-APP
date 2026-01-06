@@ -25,7 +25,7 @@ import type { Organization } from './types/organization';
  * - Sistema verifica organização primeiro, depois usuário individual
  */
 
-export type OperationType = 'topographic' | 'lines' | 'ia_gen' | 'enhance' | 'color_match';
+export type OperationType = 'topographic' | 'lines' | 'ia_gen' | 'enhance' | 'color_match' | 'remove_bg' | 'split_a4';
 export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise';
 
 // Custo em créditos por operação (SIMPLIFICADO - tudo 1 crédito)
@@ -35,6 +35,8 @@ export const CREDITS_COST: Record<OperationType, number> = {
   ia_gen: 1,
   enhance: 1,
   color_match: 1,
+  remove_bg: 1,
+  split_a4: 1,
 };
 
 // Custo real em USD (Gemini 2.5 Flash Image - Dezembro 2025)
@@ -45,6 +47,8 @@ export const USD_COST: Record<OperationType, number> = {
   ia_gen: 0.039,         // Gemini 2.5 Flash Image
   enhance: 0.039,        // Gemini 2.5 Flash Image (4K upscale)
   color_match: 0.02,     // Apenas análise de texto (input)
+  remove_bg: 0.02,       // Background removal
+  split_a4: 0.01,        // Tiled printing processing
 };
 
 // Custo em BRL (dólar a R$ 5,00)
@@ -54,6 +58,8 @@ export const BRL_COST: Record<OperationType, number> = {
   ia_gen: 0.195,
   enhance: 0.195,
   color_match: 0.10,
+  remove_bg: 0.10,
+  split_a4: 0.05,
 };
 
 // Limites DIÁRIOS por plano (para evitar abuso)
@@ -74,6 +80,8 @@ export const PLAN_LIMITS: Record<PlanType, Record<OperationType, number | null>>
     ia_gen: 0,
     enhance: 0,
     color_match: 0,
+    remove_bg: 0,
+    split_a4: 0,
   },
   starter: {
     topographic: 100,    // 100 gerações/mês incluídas (Starter)
@@ -81,6 +89,8 @@ export const PLAN_LIMITS: Record<PlanType, Record<OperationType, number | null>>
     ia_gen: 100,
     enhance: 100,
     color_match: 100,
+    remove_bg: 100,
+    split_a4: 100,
   },
   pro: {
     topographic: 500,    // 500 gerações/mês incluídas
@@ -88,6 +98,8 @@ export const PLAN_LIMITS: Record<PlanType, Record<OperationType, number | null>>
     ia_gen: 500,
     enhance: 500,
     color_match: 500,
+    remove_bg: 500,
+    split_a4: 500,
   },
   studio: {
     topographic: null,   // Ilimitado
@@ -95,6 +107,8 @@ export const PLAN_LIMITS: Record<PlanType, Record<OperationType, number | null>>
     ia_gen: null,
     enhance: null,
     color_match: null,
+    remove_bg: null,
+    split_a4: null,
   },
   enterprise: {
     topographic: null,   // Verdadeiramente ilimitado
@@ -102,6 +116,8 @@ export const PLAN_LIMITS: Record<PlanType, Record<OperationType, number | null>>
     ia_gen: null,
     enhance: null,
     color_match: null,
+    remove_bg: null,
+    split_a4: null,
   }
 };
 

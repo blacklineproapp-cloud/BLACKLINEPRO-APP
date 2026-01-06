@@ -266,6 +266,7 @@ export interface RecordUsageParams {
   userId: string;
   type: UsageType;
   operationType?: string; // Tipo específico da operação (ex: "split_with_gemini", "split_only")
+  cost?: number;           // Custo monetário da operação
   metadata?: Record<string, any>;
 }
 
@@ -273,7 +274,7 @@ export interface RecordUsageParams {
  * Registra uso na tabela ai_usage
  */
 export async function recordUsage(params: RecordUsageParams): Promise<void> {
-  const { userId, type, operationType, metadata } = params;
+  const { userId, type, operationType, cost, metadata } = params;
 
   try {
     const { error } = await supabaseAdmin
@@ -282,6 +283,7 @@ export async function recordUsage(params: RecordUsageParams): Promise<void> {
         user_id: userId,
         usage_type: type,
         operation_type: operationType || type, // Fallback para type se não fornecido
+        cost: cost || 0,
         metadata: metadata || {},
         created_at: new Date().toISOString()
       });
