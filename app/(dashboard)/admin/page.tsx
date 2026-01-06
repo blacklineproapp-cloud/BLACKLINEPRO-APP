@@ -161,7 +161,7 @@ export default function AdminPage() {
 
   // Modal de mudança de plano
   const [planChangeModal, setPlanChangeModal] = useState<{ userId: string; email: string; currentPlan: string } | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'starter' | 'pro' | 'studio' | 'enterprise'>('starter');
+  const [selectedPlan, setSelectedPlan] = useState<'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy'>('starter');
   const [planChangeMode, setPlanChangeMode] = useState<'courtesy' | 'recurring'>('courtesy');
   const [sendEmail, setSendEmail] = useState(false);
   const [planChangeLoading, setPlanChangeLoading] = useState(false);
@@ -322,7 +322,18 @@ export default function AdminPage() {
     setPlanChangeLoading(true);
 
     try {
-      if (planChangeMode === 'courtesy') {
+      // Legacy: Atribuir diretamente (usuário paga via banner no dashboard)
+      if (selectedPlan === 'legacy') {
+        const success = await handleUserAction('change_plan', planChangeModal.userId, {
+          newPlan: 'legacy',
+          isCourtesy: false // Não é cortesia, mas não gera link aqui
+        });
+
+        if (success) {
+          alert(`✅ Plano Legacy atribuído!\n\n📱 O usuário verá um banner no dashboard para pagar R$ 25/mês.\n\n💡 Após o pagamento, o acesso será liberado automaticamente.`);
+          setPlanChangeModal(null);
+        }
+      } else if (planChangeMode === 'courtesy') {
         // Modo cortesia - ativar plano diretamente
         const success = await handleUserAction('change_plan', planChangeModal.userId, {
           newPlan: selectedPlan,
@@ -1345,21 +1356,29 @@ export default function AdminPage() {
                       <td className="px-6 py-4">
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                            user.plan === 'studio'
+                            user.plan === 'enterprise'
+                              ? 'bg-blue-900/30 text-blue-400 border border-blue-800/30'
+                              : user.plan === 'studio'
                               ? 'bg-amber-900/30 text-amber-400 border border-amber-800/30'
                               : user.plan === 'pro'
                               ? 'bg-purple-900/30 text-purple-400 border border-purple-800/30'
                               : user.plan === 'starter'
-                              ? 'bg-blue-900/30 text-blue-400 border border-blue-800/30'
+                              ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/30'
+                              : user.plan === 'legacy'
+                              ? 'bg-orange-900/30 text-orange-400 border border-orange-800/30'
                               : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
                           }`}
                         >
-                          {user.plan === 'studio'
+                          {user.plan === 'enterprise'
+                            ? '🏢 Enterprise'
+                            : user.plan === 'studio'
                             ? 'Studio'
                             : user.plan === 'pro'
                             ? 'Pro'
                             : user.plan === 'starter'
                             ? 'Starter'
+                            : user.plan === 'legacy'
+                            ? '🎁 Legacy'
                             : 'Free'}
                         </span>
                       </td>
@@ -1566,6 +1585,7 @@ export default function AdminPage() {
                 className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm focus:border-blue-500 outline-none"
               >
                 <option value="free">Free (Gratuito)</option>
+                <option value="legacy">🎁 Legacy (R$ 25/mês) - APENAS EDITOR</option>
                 <option value="starter">Starter (R$ 50/mês)</option>
                 <option value="pro">Pro (R$ 100/mês)</option>
                 <option value="studio">Studio (R$ 300/mês) - Multi-usuário (3 usuários)</option>
@@ -1573,8 +1593,22 @@ export default function AdminPage() {
               </select>
             </div>
 
+            {/* Aviso especial para plano Legacy */}
+            {selectedPlan === 'legacy' && (
+              <div className="mb-4 p-3 bg-amber-900/20 border border-amber-800/30 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle size={16} className="text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-xs text-amber-400">
+                    <strong>Plano Legacy:</strong> Apenas EDITOR (sem ferramentas premium). 
+                    Usuário deve pagar IMEDIATAMENTE (sem cortesia). 
+                    Plano secreto para usuários do app anterior.
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Modo de Ativação */}
-            {selectedPlan !== 'free' && (
+            {selectedPlan !== 'free' && selectedPlan !== 'legacy' && (
               <div className="mb-4">
                 <label className="block mb-3 text-sm font-medium text-zinc-300">
                   Modo de Ativação
@@ -1618,6 +1652,20 @@ export default function AdminPage() {
                     </div>
                   </label>
                 </div>
+              </div>
+            )}
+
+            {/* Legacy: Apenas modo recorrente (sem cortesia) */}
+            {selectedPlan === 'legacy' && (
+              <div className="mb-4 p-4 bg-emerald-900/20 border border-emerald-800/30 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard size={18} className="text-emerald-400" />
+                  <h4 className="font-semibold text-emerald-400">Modo: Pagamento Imediato</h4>
+                </div>
+                <p className="text-xs text-zinc-300">
+                  Plano Legacy requer <strong>pagamento imediato</strong>. 
+                  Ao confirmar, o usuário verá um banner no dashboard com botão para pagar R$ 25/mês via Stripe.
+                </p>
               </div>
             )}
 

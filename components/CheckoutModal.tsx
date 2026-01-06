@@ -13,7 +13,7 @@ import type { BillingCycle } from '@/lib/stripe/types';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface CheckoutModalProps {
-  plan: 'starter' | 'pro' | 'studio' | 'enterprise';
+  plan: 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
   cycle?: 'monthly' | 'quarterly' | 'semiannual' | 'yearly';
   isOpen: boolean;
   onClose: () => void;
@@ -28,6 +28,12 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
   const [devMode, setDevMode] = useState(false);
 
   const planDetails = {
+    legacy: {
+      name: 'Legacy',
+      icon: Sparkles,
+      color: 'orange',
+      limit: '100 gerações/mês',
+    },
     starter: {
       name: 'Starter',
       icon: Zap,
@@ -149,6 +155,7 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
           <div className="flex items-center gap-2.5">
             <div
               className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                details.color === 'orange' ? 'bg-orange-600/10 border border-orange-500/30' :
                 details.color === 'emerald' ? 'bg-emerald-600/10 border border-emerald-500/30' :
                 details.color === 'purple' ? 'bg-purple-600/10 border border-purple-500/30' :
                 'bg-amber-600/10 border border-amber-500/30'
@@ -156,6 +163,7 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
             >
               <details.icon 
                 className={
+                  details.color === 'orange' ? 'text-orange-500' :
                   details.color === 'emerald' ? 'text-emerald-500' :
                   details.color === 'purple' ? 'text-purple-500' :
                   'text-amber-500'

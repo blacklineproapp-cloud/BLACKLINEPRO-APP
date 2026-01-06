@@ -54,7 +54,7 @@ export type PaymentMethod =
 // PLAN TYPE
 // ============================================================================
 
-export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise';
+export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
 
 export type BillingCycle = 'monthly' | 'quarterly' | 'semiannual' | 'yearly';
 

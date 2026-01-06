@@ -50,6 +50,10 @@ export default async function DashboardPage() {
   };
   const monthlyLimit = limits[user.plan as string] || 100;
 
+  // Verificar se usuário tem cortesia com deadline
+  const courtesyDeadline = (user as any).courtesy_deadline;
+  const assignedPlan = (user as any).assigned_plan;
+
   return (
     <DashboardClient
       projects={projects || []}
@@ -57,6 +61,11 @@ export default async function DashboardPage() {
       currentUsage={currentUsage}
       monthlyLimit={monthlyLimit}
       userPlan={user.plan as string}
+      courtesyDeadline={courtesyDeadline}
+      assignedPlan={assignedPlan}
+      userId={user.id}
+      userEmail={user.email}
+      isPaid={user.is_paid}
     />
   );
 }

@@ -198,7 +198,7 @@ export async function POST(req: Request) {
 
         const { isCourtesy, sendPaymentLink } = body;
 
-        if (!newPlan || !['free', 'starter', 'pro', 'studio'].includes(newPlan)) {
+        if (!newPlan || !['free', 'starter', 'pro', 'studio', 'enterprise', 'legacy'].includes(newPlan)) {
           return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
         }
 
@@ -211,6 +211,13 @@ export async function POST(req: Request) {
           updates.admin_courtesy = false;
           updates.admin_courtesy_granted_by = null;
           updates.admin_courtesy_granted_at = null;
+        } else if (newPlan === 'legacy') {
+          // Legacy: Atribui plano mas NÃO marca como pago (usuário paga via banner)
+          updates.is_paid = false;
+          updates.tools_unlocked = false;
+          updates.subscription_status = 'inactive';
+          updates.admin_courtesy = false;
+          // Não registra como cortesia - usuário precisa pagar
         } else if (newPlan === 'starter') {
           updates.is_paid = true;
           updates.tools_unlocked = false;
@@ -221,7 +228,7 @@ export async function POST(req: Request) {
             updates.admin_courtesy_granted_by = adminCheck.adminId;
             updates.admin_courtesy_granted_at = new Date().toISOString();
           }
-        } else if (newPlan === 'pro' || newPlan === 'studio') {
+        } else if (newPlan === 'pro' || newPlan === 'studio' || newPlan === 'enterprise') {
           updates.is_paid = true;
           updates.tools_unlocked = true;
           updates.subscription_status = 'active';
@@ -233,10 +240,20 @@ export async function POST(req: Request) {
           }
         }
 
-        await supabaseAdmin
+        console.log(`[Admin] Atualizando usuário ${targetUserId} para plano ${newPlan}:`, updates);
+
+        const { data: updateResult, error: updateError } = await supabaseAdmin
           .from('users')
           .update(updates)
-          .eq('id', targetUserId);
+          .eq('id', targetUserId)
+          .select();
+
+        if (updateError) {
+          console.error('[Admin] Erro ao atualizar plano:', updateError);
+          throw updateError;
+        }
+
+        console.log('[Admin] Usuário atualizado:', updateResult);
 
         // Buscar clerk_id para invalidar cache
         const { data: targetUser } = await supabaseAdmin

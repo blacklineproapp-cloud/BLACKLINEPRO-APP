@@ -15,7 +15,7 @@ import { CustomerService } from '@/lib/stripe';
 import { getPriceIdFromPlan } from '@/lib/billing/stripe-plan-mapping';
 import type { BillingCycle } from '@/lib/stripe/types';
 
-type CheckoutPlan = 'starter' | 'pro' | 'studio' | 'enterprise';
+type CheckoutPlan = 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
 
 export async function POST(req: Request) {
   try {
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
     const { plan, cycle = 'monthly' } = await req.json();
 
     // Validar plano
-    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio' && plan !== 'enterprise') {
+    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio' && plan !== 'enterprise' && plan !== 'legacy') {
       return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
     }
 
@@ -60,9 +60,10 @@ export async function POST(req: Request) {
         plan: plan,
       };
 
-      if (plan === 'pro' || plan === 'studio') {
+      if (plan === 'pro' || plan === 'studio' || plan === 'enterprise') {
         updates.tools_unlocked = true;
       }
+      // Legacy: apenas editor, sem ferramentas
 
       await supabaseAdmin
         .from('users')
@@ -89,6 +90,13 @@ export async function POST(req: Request) {
 
       // Calcular valor baseado no plano e ciclo
       switch (plan) {
+        case 'legacy':
+          // Legacy: sempre R$ 25/mês (sem desconto)
+          amount = cycle === 'monthly' ? 2500 :
+                   cycle === 'quarterly' ? 7500 :
+                   cycle === 'semiannual' ? 15000 :
+                   30000; // yearly
+          break;
         case 'starter':
           amount = cycle === 'monthly' ? 5000 :
                    cycle === 'quarterly' ? 13500 :
@@ -106,6 +114,12 @@ export async function POST(req: Request) {
                    cycle === 'quarterly' ? 81000 :
                    cycle === 'semiannual' ? 135000 :
                    216000; // yearly
+          break;
+        case 'enterprise':
+          amount = cycle === 'monthly' ? 60000 :
+                   cycle === 'quarterly' ? 162000 :
+                   cycle === 'semiannual' ? 270000 :
+                   432000; // yearly
           break;
         default:
           priceId = PRICES.STARTER;

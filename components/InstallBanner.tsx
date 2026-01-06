@@ -83,9 +83,9 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
               <div className="flex-shrink-0 w-14 h-14 bg-black rounded-xl border border-zinc-800 flex items-center justify-center overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
-                  src="/icon-192.png" 
+                  src="/web-app-manifest-192x192.png" 
                   alt="StencilFlow" 
-                  className="w-10 h-10 object-contain"
+                  className="w-full h-full object-cover"
                 />
               </div>
 

@@ -7,7 +7,7 @@ import { PLAN_PRICING, formatPrice, BILLING_CYCLES } from '@/lib/billing/plans';
 import type { BillingCycle } from '@/lib/stripe/types';
 
 interface CheckoutFormProps {
-  plan: 'starter' | 'pro' | 'studio' | 'enterprise';
+  plan: 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
   cycle?: BillingCycle;
   onSuccess: () => void;
   onError: (error: string) => void;

@@ -11,7 +11,7 @@
 import type { BillingCycle } from '../stripe/types';
 
 // Tipos de plano
-export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise';
+export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
 
 // ============================================================================
 // CICLOS DE PAGAMENTO
@@ -63,6 +63,12 @@ export const PLAN_PRICING: Record<PlanType, PlanPricing> = {
     semiannual: 0,
     yearly: 0
   },
+  legacy: {
+    monthly: 25.00,      // 🎁 LEGACY: R$ 25/mês fixo
+    quarterly: 75.00,    // R$ 25/mês (sem desconto)
+    semiannual: 150.00,  // R$ 25/mês (sem desconto)
+    yearly: 300.00       // R$ 25/mês (sem desconto)
+  },
   starter: {
     monthly: 50.00,
     quarterly: 135.00,   // R$ 45/mês (10% off)
@@ -95,6 +101,7 @@ export const PLAN_PRICING: Record<PlanType, PlanPricing> = {
 
 export const PLAN_GENERATION_LIMITS: Record<PlanType, number | null> = {
   free: 0,         // Sem acesso
+  legacy: 100,     // 🎁 LEGACY: Mesmo limite do Starter
   starter: 100,    // 100 gerações/mês
   pro: 500,        // 500 gerações/mês
   studio: 7500,    // 🛡️ Soft limit: 7.500 gerações/mês
@@ -143,6 +150,46 @@ export const PLANS: Record<PlanType, PlanInfo> = {
         name: 'Ferramentas IA',
         included: false,
         description: 'Apenas para assinantes'
+      }
+    ]
+  },
+
+  legacy: {
+    name: 'Legacy',
+    description: 'Apenas Editor - Plano especial',
+    price: PLAN_PRICING.legacy,
+    generationLimit: 100,
+    cta: 'Assinar Legacy',
+    features: [
+      {
+        name: 'Editor de Stencil completo',
+        included: true,
+        description: 'Edição profissional de stencils'
+      },
+      {
+        name: 'Modo Topográfico',
+        included: true,
+        description: 'Visualize camadas de profundidade'
+      },
+      {
+        name: 'Linhas Perfeitas',
+        included: true,
+        description: 'Ajuste automático de contornos'
+      },
+      {
+        name: 'Download PNG',
+        included: true,
+        description: 'Exporte em alta qualidade'
+      },
+      {
+        name: 'Ferramentas Premium',
+        included: false,
+        description: 'Não incluídas (upgrade para Starter)'
+      },
+      {
+        name: 'IA Generativa',
+        included: false,
+        description: 'Não incluída (upgrade para Pro)'
       }
     ]
   },
@@ -318,6 +365,7 @@ export interface StripePriceIds {
 export function getStripePriceIds(plan: PlanType): StripePriceIds {
   const prefixMap: Record<PlanType, string> = {
     free: 'FREE',
+    legacy: 'LEGACY',
     starter: 'STARTER',
     pro: 'PRO',
     studio: 'STUDIO',

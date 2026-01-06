@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Plus, Clock, Upload, Zap, Printer, Crown, X, Download, Edit2, Trash2, Maximize2, Activity, TrendingUp, Infinity as InfinityIcon, Search, Filter, Loader2, Pencil, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { storage } from '@/lib/client-storage';
+import CourtesyBanner from '@/components/CourtesyBanner';
+import LegacyPaymentBanner from '@/components/LegacyPaymentBanner';
 
 interface Project {
   id: string;
@@ -25,9 +27,14 @@ interface DashboardClientProps {
   currentUsage: number;
   monthlyLimit: number | null;
   userPlan: string;
+  courtesyDeadline?: string | null;
+  assignedPlan?: 'legacy' | 'starter' | 'pro' | 'studio' | null;
+  userId: string;
+  userEmail: string;
+  isPaid: boolean;
 }
 
-export default function DashboardClient({ projects, isSubscribed, currentUsage, monthlyLimit, userPlan }: DashboardClientProps) {
+export default function DashboardClient({ projects, isSubscribed, currentUsage, monthlyLimit, userPlan, courtesyDeadline, assignedPlan, userId, userEmail, isPaid }: DashboardClientProps) {
   const router = useRouter();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showStencil, setShowStencil] = useState(true);
@@ -247,6 +254,19 @@ export default function DashboardClient({ projects, isSubscribed, currentUsage, 
           </div>
         )}
       </div>
+
+      {/* Legacy Payment Banner - Aparece quando admin atribui plano legacy */}
+      {userPlan === 'legacy' && !isPaid && (
+        <LegacyPaymentBanner userId={userId} userEmail={userEmail} />
+      )}
+
+      {/* Courtesy Banner */}
+      {courtesyDeadline && assignedPlan && (
+        <CourtesyBanner 
+          deadline={courtesyDeadline} 
+          assignedPlan={assignedPlan as 'legacy' | 'starter' | 'pro' | 'studio'} 
+        />
+      )}
 
       {/* Banner de Assinatura */}
       {!isSubscribed && (

@@ -889,7 +889,8 @@ export default function EditorPage() {
             <div className="w-12 h-1 bg-zinc-600 rounded-full"></div>
           </div>
 
-          <div className="p-2.5 lg:p-5 space-y-2 lg:space-y-3 overflow-y-auto pb-24 lg:pb-5 max-h-full">
+          <div className="h-full overflow-y-auto overscroll-contain">
+            <div className="p-2.5 lg:p-5 space-y-2 lg:space-y-3 pb-24 lg:pb-5">
 
             {/* Botão Nova Imagem - Aparece quando tem imagem carregada */}
             {originalImage && !generatedStencil && (
@@ -1053,6 +1054,7 @@ export default function EditorPage() {
                 </div>
               </>
             )}
+            </div>
           </div>
         </aside>
       </div>

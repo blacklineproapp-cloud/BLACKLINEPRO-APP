@@ -41,6 +41,15 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
     colorMatch: 2,
     splitA4: 2
   },
+  legacy: {
+    editorGenerations: 100,  // 🎁 LEGACY: Apenas editor
+    aiRequests: 0,           // ❌ SEM IA avançada
+    toolsUsage: 0,           // ❌ SEM ferramentas premium
+    removeBackground: 0,     // ❌ SEM remove background
+    enhance4K: 0,            // ❌ SEM enhance 4K
+    colorMatch: 0,           // ❌ SEM color match
+    splitA4: 0               // ❌ SEM split A4
+  },
   starter: {
     editorGenerations: 100,  // 100 gerações por mês
     aiRequests: 0,           // Não tem acesso à IA avançada
