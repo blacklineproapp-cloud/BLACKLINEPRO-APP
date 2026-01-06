@@ -77,11 +77,26 @@ export async function POST(req: Request) {
 
 // Função auxiliar para processar geração
 async function processGeneration(req: Request, clerkUserId: string, userUuid: string, isAdmin: boolean) {
-  // Processar requisição
-  const { image, style, promptDetails } = await req.json();
+  // Validar e parsear JSON
+  let body;
+  try {
+    body = await req.json();
+  } catch (e) {
+    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
+  }
 
-  if (!image) {
-    return NextResponse.json({ error: 'Imagem não fornecida' }, { status: 400 });
+  const { image, style, promptDetails } = body;
+
+  // Validar imagem
+  if (!image || typeof image !== 'string') {
+    return NextResponse.json({ error: 'Imagem não fornecida ou inválida' }, { status: 400 });
+  }
+
+  // Validar promptDetails (máximo 1000 caracteres)
+  if (promptDetails && (typeof promptDetails !== 'string' || promptDetails.length > 1000)) {
+    return NextResponse.json({ 
+      error: 'Instruções extras muito longas (máximo 1000 caracteres)' 
+    }, { status: 400 });
   }
 
   // 🚀 CORREÇÃO #1: Validar imagem ANTES de processar (previne OOM e erros Gemini)

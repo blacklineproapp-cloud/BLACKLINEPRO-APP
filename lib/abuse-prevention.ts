@@ -597,10 +597,13 @@ export async function searchAbuse(query: string): Promise<SearchResult[]> {
       }
     } else {
       // Buscar por email (parcial)
+      // Sanitizar query para prevenir SQL injection
+      const sanitizedQuery = query.replace(/[%_\\]/g, '\\$&');
+      
       const { data: emailData } = await supabaseAdmin
         .from('ip_signups')
         .select('email, ip_address, is_blocked, created_at')
-        .ilike('email', `%${query}%`)
+        .ilike('email', `%${sanitizedQuery}%`)
         .gte('created_at', startDate.toISOString())
         .limit(20);
 

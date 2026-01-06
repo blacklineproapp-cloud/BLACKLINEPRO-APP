@@ -167,7 +167,7 @@ export async function getOrCreateUser(clerkId: string) {
         return newUser;
       },
       {
-        ttl: 900000, // 15 minutos (reduz requests Redis em 80%)
+        ttl: 300000, // 5 minutos (reduz memória em 66% vs 15min)
         tags: [`user:${clerkId}`],
         namespace: 'users',
       }

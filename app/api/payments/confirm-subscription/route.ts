@@ -12,6 +12,7 @@ import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getOrCreateUser } from '@/lib/auth';
 import { invalidateCache } from '@/lib/cache';
+import { apiLimiter, getRateLimitIdentifier, withRateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   try {
@@ -21,6 +22,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
+    // Aplicar rate limiting
+    const identifier = await getRateLimitIdentifier(userId);
+    return withRateLimit(apiLimiter, identifier, async () => {
+      return await processConfirmation(req, userId);
+    });
+  } catch (error: any) {
+    console.error('[Confirm Subscription] Erro:', error);
+    return NextResponse.json(
+      { error: 'Erro ao confirmar subscription: ' + error.message },
+      { status: 500 }
+    );
+  }
+}
+
+async function processConfirmation(req: Request, userId: string) {
+  try {
     const { paymentIntentId } = await req.json();
 
     if (!paymentIntentId) {
@@ -82,9 +99,13 @@ export async function POST(req: Request) {
       })
       .eq('id', user.id);
 
-    // Invalidar cache do usuário após atualização
-    await invalidateCache(userId, 'users');
-    console.log(`[Confirm Subscription] Cache invalidado para userId: ${userId}`);
+    // Invalidar TODOS os caches do usuário para garantir dados atualizados
+    await Promise.all([
+      invalidateCache(userId, 'users'),
+      invalidateCache(userId, 'limits'),
+      invalidateCache(userId, 'subscriptions'),
+    ]);
+    console.log(`[Confirm Subscription] Caches invalidados para userId: ${userId}`);
 
     // Buscar customer do banco
     const { data: customer } = await supabaseAdmin
@@ -147,7 +168,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error: any) {
-    console.error('[Confirm Subscription] Erro:', error);
+    console.error('[Confirm Subscription] Erro no processamento:', error);
     return NextResponse.json(
       { error: 'Erro ao confirmar subscription: ' + error.message },
       { status: 500 }

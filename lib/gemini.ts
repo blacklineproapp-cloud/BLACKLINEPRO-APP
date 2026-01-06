@@ -112,14 +112,20 @@ export async function generateStencilFromImage(
   // Usar retry logic para lidar com falhas temporárias do Gemini
   return retryGeminiAPI(async () => {
     try {
-      const result = await model.generateContent([
-        fullPrompt,
-        {
-          inlineData: {
-            data: cleanBase64,
-            mimeType: 'image/jpeg',
+      // Adicionar timeout de 2 minutos para prevenir hanging
+      const result = await Promise.race([
+        model.generateContent([
+          fullPrompt,
+          {
+            inlineData: {
+              data: cleanBase64,
+              mimeType: 'image/jpeg',
+            },
           },
-        },
+        ]),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout: Gemini demorou mais de 2 minutos')), 120000)
+        )
       ]);
 
       const response = result.response;

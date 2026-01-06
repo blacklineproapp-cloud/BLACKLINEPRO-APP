@@ -59,7 +59,13 @@ async function getStripePaidEmails(): Promise<Set<string>> {
         if (!customer.deleted && customer.email) {
           email = customer.email;
         }
-      } catch (e) {}
+      } catch (e: any) {
+        console.error('[Admin Metrics] Erro ao buscar customer do Stripe:', {
+          customerId,
+          error: e.message
+        });
+        // Continuar processamento mesmo com erro
+      }
     }
 
     if (email) {
