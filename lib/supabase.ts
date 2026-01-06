@@ -47,14 +47,14 @@ export const supabase = createClient(
   }
 );
 
-// Tipos do banco de dados
+// Tipos do banco de dados (Sincronizado com atual.sql)
 export interface User {
   id: string;
   clerk_id: string;
   email: string;
   name: string;
   picture?: string;
-  subscription_status: 'inactive' | 'active' | 'canceled' | 'past_due' | 'trialing';
+  subscription_status: 'inactive' | 'active' | 'canceled' | 'past_due' | 'trialing' | 'unpaid' | 'incomplete' | 'incomplete_expired' | 'paused';
   subscription_id?: string;
   subscription_expires_at?: string;
   is_paid: boolean;
@@ -62,6 +62,18 @@ export interface User {
   created_at: string;
   last_login: string;
   updated_at: string;
+  credits: number;
+  plan: 'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
+  usage_this_month?: any;
+  daily_usage?: any;
+  grace_period_until?: string;
+  auto_bill_after_grace?: boolean;
+  admin_courtesy?: boolean;
+  is_blocked?: boolean;
+  blocked_reason?: string;
+  is_admin?: boolean;
+  total_ai_requests?: number;
+  last_active_at?: string;
 }
 
 export interface Project {
@@ -70,7 +82,8 @@ export interface Project {
   name: string;
   original_image: string;
   stencil_image: string;
-  style: 'standard' | 'perfect_lines';
+  thumbnail_url?: string;
+  style: string;
   width_cm?: number;
   height_cm?: number;
   prompt_details?: string;
@@ -83,21 +96,49 @@ export interface Payment {
   user_id: string;
   stripe_payment_id: string;
   stripe_subscription_id?: string;
+  stripe_invoice_id?: string;
+  stripe_payment_intent_id?: string;
   amount: number;
   currency: string;
-  status: 'pending' | 'succeeded' | 'failed' | 'canceled';
+  status: string;
   payment_method: string;
   description?: string;
+  receipt_url?: string;
+  invoice_url?: string;
+  plan_type?: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface AIUsage {
   id: string;
   user_id: string;
-  operation_type: 'generate_stencil' | 'enhance' | 'color_match' | 'generate_idea';
+  organization_id?: string;
+  operation_type: string;
+  usage_type?: string;
   tokens_used: number;
   cost: number;
   model_used?: string;
   processing_time_ms?: number;
+  metadata?: any;
+  source_type?: 'user' | 'organization';
   created_at: string;
+}
+
+export interface Subscription {
+  id: string;
+  customer_id: string;
+  stripe_subscription_id: string;
+  stripe_price_id?: string;
+  stripe_product_id?: string;
+  status: string;
+  current_period_start?: string;
+  current_period_end?: string;
+  trial_start?: string;
+  trial_end?: string;
+  canceled_at?: string;
+  ended_at?: string;
+  metadata?: any;
+  created_at: string;
+  updated_at: string;
 }

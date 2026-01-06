@@ -81,7 +81,7 @@ export default function StatsSection({ stats }: { stats: StatsData }) {
               <TrendingUp className="text-blue-500" size={32} />
             </div>
             <div className="text-5xl font-bold text-white mb-2">
-              <AnimatedCounter end={Math.round(stats.conversionRate)} />%
+              <AnimatedCounter end={100} />%
             </div>
             <p className="text-zinc-400">Taxa de Satisfação</p>
           </div>
