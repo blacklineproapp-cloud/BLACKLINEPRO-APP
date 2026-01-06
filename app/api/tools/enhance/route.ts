@@ -129,19 +129,18 @@ export async function POST(req: Request) {
       hasImage: !!enhancedImage
     });
 
-    // ✅ REGISTRAR USO após operação bem-sucedida (exceto admins)
-    if (!userIsAdmin) {
-      await recordUsage({
-        userId: userData.id,
-        type: 'tool_usage',
-        operationType: 'enhance_image',
-        cost: BRL_COST.enhance,
-        metadata: {
-          tool: 'enhance',
-          operation: 'enhance_image'
-        }
-      });
-    }
+    // ✅ REGISTRAR USO após operação bem-sucedida
+    await recordUsage({
+      userId: userData.id,
+      type: 'tool_usage',
+      operationType: 'enhance_image',
+      cost: BRL_COST.enhance,
+      metadata: {
+        tool: 'enhance',
+        operation: 'enhance_image',
+        is_admin: userIsAdmin
+      }
+    });
 
     return NextResponse.json({ image: enhancedImage });
   } catch (error: any) {

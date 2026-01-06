@@ -13,6 +13,7 @@ export default function SuccessPage() {
     starter: {
       name: 'Starter',
       price: 'R$ 50/mês',
+      value: 50,
       icon: Zap,
       color: 'emerald',
       features: [
@@ -25,6 +26,7 @@ export default function SuccessPage() {
     pro: {
       name: 'Pro',
       price: 'R$ 100/mês',
+      value: 100,
       icon: Crown,
       color: 'purple',
       features: [
@@ -37,6 +39,7 @@ export default function SuccessPage() {
     studio: {
       name: 'Studio',
       price: 'R$ 300/mês',
+      value: 300,
       icon: Sparkles,
       color: 'amber',
       features: [
@@ -46,18 +49,43 @@ export default function SuccessPage() {
         'Ideal para estúdios',
       ],
     },
+    enterprise: {
+      name: 'Enterprise',
+      price: 'R$ 600/mês',
+      value: 600,
+      icon: Crown,
+      color: 'blue',
+      features: [
+        'Tudo do plano Studio',
+        'Uso ILIMITADO',
+        'Suporte dedicado 24/7',
+        'API + Onboarding',
+      ],
+    },
   };
 
-  const details = plan ? planDetails[plan] : null;
+  const details = plan ? (planDetails[plan] || null) : null;
 
-  // Auto-redirecionar após 5 segundos
+  // Rastreamento Facebook Pixel + Auto-redirecionar
   useEffect(() => {
+    // 1. Rastrear Conversão (Purchase)
+    if (plan && planDetails[plan] && typeof window !== 'undefined' && (window as any).fbq) {
+      const p = planDetails[plan];
+      (window as any).fbq('track', 'Purchase', {
+        value: (p as any).value || 0,
+        currency: 'BRL',
+        content_name: p.name,
+        content_category: 'Subscription'
+      });
+      console.log(`[Pixel] Purchase tracked: ${p.name} - R$ ${(p as any).value}`);
+    }
+
     const timeout = setTimeout(() => {
       router.push('/dashboard');
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, [router]);
+  }, [router, plan]);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">

@@ -641,8 +641,8 @@ export default function EditorPage() {
     <div className="min-h-screen bg-[#09090b] flex flex-col">
       <div className="flex-1 flex flex-col lg:flex-row relative overflow-hidden">
         
-        {/* Canvas Area */}
-        <main className="flex-1 bg-zinc-950 flex items-center justify-center p-3 lg:p-6 min-h-[40vh] lg:min-h-0 pb-20 lg:pb-6">
+        {/* Canvas Area - Máximo de espaço para a imagem */}
+        <main className="flex-1 bg-zinc-950 flex items-center justify-center p-1 lg:p-2 min-h-[40vh] lg:min-h-0 pb-20 lg:pb-6">
           
           {/* Upload State */}
           {!originalImage && (
@@ -650,9 +650,9 @@ export default function EditorPage() {
               <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
               <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-40 h-40 lg:w-56 lg:h-56 border-2 border-dashed border-zinc-700 rounded-2xl flex flex-col items-center justify-center text-zinc-500 hover:text-emerald-500 hover:border-emerald-500 transition-all bg-zinc-900/50"
+                className="w-40 h-40 lg:w-64 lg:h-64 border-2 border-dashed border-zinc-700 rounded-2xl flex flex-col items-center justify-center text-zinc-500 hover:text-emerald-500 hover:border-emerald-500 transition-all bg-zinc-900/50"
               >
-                <ImageIcon size={36} className="mb-3" />
+                <ImageIcon size={40} className="mb-4" />
                 <span className="font-medium text-sm">Carregar Imagem</span>
               </button>
             </div>
@@ -665,22 +665,28 @@ export default function EditorPage() {
           
           {/* Original Image (before generation) */}
           {originalImage && !isProcessing && !currentStencil && (
-            <div className="relative w-full h-[45vh] lg:h-[70vh]">
+            <div 
+              className="relative shadow-2xl rounded-lg overflow-hidden bg-white h-[60vh] lg:h-[85vh] max-w-full"
+              style={{ aspectRatio: aspectRatio || 'auto' }}
+            >
               <Image
                 src={originalImage}
                 alt="Original"
                 fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
-                className="object-contain shadow-2xl rounded-lg"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 75vw"
+                className="object-contain"
                 unoptimized
                 priority
               />
             </div>
           )}
 
-          {/* Comparison View (after generation) */}
+          {/* Comparison View (after generation) - Height increased to 85vh */}
           {originalImage && !isProcessing && currentStencil && (
-            <div className="relative select-none shadow-2xl rounded-lg overflow-hidden bg-white max-w-full max-h-[45vh] lg:max-h-[70vh]">
+            <div 
+              className="relative select-none shadow-2xl rounded-lg overflow-hidden bg-white h-[60vh] lg:h-[85vh] max-w-full"
+              style={{ aspectRatio: aspectRatio || 'auto' }}
+            >
               {/* Mode Toggle */}
               <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-zinc-900/95 border border-zinc-700 rounded-full p-0.5 flex gap-0.5 shadow-xl">
                 <button
@@ -743,7 +749,7 @@ export default function EditorPage() {
               <img
                 src={originalImage}
                 alt="Original"
-                className="block max-w-full max-h-[45vh] lg:max-h-[70vh] object-contain"
+                className="block w-full h-full object-contain"
                 draggable={false}
                 style={{
                   opacity: showOriginalPreview ? 1 : (comparisonMode === 'overlay' ? 0.5 : 1),
@@ -878,7 +884,7 @@ export default function EditorPage() {
           fixed lg:relative bottom-0 left-0 right-0 lg:w-72 xl:w-80
           bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-800
           transition-transform duration-300 z-40 shadow-2xl lg:shadow-none
-          ${generatedStencil ? 'max-h-[75vh] lg:max-h-none' : 'max-h-[60vh] lg:max-h-none'}
+          ${generatedStencil ? 'max-h-[85vh] lg:max-h-none' : 'max-h-[70vh] lg:max-h-none'}
           rounded-t-2xl lg:rounded-none overflow-hidden
         `}>
           {/* Drag handle - Clicável para abrir/fechar */}
@@ -890,7 +896,7 @@ export default function EditorPage() {
           </div>
 
           <div className="h-full overflow-y-auto overscroll-contain">
-            <div className="p-2.5 lg:p-5 space-y-2 lg:space-y-3 pb-24 lg:pb-5">
+            <div className="p-2.5 lg:p-5 space-y-2 lg:space-y-3 pb-32 lg:pb-5">
 
             {/* Botão Nova Imagem - Aparece quando tem imagem carregada */}
             {originalImage && !generatedStencil && (

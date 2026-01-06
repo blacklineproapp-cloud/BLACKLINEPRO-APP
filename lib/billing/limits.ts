@@ -276,6 +276,13 @@ export interface RecordUsageParams {
 export async function recordUsage(params: RecordUsageParams): Promise<void> {
   const { userId, type, operationType, cost, metadata } = params;
 
+  // Log para depuração de custos em tempo real
+  console.log(`[Usage] Registrando uso: ${type}/${operationType || type}`, {
+    userId,
+    cost,
+    hasMetadata: !!metadata
+  });
+
   try {
     const { error } = await supabaseAdmin
       .from('ai_usage')
@@ -289,10 +296,12 @@ export async function recordUsage(params: RecordUsageParams): Promise<void> {
       });
 
     if (error) {
-      console.error('[Limits] Erro ao registrar uso:', error);
+      console.error('[Limits] Erro ao registrar uso no banco:', error);
+    } else {
+      console.log(`[Usage] ✅ Uso registrado com sucesso (Custo: ${cost || 0})`);
     }
   } catch (error) {
-    console.error('[Limits] Erro ao registrar uso:', error);
+    console.error('[Limits] Erro fatal ao registrar uso:', error);
   }
 }
 

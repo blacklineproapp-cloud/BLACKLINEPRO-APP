@@ -69,22 +69,21 @@ export async function POST(req: Request) {
     // Gerar ideia
     const tattooImage = await generateTattooIdea(prompt, size);
 
-    // Registrar uso após geração bem-sucedida (exceto admins)
+    // Registrar uso após geração bem-sucedida
     try {
-      if (!userIsAdmin) {
-        await recordUsage({
-          userId: user.id,
-          type: 'ai_request',
-          operationType: 'generate_idea',
-          cost: BRL_COST.ia_gen,
-          metadata: {
-            tool: 'generate_idea',
-            operation: 'generate_idea',
-            prompt,
-            size
-          }
-        });
-      }
+      await recordUsage({
+        userId: user.id,
+        type: 'ai_request',
+        operationType: 'generate_idea',
+        cost: BRL_COST.ia_gen,
+        metadata: {
+          tool: 'generate_idea',
+          operation: 'generate_idea',
+          prompt,
+          size,
+          is_admin: userIsAdmin
+        }
+      });
     } catch (e) {
       console.warn('Erro ao registrar uso de IA:', e);
     }

@@ -100,19 +100,19 @@ export async function POST(req: Request) {
     const colorPalette = await analyzeImageColors(image, brand);
 
     // Registrar uso (ignorar erros)
+    // Registrar uso (ignorar erros)
     try {
-      if (!userIsAdmin) {
-        await recordUsage({
-          userId: user.id,
-          type: 'tool_usage',
-          operationType: 'color_match',
-          cost: BRL_COST.color_match,
-          metadata: {
-            tool: 'color_match',
-            brand
-          }
-        });
-      }
+      await recordUsage({
+        userId: user.id,
+        type: 'tool_usage',
+        operationType: 'color_match',
+        cost: BRL_COST.color_match,
+        metadata: {
+          tool: 'color_match',
+          brand,
+          is_admin: userIsAdmin
+        }
+      });
     } catch (e) {
       console.warn('Erro ao registrar uso de IA:', e);
     }

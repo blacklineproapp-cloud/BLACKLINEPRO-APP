@@ -123,21 +123,22 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
   // Gerar stencil no modo selecionado pelo usuário
   const stencilImage = await generateStencilFromImage(image, promptDetails, selectedStyle);
 
-  // ✅ REGISTRAR USO após geração bem-sucedida (exceto admins)
-  if (!isAdmin) {
-    await recordUsage({
-      userId: userUuid,
-      type: 'editor_generation',
-      operationType: 'generate_stencil',
-      cost: selectedStyle === 'perfect_lines' ? BRL_COST.lines : BRL_COST.topographic,
-      metadata: {
-        style: selectedStyle,
-        operation: 'generate_stencil'
-      }
-    });
+  // ✅ REGISTRAR USO após geração bem-sucedida
+  await recordUsage({
+    userId: userUuid,
+    type: 'editor_generation',
+    operationType: 'generate_stencil',
+    cost: selectedStyle === 'perfect_lines' ? BRL_COST.lines : BRL_COST.topographic,
+    metadata: {
+      style: selectedStyle,
+      operation: 'generate_stencil',
+      is_admin: isAdmin
+    }
+  });
 
-    // 🛡️ RASTREAR TRIAL USAGE POR IP (para detecção de abuso)
-    // Apenas para planos free (trials)
+  // 🛡️ RASTREAR TRIAL USAGE POR IP (para detecção de abuso)
+  // Apenas para planos free (trials) e não-admins
+  if (!isAdmin) {
     const { data: user } = await supabaseAdmin
       .from('users')
       .select('plan')

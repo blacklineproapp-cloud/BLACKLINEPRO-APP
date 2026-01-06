@@ -126,19 +126,18 @@ export async function POST(req: Request) {
       hasImage: !!resultImage
     });
 
-    // ✅ REGISTRAR USO após operação bem-sucedida (exceto admins)
-    if (!userIsAdmin) {
-      await recordUsage({
-        userId: userData.id,
-        type: 'tool_usage',
-        operationType: 'remove_bg',
-        cost: BRL_COST.remove_bg,
-        metadata: {
-          tool: 'remove_bg',
-          operation: 'remove_bg'
-        }
-      });
-    }
+    // ✅ REGISTRAR USO após operação bem-sucedida
+    await recordUsage({
+      userId: userData.id,
+      type: 'tool_usage',
+      operationType: 'remove_bg',
+      cost: BRL_COST.remove_bg,
+      metadata: {
+        tool: 'remove_bg',
+        operation: 'remove_bg',
+        is_admin: userIsAdmin
+      }
+    });
 
     return NextResponse.json({ image: resultImage });
   } catch (error: any) {

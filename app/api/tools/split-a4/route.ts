@@ -236,29 +236,26 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
           .toBuffer();
       }
 
-      // ✅ REGISTRAR USO após processamento Gemini bem-sucedido (exceto admins)
-      if (userUuid && !userIsAdmin) {
-        await recordUsage({
-          userId: userUuid,
-          type: 'tool_usage',
-          operationType: 'split_with_gemini',
-          cost: BRL_COST.split_a4,
-          metadata: {
-            tool: 'split_a4',
-            processMode: processMode,
-            operation: 'split_with_gemini'
-          }
-        });
-      }
+      // ✅ REGISTRAR USO após processamento Gemini bem-sucedido
+      await recordUsage({
+        userId: userUuid!,
+        type: 'tool_usage',
+        operationType: 'split_with_gemini',
+        cost: BRL_COST.split_a4,
+        metadata: {
+          tool: 'split_a4',
+          processMode: processMode,
+          operation: 'split_with_gemini',
+          is_admin: userIsAdmin
+        }
+      });
     } catch (error) {
       console.error('❌ Gemini processing failed:', error);
       throw new Error(`Falha no processamento ${processMode}: ${error}`);
     }
   } else {
-    // Reference mode: RÁPIDO, sem processamento AI
-
-    // Registrar uso no modo reference (exceto admins)
-    if (userUuid && !userIsAdmin) {
+    // Registrar uso no modo reference
+    if (userUuid) {
       await recordUsage({
         userId: userUuid,
         type: 'tool_usage',
@@ -267,7 +264,8 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
         metadata: {
           tool: 'split_a4',
           processMode: 'reference',
-          operation: 'split_only'
+          operation: 'split_only',
+          is_admin: userIsAdmin
         }
       });
     }
