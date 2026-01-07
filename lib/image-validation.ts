@@ -184,19 +184,34 @@ export async function validateImage(base64String: string): Promise<ImageValidati
       };
     }
 
-    // Validar comprimento (deve ser múltiplo de 4)
-    if (sanitizedBase64.length % 4 !== 0) {
-      logger.error('[Image Validation] Base64 com comprimento inválido', {
-        length: sanitizedBase64.length,
-        remainder: sanitizedBase64.length % 4
+    // 🔧 CORREÇÃO: Autopadding para base64
+    // Se o comprimento não é múltiplo de 4, adicionamos '=' até ser.
+    // Isso evita o erro de "base64 incompleto" se o browser/biblioteca omitir padding.
+    let paddedBase64 = sanitizedBase64;
+    const remainder = paddedBase64.length % 4;
+    
+    if (remainder > 0) {
+      const paddingNeeded = 4 - remainder;
+      // Remainder 1 é fisicamente impossível em base64 válido (mínimo 2 chars para 1 byte)
+      if (remainder === 1) {
+        logger.error('[Image Validation] Base64 truncado (comprimento inválido)', {
+          length: paddedBase64.length,
+          lastChars: paddedBase64.substring(paddedBase64.length - 10)
+        });
+        return {
+          valid: false,
+          error: 'Formato de imagem inválido (arquivo truncado ou incompleto)',
+        };
+      }
+      
+      paddedBase64 = paddedBase64.padEnd(paddedBase64.length + paddingNeeded, '=');
+      logger.info('[Image Validation] Padding corrigido automaticamente', { 
+        added: paddingNeeded, 
+        newLength: paddedBase64.length 
       });
-      return {
-        valid: false,
-        error: 'Formato de imagem inválido (base64 incompleto)',
-      };
     }
 
-    const buffer = Buffer.from(sanitizedBase64, 'base64');
+    const buffer = Buffer.from(paddedBase64, 'base64');
 
     // 3. Validar metadata (formato, dimensões, etc)
     return await validateImageMetadata(buffer);

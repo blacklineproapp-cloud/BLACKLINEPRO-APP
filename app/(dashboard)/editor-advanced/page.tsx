@@ -8,7 +8,9 @@ import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers,
 import { useRouter } from 'next/navigation';
 import { useEditorHistory } from '@/hooks/useEditorHistory';
 import { DEFAULT_ADJUST_CONTROLS, type AdjustControls } from '@/lib/stencil-types';
-import { applyAdjustments, applyPreset, resetControls } from '@/lib/stencil-adjustments';
+import { applyAdjustments, resetControls, isDefaultControls } from '@/lib/stencil-adjustments';
+import { processImageOnClient } from '@/lib/canvas-processor';
+import { compressIfNeeded } from '@/lib/image-compress';
 
 type Style = 'standard' | 'perfect_lines';
 type ComparisonMode = 'wipe' | 'overlay';
@@ -188,12 +190,15 @@ export default function EditorAdvancedPage() {
     }
 
     try {
+      // 🔥 COMPRESSÃO: Evitar erro 413 (Payload Too Large) seguindo o padrão técnico
+      const compressedImage = await compressIfNeeded(originalImage);
+
       const res = await fetch('/api/stencil/generate', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          image: originalImage,
+          image: compressedImage,
           style: selectedStyle,
           promptDetails: promptText,
           widthCm,
@@ -244,23 +249,34 @@ export default function EditorAdvancedPage() {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Criar novo timer (200ms de debounce - otimizado para responsividade)
+    // Criar novo timer (50ms de debounce para Canvas - quase instantâneo)
     debounceTimerRef.current = setTimeout(async () => {
-      setIsAdjusting(true);
+      // ✨ CORREÇÃO CRÍTICA: Se os controles estão no padrão, NÃO processar.
+      // Isso preserva os tons de cinza e a arte original da IA.
+      if (isDefaultControls(controls)) {
+        setAdjustedStencil(null);
+        return;
+      }
 
+      // Para ajustes de cor, usamos o processamento local (Instantâneo)
       try {
-        const adjusted = await applyAdjustments(generatedStencil, controls);
+        const adjusted = await processImageOnClient(generatedStencil, {
+          threshold: controls.threshold,
+          gamma: controls.gamma,
+          brightness: controls.brightness,
+          contrast: controls.contrast,
+          invert: controls.invert
+        });
+        
         setAdjustedStencil(adjusted);
-
-        // Adicionar ao histórico
         history.pushState(adjusted, controls);
       } catch (error: any) {
-        console.error('Erro ao aplicar ajustes:', error);
-        alert('Erro ao aplicar ajustes: ' + error.message);
-      } finally {
-        setIsAdjusting(false);
+        console.error('Erro no processamento instantâneo:', error);
+        // Fallback para API se o cliente falhar (raro)
+        const adjusted = await applyAdjustments(generatedStencil, controls);
+        setAdjustedStencil(adjusted);
       }
-    }, 200);
+    }, 50);
   }, [generatedStencil, history]);
 
   // Handler de mudança de controles
@@ -269,24 +285,23 @@ export default function EditorAdvancedPage() {
     applyAdjustmentsDebounced(newControls);
   };
 
-  // Aplicar preset
-  const handleApplyPreset = (presetKey: string) => {
-    const newControls = applyPreset(adjustControls, presetKey);
-    handleAdjustChange(newControls);
-  };
 
 
 
   const autoSaveProject = async (stencilImage: string) => {
     try {
+      // 🔥 COMPRESSÃO: Manter consistência e evitar erros de payload
+      const compressedOriginal = await compressIfNeeded(originalImage!);
+      const compressedStencil = await compressIfNeeded(stencilImage);
+
       const res = await fetch('/api/projects', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: `Estêncil ${new Date().toLocaleTimeString()}`,
-          originalImage,
-          stencilImage,
+          originalImage: compressedOriginal,
+          stencilImage: compressedStencil,
           style: selectedStyle,
           widthCm,
           heightCm,
@@ -308,13 +323,17 @@ export default function EditorAdvancedPage() {
     const name = prompt('Nome do projeto:') || `Estêncil ${new Date().toLocaleTimeString()}`;
 
     try {
+      // 🔥 COMPRESSÃO: Consistência total com o editor padrão
+      const compressedOriginal = await compressIfNeeded(originalImage);
+      const compressedStencil = await compressIfNeeded(currentStencil);
+
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          originalImage,
-          stencilImage: currentStencil,
+          originalImage: compressedOriginal,
+          stencilImage: compressedStencil,
           style: selectedStyle,
           widthCm,
           heightCm,
@@ -515,12 +534,6 @@ export default function EditorAdvancedPage() {
                   draggable={false}
                   unoptimized
                   style={{
-                    // Preview instantâneo com CSS filters (enquanto API processa)
-                    filter: `
-                      brightness(${1 + (adjustControls.brightness / 100)})
-                      contrast(${1 + (adjustControls.contrast / 100)})
-                      ${adjustControls.invert ? 'invert(1)' : ''}
-                    `.trim(),
                     transform: `
                       rotate(${adjustControls.rotation}deg)
                       scaleX(${adjustControls.flipHorizontal ? -1 : 1})
@@ -529,6 +542,7 @@ export default function EditorAdvancedPage() {
                   }}
                 />
               </div>
+
 
               {/* Wipe handle */}
               {comparisonMode === 'wipe' && (
@@ -624,13 +638,13 @@ export default function EditorAdvancedPage() {
                 </button>
 
                 <div className={`${showSizeSection ? 'block' : 'hidden'} lg:block px-2 pb-2`}>
-                  <div className="grid grid-cols-4 gap-1 mb-2">
-                    {['A4', 'A3', 'Retrato', 'Quadrado'].map((preset) => (
-                      <button key={preset} onClick={() => applyPresetSize(preset)} className="py-1 rounded text-[9px] font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 border border-zinc-800 hover:border-emerald-700">
-                        {preset}
-                      </button>
-                    ))}
-                  </div>
+                   <div className="grid grid-cols-4 gap-1 mb-2">
+                     {['A4', 'A3', 'Retrato', 'Quadrado'].map((preset) => (
+                       <button key={preset} onClick={() => applyPresetSize(preset)} className="py-1 rounded text-[9px] font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 border border-zinc-800 hover:border-emerald-700">
+                         {preset}
+                       </button>
+                     ))}
+                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
                     <div>
                       <label className="text-[9px] text-zinc-500 block mb-0.5">Largura (cm)</label>

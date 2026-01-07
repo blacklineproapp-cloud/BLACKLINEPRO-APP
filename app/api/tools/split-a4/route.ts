@@ -541,10 +541,10 @@ export async function POST(req: Request) {
         
         if (!trialCheck.allowed) {
           return NextResponse.json({
-            error: 'Trial encerrado',
-            message: 'Você já usou seus 2 testes gratuitos de Divisão em A4. Assine para desbloquear acesso ilimitado!',
+            error: 'Acesso Restrito',
+            message: 'A Impressão em Ladrilhos (Split A4) é exclusiva para assinantes. Facilite seu trabalho agora!',
             requiresSubscription: true,
-            subscriptionType: 'tools',
+            subscriptionType: 'tools'
           }, { status: 403 });
         }
       }

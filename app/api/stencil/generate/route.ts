@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       // Diferenciar mensagem para usuários Free (Trial) vs Assinantes
       const isFreePlan = (userData.plan === 'free' || !userData.plan);
       const message = isFreePlan 
-        ? 'Você já usou seus 2 testes gratuitos do Editor. Assine para desbloquear acesso ilimitado!'
+        ? 'O uso do Editor é exclusivo para assinantes. Escolha um plano para começar a criar seus estênceis!'
         : getLimitMessage('editor_generation', limitCheck.limit, limitCheck.resetDate);
 
       return NextResponse.json(
@@ -112,7 +112,7 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
 
   // VALIDAÇÃO: Garantir que style é um valor válido
   const validStyles = ['standard', 'perfect_lines'] as const;
-  const selectedStyle = validStyles.includes(style) ? style : 'standard';
+  const selectedStyle = (validStyles as readonly string[]).includes(style) ? style as 'standard' | 'perfect_lines' : 'standard';
 
   logger.info('[Generate] Gerando stencil', {
     ...validation.metadata,
@@ -136,26 +136,13 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
     }
   });
 
-  // 🛡️ RASTREAR TRIAL USAGE POR IP (para detecção de abuso)
-  // Apenas para planos free (trials) e não-admins
-  if (!isAdmin) {
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('plan')
-      .eq('id', userUuid)
-      .single();
-
-    if (user?.plan === 'free') {
-      const ipAddress = await getClientIP();
-      await trackTrialUsage({
-        ipAddress,
-        userId: userUuid,
-        clerkId: clerkUserId,
-        actionType: 'editor_generation',
-        metadata: { style: selectedStyle }
-      });
-    }
+  // 🛡️ RASTREAR TRIAL USAGE POR IP (Removido - Trial desativado)
+  /* 
+  if (!isAdmin && user?.plan === 'free') {
+    const ipAddress = await getClientIP();
+    await trackTrialUsage({ ... });
   }
+  */
 
   return NextResponse.json({ image: stencilImage });
 }

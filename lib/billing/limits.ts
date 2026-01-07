@@ -32,14 +32,14 @@ export interface UsageLimits {
 
 export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
   free: {
-    editorGenerations: 2,    // 🎁 2 testes gratuitos
-    aiRequests: 2,           // 🎁 2 testes gratuitos de IA Generativa
+    editorGenerations: 0,    // 🔒 Bloqueado: Necessário assinatura
+    aiRequests: 0,           // 🔒 Bloqueado: Necessário assinatura
     toolsUsage: 0,           // DEPRECATED
-    // 🎁 TRIAL: 2 usos de cada ferramenta para testar
-    removeBackground: 2,
-    enhance4K: 2,
-    colorMatch: 2,
-    splitA4: 2
+    // 🔒 BLOQUEADO: Sem testes gratuitos (Exclusivo para assinantes)
+    removeBackground: 0,
+    enhance4K: 0,
+    colorMatch: 0,
+    splitA4: 0
   },
   legacy: {
     editorGenerations: 100,  // 🎁 LEGACY: Apenas editor

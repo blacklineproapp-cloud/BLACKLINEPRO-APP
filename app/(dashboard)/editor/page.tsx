@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEditorHistory } from '@/hooks/useEditorHistory';
 import { DEFAULT_ADJUST_CONTROLS, type AdjustControls } from '@/lib/stencil-types';
 import { applyAdjustments, resetControls } from '@/lib/stencil-adjustments';
+import { processImageOnClient } from '@/lib/canvas-processor';
 import { storage } from '@/lib/client-storage';
 import { compressIfNeeded } from '@/lib/image-compress';
 
@@ -52,7 +53,6 @@ export default function EditorPage() {
   const [showSizeSection, setShowSizeSection] = useState(false);
   const [showModeSection, setShowModeSection] = useState(false);
   const [showAdjustSection, setShowAdjustSection] = useState(true);
-  const [showProfessionalSection, setShowProfessionalSection] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -161,30 +161,35 @@ export default function EditorPage() {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // Criar novo timer (300ms de debounce)
+    // Criar novo timer (50ms de debounce para Canvas - quase instantâneo)
     debounceTimerRef.current = setTimeout(async () => {
-      // ✨ OTIMIZAÇÃO: Se todos os controles estão nos valores padrão, voltar ao original
+      // ✨ CORREÇÃO CRÍTICA: Se os controles estão no padrão, NÃO processar.
+      // Isso preserva os tons de cinza e a arte original da IA (Topográfico/Ultra Pro).
       if (isDefaultControls(controls)) {
-        setAdjustedStencil(null); // Volta ao generatedStencil original
-        history.pushState(generatedStencil, controls);
+        setAdjustedStencil(null);
         return;
       }
 
-      setIsAdjusting(true);
-
+      // Pour ajustes de cor, usamos o processamento local (Instantâneo)
       try {
-        const adjusted = await applyAdjustments(generatedStencil, controls);
+        const adjusted = await processImageOnClient(generatedStencil, {
+          threshold: controls.threshold,
+          gamma: controls.gamma,
+          brightness: controls.brightness,
+          contrast: controls.contrast,
+          invert: controls.invert
+        });
+        
         setAdjustedStencil(adjusted);
-
-        // Adicionar ao histórico
         history.pushState(adjusted, controls);
       } catch (error: any) {
-        console.error('[Editor] Erro ao aplicar ajustes:', error);
-        alert('Erro ao aplicar ajustes: ' + error.message);
-      } finally {
-        setIsAdjusting(false);
+        console.error('[Editor] Erro no processamento instantâneo:', error);
+        // Fallback para API se o cliente falhar
+        const adjusted = await applyAdjustments(generatedStencil, controls);
+        setAdjustedStencil(adjusted);
+        history.pushState(adjusted, controls);
       }
-    }, 300);
+    }, 50);
   }, [generatedStencil, history, isAdjusting]);
 
   // Handler de mudança de controles
@@ -769,8 +774,21 @@ export default function EditorPage() {
                   opacity: showOriginalPreview ? 0 : (comparisonMode === 'overlay' ? sliderPosition / 100 : 1)
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={currentStencil} alt="Stencil" className="w-full h-full object-contain" draggable={false} />
+                <Image 
+                  src={currentStencil} 
+                  alt="Stencil" 
+                  fill
+                  className="object-contain" 
+                  draggable={false}
+                  unoptimized
+                  style={{
+                    transform: `
+                      rotate(${adjustControls.rotation}deg)
+                      scaleX(${adjustControls.flipHorizontal ? -1 : 1})
+                      scaleY(${adjustControls.flipVertical ? -1 : 1})
+                    `.trim()
+                  }}
+                />
               </div>
 
               {/* Wipe handle - Horizontal */}

@@ -18,9 +18,9 @@ export async function GET() {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    // ✅ Desbloqueia ferramentas se já pagou OU se ainda tem trial
+    // ✅ Desbloqueia ferramentas apenas se já pagou (sem trial para free)
     const trialRemaining = await hasAnyTrialRemaining(user.id);
-    const toolsUnlocked = user.tools_unlocked || trialRemaining;
+    const toolsUnlocked = user.tools_unlocked; // Removido fallback trialRemaining
 
     return NextResponse.json({
       id: user.id,

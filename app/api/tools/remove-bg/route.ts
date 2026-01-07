@@ -88,8 +88,8 @@ export async function POST(req: Request) {
         
         if (!trialCheck.allowed) {
           return NextResponse.json({
-            error: 'Trial encerrado',
-            message: 'Você já usou seus 2 testes gratuitos de Remoção de Fundo. Assine para desbloquear acesso ilimitado!',
+            error: 'Acesso Restrito',
+            message: 'A Remoção de Fundo é uma ferramenta exclusiva para assinantes. Faça o upgrade agora para desbloquear!',
             requiresSubscription: true,
             subscriptionType: 'tools'
           }, { status: 403 });

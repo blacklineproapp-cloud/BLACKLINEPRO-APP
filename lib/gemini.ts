@@ -18,6 +18,7 @@ const topographicModel = genAI.getGenerativeModel({
   },
 });
 
+
 // Modelo para LINHAS - SIMPLICIDADE E LIMPEZA
 // Parâmetros mais restritivos para manter simplicidade
 // topP 0.08 = moderado - simples mas funcional
@@ -74,7 +75,7 @@ export async function generateStencilFromImage(
     ? PERFECT_LINES_INSTRUCTION_OPTIMIZED
     : TOPOGRAPHIC_INSTRUCTION_OPTIMIZED;
 
-  // INVERTIDO: standard = linesModel, perfect_lines = topographicModel
+  // Seleção inteligente de modelo
   const model = style === 'standard' ? linesModel : topographicModel;
 
   // Log detalhado para debug

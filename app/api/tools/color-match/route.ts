@@ -81,8 +81,8 @@ export async function POST(req: Request) {
         
         if (!trialCheck.allowed) {
           return NextResponse.json({
-            error: 'Trial encerrado',
-            message: 'Você já usou seus 2 testes gratuitos de Color Match. Assine para desbloquear acesso ilimitado!',
+            error: 'Acesso Restrito',
+            message: 'A Harmonização de Cores é exclusiva para assinantes. Escolha um plano para usar!',
             requiresSubscription: true,
             subscriptionType: 'tools'
           }, { status: 403 });

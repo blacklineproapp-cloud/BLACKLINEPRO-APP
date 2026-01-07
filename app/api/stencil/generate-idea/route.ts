@@ -50,9 +50,10 @@ export async function POST(req: Request) {
         const trialCheck = await checkGenerateIdeaLimit(user.id);
         
         if (!trialCheck.allowed) {
+          const message = 'A criação de artes com IA é exclusiva para assinantes. Comece a criar designs incríveis agora!';
           return NextResponse.json({
-            error: 'Trial encerrado',
-            message: 'Você já usou seus 2 testes gratuitos de Ideias com IA. Assine para desbloquear acesso ilimitado!',
+            error: 'Acesso negado',
+            message,
             requiresSubscription: true,
             subscriptionType: 'subscription'
           }, { status: 403 });

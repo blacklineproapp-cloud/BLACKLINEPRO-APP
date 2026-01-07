@@ -75,7 +75,7 @@ export const DAILY_LIMITS: Record<PlanType, number> = {
 // Limites mensais por plano (inclusos na assinatura)
 export const PLAN_LIMITS: Record<PlanType, Record<OperationType, number | null>> = {
   free: {
-    topographic: 0,      // ZERO gerações para free
+    topographic: 0,      // ZERO gerações para free (🔒 Bloqueado)
     lines: 0,
     ia_gen: 0,
     enhance: 0,
