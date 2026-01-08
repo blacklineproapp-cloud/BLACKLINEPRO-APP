@@ -33,7 +33,7 @@ const linesModel = genAI.getGenerativeModel({
 });
 
 
-// Modelo para geração de imagens a partir de texto - Gemini 1.5 Flash
+// Modelo para geração de imagens a partir de texto - Gemini 2.5 Flash
 const textToImageModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
@@ -43,7 +43,7 @@ const textToImageModel = genAI.getGenerativeModel({
   },
 });
 
-// Modelo DEDICADO para Aprimoramento - Gemini 1.5 Flash
+// Modelo DEDICADO para Aprimoramento - Gemini 2.5 Flash
 // Configuração otimizada para detalhes
 const dedicatedEnhanceModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
