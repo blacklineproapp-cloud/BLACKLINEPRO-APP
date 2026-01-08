@@ -77,26 +77,33 @@ export async function POST(req: Request) {
     console.log(`[Send Courtesy Links] ${courtesyUsers.length} usuários de cortesia encontrados`);
 
     // 5. Filtrar usuários que já receberam email de cortesia
-    const { data: alreadySent } = await supabaseAdmin
-      .from('remarketing_campaigns')
-      .select('user_id')
-      .eq('campaign_type', 'courtesy');
+    let finalUsers = courtesyUsers;
+    let alreadySentIds = new Set<string>();
 
-    const alreadySentIds = new Set(alreadySent?.map(c => c.user_id) || []);
+    if (!body.forceResend) {
+      const { data: alreadySent } = await supabaseAdmin
+        .from('remarketing_campaigns')
+        .select('user_id')
+        .eq('campaign_type', 'courtesy');
 
-    const usersToSend = courtesyUsers.filter(u => !alreadySentIds.has(u.id));
+      alreadySentIds = new Set(alreadySent?.map(c => c.user_id) || []);
+      finalUsers = courtesyUsers.filter(u => !alreadySentIds.has(u.id));
+      console.log(`[Send Courtesy Links] ${finalUsers.length} usuários para enviar (${courtesyUsers.length - finalUsers.length} já receberam)`);
+    } else {
+      console.log(`[Send Courtesy Links] 🚀 MODO FORCE: Enviando para todos ${courtesyUsers.length} usuários`);
+    }
 
     // Aplicar limite se especificado
-    const finalUsers = limit ? usersToSend.slice(0, limit) : usersToSend;
-
-    console.log(`[Send Courtesy Links] ${finalUsers.length} usuários para enviar (${usersToSend.length - finalUsers.length} já receberam)`);
+    if (limit) {
+      finalUsers = finalUsers.slice(0, limit);
+    }
 
     if (finalUsers.length === 0) {
       return NextResponse.json({
         success: true,
         message: 'Todos os usuários de cortesia já receberam o link',
         sent: 0,
-        alreadySent: alreadySent?.length || 0
+        alreadySentCount: alreadySentIds.size
       });
     }
 

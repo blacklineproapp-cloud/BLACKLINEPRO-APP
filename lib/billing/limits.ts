@@ -165,14 +165,35 @@ async function checkLimit(
   operationTypeFilter?: string | string[] // 🆕 Filtro opcional por operação(ões)
 ): Promise<LimitCheckResult> {
   try {
-    // 1. Buscar plano do usuário
+    // 1. Buscar plano e flags do usuário
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('plan')
+      .select('plan, admin_courtesy, is_paid, subscription_id')
       .eq('id', userId)
       .single();
 
     const plan = (user?.plan || 'free') as PlanType;
+
+    // 🛡️ TRAVA DE SEGURANÇA 10/01/2025: Usuários de cortesia perdem acesso após esta data
+    // Se for cortesia (admin_courtesy true OU is_paid sem subscription_id real)
+    const isCourtesy = user?.admin_courtesy === true || (user?.is_paid === true && !user?.subscription_id);
+
+    if (isCourtesy) {
+      const now = new Date();
+      const deadline = new Date('2025-01-11T00:00:00Z'); // Trava a partir do primeiro minuto do dia 11
+
+      if (now >= deadline) {
+        console.warn(`[Limits] 🔒 Usuário ${userId} (Cortesia) bloqueado pós-deadline de 10/01/2025`);
+        return {
+          allowed: false,
+          remaining: 0,
+          limit: 0,
+          usagePercentage: 100,
+          warningMessage: 'Seu período de cortesia expirou em 10/01. Por favor, realize sua assinatura para continuar usando.'
+        };
+      }
+    }
+
     const limit = PLAN_LIMITS[plan][limitKey];
 
     // 🏢 ENTERPRISE: Verdadeiramente ilimitado (-1)

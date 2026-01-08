@@ -133,6 +133,15 @@ export async function POST(req: Request) {
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription);
         break;
 
+      case 'checkout.session.async_payment_succeeded':
+        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+        break;
+
+      case 'checkout.session.async_payment_failed':
+        // Log ou notificação de falha em pagamento assíncrono (Boleto não pago)
+        console.warn(`[Webhook] ❌ Pagamento assíncrono falhou: ${event.id}`);
+        break;
+
       case 'invoice.payment_succeeded':
         await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
         break;
@@ -271,50 +280,56 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const isAdminInitiated = session.metadata?.admin_initiated === 'true';
   const adminId = session.metadata?.admin_id;
 
-  // 4. Se é assinatura, processar
-  if (session.subscription) {
-    const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+    // 4. Se é assinatura, processar
+    if (session.subscription) {
+      const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+      const isPaid = session.payment_status === 'paid';
 
-    // Preparar updates
-    const userUpdates: any = {
-      subscription_status: subscription.status,
-      subscription_id: subscription.id,
-      subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
-      is_paid: true,
-      plan: plan || 'starter',
-      tools_unlocked: plan === 'pro' || plan === 'studio' || plan === 'enterprise'
-    };
+      // Preparar updates do usuário
+      const userUpdates: any = {
+        subscription_status: subscription.status,
+        subscription_id: subscription.id,
+        subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
+        plan: plan || 'starter',
+        // SÓ libera se estiver pago. Se for boleto pendente (unpaid), is_paid continua false ou status anterior.
+        is_paid: isPaid,
+        tools_unlocked: isPaid && (plan === 'pro' || plan === 'studio' || plan === 'enterprise')
+      };
 
-    // Se foi iniciado pelo admin, remover flag de cortesia
-    if (isAdminInitiated) {
-      userUpdates.admin_courtesy = false;
-      userUpdates.admin_courtesy_granted_by = null;
-      userUpdates.admin_courtesy_granted_at = null;
-    }
+      // Se foi iniciado pelo admin e PAGOU, remover flag de cortesia
+      if (isAdminInitiated && isPaid) {
+        userUpdates.admin_courtesy = false;
+        userUpdates.admin_courtesy_granted_by = null;
+        userUpdates.admin_courtesy_granted_at = null;
+      }
 
-    // Atualizar usuário
-    await supabaseAdmin
-      .from('users')
-      .update(userUpdates)
-      .eq('id', user.id);
+      // Atualizar usuário
+      await supabaseAdmin
+        .from('users')
+        .update(userUpdates)
+        .eq('id', user.id);
 
-    // Registrar pagamento
-    await supabaseAdmin.from('payments').insert({
-      user_id: user.id,
-      customer_id: customer?.id,
-      stripe_payment_id: session.payment_intent as string,
-      stripe_payment_intent_id: session.payment_intent as string,
-      stripe_subscription_id: subscription.id,
-      amount: (session.amount_total || 0) / 100,
-      currency: session.currency || 'brl',
-      status: 'succeeded',
-      payment_method: 'card',
-      description: `Assinatura ${plan === 'studio' ? 'Studio' : plan === 'pro' ? 'Pro' : 'Starter'}`,
-      plan_type: plan || 'starter'
-    });
+      // Registrar pagamento com status fiel (succeeded ou pending)
+      await supabaseAdmin.from('payments').insert({
+        user_id: user.id,
+        customer_id: customer?.id,
+        stripe_payment_id: session.payment_intent as string,
+        stripe_payment_intent_id: session.payment_intent as string,
+        stripe_subscription_id: subscription.id,
+        amount: (session.amount_total || 0) / 100,
+        currency: session.currency || 'brl',
+        status: isPaid ? 'succeeded' : 'pending', // ⚠️ CRUCIAL: 'pending' não infla a receita do admin
+        payment_method: session.payment_method_types?.[0] || 'card',
+        description: `Assinatura ${plan === 'studio' ? 'Studio' : plan === 'pro' ? 'Pro' : 'Starter'} (${isPaid ? 'Confirmado' : 'Aguardando Compensação'})`,
+        plan_type: plan || 'starter',
+        metadata: {
+          stripe_checkout_id: session.id,
+          payment_status: session.payment_status
+        }
+      });
 
-    // Log se foi iniciado pelo admin
-    if (isAdminInitiated && adminId) {
+      // Log se foi iniciado pelo admin e concluiu pagamento
+      if (isAdminInitiated && adminId && isPaid) {
       await supabaseAdmin.from('admin_logs').insert({
         admin_user_id: adminId,
         action: 'user_completed_payment',

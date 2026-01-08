@@ -31,7 +31,7 @@ export class CheckoutService {
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         mode: 'subscription',
-        payment_method_types: ['card', 'boleto'],
+        payment_method_types: ['card', 'boleto', 'pix'],
         line_items: [
           {
             price: priceId,
@@ -193,7 +193,7 @@ export class CheckoutService {
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         mode: 'subscription',
-        payment_method_types: ['card', 'boleto'],
+        payment_method_types: ['card', 'boleto', 'pix'],
         line_items: [
           {
             price: priceId,
