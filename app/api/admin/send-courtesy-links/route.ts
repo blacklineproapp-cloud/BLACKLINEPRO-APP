@@ -46,14 +46,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Admin não encontrado' }, { status: 404 });
     }
 
-    // 4. Buscar usuários de cortesia que ainda não receberam o link
-    // Critério: is_paid=true mas não têm subscription_id (= não estão no Stripe)
+    // 4. Buscar usuários de cortesia ou em grace period que precisam migrar para o Stripe
+    // Critério: is_paid=true E (admin_courtesy=true OU grace_period_until não é nulo)
+    // E, se tiverem subscription_id, que não tenham sido confirmados como pagantes reais no Stripe
     let query = supabaseAdmin
       .from('users')
-      .select('id, clerk_id, email, name, plan')
+      .select('id, clerk_id, email, name, plan, admin_courtesy, grace_period_until, subscription_id')
       .eq('is_paid', true)
-      .is('subscription_id', null)
       .not('plan', 'eq', 'free');
+
+    // Se NÃO for forceResend, podemos ser mais restritivos
+    // Mas se FOR forceResend, queremos encontrar todos que o Admin vê como "Cortesia" no painel
 
     // Se testEmail foi fornecido, filtrar apenas esse email
     if (testEmail) {
@@ -63,18 +66,30 @@ export async function POST(req: Request) {
       query = query.order('created_at', { ascending: false });
     }
 
-    const { data: courtesyUsers } = await query;
+    const { data: allPaidButNoSub, error: queryError } = await query;
 
-    if (!courtesyUsers || courtesyUsers.length === 0) {
-      return NextResponse.json({
-        success: true,
-        message: 'Nenhum usuário de cortesia encontrado',
-        sent: 0,
-        users: []
-      });
+    if (queryError) {
+      console.error('[Send Courtesy Links] Erro na query:', queryError);
+      throw queryError;
     }
 
-    console.log(`[Send Courtesy Links] ${courtesyUsers.length} usuários de cortesia encontrados`);
+    // Filtragem refinada: 
+    // Só enviar para quem é admin_courtesy=true OU tem grace_period_until
+    // E que NÃO tenham uma assinatura ativa/paga (subscription_id nulo ou admin_courtesy ainda true)
+    let courtesyUsers = allPaidButNoSub?.filter(u => {
+      // Se admin_courtesy ainda é true, é o alvo principal (não pagou Stripe ainda)
+      if (u.admin_courtesy === true) return true;
+      
+      // Se tem grace_period e não tem sub, também é alvo
+      if (u.grace_period_until && !u.subscription_id) return true;
+
+      // Fallback: se is_paid mas não tem sub (migração manual sem flag)
+      if (!u.subscription_id) return true;
+
+      return false;
+    }) || [];
+
+    console.log(`[Send Courtesy Links] ${courtesyUsers.length} usuários elegíveis para link de pagamento`);
 
     // 5. Filtrar usuários que já receberam email de cortesia
     let finalUsers = courtesyUsers;
@@ -172,14 +187,21 @@ export async function POST(req: Request) {
         }
 
         // Registrar envio no banco
-        await supabaseAdmin
+        // Registrar envio no banco (usar upsert para evitar erro de duplicata se houver constraint)
+        const { error: logError } = await supabaseAdmin
           .from('remarketing_campaigns')
-          .insert({
+          .upsert({
             user_id: user.id,
             campaign_type: 'courtesy',
             email_status: 'sent',
             sent_at: new Date().toISOString()
+          }, { 
+            onConflict: 'user_id,campaign_type' 
           });
+
+        if (logError) {
+          console.warn(`[Send Courtesy Links] Erro ao registrar log para ${user.email}:`, logError.message);
+        }
 
         console.log(`[Send Courtesy Links] ✅ Enviado para ${user.email}`);
 

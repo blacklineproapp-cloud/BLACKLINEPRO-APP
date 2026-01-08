@@ -551,7 +551,10 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/send-courtesy-links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dryRun: false })
+        body: JSON.stringify({ 
+          dryRun: false,
+          forceResend: true // Permitir reenvio conforme solicitado
+        })
       });
 
       const data = await res.json();
