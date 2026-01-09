@@ -33,13 +33,3 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# admin/maintenance scripts (não devem ir para produção)
-/scripts/*
-
-# Scripts essenciais (usados em produção/desenvolvimento):
-!/scripts/railway-worker.ts
-!/scripts/railway-worker.js
-!/scripts/sync-email-templates.ts
-!/scripts/populate-historical-ip-data.ts
-!/scripts/automated-remarketing.ts
-!/scripts/send-remarketing-emails.ts
