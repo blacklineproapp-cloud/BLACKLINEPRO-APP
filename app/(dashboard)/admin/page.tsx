@@ -658,9 +658,9 @@ export default function AdminPage() {
             <MetricCard
               icon={<CheckCircle size={20} />}
               title="Pagantes"
-              value={metrics.general.paidUsers}
-              subtitle={`${conversionRate}% conversão`}
-              trend={`${conversionRate}%`}
+              value={metrics.paymentDetails.stripeCustomers.count}
+              subtitle={`${((metrics.paymentDetails.stripeCustomers.count / metrics.general.totalUsers) * 100).toFixed(1)}% conversão`}
+              trend={`${((metrics.paymentDetails.stripeCustomers.count / metrics.general.totalUsers) * 100).toFixed(1)}%`}
               color="green"
             />
             <MetricCard

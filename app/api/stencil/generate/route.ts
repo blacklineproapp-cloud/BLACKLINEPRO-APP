@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     // 1. Buscar usuário completo (precisa do UUID user.id)
     const { data: userData } = await supabaseAdmin
       .from('users')
-      .select('id, plan')
+      .select('id, plan, is_paid, subscription_status')
       .eq('clerk_id', userId)
       .single();
 
@@ -39,6 +39,19 @@ export async function POST(req: Request) {
     if (userIsAdmin) {
       // Admin: processar diretamente sem limitações
       return await processGeneration(req, userId, userData.id, true);
+    }
+
+    // 🔒 VERIFICAR PAGAMENTO - Bloquear usuários não pagos
+    if (!userData.is_paid) {
+      return NextResponse.json(
+        {
+          error: 'Assinatura necessária',
+          message: 'O Editor é exclusivo para assinantes. Escolha um plano para começar a criar seus estênceis!',
+          requiresSubscription: true,
+          subscriptionType: 'subscription',
+        },
+        { status: 403 }
+      );
     }
 
     // 2. VERIFICAR LIMITE DE USO (100/500 por plano)
