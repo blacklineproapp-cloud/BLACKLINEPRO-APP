@@ -168,28 +168,28 @@ async function checkLimit(
     // 1. Buscar plano e flags do usuário
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('plan, admin_courtesy, is_paid, subscription_id')
+      .select('plan, admin_courtesy, admin_courtesy_expires_at, is_paid')
       .eq('id', userId)
       .single();
 
     const plan = (user?.plan || 'free') as PlanType;
 
-    // 🛡️ TRAVA DE SEGURANÇA 10/01/2025: Usuários de cortesia perdem acesso após esta data
-    // Se for cortesia (admin_courtesy true OU is_paid sem subscription_id real)
-    const isCourtesy = user?.admin_courtesy === true || (user?.is_paid === true && !user?.subscription_id);
+    // 🛡️ CORREÇÃO: Verificar cortesia APENAS pelo campo admin_courtesy_expires_at
+    // Usuários de boleto e pagamentos manuais NÃO devem ser bloqueados
+    const isCourtesy = user?.admin_courtesy === true;
+    const courtesyExpiresAt = user?.admin_courtesy_expires_at ? new Date(user.admin_courtesy_expires_at) : null;
 
-    if (isCourtesy) {
+    if (isCourtesy && courtesyExpiresAt) {
       const now = new Date();
-      const deadline = new Date('2025-01-11T00:00:00Z'); // Trava a partir do primeiro minuto do dia 11
 
-      if (now >= deadline) {
-        console.warn(`[Limits] 🔒 Usuário ${userId} (Cortesia) bloqueado pós-deadline de 10/01/2025`);
+      if (now >= courtesyExpiresAt) {
+        console.warn(`[Limits] 🔒 Usuário ${userId} (Cortesia) bloqueado - cortesia expirou em ${courtesyExpiresAt.toLocaleDateString('pt-BR')}`);
         return {
           allowed: false,
           remaining: 0,
           limit: 0,
           usagePercentage: 100,
-          warningMessage: 'Seu período de cortesia expirou em 10/01. Por favor, realize sua assinatura para continuar usando.'
+          warningMessage: `Seu período de cortesia expirou em ${courtesyExpiresAt.toLocaleDateString('pt-BR')}. Por favor, realize sua assinatura para continuar usando.`
         };
       }
     }
