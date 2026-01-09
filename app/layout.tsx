@@ -61,6 +61,14 @@ export const metadata: Metadata = {
     title: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
     description: 'Editor profissional de stencils com Tecnologia StencilFlow. Modo topográfico, linhas perfeitas, Color Match e mais. Grátis para começar.',
     locale: 'pt_BR',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
