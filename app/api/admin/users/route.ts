@@ -212,6 +212,7 @@ export async function POST(req: Request) {
           updates.admin_courtesy = false;
           updates.admin_courtesy_granted_by = null;
           updates.admin_courtesy_granted_at = null;
+          updates.admin_courtesy_expires_at = null;
         } else if (newPlan === 'legacy') {
           // Legacy: Atribui plano mas NÃO marca como pago (usuário paga via banner)
           updates.is_paid = false;
@@ -228,6 +229,10 @@ export async function POST(req: Request) {
             updates.admin_courtesy = true;
             updates.admin_courtesy_granted_by = adminCheck.adminId;
             updates.admin_courtesy_granted_at = new Date().toISOString();
+            // Cortesia expira em 30 dias
+            const expirationDate = new Date();
+            expirationDate.setDate(expirationDate.getDate() + 30);
+            updates.admin_courtesy_expires_at = expirationDate.toISOString();
           }
         } else if (newPlan === 'pro' || newPlan === 'studio' || newPlan === 'enterprise') {
           updates.is_paid = true;
@@ -238,6 +243,10 @@ export async function POST(req: Request) {
             updates.admin_courtesy = true;
             updates.admin_courtesy_granted_by = adminCheck.adminId;
             updates.admin_courtesy_granted_at = new Date().toISOString();
+            // Cortesia expira em 30 dias
+            const expirationDate = new Date();
+            expirationDate.setDate(expirationDate.getDate() + 30);
+            updates.admin_courtesy_expires_at = expirationDate.toISOString();
           }
         }
 

@@ -13,6 +13,22 @@ import { createOrganization } from '@/lib/organizations';
 import { activateUserAtomic } from '@/lib/admin/user-activation';
 import Stripe from 'stripe';
 
+/**
+ * Converte timestamp do Stripe (unix seconds) para ISO string de forma segura
+ * Retorna null se o valor for null, undefined ou inválido
+ */
+function safeTimestampToISO(timestamp: number | null | undefined): string | null {
+  if (!timestamp || typeof timestamp !== 'number' || isNaN(timestamp)) {
+    return null;
+  }
+  try {
+    return new Date(timestamp * 1000).toISOString();
+  } catch (e) {
+    console.error('[Webhook] Erro ao converter timestamp:', timestamp, e);
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
   const body = await req.text();
   const signature = headers().get('stripe-signature');
@@ -392,14 +408,10 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       ? subscription.items.data[0].price.product
       : subscription.items.data[0].price.product.id,
     status: subscription.status as any,
-    current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-    current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-    trial_start: subscription.trial_start
-      ? new Date(subscription.trial_start * 1000).toISOString()
-      : null,
-    trial_end: subscription.trial_end
-      ? new Date(subscription.trial_end * 1000).toISOString()
-      : null,
+    current_period_start: safeTimestampToISO(subscription.current_period_start)!,
+    current_period_end: safeTimestampToISO(subscription.current_period_end)!,
+    trial_start: safeTimestampToISO(subscription.trial_start),
+    trial_end: safeTimestampToISO(subscription.trial_end),
     metadata: subscription.metadata
   });
 
@@ -490,7 +502,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     .from('users')
     .update({
       subscription_status: subscription.status,
-      subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
+      subscription_expires_at: safeTimestampToISO(subscription.current_period_end),
       is_paid: ['active', 'trialing'].includes(subscription.status)
     })
     .eq('subscription_id', subscription.id);
@@ -590,7 +602,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     .from('users')
     .update({
       subscription_status: 'active',
-      subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
+      subscription_expires_at: safeTimestampToISO(subscription.current_period_end),
       is_paid: true
     })
     .eq('subscription_id', subscription.id);

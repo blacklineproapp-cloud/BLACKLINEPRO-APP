@@ -12,6 +12,22 @@ import type {
   UpdateSubscriptionParams
 } from './types';
 
+/**
+ * Converte timestamp do Stripe (unix seconds) para ISO string de forma segura
+ * Retorna null se o valor for null, undefined ou inválido
+ */
+function safeTimestampToISO(timestamp: number | null | undefined): string | null {
+  if (!timestamp || typeof timestamp !== 'number' || isNaN(timestamp)) {
+    return null;
+  }
+  try {
+    return new Date(timestamp * 1000).toISOString();
+  } catch (e) {
+    console.error('[SubscriptionService] Erro ao converter timestamp:', timestamp, e);
+    return null;
+  }
+}
+
 export class SubscriptionService {
   /**
    * Cria uma assinatura no Stripe e no banco
@@ -57,14 +73,10 @@ export class SubscriptionService {
             ? stripeSubscription.items.data[0].price.product
             : stripeSubscription.items.data[0].price.product.id,
           status: stripeSubscription.status as SubscriptionStatus,
-          current_period_start: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
-          trial_start: stripeSubscription.trial_start
-            ? new Date(stripeSubscription.trial_start * 1000).toISOString()
-            : null,
-          trial_end: stripeSubscription.trial_end
-            ? new Date(stripeSubscription.trial_end * 1000).toISOString()
-            : null,
+          current_period_start: safeTimestampToISO(stripeSubscription.current_period_start)!,
+          current_period_end: safeTimestampToISO(stripeSubscription.current_period_end)!,
+          trial_start: safeTimestampToISO(stripeSubscription.trial_start),
+          trial_end: safeTimestampToISO(stripeSubscription.trial_end),
           metadata: metadata || {}
         })
         .select()
@@ -209,20 +221,12 @@ export class SubscriptionService {
       return await this.updateSubscription(subscription.id, {
         status: stripeSubscription.status as SubscriptionStatus,
         stripe_price_id: stripeSubscription.items.data[0].price.id,
-        current_period_start: new Date(stripeSubscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(stripeSubscription.current_period_end * 1000).toISOString(),
-        trial_start: stripeSubscription.trial_start
-          ? new Date(stripeSubscription.trial_start * 1000).toISOString()
-          : null,
-        trial_end: stripeSubscription.trial_end
-          ? new Date(stripeSubscription.trial_end * 1000).toISOString()
-          : null,
-        canceled_at: stripeSubscription.canceled_at
-          ? new Date(stripeSubscription.canceled_at * 1000).toISOString()
-          : null,
-        ended_at: stripeSubscription.ended_at
-          ? new Date(stripeSubscription.ended_at * 1000).toISOString()
-          : null
+        current_period_start: safeTimestampToISO(stripeSubscription.current_period_start)!,
+        current_period_end: safeTimestampToISO(stripeSubscription.current_period_end)!,
+        trial_start: safeTimestampToISO(stripeSubscription.trial_start),
+        trial_end: safeTimestampToISO(stripeSubscription.trial_end),
+        canceled_at: safeTimestampToISO(stripeSubscription.canceled_at),
+        ended_at: safeTimestampToISO(stripeSubscription.ended_at)
       });
     } catch (error: any) {
       console.error('[SubscriptionService] Erro ao sincronizar:', error);
