@@ -1,6 +1,7 @@
 import { currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from './supabase';
 import { getOrSetCache, invalidateCache } from './cache';
+import { checkAndRevertExpiredCourtesy } from './courtesy-service';
 
 // Função auxiliar para retry com backoff exponencial
 async function retryWithBackoff<T>(
@@ -172,6 +173,31 @@ export async function getOrCreateUser(clerkId: string) {
         namespace: 'users',
       }
     );
+
+    // 🔒 VERIFICAR CORTESIA EXPIRADA (apenas se usuário existe)
+    if (user?.id) {
+      try {
+        const courtesyCheck = await checkAndRevertExpiredCourtesy(user.id);
+        
+        if (courtesyCheck.wasReverted) {
+          console.log(`[Auth] ⏰ Cortesia expirada - usuário ${user.id} revertido para FREE`);
+          // Invalidar cache para forçar reload dos dados atualizados
+          await invalidateCache(clerkId, 'users');
+          
+          // Buscar dados atualizados
+          const { data: updatedUser } = await supabaseAdmin
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          
+          return updatedUser || user;
+        }
+      } catch (courtesyError) {
+        // Não bloquear login se verificação de cortesia falhar
+        console.error('[Auth] ⚠️ Erro ao verificar cortesia (não bloqueante):', courtesyError);
+      }
+    }
 
     return user;
   } catch (err: any) {
