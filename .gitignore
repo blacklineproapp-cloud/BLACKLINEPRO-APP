@@ -32,3 +32,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# admin/maintenance scripts (não devem ir para produção)
+/scripts/*
+# Mas manter scripts essenciais:
+!/scripts/railway-worker.ts
+!/scripts/sync-email-templates.ts
