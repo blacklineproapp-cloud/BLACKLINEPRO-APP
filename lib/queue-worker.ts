@@ -15,26 +15,36 @@ import { supabaseAdmin } from './supabase';
  *
  * IMPORTANTE: Em produção, rodar workers em processos separados
  * ou em workers do Vercel/Railway
+ *
+ * 🚀 MIGRAÇÃO: Upstash → Railway Redis
+ * - Workers agora usam Railway Redis (TCP nativo)
+ * - Configuração idêntica ao queue.ts para garantir compatibilidade
  */
 
-// Mesma configuração de Redis (ConnectionOptions para BullMQ)
-const redisConnection: ConnectionOptions = process.env.UPSTASH_REDIS_REST_URL
-  ? {
-      host: process.env.UPSTASH_REDIS_REST_URL!.replace('https://', '').replace(
-        'http://',
-        ''
-      ),
-      port: 6379,
-      password: process.env.UPSTASH_REDIS_REST_TOKEN!,
-      tls: process.env.UPSTASH_REDIS_REST_URL?.startsWith('https') ? {} : undefined,
-      maxRetriesPerRequest: null,
-    }
+// Railway Redis Connection (mesma do queue.ts)
+// Parser manual para evitar conflito de versões do ioredis
+function parseRedisUrl(url: string): ConnectionOptions {
+  const urlObj = new URL(url);
+  return {
+    host: urlObj.hostname,
+    port: parseInt(urlObj.port) || 6379,
+    password: urlObj.password || undefined,
+    username: urlObj.username || undefined,
+    maxRetriesPerRequest: null,
+  };
+}
+
+const redisConnection: ConnectionOptions = process.env.REDIS_URL
+  ? parseRedisUrl(process.env.REDIS_URL)
   : {
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD,
+      host: 'localhost',
+      port: 6379,
       maxRetriesPerRequest: null,
     };
+
+console.log('[Workers] Configurando workers com Railway Redis:',
+  process.env.REDIS_URL ? '✅ Conectado' : '⚠️ Usando localhost'
+);
 
 // ============================================
 // WORKER: STENCIL GENERATION

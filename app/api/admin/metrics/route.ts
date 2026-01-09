@@ -14,7 +14,7 @@ let stripePaidEmailsCache: {
   timestamp: number;
 } | null = null;
 
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+const CACHE_TTL = 30 * 1000; // 30 segundos (reduzido para ver mudanças mais rápido)
 
 async function getStripePaidEmails(): Promise<Set<string>> {
   // Verificar cache

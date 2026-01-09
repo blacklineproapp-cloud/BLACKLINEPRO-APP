@@ -11,6 +11,7 @@ import { CustomerService, SubscriptionService } from '@/lib/stripe';
 import { getPlanFromPriceId } from '@/lib/billing';
 import { createOrganization } from '@/lib/organizations';
 import { activateUserAtomic } from '@/lib/admin/user-activation';
+import type { PlanType } from '@/lib/stripe/types';
 import Stripe from 'stripe';
 
 /**
@@ -301,6 +302,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     if (session.subscription) {
       const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
       const isPaid = session.payment_status === 'paid';
+
+      // 🔍 LOG CRÍTICO: Verificar se Stripe está enviando status correto (BOLETOS)
+      console.log(`[Webhook] Checkout ${session.id}:`);
+      console.log(`  - payment_status: "${session.payment_status}"`);
+      console.log(`  - isPaid: ${isPaid}`);
+      console.log(`  - payment_method_types: ${JSON.stringify(session.payment_method_types)}`);
+
+      if (!isPaid && session.payment_method_types?.includes('boleto')) {
+        console.warn(`[Webhook] ⚠️ BOLETO com status="${session.payment_status}" - Pode estar pendente ou Stripe não atualizou ainda`);
+      }
 
       // Preparar updates do usuário
       const userUpdates: any = {
@@ -597,18 +608,39 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   // Atualizar subscription no banco
   await SubscriptionService.syncFromStripe(subscription.id);
 
-  // Atualizar usuário (compatibilidade)
-  await supabaseAdmin
-    .from('users')
-    .update({
-      subscription_status: 'active',
-      subscription_expires_at: safeTimestampToISO(subscription.current_period_end),
-      is_paid: true
-    })
-    .eq('subscription_id', subscription.id);
+  // Buscar plano do price_id
+  const planMapping = getPlanFromPriceId(subscription.items.data[0].price.id);
+  const planType = (planMapping?.tier || 'starter') as PlanType;
+
+  // ✅ CORREÇÃO BUG CRÍTICO: Usar activateUserAtomic() para resetar limites
+  // Antes: apenas atualizava is_paid=true SEM resetar ai_usage
+  // Agora: reseta contadores para usuários pagantes (especialmente BOLETOS)
+  try {
+    const result = await activateUserAtomic(customer.user_id, planType, {
+      isPaid: true,
+      toolsUnlocked: planType === 'pro' || planType === 'studio' || planType === 'enterprise',
+      subscriptionStatus: 'active',
+      adminId: undefined // Webhook não tem admin
+    });
+
+    console.log(`[Webhook] ✅ Invoice paid - ${result.message} (resetado ${result.deleted_records} registros)`);
+
+  } catch (activationError: any) {
+    console.error('[Webhook] ❌ Erro ao ativar via invoice.payment_succeeded:', activationError);
+
+    // Fallback: Atualizar manualmente (sem reset de limites)
+    console.warn('[Webhook] ⚠️ Aplicando fallback (SEM RESET DE LIMITES)');
+    await supabaseAdmin
+      .from('users')
+      .update({
+        subscription_status: 'active',
+        subscription_expires_at: safeTimestampToISO(subscription.current_period_end),
+        is_paid: true
+      })
+      .eq('subscription_id', subscription.id);
+  }
 
   // Registrar pagamento
-  const planMapping = getPlanFromPriceId(subscription.items.data[0].price.id);
 
   await supabaseAdmin.from('payments').insert({
     user_id: customer.user_id,

@@ -90,33 +90,8 @@ export async function POST(
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    // 🛡️ RATE LIMITING: Prevenir abuso ao aceitar convites (60 requests/min)
-    const identifier = await getRateLimitIdentifier(clerkId);
-
-    if (apiLimiter) {
-      const { success, limit, remaining, reset } = await apiLimiter.limit(identifier);
-
-      if (!success) {
-        return NextResponse.json(
-          {
-            error: 'Muitas requisições',
-            message: 'Você atingiu o limite de requisições. Tente novamente em alguns minutos.',
-            limit,
-            remaining,
-            reset: new Date(reset).toISOString(),
-          },
-          {
-            status: 429,
-            headers: {
-              'X-RateLimit-Limit': limit.toString(),
-              'X-RateLimit-Remaining': remaining.toString(),
-              'X-RateLimit-Reset': reset.toString(),
-              'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
-            },
-          }
-        );
-      }
-    }
+    // 🛡️ RATE LIMITING: Desabilitado (controlado via database)
+    // Rate limiting removido após migração para Railway Redis
 
     const token = params.token;
 

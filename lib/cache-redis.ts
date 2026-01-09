@@ -1,4 +1,4 @@
-import { Redis } from '@upstash/redis';
+import { Redis } from 'ioredis';
 
 /**
  * Sistema de Cache Híbrido com Redis
@@ -6,10 +6,10 @@ import { Redis } from '@upstash/redis';
  * Usa Redis quando disponível (produção) e fallback para memória (desenvolvimento)
  * Compartilhado entre instâncias + persistente + alta performance
  *
- * 🚀 OTIMIZAÇÃO: Migrado de ioredis para @upstash/redis
- * - ioredis usa protocolo TCP (incompatível com Upstash REST API)
- * - @upstash/redis usa HTTP REST (compatível e otimizado)
- * - Reduz tentativas de conexão falhas e erros no log
+ * 🚀 MIGRAÇÃO: Upstash → Railway Redis
+ * - Railway Redis usa protocolo TCP nativo (ioredis)
+ * - Upstash cobrava US$ 12/mês desnecessariamente
+ * - Railway Redis é GRÁTIS e mais rápido (mesmo datacenter)
  */
 
 // ============================================
@@ -18,24 +18,42 @@ import { Redis } from '@upstash/redis';
 
 let redisClient: Redis | null = null;
 
-// 🚀 Conectar ao Upstash Redis (REST API)
-if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+// 🚀 Conectar ao Railway Redis (TCP)
+if (process.env.REDIS_URL) {
   try {
-    redisClient = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    redisClient = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false,
+      // Configurações de reconnection
+      retryStrategy(times) {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+      lazyConnect: true, // Conectar apenas quando necessário
     });
 
-    console.log('[Cache] ✅ Redis (Upstash) configurado com sucesso');
+    // Conectar imediatamente
+    redisClient.connect().then(() => {
+      console.log('[Cache] ✅ Railway Redis conectado');
+    }).catch((error) => {
+      console.warn('[Cache] Railway Redis falhou, usando memory fallback:', error.message);
+      redisClient = null;
+    });
+
+    // Event listeners
+    redisClient.on('error', (err) => {
+      console.error('[Cache] ❌ Erro Railway Redis:', err.message);
+    });
+
+    redisClient.on('reconnecting', () => {
+      console.log('[Cache] 🔄 Reconectando ao Railway Redis...');
+    });
+
   } catch (error) {
     console.warn('[Cache] Redis setup failed, using memory fallback:', error);
     redisClient = null;
   }
 }
-
-// ⚠️ Removido suporte para Redis local (REDIS_HOST)
-// Upstash Free é suficiente para desenvolvimento e produção
-// Se precisar de Redis local, use Docker com Upstash compatível
 
 // ============================================
 // FALLBACK: CACHE EM MEMÓRIA
@@ -136,7 +154,7 @@ export async function getOrSetCache<T>(
       console.log(`🔄 [Redis] Cache MISS: ${fullKey}`);
       const data = await fetcher();
 
-      // Salvar no Redis com TTL
+      // Salvar no Redis com TTL (ioredis sintaxe: key, seconds, value)
       await redisClient.setex(fullKey, Math.floor(ttl / 1000), JSON.stringify(data));
 
       // 🚀 OTIMIZAÇÃO: Tags removidas para reduzir requests Redis
@@ -328,10 +346,9 @@ export async function getCacheStats(): Promise<{
 
 /**
  * Verifica se Redis está conectado
- * 🚀 OTIMIZAÇÃO: @upstash/redis não tem .status, apenas verifica se foi inicializado
  */
 export function isRedisConnected(): boolean {
-  return redisClient !== null;
+  return redisClient !== null && redisClient.status === 'ready';
 }
 
 /**

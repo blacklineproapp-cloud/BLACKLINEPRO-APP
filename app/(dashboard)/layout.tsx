@@ -1,6 +1,6 @@
 'use client';
 
-import { useUser } from '@clerk/nextjs';
+import { useUser, useClerk } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -57,7 +57,13 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const { user } = useUser();
+  const { signOut } = useClerk();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    setIsMenuOpen(false);
+    await signOut({ redirectUrl: '/' });
+  };
 
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500/30">
@@ -110,6 +116,20 @@ export default function DashboardLayout({
                   <Rocket size={16} className="text-emerald-500" />
                   <span className="text-xs text-emerald-400 font-bold">Fazer Upgrade</span>
                </Link>
+
+               {/* Divider */}
+               <div className="h-px bg-zinc-800 my-1" />
+
+               {/* Logout Button - Visível e claro */}
+               <button
+                 onClick={handleLogout}
+                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-500/10 transition-colors text-left w-full"
+               >
+                  <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span className="text-xs text-red-400 font-medium">Sair da Conta</span>
+               </button>
             </div>
           </div>
         </>
