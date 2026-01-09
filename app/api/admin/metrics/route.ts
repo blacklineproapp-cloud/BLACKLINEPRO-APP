@@ -173,29 +173,50 @@ export async function GET(req: Request) {
     });
 
     // =========================================================================
-    // RECEITA
+    // RECEITA (APENAS PAGAMENTOS REAIS DO STRIPE)
     // =========================================================================
 
-    // Receita total
+    // Buscar emails que pagaram via Stripe (fonte da verdade)
+    const stripePayingEmails = await getStripePaidEmails();
+
+    // Receita total - APENAS de emails que pagaram via Stripe
     const { data: allPayments } = await supabaseAdmin
       .from('payments')
-      .select('amount')
+      .select('amount, user_id')
       .eq('status', 'succeeded');
 
-    const totalRevenue = allPayments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0;
+    // Filtrar apenas pagamentos de usuários que realmente pagaram no Stripe
+    const { data: payingUsers } = await supabaseAdmin
+      .from('users')
+      .select('id, email')
+      .in('id', allPayments?.map(p => p.user_id) || []);
 
-    // Receita deste mês
+    const userEmailMap = new Map(payingUsers?.map(u => [u.id, u.email.toLowerCase()]) || []);
+    
+    const realPayments = allPayments?.filter(p => {
+      const email = userEmailMap.get(p.user_id);
+      return email && stripePayingEmails.has(email);
+    }) || [];
+
+    const totalRevenue = realPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+    // Receita deste mês - APENAS de emails que pagaram via Stripe
     const firstDayOfMonth = new Date();
     firstDayOfMonth.setDate(1);
     firstDayOfMonth.setHours(0, 0, 0, 0);
 
     const { data: monthPayments } = await supabaseAdmin
       .from('payments')
-      .select('amount')
+      .select('amount, user_id')
       .eq('status', 'succeeded')
       .gte('created_at', firstDayOfMonth.toISOString());
 
-    const monthRevenue = monthPayments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0;
+    const realMonthPayments = monthPayments?.filter(p => {
+      const email = userEmailMap.get(p.user_id);
+      return email && stripePayingEmails.has(email);
+    }) || [];
+
+    const monthRevenue = realMonthPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
     // =========================================================================
     // DETALHAMENTO DE PAGANTES (STRIPE API = FONTE DA VERDADE)

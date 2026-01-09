@@ -724,22 +724,22 @@ export default function AdminPage() {
                 </div>
               </button>
 
-              {/* Cortesia Permanente */}
+              {/* Cortesia Temporária (3 dias) */}
               <button
-                onClick={() => setUserListModal({ show: true, type: 'courtesy', title: 'Cortesias Permanentes (Migração)' })}
+                onClick={() => setUserListModal({ show: true, type: 'courtesy', title: 'Cortesias Temporárias (Prazo: 3 dias)' })}
                 className="bg-zinc-950 border border-purple-800/30 hover:border-purple-600/50 rounded-lg p-5 text-left transition-all hover:scale-[1.02] cursor-pointer"
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Gift size={18} className="text-purple-400" />
-                  <h4 className="font-semibold text-sm">Cortesia Permanente</h4>
+                  <h4 className="font-semibold text-sm">Cortesia Temporária</h4>
                   <Eye size={14} className="text-purple-600 ml-auto" />
                 </div>
                 <div className="text-3xl font-bold text-purple-400 mb-2">
                   {metrics.paymentDetails.courtesyUsers.count}
                 </div>
-                <p className="text-xs text-zinc-500 mb-3">Acesso gratuito concedido</p>
+                <p className="text-xs text-zinc-500 mb-3">Aguardando pagamento (3 dias)</p>
                 <div className="text-xs text-zinc-400">
-                  🎁 Precisam receber link Stripe
+                  ⏰ Expira em 12/01/2026
                 </div>
               </button>
 
