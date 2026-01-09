@@ -1,4 +1,4 @@
-import { Worker, Job } from 'bullmq';
+import { Worker, Job, ConnectionOptions } from 'bullmq';
 import {
   StencilJobData,
   EnhanceJobData,
@@ -9,7 +9,6 @@ import { generateStencilFromImage, enhanceImage, generateTattooIdea, analyzeImag
 import { recordUsage } from './billing/limits';
 import { BRL_COST } from './credits';
 import { supabaseAdmin } from './supabase';
-import { Redis } from 'ioredis';
 
 /**
  * Workers que processam jobs em background
@@ -18,9 +17,9 @@ import { Redis } from 'ioredis';
  * ou em workers do Vercel/Railway
  */
 
-// Mesma configuração de Redis
-const redisConnection = process.env.UPSTASH_REDIS_REST_URL
-  ? new Redis({
+// Mesma configuração de Redis (ConnectionOptions para BullMQ)
+const redisConnection: ConnectionOptions = process.env.UPSTASH_REDIS_REST_URL
+  ? {
       host: process.env.UPSTASH_REDIS_REST_URL!.replace('https://', '').replace(
         'http://',
         ''
@@ -29,13 +28,13 @@ const redisConnection = process.env.UPSTASH_REDIS_REST_URL
       password: process.env.UPSTASH_REDIS_REST_TOKEN!,
       tls: process.env.UPSTASH_REDIS_REST_URL?.startsWith('https') ? {} : undefined,
       maxRetriesPerRequest: null,
-    })
-  : new Redis({
+    }
+  : {
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6379'),
       password: process.env.REDIS_PASSWORD,
       maxRetriesPerRequest: null,
-    });
+    };
 
 // ============================================
 // WORKER: STENCIL GENERATION

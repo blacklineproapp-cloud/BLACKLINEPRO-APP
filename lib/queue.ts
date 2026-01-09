@@ -1,5 +1,4 @@
-import { Queue, Worker, Job, QueueEvents } from 'bullmq';
-import { Redis } from 'ioredis';
+import { Queue, Worker, Job, QueueEvents, ConnectionOptions } from 'bullmq';
 
 /**
  * Sistema de Filas com BullMQ + Redis
@@ -13,8 +12,8 @@ import { Redis } from 'ioredis';
 // ============================================
 
 // Usar mesmo Redis do Upstash (rate limiting) ou criar separado
-const redisConnection = process.env.UPSTASH_REDIS_REST_URL
-  ? new Redis({
+const redisConnection: ConnectionOptions = process.env.UPSTASH_REDIS_REST_URL
+  ? {
       host: process.env.UPSTASH_REDIS_REST_URL!.replace('https://', '').replace(
         'http://',
         ''
@@ -23,13 +22,13 @@ const redisConnection = process.env.UPSTASH_REDIS_REST_URL
       password: process.env.UPSTASH_REDIS_REST_TOKEN!,
       tls: process.env.UPSTASH_REDIS_REST_URL?.startsWith('https') ? {} : undefined,
       maxRetriesPerRequest: null, // Required for BullMQ
-    })
-  : new Redis({
+    }
+  : {
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6379'),
       password: process.env.REDIS_PASSWORD,
       maxRetriesPerRequest: null,
-    });
+    };
 
 // ============================================
 // TIPOS DE JOBS

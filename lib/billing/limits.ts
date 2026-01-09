@@ -13,11 +13,11 @@ import type { PlanType } from '../stripe/types';
 // DEFINIÇÃO DE LIMITES
 // ============================================================================
 
-// 🛡️ SOFT LIMIT STUDIO: Limite "justo" para prevenir abuso
-// Com 7.500 gerações/mês a R$ 0,045/geração = R$ 337,50 de custo
-// Receita Studio: R$ 300/mês → Margem ainda positiva
-export const STUDIO_SOFT_LIMIT = 7500;  // Gerações/mês
-export const STUDIO_WARNING_THRESHOLD = 0.80;  // Alerta aos 80% (6.000 gerações)
+// Limite Studio: 680 gerações/mês
+// Com 680 gerações/mês a R$ 0,50/geração = R$ 340 de custo
+// Receita Studio: R$ 300/mês → Margem controlada
+export const STUDIO_LIMIT = 680;  // Gerações/mês
+export const STUDIO_WARNING_THRESHOLD = 0.80;  // Alerta aos 80% (544 gerações)
 
 export interface UsageLimits {
   editorGenerations: number;  // -1 = ilimitado verdadeiro, 0 = bloqueado, >0 = limite
@@ -51,40 +51,40 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
     splitA4: 0               // ❌ SEM split A4
   },
   starter: {
-    editorGenerations: 100,  // 100 gerações por mês
+    editorGenerations: 95,   // 95 gerações por mês
     aiRequests: 0,           // Não tem acesso à IA avançada
-    toolsUsage: 100,         // Uso básico de ferramentas
-    removeBackground: 100,
-    enhance4K: 100,
-    colorMatch: 100,
-    splitA4: 100
+    toolsUsage: 95,          // Uso básico de ferramentas
+    removeBackground: 95,
+    enhance4K: 95,
+    colorMatch: 95,
+    splitA4: 95
   },
   pro: {
-    editorGenerations: 500,  // 500 gerações por mês
-    aiRequests: 100,         // 100 requests IA por mês
-    toolsUsage: 500,         // Ferramentas completas
-    removeBackground: 500,
-    enhance4K: 500,
-    colorMatch: 500,
-    splitA4: 500
+    editorGenerations: 210,  // 210 gerações por mês
+    aiRequests: 210,         // 210 requests IA por mês
+    toolsUsage: 210,         // Ferramentas completas
+    removeBackground: 210,
+    enhance4K: 210,
+    colorMatch: 210,
+    splitA4: 210
   },
   studio: {
-    editorGenerations: STUDIO_SOFT_LIMIT,  // 🛡️ SOFT LIMIT: 7.500 gerações/mês
-    aiRequests: STUDIO_SOFT_LIMIT,         // 🛡️ SOFT LIMIT aplicado
-    toolsUsage: STUDIO_SOFT_LIMIT,         // 🛡️ SOFT LIMIT aplicado
-    removeBackground: STUDIO_SOFT_LIMIT,
-    enhance4K: STUDIO_SOFT_LIMIT,
-    colorMatch: STUDIO_SOFT_LIMIT,
-    splitA4: STUDIO_SOFT_LIMIT
+    editorGenerations: STUDIO_LIMIT,  // 680 gerações/mês
+    aiRequests: STUDIO_LIMIT,         // 680 requests IA/mês
+    toolsUsage: STUDIO_LIMIT,         // 680 ferramentas/mês
+    removeBackground: STUDIO_LIMIT,
+    enhance4K: STUDIO_LIMIT,
+    colorMatch: STUDIO_LIMIT,
+    splitA4: STUDIO_LIMIT
   },
   enterprise: {
-    editorGenerations: -1,   // 🏢 VERDADEIRAMENTE ILIMITADO
-    aiRequests: -1,          // 🏢 VERDADEIRAMENTE ILIMITADO
-    toolsUsage: -1,          // 🏢 VERDADEIRAMENTE ILIMITADO
-    removeBackground: -1,
-    enhance4K: -1,
-    colorMatch: -1,
-    splitA4: -1
+    editorGenerations: 1400,  // 🏢 1400 gerações/mês
+    aiRequests: 1400,         // 🏢 1400 requests IA/mês
+    toolsUsage: 1400,         // 🏢 1400 ferramentas/mês
+    removeBackground: 1400,
+    enhance4K: 1400,
+    colorMatch: 1400,
+    splitA4: 1400
   }
 };
 
@@ -462,7 +462,7 @@ export async function getStudioUsageReport(): Promise<StudioUsageReport[]> {
           .gte('created_at', firstDayOfMonth.toISOString());
 
         const usage = count || 0;
-        const percentage = (usage / STUDIO_SOFT_LIMIT) * 100;
+        const percentage = (usage / STUDIO_LIMIT) * 100;
 
         // Calcular nível de warning
         let warningLevel: 'normal' | 'warning' | 'critical' = 'normal';
@@ -472,14 +472,14 @@ export async function getStudioUsageReport(): Promise<StudioUsageReport[]> {
           warningLevel = 'warning';   // Próximo ao limite
         }
 
-        // Estimar custo (R$ 0,045 por geração)
-        const costEstimate = usage * 0.045;
+        // Estimar custo (R$ 0,50 por geração)
+        const costEstimate = usage * 0.50;
 
         return {
           userId: user.id,
           email: user.email,
           usage,
-          limit: STUDIO_SOFT_LIMIT,
+          limit: STUDIO_LIMIT,
           percentage: Math.round(percentage),
           warningLevel,
           costEstimate: Math.round(costEstimate * 100) / 100

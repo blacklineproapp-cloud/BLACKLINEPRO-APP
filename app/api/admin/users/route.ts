@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { isAdmin as checkIsAdmin } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin-config';
 import { supabaseAdmin } from '@/lib/supabase';
+import { activateUserAtomic } from '@/lib/admin/user-activation';
 
 // Middleware para verificar admin (usando config centralizada)
 async function userIsAdmin(userId: string): Promise<{ userIsAdmin: boolean; adminId?: string }> {
@@ -240,46 +241,45 @@ export async function POST(req: Request) {
           }
         }
 
-        console.log(`[Admin] Atualizando usuário ${targetUserId} para plano ${newPlan}:`, updates);
+        // ✅ USAR FUNÇÃO ATÔMICA (previne race condition + garante atomicidade)
+        try {
+          const result = await activateUserAtomic(targetUserId, newPlan, {
+            isPaid: updates.is_paid,
+            toolsUnlocked: updates.tools_unlocked,
+            subscriptionStatus: updates.subscription_status,
+            adminId: adminCheck.adminId
+          });
 
-        const { data: updateResult, error: updateError } = await supabaseAdmin
-          .from('users')
-          .update(updates)
-          .eq('id', targetUserId)
-          .select();
+          console.log(`[Admin] ✅ ${result.message}`);
 
-        if (updateError) {
-          console.error('[Admin] Erro ao atualizar plano:', updateError);
-          throw updateError;
+          // Buscar clerk_id para invalidar cache
+          const { data: targetUser } = await supabaseAdmin
+            .from('users')
+            .select('clerk_id')
+            .eq('id', targetUserId)
+            .single();
+
+          // Invalidar cache do usuário
+          if (targetUser?.clerk_id) {
+            const { invalidateCache } = await import('@/lib/cache');
+            await invalidateCache(targetUser.clerk_id, 'users');
+            console.log(`[Admin] Cache invalidado para: ${targetUser.clerk_id}`);
+          }
+
+          return NextResponse.json({
+            message: isCourtesy ? 'Plano cortesia ativado' : result.message,
+            success: true,
+            deletedRecords: result.deleted_records,
+            oldPlan: result.old_plan,
+            newPlan: result.new_plan
+          });
+
+        } catch (activationError: any) {
+          console.error('[Admin] ❌ Erro na ativação atômica:', activationError);
+          return NextResponse.json({
+            error: 'Erro ao ativar usuário: ' + activationError.message
+          }, { status: 500 });
         }
-
-        console.log('[Admin] Usuário atualizado:', updateResult);
-
-        // Buscar clerk_id para invalidar cache
-        const { data: targetUser } = await supabaseAdmin
-          .from('users')
-          .select('clerk_id')
-          .eq('id', targetUserId)
-          .single();
-
-        // Invalidar cache do usuário
-        if (targetUser?.clerk_id) {
-          const { invalidateCache } = await import('@/lib/cache');
-          await invalidateCache(targetUser.clerk_id, 'users');
-          console.log(`[Admin] Cache invalidado para: ${targetUser.clerk_id}`);
-        }
-
-        await supabaseAdmin.from('admin_logs').insert({
-          admin_user_id: adminCheck.adminId!,
-          action: isCourtesy ? 'grant_courtesy_plan' : 'change_plan',
-          target_user_id: targetUserId,
-          details: { newPlan, isCourtesy: isCourtesy || false },
-        });
-
-        return NextResponse.json({ 
-          message: isCourtesy ? 'Plano cortesia ativado' : 'Plano alterado',
-          success: true
-        });
       }
 
       default:

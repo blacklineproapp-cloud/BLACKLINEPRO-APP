@@ -10,6 +10,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { CustomerService, SubscriptionService } from '@/lib/stripe';
 import { getPlanFromPriceId } from '@/lib/billing';
 import { createOrganization } from '@/lib/organizations';
+import { activateUserAtomic } from '@/lib/admin/user-activation';
 import Stripe from 'stripe';
 
 export async function POST(req: Request) {
@@ -303,11 +304,31 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         userUpdates.admin_courtesy_granted_at = null;
       }
 
-      // Atualizar usuário
-      await supabaseAdmin
-        .from('users')
-        .update(userUpdates)
-        .eq('id', user.id);
+      // ✅ USAR FUNÇÃO ATÔMICA se PAGOU (previne race condition com admin)
+      if (isPaid) {
+        try {
+          const result = await activateUserAtomic(user.id, plan || 'starter', {
+            isPaid: true,
+            toolsUnlocked: plan === 'pro' || plan === 'studio' || plan === 'enterprise',
+            subscriptionStatus: subscription.status,
+            adminId: undefined // Webhook não tem admin
+          });
+
+          console.log(`[Webhook] ✅ Ativação atômica: ${result.message}`);
+
+        } catch (activationError: any) {
+          console.error('[Webhook] ❌ Erro na ativação atômica:', activationError);
+          // Não throw - continuar processando webhook (já logado)
+        }
+      } else {
+        // Boleto PENDENTE - apenas atualizar status sem liberar limites
+        console.log('[Webhook] ⏳ Boleto pendente - aguardando compensação');
+
+        await supabaseAdmin
+          .from('users')
+          .update(userUpdates)
+          .eq('id', user.id);
+      }
 
       // Registrar pagamento com status fiel (succeeded ou pending)
       await supabaseAdmin.from('payments').insert({
