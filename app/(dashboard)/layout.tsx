@@ -196,6 +196,27 @@ export default function DashboardLayout({
           />
         </div>
 
+        {/* 🖥️ Desktop User Section - Photo + Logout */}
+        <div className="hidden md:flex md:flex-col md:items-center md:gap-3 md:mb-4">
+          {/* User Photo */}
+          {user && (
+            <div className="scale-90">
+              <UserButton afterSignOutUrl="/" />
+            </div>
+          )}
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="p-2 rounded-xl hover:bg-red-500/10 transition-colors group"
+            title="Sair da Conta"
+          >
+            <svg className="w-5 h-5 text-zinc-500 group-hover:text-red-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
+
         {/* 📱 Mobile Menu Button - THE SMART WAY */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}

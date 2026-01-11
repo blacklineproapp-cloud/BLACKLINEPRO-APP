@@ -8,6 +8,7 @@ import { Plus, Clock, Upload, Zap, Printer, Crown, X, Download, Edit2, Trash2, M
 import { storage } from '@/lib/client-storage';
 import CourtesyBanner from '@/components/CourtesyBanner';
 import LegacyPaymentBanner from '@/components/LegacyPaymentBanner';
+import IAGenGallery from './HistoryTab';
 
 interface Project {
   id: string;
@@ -21,8 +22,19 @@ interface Project {
   created_at: string;
 }
 
+interface AIGenImage {
+  id: string;
+  created_at: string;
+  metadata: {
+    prompt?: string;
+    size?: string;
+    generated_image?: string;
+  };
+}
+
 interface DashboardClientProps {
   projects: Project[];
+  aiGenImages: AIGenImage[]; // 🆕 Imagens IA Gen
   isSubscribed: boolean;
   currentUsage: number;
   monthlyLimit: number | null;
@@ -34,7 +46,7 @@ interface DashboardClientProps {
   isPaid: boolean;
 }
 
-export default function DashboardClient({ projects, isSubscribed, currentUsage, monthlyLimit, userPlan, courtesyDeadline, assignedPlan, userId, userEmail, isPaid }: DashboardClientProps) {
+export default function DashboardClient({ projects, aiGenImages, isSubscribed, currentUsage, monthlyLimit, userPlan, courtesyDeadline, assignedPlan, userId, userEmail, isPaid }: DashboardClientProps) {
   const router = useRouter();
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showStencil, setShowStencil] = useState(true);
@@ -47,6 +59,7 @@ export default function DashboardClient({ projects, isSubscribed, currentUsage, 
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [inlineEditName, setInlineEditName] = useState('');
   const [currentPage, setCurrentPage] = useState(0);
+  const [activeTab, setActiveTab] = useState<'projects' | 'history'>('projects');
   const PROJECTS_PER_PAGE = 12; // 4 colunas x 3 linhas (ou 2x6 no mobile)
 
   // Filtrar projetos baseado na busca e filtro
@@ -286,19 +299,51 @@ export default function DashboardClient({ projects, isSubscribed, currentUsage, 
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6 lg:mb-10">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">Meus Projetos</h1>
-          <p className="text-zinc-400 text-sm lg:text-base">Gerencie seus decalques</p>
+      {/* Header with Tabs */}
+      <div className="mb-6 lg:mb-10">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">Dashboard</h1>
+            <p className="text-zinc-400 text-sm lg:text-base">Gerencie seus projetos e histórico</p>
+          </div>
+          <Link href="/editor">
+            <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 lg:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm lg:text-base">
+              <Plus size={18} />
+              <span className="sm:hidden">Novo</span>
+              <span className="hidden sm:inline">Novo Decalque</span>
+            </button>
+          </Link>
         </div>
-        <Link href="/editor">
-          <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 lg:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm lg:text-base">
-            <Plus size={18} />
-            <span className="sm:hidden">Novo</span>
-            <span className="hidden sm:inline">Novo Decalque</span>
+
+        {/* Tab Navigation */}
+        <div className="flex gap-2 border-b border-zinc-800">
+          <button
+            onClick={() => setActiveTab('projects')}
+            className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              activeTab === 'projects'
+                ? 'text-emerald-400'
+                : 'text-zinc-400 hover:text-zinc-300'
+            }`}
+          >
+            Projetos
+            {activeTab === 'projects' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />
+            )}
           </button>
-        </Link>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              activeTab === 'history'
+                ? 'text-emerald-400'
+                : 'text-zinc-400 hover:text-zinc-300'
+            }`}
+          >
+            Galeria IA Gen
+            {activeTab === 'history' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Workflow Section */}
@@ -340,8 +385,9 @@ export default function DashboardClient({ projects, isSubscribed, currentUsage, 
         </div>
       </div>
 
-      {/* Galeria */}
-      <div>
+      {/* Tab Content */}
+      {activeTab === 'projects' ? (
+        <div>
         {/* Header da Galeria com Busca e Filtros */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
           <h2 className="text-zinc-300 font-semibold flex items-center gap-2 text-sm">
@@ -566,7 +612,10 @@ export default function DashboardClient({ projects, isSubscribed, currentUsage, 
             </Link>
           </div>
         )}
-      </div>
+        </div>
+      ) : (
+        <IAGenGallery images={aiGenImages} userId={userId} />
+      )}
 
       {/* Lightbox Modal */}
       {selectedProject && (

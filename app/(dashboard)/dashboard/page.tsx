@@ -28,6 +28,15 @@ export default async function DashboardPage() {
     .order('created_at', { ascending: false })
     .limit(50); // Limitar a 50 projetos mais recentes
 
+  // Buscar imagens IA Gen (mesmo padrão dos projetos)
+  const { data: aiGenImages } = await supabaseAdmin
+    .from('ai_usage')
+    .select('id, created_at, metadata')
+    .eq('user_id', user.id)
+    .eq('operation_type', 'generate_idea')
+    .order('created_at', { ascending: false })
+    .limit(50); // Limitar a 50 imagens mais recentes
+
   const isSubscribed = user.is_paid && user.subscription_status === 'active';
 
   // Buscar uso do mês atual
@@ -57,13 +66,14 @@ export default async function DashboardPage() {
   return (
     <DashboardClient
       projects={projects || []}
+      aiGenImages={aiGenImages || []} // 🆕 Passar imagens IA Gen
       isSubscribed={isSubscribed}
       currentUsage={currentUsage}
       monthlyLimit={monthlyLimit}
-      userPlan={user.plan as string}
+      userPlan={user.plan}
       courtesyDeadline={courtesyDeadline}
       assignedPlan={assignedPlan}
-      userId={user.id}
+      userId={user.clerk_id}
       userEmail={user.email}
       isPaid={user.is_paid}
     />

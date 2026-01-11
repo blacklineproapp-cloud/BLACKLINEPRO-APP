@@ -61,14 +61,14 @@ export async function POST(req: Request) {
       }
     }
 
-    const { prompt, size } = await req.json();
+    const { prompt, size, referenceImage } = await req.json();
 
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt não fornecido' }, { status: 400 });
     }
 
-    // Gerar ideia
-    const tattooImage = await generateTattooIdea(prompt, size);
+    // Gerar ideia (com ou sem imagem de referência)
+    const tattooImage = await generateTattooIdea(prompt, size, referenceImage);
 
     // Registrar uso após geração bem-sucedida
     try {
@@ -82,7 +82,8 @@ export async function POST(req: Request) {
           operation: 'generate_idea',
           prompt,
           size,
-          is_admin: userIsAdmin
+          is_admin: userIsAdmin,
+          generated_image: tattooImage, // 🆕 Salvar imagem para galeria
         }
       });
     } catch (e) {

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { storage } from '@/lib/client-storage';
-import { Sparkles, Download, MoveRight, FileOutput, Settings, ChevronUp, X } from 'lucide-react';
+import { Sparkles, Download, MoveRight, FileOutput, Settings, ChevronUp, X, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 type ImageSize = 'A4' | 'A3' | '1K' | '2K' | '4K';
@@ -69,6 +69,8 @@ export default function GeneratorPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [negativePrompt, setNegativePrompt] = useState('');
   const [selectedComposition, setSelectedComposition] = useState<Composition>('free');
+  const [referenceImage, setReferenceImage] = useState<string | null>(null);
+  const [referenceImageFile, setReferenceImageFile] = useState<File | null>(null);
 
   // Carregar histórico do localStorage
   useEffect(() => {
@@ -79,6 +81,37 @@ export default function GeneratorPage() {
     // Sempre iniciar com controles abertos (especialmente importante no mobile)
     setShowControls(true);
   }, []);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      setError('Por favor, selecione uma imagem válida');
+      return;
+    }
+
+    // Validar tamanho (max 20MB para inline data)
+    if (file.size > 20 * 1024 * 1024) {
+      setError('Imagem muito grande. Máximo 20MB.');
+      return;
+    }
+
+    setReferenceImageFile(file);
+
+    // Criar preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setReferenceImage(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeReferenceImage = () => {
+    setReferenceImage(null);
+    setReferenceImageFile(null);
+  };
 
   const handleGenerate = async () => {
     if (!prompt) return;
@@ -113,7 +146,11 @@ export default function GeneratorPage() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: fullPrompt, size }),
+        body: JSON.stringify({
+          prompt: fullPrompt,
+          size,
+          referenceImage: referenceImage || undefined, // base64 da imagem se existir
+        }),
       });
 
       const data = await res.json();
@@ -279,7 +316,45 @@ export default function GeneratorPage() {
                     placeholder="Ex: Caveira mexicana com rosas..."
                     className="w-full h-16 lg:h-20 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs lg:text-sm text-white placeholder-zinc-600 focus:border-indigo-500 outline-none resize-none"
                   />
-                  
+
+                  {/* Upload de Imagem de Referência */}
+                  <div className="mt-2">
+                    {!referenceImage ? (
+                      <label className="block">
+                        <div className="cursor-pointer bg-zinc-950 border border-dashed border-zinc-700 hover:border-indigo-500 rounded-lg p-2 transition-colors">
+                          <div className="flex items-center gap-2 text-xs text-zinc-500">
+                            <Upload size={14} />
+                            <span>Adicionar imagem de referência (opcional)</span>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                        </div>
+                      </label>
+                    ) : (
+                      <div className="relative bg-zinc-950 border border-indigo-500/50 rounded-lg p-2">
+                        <button
+                          onClick={removeReferenceImage}
+                          className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 transition-colors"
+                          title="Remover imagem"
+                        >
+                          <X size={12} />
+                        </button>
+                        <img
+                          src={referenceImage}
+                          alt="Referência"
+                          className="w-full h-24 object-cover rounded"
+                        />
+                        <p className="text-[10px] text-zinc-500 mt-1">
+                          ✓ Imagem de referência adicionada
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Histórico de Prompts */}
                   {promptHistory.length > 0 && (
                     <div className="relative">

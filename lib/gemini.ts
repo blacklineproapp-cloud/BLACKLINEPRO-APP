@@ -152,10 +152,11 @@ export async function generateStencilFromImage(
   }, `Gemini Stencil Generation (${style})`);
 }
 
-// Gerar ideia de tatuagem a partir de texto
+// Gerar ideia de tatuagem a partir de texto (e opcionalmente imagem de referência)
 export async function generateTattooIdea(
   prompt: string,
-  size: 'A4' | 'A3' | '1K' | '2K' | '4K' = 'A4'
+  size: 'A4' | 'A3' | '1K' | '2K' | '4K' = 'A4',
+  referenceImage?: string // base64 da imagem
 ): Promise<string> {
   const resolutionMap = {
     'A4': '2480x3508px (A4 - 21x29.7cm @ 300 DPI)',
@@ -165,11 +166,24 @@ export async function generateTattooIdea(
     '4K': '4096x4096px'
   };
 
-  const tattooPrompt = `ATUE COMO: Artista especialista em design de tatuagem hiper-realista.
+  // Construir prompt baseado em ter ou não imagem de referência
+  const hasReferenceImage = !!referenceImage;
+
+  const basePrompt = hasReferenceImage
+    ? `ATUE COMO: Artista especialista em design de tatuagem hiper-realista.
+
+MISSÃO: Criar uma arte de tatuagem FOTORREALISTA inspirada na IMAGEM DE REFERÊNCIA fornecida e nas seguintes instruções:
+
+"${prompt}"
+
+IMPORTANTE: Use a IMAGEM como base de inspiração, mas crie uma versão artística melhorada para tatuagem, seguindo as instruções do cliente.`
+    : `ATUE COMO: Artista especialista em design de tatuagem hiper-realista.
 
 MISSÃO: Criar uma arte de tatuagem FOTORREALISTA baseada nesta descrição do cliente:
 
-"${prompt}"
+"${prompt}"`;
+
+  const tattooPrompt = `${basePrompt}
 
 ESPECIFICAÇÕES TÉCNICAS:
 - Resolução: ${resolutionMap[size]} (alta definição)
@@ -224,12 +238,53 @@ IMPORTANTE:
 - A arte deve estar ISOLADA, como uma ilustração em papel/tela
 - O resultado é a ARTE PURA, não a arte tatuada em alguém
 
+🚫 NUNCA INCLUA:
+- Molduras, frames ou bordas decorativas ao redor da arte
+- Formato de retrato/quadro pendurado na parede
+- Efeitos de "foto emoldurada" ou "canvas esticado"
+- Sombras de moldura ou efeitos 3D de quadro
+- Texturas de papel/canvas nas bordas
+- A arte deve ser LIVRE e SOLTA no espaço, sem limitações visuais de enquadramento
+
+✅ FORMATO CORRETO:
+- Arte flutuando livremente no fundo neutro
+- Sem molduras, sem bordas, sem frames
+- Imagem limpa e direta, pronta para aplicação
+- Foco 100% na arte, zero elementos decorativos externos
+
 GERE A IMAGEM AGORA:`;
 
   // Usar retry logic para lidar com falhas temporárias do Gemini
   return retryGeminiAPI(async () => {
     try {
-      const result = await textToImageModel.generateContent(tattooPrompt);
+      // Preparar conteúdo baseado em ter ou não imagem
+      let content: any;
+
+      if (hasReferenceImage && referenceImage) {
+        // Extrair base64 puro (remover data:image/...;base64,)
+        const base64Data = referenceImage.includes('base64,')
+          ? referenceImage.split('base64,')[1]
+          : referenceImage;
+
+        // Detectar mimeType da imagem
+        const mimeType = referenceImage.match(/data:(image\/[a-z]+);/)?.[1] || 'image/jpeg';
+
+        // Multimodal: imagem + texto
+        content = [
+          {
+            inlineData: {
+              mimeType,
+              data: base64Data,
+            },
+          },
+          tattooPrompt,
+        ];
+      } else {
+        // Apenas texto
+        content = tattooPrompt;
+      }
+
+      const result = await textToImageModel.generateContent(content);
       const response = result.response;
       const parts = response.candidates?.[0]?.content?.parts;
 

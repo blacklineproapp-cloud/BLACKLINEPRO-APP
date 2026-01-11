@@ -147,7 +147,7 @@ export async function getOrSetCache<T>(
 
       if (cached) {
         console.log(`✅ [Redis] Cache HIT: ${fullKey}`);
-        return cached as T;
+        return JSON.parse(cached) as T;
       }
 
       // Cache MISS: buscar dados
