@@ -136,12 +136,9 @@ export default function AdminPage() {
 
 
 
-  // Limpeza de duplicados
-  const [duplicatesInfo, setDuplicatesInfo] = useState<any>(null);
-  const [cleanupLog, setCleanupLog] = useState<string[]>([]);
+
   
-  // Tickets de suporte
-  const [ticketCount, setTicketCount] = useState<number>(0);
+
 
   // Remarketing
   const [remarketingStats, setRemarketingStats] = useState<RemarketingStats | null>(null);
@@ -179,14 +176,7 @@ export default function AdminPage() {
       const data = await res.json();
       setMetrics(data);
       
-      // Carregar contagem de tickets pendentes
-      try {
-        const ticketRes = await fetch('/api/admin/support?status=open&limit=1');
-        if (ticketRes.ok) {
-          const ticketData = await ticketRes.json();
-          setTicketCount((ticketData.counts?.open || 0) + (ticketData.counts?.in_progress || 0));
-        }
-      } catch (e) { /* ignore */ }
+      /* Ticket logic removed */
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -207,73 +197,9 @@ export default function AdminPage() {
 
 
 
-  // Funções de limpeza de duplicados
-  const addCleanupLog = (msg: string) => {
-    setCleanupLog(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
-  };
 
-  const checkDuplicates = async () => {
-    addCleanupLog('🔍 Verificando duplicados...');
-    try {
-      const res = await fetch('/api/admin/cleanup-duplicates');
-      const data = await res.json();
-      setDuplicatesInfo(data);
 
-      if (data.duplicates?.length > 0) {
-        addCleanupLog(`⚠️  Encontrados ${data.duplicates.length} emails duplicados`);
-        data.duplicates.forEach((dup: any) => {
-          addCleanupLog(`   ${dup.email} - ${dup.count} usuários`);
-        });
-      } else {
-        addCleanupLog('✅ Nenhum duplicado encontrado!');
-      }
-    } catch (err: any) {
-      addCleanupLog(`❌ Erro: ${err.message}`);
-    }
-  };
 
-  const activateUser = async (userId: string) => {
-    addCleanupLog(`⚡ Ativando usuário ${userId.substring(0, 8)}...`);
-    try {
-      const res = await fetch('/api/admin/activate-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        addCleanupLog(`✅ Usuário ativado: ${data.user.email}`);
-        await loadMetrics();
-        await loadMetrics();
-      } else {
-        addCleanupLog(`❌ Erro: ${data.error}`);
-      }
-    } catch (err: any) {
-      addCleanupLog(`❌ Erro: ${err.message}`);
-    }
-  };
-
-  const deleteUser = async (userId: string) => {
-    addCleanupLog(`🗑️  Deletando usuário ${userId.substring(0, 8)}...`);
-    try {
-      const res = await fetch(`/api/admin/delete-user?userId=${userId}`, {
-        method: 'DELETE'
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        addCleanupLog(`✅ Deletado: ${data.deleted.email}`);
-        await loadMetrics();
-        await loadMetrics();
-        await checkDuplicates(); // Verificar novamente
-      } else {
-        addCleanupLog(`❌ Erro: ${data.error}`);
-      }
-    } catch (err: any) {
-      addCleanupLog(`❌ Erro: ${err.message}`);
-    }
-  };
 
   // Funções de Remarketing
   const loadRemarketingStats = async () => {
@@ -671,38 +597,10 @@ export default function AdminPage() {
         )}
 
         {/* Card de Tickets Pendentes */}
-        {ticketCount > 0 && (
-          <Link href="/admin/suporte" className="block mb-4">
-            <div className="bg-gradient-to-r from-orange-600/20 to-red-600/20 border border-orange-500/30 rounded-xl p-4 flex items-center justify-between hover:border-orange-500/50 transition">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-500/20 rounded-lg">
-                  <HelpCircle size={24} className="text-orange-400" />
-                </div>
-                <div>
-                  <p className="font-semibold text-orange-400">{ticketCount} Ticket(s) Pendente(s)</p>
-                  <p className="text-sm text-zinc-400">Clique para gerenciar</p>
-                </div>
-              </div>
-              <ArrowUpRight size={20} className="text-orange-400" />
-            </div>
-          </Link>
-        )}
+
 
         {/* Card de IP Abuse Stats */}
-        <Link href="/admin/ip-abuse" className="block mb-8">
-          <div className="bg-gradient-to-r from-red-600/20 to-pink-600/20 border border-red-500/30 rounded-xl p-4 flex items-center justify-between hover:border-red-500/50 transition">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-500/20 rounded-lg">
-                <Shield size={24} className="text-red-400" />
-              </div>
-              <div>
-                <p className="font-semibold text-red-400">Sistema Anti-Abuso por IP</p>
-                <p className="text-sm text-zinc-400">Monitorar múltiplas contas e trials</p>
-              </div>
-            </div>
-            <ArrowUpRight size={20} className="text-red-400" />
-          </div>
-        </Link>
+
 
         {/* SISTEMA DE REMARKETING */}
         <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-6 mb-8">
@@ -1007,81 +905,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* CORREÇÃO DE DUPLICADOS */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-8">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <AlertTriangle size={20} className="text-amber-400" />
-            Correção de Usuários Duplicados
-          </h3>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Botões de ação */}
-            <div className="space-y-3">
-              <button
-                onClick={checkDuplicates}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <Search size={18} />
-                Verificar Duplicados
-              </button>
-
-              {duplicatesInfo?.duplicates?.[0] && duplicatesInfo.duplicates[0].users && (
-                <>
-                  {/* Usar dinamicamente os usuários duplicados encontrados */}
-                  {duplicatesInfo.duplicates[0].users.length >= 2 && (
-                    <>
-                      <button
-                        onClick={() => activateUser(duplicatesInfo.duplicates[0].users[0].id)}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                      >
-                        <CheckCircle size={18} />
-                        Ativar: {duplicatesInfo.duplicates[0].users[0].email?.substring(0, 20)}...
-                      </button>
-
-                      <button
-                        onClick={() => deleteUser(duplicatesInfo.duplicates[0].users[1].id)}
-                        className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Ban size={18} />
-                        Deletar Duplicado
-                      </button>
-                    </>
-                  )}
-                </>
-              )}
-
-              <button
-                onClick={() => setCleanupLog([])}
-                className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-2 px-4 rounded-lg transition-colors text-sm"
-              >
-                Limpar Log
-              </button>
-            </div>
-
-            {/* Log */}
-            <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 min-h-[200px] max-h-[400px] overflow-y-auto">
-              {cleanupLog.length === 0 ? (
-                <p className="text-zinc-600 text-sm">Clique em &quot;Verificar Duplicados&quot; para começar...</p>
-              ) : (
-                <div className="space-y-1 font-mono text-xs">
-                  {cleanupLog.map((line, i) => (
-                    <div
-                      key={i}
-                      className={`${
-                        line.includes('✅') ? 'text-emerald-400' :
-                        line.includes('❌') ? 'text-red-400' :
-                        line.includes('⚠️') ? 'text-amber-400' :
-                        'text-zinc-400'
-                      }`}
-                    >
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
 
 
       {/* Modal de Confirmação de Envio de Remarketing */}

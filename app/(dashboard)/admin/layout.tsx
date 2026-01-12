@@ -180,7 +180,6 @@ export default function AdminLayout({
           active={pathname?.startsWith('/admin/suporte')}
           icon={<HelpCircle size={24} />}
           label="Suporte"
-          className="hidden md:flex"
         />
 
         {/* Desktop User Section */}

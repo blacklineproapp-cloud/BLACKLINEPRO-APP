@@ -32,7 +32,7 @@ export async function GET(req: Request) {
     const { data: targetUser, error: userError } = await supabaseAdmin
       .from('users')
       .select('id, email, name, plan, credits, usage_this_month, is_paid, admin_courtesy, admin_courtesy_expires_at, subscription_status')
-      .ilike('email', userEmail)
+      .ilike('email', `%${userEmail}%`)
       .single();
 
     if (userError || !targetUser) {

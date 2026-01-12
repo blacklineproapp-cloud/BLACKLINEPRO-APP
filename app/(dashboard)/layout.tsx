@@ -65,6 +65,11 @@ export default function DashboardLayout({
     await signOut({ redirectUrl: '/' });
   };
 
+  // 🛡️ Se estiver na área de admin, não renderizar o layout do dashboard (evita toolbar duplicada)
+  if (pathname?.startsWith('/admin')) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500/30">
       
