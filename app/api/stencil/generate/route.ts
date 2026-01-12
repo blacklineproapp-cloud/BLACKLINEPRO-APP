@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     // 1. Buscar usuário completo (precisa do UUID user.id)
     const { data: userData } = await supabaseAdmin
       .from('users')
-      .select('id, plan, is_paid, subscription_status')
+      .select('id, plan, is_paid, subscription_status, admin_courtesy, admin_courtesy_expires_at')
       .eq('clerk_id', userId)
       .single();
 
@@ -42,7 +42,12 @@ export async function POST(req: Request) {
     }
 
     // 🔒 VERIFICAR PAGAMENTO - Bloquear usuários não pagos
-    if (!userData.is_paid) {
+    // EXCEÇÃO: Usuários com cortesia ativa podem usar
+    const hasActiveCourtesy = userData.admin_courtesy && 
+      userData.admin_courtesy_expires_at &&
+      new Date(userData.admin_courtesy_expires_at) > new Date();
+    
+    if (!userData.is_paid && !hasActiveCourtesy) {
       return NextResponse.json(
         {
           error: 'Assinatura necessária',

@@ -51,13 +51,34 @@ export async function uploadImage(
     // Converter Base64 para Buffer
     const buffer = base64ToBuffer(base64Image);
 
+    // 🔥 VALIDAÇÃO: Garantir que o buffer não está vazio
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Imagem vazia ou inválida após conversão base64');
+    }
+
+    // 🔥 VALIDAÇÃO: Garantir que é uma imagem válida usando Sharp
+    let processedBuffer: Buffer;
+    try {
+      // Processar com Sharp para garantir que é PNG válido
+      processedBuffer = await sharp(buffer)
+        .png()
+        .toBuffer();
+      
+      if (processedBuffer.length === 0) {
+        throw new Error('Buffer processado está vazio');
+      }
+    } catch (sharpError: any) {
+      console.error('[Storage] Erro ao processar imagem com Sharp:', sharpError);
+      throw new Error(`Imagem inválida ou corrompida: ${sharpError.message}`);
+    }
+
     // Definir caminho: userId/projectId/type.png
     const filePath = `${userId}/${projectId}/${type}.png`;
 
-    // Upload para o Storage
+    // Upload para o Storage com buffer processado
     const { data, error } = await supabaseAdmin.storage
       .from(BUCKET_NAME)
-      .upload(filePath, buffer, {
+      .upload(filePath, processedBuffer, {
         contentType: 'image/png',
         upsert: true, // Substitui se já existir
       });
@@ -71,6 +92,8 @@ export async function uploadImage(
     const { data: publicUrlData } = supabaseAdmin.storage
       .from(BUCKET_NAME)
       .getPublicUrl(filePath);
+
+    console.log(`[Storage] Upload sucesso: ${type} (${processedBuffer.length} bytes)`);
 
     return {
       publicUrl: publicUrlData.publicUrl,
@@ -102,14 +125,41 @@ export async function uploadImageWithThumbnail(
     // Converter Base64 para Buffer
     const buffer = base64ToBuffer(base64Image);
 
-    // Gerar thumbnail 300x300 em WebP (muito menor que PNG)
-    const thumbnailBuffer = await sharp(buffer)
-      .resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, {
-        fit: 'contain',
-        background: { r: 255, g: 255, b: 255, alpha: 1 }
-      })
-      .webp({ quality: 80 })
-      .toBuffer();
+    // 🔥 VALIDAÇÃO: Garantir que o buffer não está vazio
+    if (!buffer || buffer.length === 0) {
+      throw new Error('Imagem vazia ou inválida após conversão base64');
+    }
+
+    // 🔥 PROCESSAR: Garantir que é PNG válido
+    let fullBuffer: Buffer;
+    let thumbnailBuffer: Buffer;
+    
+    try {
+      // Processar imagem full em PNG
+      fullBuffer = await sharp(buffer)
+        .png()
+        .toBuffer();
+
+      if (fullBuffer.length === 0) {
+        throw new Error('Buffer full processado está vazio');
+      }
+
+      // Gerar thumbnail 300x300 em WebP (muito menor que PNG)
+      thumbnailBuffer = await sharp(buffer)
+        .resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, {
+          fit: 'contain',
+          background: { r: 255, g: 255, b: 255, alpha: 1 }
+        })
+        .webp({ quality: 80 })
+        .toBuffer();
+
+      if (thumbnailBuffer.length === 0) {
+        throw new Error('Buffer thumbnail está vazio');
+      }
+    } catch (sharpError: any) {
+      console.error('[Storage] Erro ao processar imagem com Sharp:', sharpError);
+      throw new Error(`Imagem inválida ou corrompida: ${sharpError.message}`);
+    }
 
     // Caminhos
     const filePath = `${userId}/${projectId}/${type}.png`;
@@ -118,7 +168,7 @@ export async function uploadImageWithThumbnail(
     // Upload da imagem full
     const { error: fullError } = await supabaseAdmin.storage
       .from(BUCKET_NAME)
-      .upload(filePath, buffer, {
+      .upload(filePath, fullBuffer, {
         contentType: 'image/png',
         upsert: true,
       });
@@ -150,7 +200,7 @@ export async function uploadImageWithThumbnail(
       .from(BUCKET_NAME)
       .getPublicUrl(thumbPath);
 
-    console.log(`[Storage] Upload com thumb: ${type} (${buffer.length}B → thumb ${thumbnailBuffer.length}B)`);
+    console.log(`[Storage] Upload com thumb: ${type} (full: ${fullBuffer.length}B, thumb: ${thumbnailBuffer.length}B)`);
 
     return {
       publicUrl: publicUrlData.publicUrl,

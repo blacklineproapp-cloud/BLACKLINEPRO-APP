@@ -103,8 +103,28 @@ export async function GET(req: Request) {
       total_requests: countMap.get(user.id) || 0,
     }));
 
+    // 🔥 BUSCAR ESTATÍSTICAS GLOBAIS (Parallel Requests)
+    // Isso garante que os cards mostrem o total real do banco, não apenas da página atual
+    const [
+      { count: totalCount },
+      { count: paidCount },
+      { count: freeCount },
+      { count: blockedCount }
+    ] = await Promise.all([
+      supabaseAdmin.from('users').select('*', { count: 'exact', head: true }),
+      supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).eq('is_paid', true),
+      supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).eq('is_paid', false),
+      supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).eq('is_blocked', true)
+    ]);
+
     return NextResponse.json({
       users: usersWithMetrics,
+      stats: {
+        total: totalCount || 0,
+        paid: paidCount || 0,
+        free: freeCount || 0,
+        blocked: blockedCount || 0
+      },
       pagination: {
         page,
         limit,

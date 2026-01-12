@@ -169,128 +169,222 @@ TECHNICAL:
 
 OUTPUT: Generate ONLY the ultra-detailed topographic stencil. No text, no legends. PNG black on white.`;
 
-// LINHAS - Detalhado, captura TODOS os detalhes, mas com linhas limpas e espaçadas
-export const PERFECT_LINES_INSTRUCTION_OPTIMIZED = `ROLE: Detailed Line Stencil Artist
-FUNCTION: Convert photo → DETAILED line stencil capturing ALL details with CLEAN, SEPARATED LINES.
+// LINHAS - Mapeamento Inteligente de Contornos (TODOS os detalhes estruturais, ZERO sombras)
+export const PERFECT_LINES_INSTRUCTION_OPTIMIZED = `ROLE: Intelligent Contour Mapping Specialist
+FUNCTION: Convert photo → COMPREHENSIVE CONTOUR MAP with ALL structural details, ZERO shadow rendering.
+
+CRITICAL PHILOSOPHY:
+✅ CAPTURE: All structural elements (edges, textures, wrinkles, pores, strands, features)
+✅ DRAW: Fine, well-defined lines for every detail boundary
+✅ INTELLIGENT FILTERING: Distinguish structural details FROM tonal shadows
+❌ IGNORE: Shadows, depth shading, tonal gradients, volume hatching
+❌ NEVER: Use line density or hatching to indicate darkness/light
 
 CRITICAL RULES:
 ❌ NEVER alter anatomy, proportions, positioning, expressions
-❌ NEVER add/remove elements or "improve" the original
-✅ COPY every detail EXACTLY as shown in photo
-✅ Capture ALL details using clean line work
+❌ NEVER use parallel lines for shading (hatching)
+❌ NEVER use line density to show shadows
+❌ NEVER fill areas with tonal patterns
+✅ Draw lines ONLY where physical structures exist
+✅ Map every structural detail with fine, clean lines
 
-OUTPUT: 100% MONOCHROME (pure black lines on pure white). Detailed but clean.
-
-═══════════════════════════════════════════════════════════════
-LINE HIERARCHY (Detailed & Clean)
-═══════════════════════════════════════════════════════════════
-MAIN CONTOURS: 0.8-1.5pt - Define major shapes, strong and crisp
-SECONDARY CONTOURS: 0.5-0.8pt - Internal structures, anatomical divisions
-TERTIARY CONTOURS: 0.3-0.5pt - Fine details, subtle edges
-HATCHING: 0.3-0.6pt - Create depth/volume, ALWAYS directional following 3D form
-
-PHILOSOPHY: Capture ALL details with clean, separated lines (more spacing than topographic).
+OUTPUT: 100% MONOCHROME - Dense network of fine black contour lines on white. NO SHADING.
 
 ═══════════════════════════════════════════════════════════════
-7-LEVEL TONAL SYSTEM (Maximum Detail with Clean Lines)
+INTELLIGENT DETAIL DETECTION
 ═══════════════════════════════════════════════════════════════
-LEVEL 1 - DARKEST (0.5-0.8mm spacing, 0.4-0.6pt)
-  → Deepest areas: pupils, deep cavities, core shadows
-  → Clean separated lines (more spacing than topographic)
+WHAT TO CAPTURE (Structural Details):
+✅ Physical edges and boundaries
+✅ Texture patterns (skin, fabric, hair)
+✅ Wrinkles, creases, folds
+✅ Pores and skin irregularities
+✅ Individual hair strands
+✅ Feature details (eyes, nose, mouth)
+✅ Surface variations and marks
 
-LEVEL 2 - VERY DARK (0.8-1.2mm spacing, 0.4-0.5pt)
-  → Strong shadows, recessed forms
-  → Clear directional hatching following anatomy
+WHAT TO IGNORE (Tonal Information):
+❌ Shadows (cast shadows, core shadows)
+❌ Highlights and light reflections
+❌ Tonal gradients and transitions
+❌ Volume indication through darkness
+❌ Depth cues through shading
 
-LEVEL 3 - DARK (1.2-1.8mm spacing, 0.4-0.5pt)
-  → Moderate shadows, transition zones
-  → Visible line separation
-
-LEVEL 4 - MEDIUM (1.8-2.5mm spacing, 0.3-0.5pt)
-  → Middle tones, neutral areas
-  → Balanced spacing
-
-LEVEL 5 - LIGHT (2.5-3.5mm spacing, 0.3-0.4pt)
-  → Light areas, gentle transitions
-  → Sparse but present
-
-LEVEL 6 - VERY LIGHT (3.5-5.0mm spacing, 0.3-0.4pt)
-  → Near highlights, soft light
-  → Very sparse lines
-
-LEVEL 7 - HIGHLIGHTS (5.0-6.0mm spacing OR pure white)
-  → Brightest areas, reflections
-  → Extremely sparse OR white
-
-CRITICAL: Use ALL 7 levels to capture ALL details. Lines MUST be clean and separated.
+INTELLIGENCE RULE: If it's a PHYSICAL STRUCTURE → draw it. If it's LIGHT/SHADOW → ignore it.
 
 ═══════════════════════════════════════════════════════════════
-EYES (MAXIMUM DETAIL with Clean Lines)
+LINE HIERARCHY (Fine & Well-Defined)
 ═══════════════════════════════════════════════════════════════
-ABSOLUTE RULE: COPY every detail from photo - NEVER alter!
+MAIN CONTOURS: 0.6-0.8pt - External silhouettes, major boundaries
+FEATURE CONTOURS: 0.4-0.6pt - Eyes, nose, mouth, ears, major elements
+DETAIL LINES: 0.3-0.5pt - Wrinkles, creases, texture boundaries
+MICRO-DETAILS: 0.3-0.4pt - Pores, fine textures, hair strands
 
-PUPIL: Exact size/position, Level 1 (0.5-0.8mm)
-IRIS: Complete radial pattern using Levels 2-5 for tonal variation
-  → Inner ring: denser (Level 2-3)
-  → Outer ring: medium (Level 4-5)
-  → Natural irregularities preserved
-REFLECTION: Exact position/shape, Level 7 (pure white or 5-6mm sparse). NEVER omit!
-SCLERA: Subtle volume - Levels 5-6, denser in corners Level 4
-EYELIDS: All creases, folds, shadow details
-LASHES: Individual curved strokes, natural grouping (not simplified!)
-EYEBROW: Individual hairs per direction zone, use Levels 2-4 for density
+GOAL: Maximum detail density through fine, well-defined structural lines.
 
 ═══════════════════════════════════════════════════════════════
-HAIR (Individual Strands with Clean Lines)
+EYES (Complete Structural Mapping)
 ═══════════════════════════════════════════════════════════════
-FLOW & DIRECTION: Follow EXACT pattern from photo, capture curves and twists
-DENSITY MAPPING:
-→ Dense masses: Levels 1-3 (0.5-1.5mm)
-→ Medium masses: Levels 3-5 (1.5-3.0mm)
-→ Sparse areas: Levels 5-6 (3.0-5.0mm)
-3D VOLUME OF HAIR MASS:
-→ Foreground strands: sharp, defined (Level 2-3)
-→ Interior depth: softer, shadowed (Level 1-2)
-→ Surface highlights: sparse or white (Level 6-7)
-→ Individual strands visible (not grouped masses!)
-Each strand = individual tattoo needle path
+PUPIL:
+→ Outer boundary circle (0.5-0.6pt)
+→ NO internal shading or fills
+
+IRIS:
+→ Outer circle (0.5pt)
+→ COMPLETE radial pattern as structural lines (0.3-0.4pt)
+  - Map every visible spoke/stripe
+  - Inner ring boundary
+  - Outer ring boundary
+  - Crypts and furrows as edge lines
+→ NOT radial hatching for tone
+→ Draw the STRUCTURE, not the darkness
+
+REFLECTION:
+→ Outline the reflection shape (0.3pt)
+→ Mark boundary between reflection and iris
+→ NO highlight rendering
+
+SCLERA:
+→ Map visible veins as line structures (0.3pt)
+→ Corner detail lines (0.4pt)
+→ NO tonal shading
+
+EYELIDS:
+→ Upper/lower lid edges (0.5-0.7pt)
+→ Crease lines (0.3-0.4pt)
+→ Skin texture on lid surface
+→ NO shadow fills below eye
+
+LASHES:
+→ Individual lash edges (0.3-0.4pt)
+→ 15-25 per eye showing natural structure
+→ Curved, following natural direction
+→ NOT dense fills
+
+EYEBROW:
+→ Overall shape boundary (0.5pt)
+→ Individual hair strands (0.3-0.4pt)
+→ 30-50 hairs showing direction flow
+→ Density shown by strand count, NOT shading
 
 ═══════════════════════════════════════════════════════════════
-DETAIL CAPTURE APPROACH
+HAIR (Complete Strand Mapping)
 ═══════════════════════════════════════════════════════════════
-SKIN & MICRO-TEXTURES:
-→ Pores: tiny dots at Level 5-6 spacing
-→ Wrinkles/creases: fine lines with adjacent Level 2-3 shadow
-→ Every unique mark, freckle, irregularity mapped
-→ Subtle tonal variations using appropriate levels
+APPROACH:
+→ Outline overall hair mass (0.6-0.8pt)
+→ Map 80-150+ individual strand edges (0.3-0.5pt)
+→ Show directional flow through strand lines
+→ Capture every visible separation and overlap
 
-3D DEPTH & VOLUME:
-→ Lines wrap around 3D forms (never straight on curves)
-→ Use ALL 7 levels for smooth gradients
-→ Spatial hierarchy clear (near/far relationships)
-→ Shadow types: core, cast, ambient occlusion all mapped
+STRAND DETAIL:
+→ Each visible strand = edge line
+→ Strand overlaps = boundary lines
+→ Strand separations = gap definition
+→ Flow changes = directional lines
+
+CRITICAL - NO SHADOW RENDERING:
+→ DO NOT darken areas with more lines
+→ DO NOT use hatching for hair depth
+→ DO NOT indicate volume through density
+→ ONLY draw actual strand structures
+
+RESULT: Dense network of strand lines showing hair structure, NOT darkness.
 
 ═══════════════════════════════════════════════════════════════
-TECHNICAL
+FACE & SKIN (Complete Structural Detail)
 ═══════════════════════════════════════════════════════════════
-- Min contrast: 70%
-- ZERO solid fills, ZERO soft gradients
-- PNG pure black on pure white
-- Thermal printer optimized
+MAJOR FEATURES:
+→ Face outline/jaw (0.6-0.8pt)
+→ Nose: edges, nostrils, bridge, tip (0.4-0.6pt)
+→ Mouth: lip edges, philtrum, corners, texture (0.5-0.7pt)
+→ Ears: outer shape, internal structures (0.4-0.6pt)
+→ Neck: outline and major creases (0.5-0.7pt)
 
-QUALITY CHECK:
-□ ALL micro-details captured (pores, texture, wrinkles)?
-□ Individual hair strands (not grouped)?
-□ Complete eye details (iris pattern, reflection)?
-□ All 7 tonal levels clearly present?
-□ Lines clean and separated (more spacing than topographic)?
-□ 3D volume convincing?
+WRINKLES & CREASES (All Captured):
+→ Every wrinkle = edge line (0.3-0.4pt)
+→ Forehead lines, crow's feet, smile lines
+→ Nasolabial folds, marionette lines
+→ Neck creases, under-eye lines
+→ Draw the CREASE EDGE, not the shadow
+
+SKIN TEXTURE:
+→ Visible pores = tiny dots (0.3pt)
+→ Skin texture pattern boundaries
+→ Freckles, marks, blemishes = outline shapes
+→ Surface irregularities as edge lines
+
+CRITICAL - NO VOLUME SHADING:
+→ DO NOT map "where light meets shadow"
+→ DO NOT draw tonal transitions
+→ DO NOT indicate cheekbone depth with lines
+→ ONLY draw actual physical structures
+
+═══════════════════════════════════════════════════════════════
+TEXTURE MAPPING (All Physical Patterns)
+═══════════════════════════════════════════════════════════════
+SKIN PORES:
+→ Each visible pore = boundary circle (0.3pt)
+→ NOT stippling for tone
+→ Actual pore locations only
+
+FABRIC/CLOTHING:
+→ Weave pattern boundaries
+→ Fold edges (physical creases)
+→ Seam lines
+→ Texture transitions
+→ NO shadow fills in folds
+
+OTHER TEXTURES:
+→ Jewelry: structural details, engravings
+→ Accessories: patterns, edges
+→ Background elements: actual structures only
+
+═══════════════════════════════════════════════════════════════
+TECHNICAL CONSTRAINTS
+═══════════════════════════════════════════════════════════════
+- Line weights: 0.3-0.8pt (hierarchy only, NOT for tone)
+- ZERO hatching (parallel lines for shading)
+- ZERO cross-hatching
+- ZERO stippling for tonal effect
+- ZERO line density variation for shadows
+- ZERO filled areas
+- PNG pure black #000000 lines on pure white #FFFFFF
+- Ultra-detailed structural network
+- Optimized for thermal printer 200-300 DPI
+
+═══════════════════════════════════════════════════════════════
+QUALITY VERIFICATION
+═══════════════════════════════════════════════════════════════
+MUST HAVE:
+□ ALL structural details captured (wrinkles, pores, strands, textures)?
+□ Individual features (hairs, wrinkles, pores) shown as edges?
+□ Dense network of fine, well-defined lines?
+□ Every physical element mapped?
+□ ZERO hatching or shading?
+□ ZERO tonal rendering?
 □ Anatomy/proportions 100% exact?
-□ Professional clean line aesthetic?
 
-GOAL: Capture ALL details with clean, separated lines. Same richness as Topographic, cleaner aesthetic.
+MUST NOT HAVE:
+□ NO parallel lines for shading
+□ NO cross-hatching
+□ NO stippling for tone
+□ NO line density for shadows
+□ NO volume indication through hatching
+□ NO shadow mapping
+□ NO highlight rendering
 
-OUTPUT: Generate ONLY the simple line stencil. No text. PNG black on white.`;
+INTELLIGENCE TEST:
+- Wrinkle edge → ✅ DRAW (physical structure)
+- Shadow in wrinkle → ❌ IGNORE (tonal information)
+- Hair strand → ✅ DRAW (physical structure)
+- Dark area in hair → ❌ IGNORE (shadow)
+- Pore → ✅ DRAW (physical structure)
+- Cheek shadow → ❌ IGNORE (tonal gradient)
+
+GOAL: Ultra-detailed structural map capturing EVERY physical detail.
+Like a technical blueprint showing WHERE every element exists, NOT how dark/light it is.
+The tattoo artist sees EXACTLY where every detail is located, with fine, well-defined lines.
+
+OUTPUT: Generate ONLY the comprehensive structural contour map. No text. PNG black lines on white.`;
 
 // SIMPLIFY - Converte topográfico detalhado em linhas simples (Pipeline 2-etapas)
 export const SIMPLIFY_TOPOGRAPHIC_TO_LINES = `ROLE: Topographic-to-Lines Simplifier
