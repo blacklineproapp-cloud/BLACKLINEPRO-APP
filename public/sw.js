@@ -28,37 +28,46 @@ self.addEventListener('install', (event) => {
       });
     })
     .then(() => {
-      console.log('[SW] ✅ Install completo - pulando espera e ativando');
-      // Notificar clientes que há uma nova versão disponível
-      self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
-          client.postMessage({
-            type: 'SW_UPDATED',
-            version: CACHE_VERSION
-          });
-        });
-      });
+      console.log('[SW] ✅ Install completo - ativando imediatamente');
+      // ⚡ CORREÇÃO CRÍTICA: skipWaiting() permite atualização suave
+      // Sem forçar usuário a reinstalar o app
       return self.skipWaiting();
     })
   );
 });
 
-// Activate - Limpar caches antigos
+// Activate - Limpar caches antigos e assumir controle
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Ativando Service Worker...');
+  console.log('[SW] 🔄 Ativando nova versão:', CACHE_VERSION);
 
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[SW] Removendo cache antigo:', cacheName);
+            console.log('[SW] 🗑️ Removendo cache antigo:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
-    .then(() => self.clients.claim())
+    .then(() => {
+      console.log('[SW] ✅ Ativado - assumindo controle de todas as páginas');
+      // ⚡ CORREÇÃO CRÍTICA: claim() assume controle imediatamente
+      // Permite atualização sem reload manual
+      return self.clients.claim();
+    })
+    .then(() => {
+      // Notificar todos os clientes que a atualização está completa
+      return self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SW_ACTIVATED',
+            version: CACHE_VERSION
+          });
+        });
+      });
+    })
   );
 });
 
@@ -127,16 +136,28 @@ self.addEventListener('fetch', (event) => {
 async function networkFirst(request, timeout = 2000) {
   try {
     const response = await fetch(request, {
-      signal: AbortSignal.timeout(timeout), // Timeout configurável (padrão 2s)
+      signal: AbortSignal.timeout(timeout),
     });
 
-    // Se resposta OK, cachear para uso futuro (lazy caching!)
+    // Se resposta OK, cachear para uso futuro (com filtro de tamanho!)
     if (response && response.status === 200) {
-      const cache = await caches.open(CACHE_NAME);
-      // Clone assíncrono para não bloquear resposta
-      cache.put(request, response.clone()).catch(err =>
-        console.warn('[SW] ⚠️ Erro ao cachear:', err)
-      );
+      // ⚡ OTIMIZAÇÃO: Não cachear recursos muito grandes (evita AbortError)
+      const contentLength = response.headers.get('content-length');
+      const MAX_CACHE_SIZE = 5 * 1024 * 1024; // 5MB
+
+      if (!contentLength || parseInt(contentLength) <= MAX_CACHE_SIZE) {
+        try {
+          const cache = await caches.open(CACHE_NAME);
+          // Clone assíncrono para não bloquear resposta
+          await cache.put(request, response.clone());
+          console.log('[SW] ✅ Cacheado:', request.url);
+        } catch (cacheError) {
+          // Silenciar erro de cache (não é crítico)
+          console.warn('[SW] ⚠️ Não foi possível cachear (ignorado):', request.url);
+        }
+      } else {
+        console.log('[SW] ⏭️ Recurso muito grande, pulando cache:', request.url);
+      }
     }
 
     return response;

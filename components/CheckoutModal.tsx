@@ -38,25 +38,25 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
       name: 'Starter',
       icon: Zap,
       color: 'emerald',
-      limit: '100 gerações/mês',
+      limit: '95 gerações/mês',
     },
     pro: {
       name: 'Pro',
       icon: Crown,
       color: 'purple',
-      limit: '500 gerações/mês',
+      limit: '210 gerações/mês',
     },
     studio: {
       name: 'Studio',
       icon: Sparkles,
       color: 'amber',
-      limit: '1000 gerações/mês',
+      limit: '680 gerações/mês',
     },
     enterprise: {
       name: 'Enterprise',
       icon: Sparkles,
       color: 'amber',
-      limit: 'Ilimitado',
+      limit: '1.400 gerações/mês',
     },
   };
 
@@ -329,7 +329,7 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
                       ✓ Tudo do Pro
                     </span>
                     <span className="text-xs text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md">
-                      ✓ 1000 Gerações/mês
+                      ✓ 680 Gerações/mês
                     </span>
                     <span className="text-xs text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md">
                       ✓ Suporte Prioritário
@@ -342,7 +342,7 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
                       ✓ Tudo do Studio
                     </span>
                     <span className="text-xs text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md">
-                      ✓ Uso Ilimitado
+                      ✓ 1.400 Gerações/mês
                     </span>
                     <span className="text-xs text-amber-500 bg-amber-500/10 border border-amber-500/30 px-2 py-1 rounded-md">
                       ✓ Suporte VIP

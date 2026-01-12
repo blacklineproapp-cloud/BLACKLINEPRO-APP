@@ -33,3 +33,39 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# ===== PRODUCTION CLEANUP =====
+
+# Development documentation
+CLAUDE_*.md
+*.diff
+
+# Temporary files and outputs
+temp/
+output/
+catalogs/
+*.zip
+
+# Development scripts (keep essential ones)
+scripts/populate-*.ts
+scripts/activate-test-users.js
+scripts/stripe-*.sh
+scripts/verify-setup.ts
+scripts/check-*.ts
+scripts/audit-*.ts
+scripts/extract-*.py
+scripts/extract-*.ts
+scripts/scrape-*.py
+scripts/merge-*.py
+scripts/remove-*.py
+scripts/*-colors*.py
+scripts/*-colors*.ts
+scripts/import-colors-to-db.ts
+
+# Supabase local (development only)
+supabase/
+
+# React Email dev
+.react-email/
+
+# Claude AI
+.claude/

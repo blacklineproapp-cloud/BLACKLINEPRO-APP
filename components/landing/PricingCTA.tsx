@@ -7,7 +7,7 @@ export default function PricingCTA() {
       name: 'Starter',
       price: 'R$ 50',
       period: '/mês',
-      limit: '100 gerações/mês',
+      limit: '95 gerações/mês',
       icon: Zap,
       color: 'emerald',
       features: [
@@ -21,7 +21,7 @@ export default function PricingCTA() {
       name: 'Pro',
       price: 'R$ 100',
       period: '/mês',
-      limit: '500 gerações/mês',
+      limit: '210 gerações/mês',
       icon: Crown,
       color: 'purple',
       popular: true,
@@ -36,12 +36,12 @@ export default function PricingCTA() {
       name: 'Studio',
       price: 'R$ 300',
       period: '/mês',
-      limit: '7.500 gerações/mês',
+      limit: '680 gerações/mês',
       icon: Sparkles,
       color: 'amber',
       features: [
         'Tudo do Pro',
-        'Até 7.500 gerações/mês',
+        'Até 680 gerações/mês',
         'Suporte prioritário',
         'Ideal para estúdios'
       ]
@@ -50,12 +50,12 @@ export default function PricingCTA() {
       name: 'Enterprise',
       price: 'R$ 600',
       period: '/mês',
-      limit: 'Ilimitado',
+      limit: '1.400 gerações/mês',
       icon: Package,
       color: 'blue',
       features: [
         'Tudo do Studio',
-        'Uso ILIMITADO',
+        'Até 1.400 gerações/mês',
         'Suporte dedicado 24/7',
         'SLA garantido 99.9%'
       ]
@@ -133,14 +133,7 @@ export default function PricingCTA() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-zinc-400">
-                    {plan.limit === 'Ilimitado' ? (
-                      <>
-                        <Infinity className="w-4 h-4 text-amber-400" />
-                        <span className="text-amber-400 font-medium">{plan.limit}</span>
-                      </>
-                    ) : (
-                      <span>{plan.limit}</span>
-                    )}
+                    <span>{plan.limit}</span>
                   </div>
                 </div>
 

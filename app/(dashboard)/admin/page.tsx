@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
+import UserGalleries from './components/UserGalleries';
 
 interface Metrics {
   general: {
@@ -1518,106 +1519,113 @@ export default function AdminPage() {
                         </td>
                       </tr>
 
-                      {/* Linha expandível com histórico de atividades */}
+                      {/* Linha expandível com histórico de atividades E galerias */}
                       {expandedUser === u.id && (
                         <tr>
                           <td colSpan={7} className="px-6 py-4 bg-zinc-950/50 border-t border-zinc-800">
-                            <div className="space-y-4">
-                              {/* Header com estatísticas */}
-                              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                                <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-                                  <Activity size={16} className="text-emerald-400" />
-                                  Histórico de Atividades - {u.email}
-                                </h3>
-                                {userActivities[u.id]?.stats && (
-                                  <div className="flex items-center gap-4 text-xs text-zinc-400">
-                                    <span className="flex items-center gap-1">
-                                      <span className="text-zinc-500">Total:</span>
-                                      <span className="text-zinc-300 font-medium">{userActivities[u.id]?.stats?.total}</span>
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <span className="text-blue-400">●</span>
-                                      <span>Editor: {userActivities[u.id]?.stats?.byType.editor}</span>
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <span className="text-purple-400">●</span>
-                                      <span>IA: {userActivities[u.id]?.stats?.byType.ai}</span>
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <span className="text-emerald-400">●</span>
-                                      <span>Tools: {userActivities[u.id]?.stats?.byType.tools}</span>
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <DollarSign size={12} className="text-yellow-400" />
-                                      <span>R$ {userActivities[u.id]?.stats?.totalCost.toFixed(2)}</span>
-                                    </span>
+                            {/* Layout 2 colunas: Histórico | Galerias */}
+                            <div className="grid grid-cols-2 gap-6">
+                              {/* COLUNA 1: Histórico de Atividades */}
+                              <div className="space-y-4">
+                                {/* Header com estatísticas */}
+                                <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                                  <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+                                    <Activity size={16} className="text-emerald-400" />
+                                    Histórico de Atividades
+                                  </h3>
+                                  {userActivities[u.id]?.stats && (
+                                    <div className="flex items-center gap-4 text-xs text-zinc-400">
+                                      <span className="flex items-center gap-1">
+                                        <span className="text-zinc-500">Total:</span>
+                                        <span className="text-zinc-300 font-medium">{userActivities[u.id]?.stats?.total}</span>
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <span className="text-blue-400">●</span>
+                                        <span>Editor: {userActivities[u.id]?.stats?.byType.editor}</span>
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <span className="text-purple-400">●</span>
+                                        <span>IA: {userActivities[u.id]?.stats?.byType.ai}</span>
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <span className="text-emerald-400">●</span>
+                                        <span>Tools: {userActivities[u.id]?.stats?.byType.tools}</span>
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <DollarSign size={12} className="text-yellow-400" />
+                                        <span>R$ {userActivities[u.id]?.stats?.totalCost.toFixed(2)}</span>
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Loading */}
+                                {userActivities[u.id]?.loading && (
+                                  <div className="flex items-center justify-center py-8">
+                                    <RefreshCw className="animate-spin text-emerald-400" size={20} />
+                                    <span className="ml-2 text-sm text-zinc-400">Carregando histórico...</span>
+                                  </div>
+                                )}
+
+                                {/* Tabela de atividades */}
+                                {(userActivities[u.id]?.data?.length ?? 0) > 0 && (
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                      <thead>
+                                        <tr className="text-xs text-zinc-500 border-b border-zinc-800">
+                                          <th className="text-left py-2 px-3 font-medium">Data/Hora</th>
+                                          <th className="text-left py-2 px-3 font-medium">Tipo</th>
+                                          <th className="text-left py-2 px-3 font-medium">Operação</th>
+                                          <th className="text-right py-2 px-3 font-medium">Custo</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {userActivities[u.id]?.data?.map((activity: any) => (
+                                          <tr key={activity.id} className="text-sm border-b border-zinc-800/50 hover:bg-zinc-900/50 transition">
+                                            <td className="py-2 px-3 text-zinc-400">
+                                              {new Date(activity.created_at).toLocaleString('pt-BR', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                              })}
+                                            </td>
+                                            <td className="py-2 px-3">
+                                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                                activity.usage_type === 'editor_generation' 
+                                                  ? 'bg-blue-500/20 text-blue-400'
+                                                  : activity.usage_type === 'ai_request'
+                                                  ? 'bg-purple-500/20 text-purple-400'
+                                                  : 'bg-emerald-500/20 text-emerald-400'
+                                              }`}>
+                                                {activity.usage_type === 'editor_generation' ? 'Editor' :
+                                                 activity.usage_type === 'ai_request' ? 'IA Gen' : 'Tool'}
+                                              </span>
+                                            </td>
+                                            <td className="py-2 px-3 text-zinc-300 font-mono text-xs">
+                                              {activity.operation_type}
+                                            </td>
+                                            <td className="py-2 px-3 text-right text-zinc-400 font-mono text-xs">
+                                              R$ {(activity.cost || 0).toFixed(4)}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+
+                                {/* Empty state */}
+                                {userActivities[u.id]?.data?.length === 0 && (
+                                  <div className="text-center py-8 text-zinc-500 text-sm">
+                                    <Activity size={32} className="mx-auto mb-2 opacity-50" />
+                                    <p>Nenhuma atividade registrada</p>
                                   </div>
                                 )}
                               </div>
 
-                              {/* Loading */}
-                              {userActivities[u.id]?.loading && (
-                                <div className="flex items-center justify-center py-8">
-                                  <RefreshCw className="animate-spin text-emerald-400" size={20} />
-                                  <span className="ml-2 text-sm text-zinc-400">Carregando histórico...</span>
-                                </div>
-                              )}
-
-                              {/* Tabela de atividades */}
-                              {(userActivities[u.id]?.data?.length ?? 0) > 0 && (
-                                <div className="overflow-x-auto">
-                                  <table className="w-full">
-                                    <thead>
-                                      <tr className="text-xs text-zinc-500 border-b border-zinc-800">
-                                        <th className="text-left py-2 px-3 font-medium">Data/Hora</th>
-                                        <th className="text-left py-2 px-3 font-medium">Tipo</th>
-                                        <th className="text-left py-2 px-3 font-medium">Operação</th>
-                                        <th className="text-right py-2 px-3 font-medium">Custo</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {userActivities[u.id]?.data?.map((activity: any) => (
-                                        <tr key={activity.id} className="text-sm border-b border-zinc-800/50 hover:bg-zinc-900/50 transition">
-                                          <td className="py-2 px-3 text-zinc-400">
-                                            {new Date(activity.created_at).toLocaleString('pt-BR', {
-                                              day: '2-digit',
-                                              month: 'short',
-                                              hour: '2-digit',
-                                              minute: '2-digit'
-                                            })}
-                                          </td>
-                                          <td className="py-2 px-3">
-                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                              activity.usage_type === 'editor_generation' 
-                                                ? 'bg-blue-500/20 text-blue-400'
-                                                : activity.usage_type === 'ai_request'
-                                                ? 'bg-purple-500/20 text-purple-400'
-                                                : 'bg-emerald-500/20 text-emerald-400'
-                                            }`}>
-                                              {activity.usage_type === 'editor_generation' ? 'Editor' :
-                                               activity.usage_type === 'ai_request' ? 'IA Gen' : 'Tool'}
-                                            </span>
-                                          </td>
-                                          <td className="py-2 px-3 text-zinc-300 font-mono text-xs">
-                                            {activity.operation_type}
-                                          </td>
-                                          <td className="py-2 px-3 text-right text-zinc-400 font-mono text-xs">
-                                            R$ {(activity.cost || 0).toFixed(4)}
-                                          </td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              )}
-
-                              {/* Empty state */}
-                              {userActivities[u.id]?.data?.length === 0 && (
-                                <div className="text-center py-8 text-zinc-500 text-sm">
-                                  <Activity size={32} className="mx-auto mb-2 opacity-50" />
-                                  <p>Nenhuma atividade registrada</p>
-                                </div>
-                              )}
+                              {/* COLUNA 2: Galerias de Imagens */}
+                              <UserGalleries userId={u.id} userEmail={u.email} />
                             </div>
                           </td>
                         </tr>

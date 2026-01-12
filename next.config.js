@@ -29,9 +29,63 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
-  // Headers PWA
+  // Headers PWA + Segurança
   async headers() {
     return [
+      // 🔒 SECURITY HEADERS - Aplicar a todas as rotas
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
+          },
+          // CSP - Content Security Policy
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.stencilflow.com.br https://*.clerk.accounts.dev https://challenges.cloudflare.com https://connect.facebook.net https://www.googletagmanager.com https://js.stripe.com",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob: https: http:",
+              "font-src 'self' data:",
+              "connect-src 'self' https://*.supabase.co https://clerk.stencilflow.com.br https://*.clerk.accounts.dev https://api.stripe.com https://generativelanguage.googleapis.com https://www.facebook.com https://www.google-analytics.com https://*.ingest.us.sentry.io https://capig.madgicx.ai",
+              "frame-src 'self' https://challenges.cloudflare.com https://js.stripe.com",
+              "worker-src 'self' blob:",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+              "upgrade-insecure-requests"
+            ].join('; ')
+          },
+        ],
+      },
+      // Manifest
       {
         source: '/manifest.json',
         headers: [
@@ -45,6 +99,7 @@ const nextConfig = {
           },
         ],
       },
+      // Service Worker
       {
         source: '/sw.js',
         headers: [
@@ -62,6 +117,7 @@ const nextConfig = {
           },
         ],
       },
+      // Offline page
       {
         source: '/offline.html',
         headers: [
@@ -71,6 +127,7 @@ const nextConfig = {
           },
         ],
       },
+      // Static assets
       {
         source: '/:path*.png',
         headers: [

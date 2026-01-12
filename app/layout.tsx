@@ -4,6 +4,7 @@ import Script from 'next/script';
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+import CookieConsent from '@/components/CookieConsent';
 
 export const metadata: Metadata = {
   title: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
@@ -55,18 +56,24 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
+  metadataBase: new URL('https://www.stencilflow.com.br'),
+  alternates: {
+    canonical: 'https://www.stencilflow.com.br',
+  },
   openGraph: {
     type: 'website',
+    url: 'https://www.stencilflow.com.br',
     siteName: 'StencilFlow',
     title: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
     description: 'Editor profissional de stencils com Tecnologia StencilFlow. Modo topográfico, linhas perfeitas, Color Match e mais. Grátis para começar.',
     locale: 'pt_BR',
     images: [
       {
-        url: '/og-image.png',
+        url: 'https://www.stencilflow.com.br/og-image.png',
         width: 1200,
         height: 630,
         alt: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
+        type: 'image/png',
       },
     ],
   },
@@ -74,6 +81,18 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'StencilFlow - Editor Profissional de Stencils',
     description: 'Editor profissional de stencils de tatuagem com Tecnologia StencilFlow e ferramentas premium. Grátis para começar.',
+    images: ['https://www.stencilflow.com.br/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
@@ -134,6 +153,41 @@ export default function RootLayout({
       }}
     >
       <html lang="pt-BR">
+        <head>
+          {/* JSON-LD para Logo da Organização no Google Search */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: 'StencilFlow',
+                url: 'https://www.stencilflow.com.br',
+                logo: 'https://www.stencilflow.com.br/icon-512x512.png',
+                description: 'Editor profissional de stencils de tatuagem com tecnologia avançada',
+                contactPoint: {
+                  '@type': 'ContactPoint',
+                  contactType: 'customer support',
+                  availableLanguage: ['Portuguese'],
+                },
+              }),
+            }}
+          />
+          {/* JSON-LD para WebSite */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'WebSite',
+                name: 'StencilFlow',
+                url: 'https://www.stencilflow.com.br',
+                description: 'Editor profissional de stencils de tatuagem',
+                inLanguage: 'pt-BR',
+              }),
+            }}
+          />
+        </head>
         <body>
           {/* Meta Pixel (Facebook Pixel) para Anúncios */}
           <Script
@@ -154,18 +208,11 @@ export default function RootLayout({
               `,
             }}
           />
-          <noscript>
-            <img
-              height="1"
-              width="1"
-              style={{ display: 'none' }}
-              src="https://www.facebook.com/tr?id=925034426528491&ev=PageView&noscript=1"
-              alt=""
-            />
-          </noscript>
+          {/* Removido noscript img para evitar preload warning */}
 
           {children}
           <ServiceWorkerRegister />
+          <CookieConsent />
         </body>
       </html>
     </ClerkProvider>

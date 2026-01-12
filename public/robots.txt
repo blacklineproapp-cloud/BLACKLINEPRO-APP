@@ -1,0 +1,11 @@
+# *
+User-agent: *
+Allow: /
+
+# Disallow private areas
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://www.stencilflow.com.br/sitemap.xml
