@@ -60,6 +60,9 @@ export async function GET(req: Request) {
       query = query.eq('is_blocked', true);
     } else if (status === 'active') {
       query = query.eq('is_blocked', false);
+    } else if (status === 'courtesy') {
+      // Filtrar APENAS usuários com cortesia ativa
+      query = query.eq('admin_courtesy', true);
     }
 
     query = query.range(offset, offset + limit - 1);

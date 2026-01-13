@@ -82,7 +82,9 @@ export default function EditorPage() {
       !controls.flipVertical &&
       !controls.invert &&
       !controls.removeNoise &&
-      !controls.sharpen
+      !controls.sharpen &&
+      (controls.lineColor === '#000000' || !controls.lineColor) &&
+      (controls.colorThreshold === 250 || !controls.colorThreshold)
     );
   };
 
@@ -177,7 +179,9 @@ export default function EditorPage() {
           gamma: controls.gamma,
           brightness: controls.brightness,
           contrast: controls.contrast,
-          invert: controls.invert
+          invert: controls.invert,
+          lineColor: controls.lineColor,
+          colorThreshold: controls.colorThreshold
         });
         
         setAdjustedStencil(adjusted);
@@ -547,9 +551,16 @@ export default function EditorPage() {
         }
       }
 
-      // Converter base64 para blob para forçar download
-      const response = await fetch(imageToDownload);
-      const blob = await response.blob();
+      // ⚠️ CORREÇÃO CSP: fetch não funciona com data: URI
+      // Converter base64 diretamente para blob (sem fetch)
+      const base64Data = imageToDownload.replace(/^data:image\/\w+;base64,/, '');
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/png' });
       const url = URL.createObjectURL(blob);
 
       const link = document.createElement('a');
@@ -563,7 +574,7 @@ export default function EditorPage() {
       showToast('Download iniciado!', 'success');
     } catch (error) {
       console.error('Erro no download:', error);
-      // Fallback
+      // Fallback direto com base64 (funciona na maioria dos navegadores)
       const link = document.createElement('a');
       link.href = currentStencil;
       link.download = fileName;
@@ -897,14 +908,16 @@ export default function EditorPage() {
         )}
 
         {/* Controls Panel - Responsivo e acessível */}
-        <aside className={`
-          ${showControls ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
-          fixed lg:relative bottom-0 left-0 right-0 lg:w-72 xl:w-80
-          bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-800
-          transition-transform duration-300 z-40 shadow-2xl lg:shadow-none
-          ${generatedStencil ? 'max-h-[85vh] lg:max-h-none' : 'max-h-[70vh] lg:max-h-none'}
-          rounded-t-2xl lg:rounded-none overflow-hidden
-        `}>
+        <aside 
+          className={`
+            ${showControls ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
+            fixed lg:relative bottom-0 left-0 right-0 lg:w-72 xl:w-80
+            bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-800
+            transition-transform duration-300 z-40 shadow-2xl lg:shadow-none
+            rounded-t-2xl lg:rounded-none
+          `}
+          style={{ maxHeight: '60vh' }}
+        >
           {/* Drag handle - Clicável para abrir/fechar */}
           <div
             onClick={() => setShowControls(!showControls)}
@@ -913,8 +926,16 @@ export default function EditorPage() {
             <div className="w-12 h-1 bg-zinc-600 rounded-full"></div>
           </div>
 
-          <div className="h-full overflow-y-auto overscroll-contain">
-            <div className="p-2.5 lg:p-5 space-y-2 lg:space-y-3 pb-32 lg:pb-5">
+          {/* Container scrollável - COM SCROLL FORÇADO */}
+          <div 
+            style={{ 
+              maxHeight: 'calc(60vh - 40px)', 
+              overflowY: 'scroll',
+              WebkitOverflowScrolling: 'touch'
+            }}
+            className="lg:max-h-none lg:overflow-visible"
+          >
+            <div className="p-2 lg:p-5 space-y-1.5 lg:space-y-3 pb-24 lg:pb-5">
 
             {/* Botão Nova Imagem - Aparece quando tem imagem carregada */}
             {originalImage && !generatedStencil && (

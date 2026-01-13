@@ -29,6 +29,7 @@ export default function GenerationsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
   const [selectedImage, setSelectedImage] = useState<Project | null>(null);
+  const [showStencil, setShowStencil] = useState(true);
 
   const loadProjects = async () => {
     setLoading(true);
@@ -153,68 +154,85 @@ export default function GenerationsPage() {
           </>
         )}
 
-        {/* Modal de Detalhes */}
+        {/* Modal de Detalhes com Toggle Original/Estêncil */}
         {selectedImage && (
-          <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setSelectedImage(null)}>
-             <div className="max-w-4xl w-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-                <div className="grid grid-cols-1 md:grid-cols-2">
-                   <div className="relative aspect-square bg-black border-r border-zinc-800">
-                      <Image
-                        src={selectedImage.stencil_image || selectedImage.original_image}
-                        alt="Preview"
-                        fill
-                        className="object-contain"
-                        unoptimized
-                      />
-                   </div>
-                   <div className="p-6 flex flex-col">
-                      <h3 className="text-xl font-bold mb-1">{selectedImage.name}</h3>
-                      <p className="text-zinc-500 text-sm mb-6">{selectedImage.id}</p>
-                      
-                      <div className="space-y-4 mb-auto">
-                        <div className="flex items-center gap-3 p-3 bg-zinc-950 rounded-lg border border-zinc-800">
-                           <User size={18} className="text-zinc-400" />
-                           <div>
-                              <p className="text-xs text-zinc-500">Criado por</p>
-                              <p className="text-sm font-medium">{selectedImage.user?.email}</p>
-                           </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-3 bg-zinc-950 rounded-lg border border-zinc-800">
-                           <Calendar size={18} className="text-zinc-400" />
-                           <div>
-                              <p className="text-xs text-zinc-500">Data</p>
-                              <p className="text-sm font-medium">{new Date(selectedImage.created_at).toLocaleString('pt-BR')}</p>
-                           </div>
-                        </div>
-                        
-                        <div className="p-3 bg-zinc-950 rounded-lg border border-zinc-800">
-                           <p className="text-xs text-zinc-500 mb-1">Estilo</p>
-                           <span className="inline-block px-2 py-1 bg-indigo-900/30 text-indigo-400 text-xs rounded border border-indigo-800/50 capitalize">
-                             {selectedImage.style || 'Standard'}
-                           </span>
-                        </div>
-                      </div>
-
-                      <div className="pt-6 mt-6 border-t border-zinc-800 flex gap-3">
-                         <a 
-                           href={selectedImage.stencil_image || selectedImage.original_image}
-                           target="_blank"
-                           rel="noreferrer"
-                           className="flex-1 py-3 bg-zinc-100 text-black rounded-lg font-bold text-sm hover:bg-white transition text-center"
-                         >
-                            Abrir Original
-                         </a>
-                         <button
-                           onClick={() => setSelectedImage(null)}
-                           className="flex-1 py-3 bg-zinc-800 text-white rounded-lg font-medium text-sm hover:bg-zinc-700 transition"
-                         >
-                            Fechar
-                         </button>
-                      </div>
-                   </div>
+          <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
+            <div 
+              className="bg-zinc-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-white font-semibold truncate">{selectedImage.name}</h3>
+                  <p className="text-zinc-500 text-xs mt-0.5">
+                    {selectedImage.user?.email} • {new Date(selectedImage.created_at).toLocaleDateString('pt-BR')}
+                  </p>
                 </div>
-             </div>
+                <button 
+                  onClick={() => setSelectedImage(null)} 
+                  className="text-zinc-400 hover:text-white p-2 shrink-0"
+                >
+                  <EyeOff size={20} />
+                </button>
+              </div>
+
+              {/* Toggle Original/Stencil */}
+              <div className="flex justify-center gap-2 p-3 bg-zinc-950">
+                <button
+                  onClick={() => setShowStencil(false)}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
+                    !showStencil ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                  }`}
+                >
+                  Original
+                </button>
+                <button
+                  onClick={() => setShowStencil(true)}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
+                    showStencil ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                  }`}
+                >
+                  Estêncil
+                </button>
+              </div>
+
+              {/* Image */}
+              <div className="p-4 lg:p-6 bg-white">
+                <div className="relative w-full h-[45vh] lg:h-[50vh]">
+                  <Image
+                    src={showStencil ? selectedImage.stencil_image : selectedImage.original_image}
+                    alt={selectedImage.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+                    className="object-contain"
+                    unoptimized
+                    priority
+                  />
+                </div>
+              </div>
+
+              {/* Info Footer */}
+              <div className="p-4 border-t border-zinc-800 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <User size={14} className="text-zinc-500" />
+                    <span className="text-xs text-zinc-400">{selectedImage.user?.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-0.5 bg-indigo-900/30 text-indigo-400 text-xs rounded border border-indigo-800/50 capitalize">
+                      {selectedImage.style || 'Standard'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="px-4 py-2 bg-zinc-800 text-white rounded-lg text-sm hover:bg-zinc-700 transition"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

@@ -30,12 +30,12 @@ export default function StencilAdjustControls({
     return null;
   }
 
-  const handleChange = (key: keyof AdjustControls, value: number | boolean) => {
+  const handleChange = (key: keyof AdjustControls, value: number | boolean | string) => {
     onChange({ ...controls, [key]: value });
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-1.5 lg:space-y-3">
       {/* Header com Reset */}
       <div className="flex items-center justify-between">
         <h3 className="text-white font-semibold text-sm flex items-center gap-2">
@@ -53,7 +53,7 @@ export default function StencilAdjustControls({
       </div>
 
       {/* Seção: Ajustes Essenciais (sempre visível) */}
-      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-2 lg:p-3 space-y-2 lg:space-y-3">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-1.5 lg:p-3 space-y-1.5 lg:space-y-3">
         <div className="flex items-center gap-2 mb-1">
           <Sliders size={13} className="text-purple-400" />
           <span className="text-white font-medium text-[11px] lg:text-xs">Ajustes Essenciais</span>
@@ -195,7 +195,7 @@ export default function StencilAdjustControls({
       </div>
 
       {/* Seção: Transformações */}
-      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-2 lg:p-3 space-y-2 lg:space-y-3">
+      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-1.5 lg:p-3 space-y-1.5 lg:space-y-3">
         <div className="flex items-center gap-2 mb-1">
           <RotateCw size={13} className="text-blue-400" />
           <span className="text-white font-medium text-[11px] lg:text-xs">Transformações</span>
@@ -259,6 +259,87 @@ export default function StencilAdjustControls({
             Inverter
           </button>
         </div>
+      </div>
+
+      {/* Seção: Cor do Contorno */}
+      <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-1.5 lg:p-3 space-y-1.5 lg:space-y-3">
+        <div className="flex items-center gap-2 mb-1">
+          <div className="w-3 h-3 rounded-full border border-zinc-600" style={{ backgroundColor: controls.lineColor || '#000000' }} />
+          <span className="text-white font-medium text-[11px] lg:text-xs">Cor do Contorno</span>
+        </div>
+
+        {/* Cores pré-definidas */}
+        <div className="grid grid-cols-6 gap-1.5">
+          {[
+            { color: '#000000', name: 'Preto' },
+            { color: '#1a1a2e', name: 'Azul Escuro' },
+            { color: '#16213e', name: 'Navy' },
+            { color: '#0f3460', name: 'Azul' },
+            { color: '#533483', name: 'Roxo' },
+            { color: '#e94560', name: 'Vermelho' },
+            { color: '#1e5128', name: 'Verde' },
+            { color: '#ff6b35', name: 'Laranja' },
+            { color: '#6c5ce7', name: 'Violeta' },
+            { color: '#00b4d8', name: 'Ciano' },
+            { color: '#8b4513', name: 'Marrom' },
+            { color: '#2d3436', name: 'Grafite' },
+          ].map((preset) => (
+            <button
+              key={preset.color}
+              onClick={() => handleChange('lineColor', preset.color)}
+              disabled={isProcessing}
+              title={preset.name}
+              className={`w-full aspect-square rounded-md border-2 transition-all disabled:opacity-50 ${
+                controls.lineColor === preset.color
+                  ? 'border-emerald-500 ring-2 ring-emerald-500/30 scale-110'
+                  : 'border-zinc-700 hover:border-zinc-500'
+              }`}
+              style={{ backgroundColor: preset.color }}
+            />
+          ))}
+        </div>
+
+        {/* Cor personalizada */}
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] text-zinc-400">Personalizada:</label>
+          <input
+            type="color"
+            value={controls.lineColor || '#000000'}
+            onChange={(e) => handleChange('lineColor', e.target.value)}
+            disabled={isProcessing}
+            className="w-8 h-8 rounded cursor-pointer bg-transparent disabled:opacity-50"
+          />
+          <span className="text-[10px] text-zinc-500 font-mono">{controls.lineColor || '#000000'}</span>
+        </div>
+
+        {/* Sensibilidade do limiar (só mostra se cor != preto) */}
+        {controls.lineColor && controls.lineColor !== '#000000' && (
+          <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-[10px] text-zinc-400">Sensibilidade</label>
+              <span className="text-[10px] text-emerald-400 font-mono">
+                {controls.colorThreshold || 250}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="200"
+              max="255"
+              value={controls.colorThreshold || 250}
+              onChange={(e) => handleChange('colorThreshold', Number(e.target.value))}
+              disabled={isProcessing}
+              className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
+            />
+            <div className="flex justify-between text-[8px] text-zinc-600 mt-0.5">
+              <span>Mais cor</span>
+              <span>Menos cor</span>
+            </div>
+          </div>
+        )}
+
+        <p className="text-[9px] text-zinc-600 leading-tight">
+          💡 A cor é aplicada apenas nos contornos. O fundo branco permanece intacto.
+        </p>
       </div>
 
       {/* Indicador de processamento */}

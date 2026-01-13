@@ -1,16 +1,26 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import { X, Loader2, Crown, Zap, Sparkles, LogIn } from 'lucide-react';
+import { X, Loader2, Crown, Zap, Sparkles, LogIn, AlertTriangle } from 'lucide-react';
 import CheckoutForm from './CheckoutForm';
 import { useRouter } from 'next/navigation';
 import { useAuth, SignInButton } from '@clerk/nextjs';
 import { PLAN_PRICING, BILLING_CYCLES, formatPrice, getMonthlyEquivalent } from '@/lib/billing/plans';
 import type { BillingCycle } from '@/lib/stripe/types';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Lazy load Stripe - só carrega quando o modal é aberto
+let stripePromise: Promise<Stripe | null> | null = null;
+const getStripe = () => {
+  if (!stripePromise) {
+    stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!).catch((err) => {
+      console.warn('[Stripe] Falha ao carregar Stripe.js:', err?.message);
+      return null;
+    });
+  }
+  return stripePromise;
+};
 
 interface CheckoutModalProps {
   plan: 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
@@ -26,6 +36,21 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [devMode, setDevMode] = useState(false);
+  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
+  const [stripeError, setStripeError] = useState(false);
+
+  // Carregar Stripe quando modal abre
+  useEffect(() => {
+    if (isOpen) {
+      getStripe().then((stripe) => {
+        if (stripe) {
+          setStripeInstance(stripe);
+        } else {
+          setStripeError(true);
+        }
+      });
+    }
+  }, [isOpen]);
 
   const planDetails = {
     legacy: {
@@ -269,10 +294,37 @@ export default function CheckoutModal({ plan, cycle = 'monthly', isOpen, onClose
             </div>
           )}
 
+          {/* Stripe Load Error */}
+          {stripeError && !isLoading && (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="w-16 h-16 bg-yellow-600/10 border border-yellow-500/30 rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="text-yellow-500" size={28} />
+              </div>
+              <h3 className="text-white font-bold text-lg mb-2">Pagamento indisponível</h3>
+              <p className="text-zinc-400 text-sm text-center mb-4 max-w-xs">
+                O sistema de pagamento não pôde ser carregado. Isso pode acontecer se você tem um bloqueador de anúncios ativo.
+              </p>
+              <div className="flex flex-col gap-2 text-sm text-zinc-500">
+                <p>Tente:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Desativar extensões de bloqueio</li>
+                  <li>Usar outro navegador</li>
+                  <li>Verificar sua conexão</li>
+                </ul>
+              </div>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm text-white transition"
+              >
+                ↻ Recarregar página
+              </button>
+            </div>
+          )}
+
           {/* Checkout Form */}
-          {clientSecret && !isLoading && !devMode && (
+          {clientSecret && stripeInstance && !isLoading && !devMode && !stripeError && (
             <Elements
-              stripe={stripePromise}
+              stripe={stripeInstance}
               options={{
                 clientSecret,
                 appearance: {

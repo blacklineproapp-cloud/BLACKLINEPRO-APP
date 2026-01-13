@@ -11,6 +11,20 @@ export interface ProcessOptions {
   brightness?: number;  // -100 a +100
   contrast?: number;    // -100 a +100
   invert?: boolean;
+  lineColor?: string;   // Hex color para os contornos (ex: '#000000')
+  colorThreshold?: number; // Limiar para considerar pixel como "fundo" (200-255, padrão: 250)
+}
+
+/**
+ * Converte cor hex para RGB
+ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 0, g: 0, b: 0 };
 }
 
 /**
@@ -52,6 +66,11 @@ export async function processImageOnClient(
         const gammaValue = options.gamma || 1.0;
         const thresholdValue = options.threshold !== undefined ? options.threshold : 128;
         const doInvert = options.invert || false;
+        
+        // Cor do contorno (se especificada e diferente de preto)
+        const lineColor = options.lineColor && options.lineColor !== '#000000' 
+          ? hexToRgb(options.lineColor) 
+          : null;
 
         // Loop de processamento de pixels (Otimizado)
         for (let i = 0; i < data.length; i += 4) {
@@ -89,8 +108,36 @@ export async function processImageOnClient(
             gray = 255 - gray;
           }
 
-          // Aplicar resultado
-          data[i] = data[i+1] = data[i+2] = Math.max(0, Math.min(255, gray));
+          // Clampar valor
+          gray = Math.max(0, Math.min(255, gray));
+
+          // 7. Aplicar cor do contorno (se especificada)
+          // Técnica: Máscara + Substituição de Canal
+          // - Pixels >= limiar são considerados "fundo branco" → mantém branco puro
+          // - Pixels < limiar são "contorno/detalhe" → substitui por cor proporcional
+          if (lineColor) {
+            // Usar limiar configurável ou padrão 250
+            const WHITE_THRESHOLD = options.colorThreshold ?? 250;
+            
+            if (gray >= WHITE_THRESHOLD) {
+              // Pixel é fundo branco - NÃO TOCAR
+              data[i] = data[i+1] = data[i+2] = 255;
+            } else {
+              // Pixel é contorno/detalhe - aplicar cor preservando intensidade
+              // Mapear [0, WHITE_THRESHOLD] para [cor_pura, branco]
+              // normalizedLight: 0 = preto total, 1 = no limiar (quase branco)
+              const normalizedLight = gray / WHITE_THRESHOLD;
+              
+              // Interpolar: preto → cor pura, claro → cor misturada com branco
+              // Fórmula: cor * (1 - luz) + branco * luz
+              data[i] = Math.round(lineColor.r * (1 - normalizedLight) + 255 * normalizedLight);
+              data[i+1] = Math.round(lineColor.g * (1 - normalizedLight) + 255 * normalizedLight);
+              data[i+2] = Math.round(lineColor.b * (1 - normalizedLight) + 255 * normalizedLight);
+            }
+          } else {
+            // Sem cor customizada → aplicar resultado em escala de cinza
+            data[i] = data[i+1] = data[i+2] = gray;
+          }
           // data[i+3] (alpha) permanece o mesmo
         }
 

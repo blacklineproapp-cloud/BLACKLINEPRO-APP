@@ -22,6 +22,8 @@ interface User {
   created_at: string;
   last_active_at: string;
   total_requests: number;
+  admin_courtesy?: boolean;
+  admin_courtesy_expires_at?: string;
 }
 
 interface UserActivity {
@@ -63,15 +65,15 @@ export default function UsersManagementPage() {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [userActivities, setUserActivities] = useState<Record<string, UserActivity>>({});
 
-  const loadUsers = useCallback(async (searchQuery?: string, planFilter?: string, statusFilter?: string) => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       
       // Construir query params para busca server-side
       const params = new URLSearchParams();
-      if (searchQuery) params.set('search', searchQuery);
-      if (planFilter && planFilter !== 'all') params.set('plan', planFilter);
-      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+      if (search) params.set('search', search);
+      if (filterPlan && filterPlan !== 'all') params.set('plan', filterPlan);
+      if (filterStatus && filterStatus !== 'all') params.set('status', filterStatus);
       
       const res = await fetch(`/api/admin/users?${params.toString()}`);
       if (res.status === 403) {
@@ -89,8 +91,9 @@ export default function UsersManagementPage() {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, search, filterPlan, filterStatus]);
 
+  // Recarregar do backend quando filtros mudam
   useEffect(() => {
     loadUsers();
   }, [loadUsers]);
@@ -107,7 +110,8 @@ export default function UsersManagementPage() {
     const matchPlan = filterPlan === 'all' || u.plan === filterPlan;
     const matchStatus = filterStatus === 'all' || 
       (filterStatus === 'active' && !u.is_blocked) ||
-      (filterStatus === 'blocked' && u.is_blocked);
+      (filterStatus === 'blocked' && u.is_blocked) ||
+      (filterStatus === 'courtesy' && u.admin_courtesy === true);
     
     return matchSearch && matchPlan && matchStatus;
   });
@@ -341,6 +345,7 @@ export default function UsersManagementPage() {
                 <option value="all">Todos os status</option>
                 <option value="active">Ativos</option>
                 <option value="blocked">Bloqueados</option>
+                <option value="courtesy">🎁 Cortesia</option>
               </select>
 
               <button

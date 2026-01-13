@@ -91,6 +91,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
     try {
       // Converter base64/URL para blob para forçar download
       const response = await fetch(imageToDownload);
+      if (!response.ok) throw new Error('Falha ao carregar imagem');
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       
@@ -101,12 +102,19 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch (error) {
-      // Fallback para método antigo
-      const link = document.createElement('a');
-      link.href = imageToDownload;
-      link.download = fileName;
-      link.click();
+    } catch (error: any) {
+      // Fallback para download direto (Safari iOS pode falhar no fetch de imagens)
+      console.warn('[Download] Fetch falhou, usando fallback:', error?.message);
+      try {
+        const link = document.createElement('a');
+        link.href = imageToDownload;
+        link.download = fileName;
+        link.target = '_blank'; // Safari precisa disso em alguns casos
+        link.click();
+      } catch (fallbackError) {
+        // Último recurso: abrir em nova aba
+        window.open(imageToDownload, '_blank');
+      }
     }
   };
 
@@ -129,10 +137,15 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
         router.refresh();
         setSelectedProject(null);
       } else {
-        alert('Erro ao excluir');
+        const errorData = await res.json().catch(() => ({}));
+        alert(errorData.error || 'Erro ao excluir projeto');
       }
-    } catch (error) {
-      alert('Erro ao excluir');
+    } catch (error: any) {
+      // Safari iOS pode falhar com "Load failed" em conexões instáveis
+      console.error('[Delete] Erro:', error?.message);
+      alert(error?.message === 'Load failed' 
+        ? 'Falha na conexão. Verifique sua internet e tente novamente.'
+        : 'Erro ao excluir projeto. Tente novamente.');
     } finally {
       setIsDeleting(null);
     }
@@ -175,10 +188,15 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
         setSelectedProject({ ...selectedProject, name: editName.trim() });
         router.refresh();
       } else {
-        alert('Erro ao renomear projeto');
+        const errorData = await res.json().catch(() => ({}));
+        alert(errorData.error || 'Erro ao renomear projeto');
       }
-    } catch (error) {
-      alert('Erro ao renomear projeto');
+    } catch (error: any) {
+      // Safari iOS pode falhar com "Load failed" em conexões instáveis
+      console.error('[Rename] Erro:', error?.message);
+      alert(error?.message === 'Load failed' 
+        ? 'Falha na conexão. Verifique sua internet e tente novamente.'
+        : 'Erro ao renomear projeto. Tente novamente.');
     } finally {
       setIsSavingName(false);
       setIsEditing(false);
@@ -220,14 +238,13 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
               <p className="text-zinc-400 text-xs lg:text-sm">
                 {isUnlimited ? (
                   <>
-                    <span className="text-emerald-400 font-bold">{currentUsage} gerações</span> este mês (Ilimitado)
+                    <span className="text-emerald-400 font-bold">Ilimitado</span> • Sem restrições
                   </>
                 ) : (
                   <>
-                    <span className={`font-bold ${
-                      isLowUsage ? 'text-emerald-400' : isMediumUsage ? 'text-yellow-400' : 'text-red-400'
-                    }`}>{currentUsage}</span> de{' '}
-                    <span className="text-white font-bold">{monthlyLimit}</span> gerações usadas
+                    {isLowUsage && <span className="text-emerald-400 font-medium">Uso baixo</span>}
+                    {isMediumUsage && <span className="text-yellow-400 font-medium">Uso moderado</span>}
+                    {isHighUsage && <span className="text-red-400 font-medium">Uso alto</span>}
                   </>
                 )}
               </p>

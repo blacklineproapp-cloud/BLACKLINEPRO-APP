@@ -1,19 +1,24 @@
 /**
  * Funções de compressão de imagem no cliente
  * Para evitar erro 413 (payload muito grande)
+ * 
+ * ⚠️ IMPORTANTE: Stencils DEVEM permanecer em PNG (lossless)
+ * JPEG corrompe imagens preto/branco com detalhes finos!
  */
 
 /**
  * Comprime uma imagem base64 para um tamanho máximo
+ * 
+ * ⚠️ CORREÇÃO CRÍTICA: Usa PNG com redução de dimensões
+ * Nunca converte para JPEG (causa corrupção de stencils!)
+ * 
  * @param base64 - Imagem em base64 (data:image/...;base64,...)
  * @param maxSizeKB - Tamanho máximo em KB (padrão: 2500 = 2.5MB)
- * @param quality - Qualidade inicial (0.0-1.0, padrão: 0.85)
- * @returns Promise<string> - Imagem comprimida em base64
+ * @returns Promise<string> - Imagem comprimida em base64 (sempre PNG)
  */
 export async function compressImage(
   base64: string,
-  maxSizeKB: number = 2500,
-  quality: number = 0.85
+  maxSizeKB: number = 2500
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
@@ -43,22 +48,29 @@ export async function compressImage(
             return;
           }
 
-          // 🔧 CORREÇÃO: Reduzir dimensões AGRESSIVAMENTE se imagem muito grande
-          let targetWidth = img.width;
-          let targetHeight = img.height;
-
-          // Se maior que 4MB, reduzir dimensões primeiro
-          if (currentSizeKB > 4000) {
-            const reductionFactor = Math.sqrt(2500 / currentSizeKB); // Reduzir para ~2.5MB
-            targetWidth = Math.floor(img.width * reductionFactor);
-            targetHeight = Math.floor(img.height * reductionFactor);
-            
-            console.log('[Compress] 🔥 Imagem MUITO grande, reduzindo dimensões:', {
-              original: `${img.width}x${img.height}`,
-              novo: `${targetWidth}x${targetHeight}`,
-              fator: reductionFactor.toFixed(2)
-            });
+          // 🔧 CORREÇÃO: Calcular fator de redução baseado no tamanho
+          // Se precisa reduzir de 5MB para 2.5MB, reduzir dimensões em sqrt(2) ≈ 1.41
+          const reductionFactor = Math.sqrt(maxSizeKB / currentSizeKB);
+          
+          // Garantir redução mínima de 10% para ter efeito
+          const effectiveFactor = Math.min(reductionFactor, 0.9);
+          
+          let targetWidth = Math.floor(img.width * effectiveFactor);
+          let targetHeight = Math.floor(img.height * effectiveFactor);
+          
+          // Garantir dimensões mínimas (não menor que 800px no menor lado)
+          const minDimension = 800;
+          if (targetWidth < minDimension && targetHeight < minDimension) {
+            const scale = minDimension / Math.min(targetWidth, targetHeight);
+            targetWidth = Math.floor(targetWidth * scale);
+            targetHeight = Math.floor(targetHeight * scale);
           }
+
+          console.log('[Compress] Redimensionando:', {
+            original: `${img.width}x${img.height}`,
+            novo: `${targetWidth}x${targetHeight}`,
+            fator: effectiveFactor.toFixed(2)
+          });
 
           // Configurar canvas
           canvas.width = targetWidth;
@@ -69,35 +81,21 @@ export async function compressImage(
           ctx.imageSmoothingQuality = 'high';
           ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
-          // 🔧 CORREÇÃO CRÍTICA: Usar JPEG em vez de PNG para compressão real
-          // PNG ignora o parâmetro quality!
-          let currentQuality = quality;
-          let attempts = 0;
-          const maxAttempts = 8;
+          // 🔧 CORREÇÃO CRÍTICA: SEMPRE usar PNG para stencils
+          // PNG é lossless e preserva detalhes preto/branco
+          const compressed = canvas.toDataURL('image/png');
+          const compressedSizeKB = Math.round((compressed.length * 0.75) / 1024);
 
-          const tryCompress = (): string => {
-            attempts++;
-            
-            // USAR JPEG para compressão (PNG não comprime!)
-            const compressed = canvas.toDataURL('image/jpeg', currentQuality);
-            const compressedSizeKB = Math.round((compressed.length * 0.75) / 1024);
-
-            console.log('[Compress] Tentativa', attempts, '- Qualidade:', currentQuality.toFixed(2), '- Tamanho:', compressedSizeKB, 'KB');
-
-            // Se atingiu o tamanho ou máximo de tentativas, retornar
-            if (compressedSizeKB <= maxSizeKB || attempts >= maxAttempts) {
-              console.log('[Compress] ✅ Compressão concluída:', compressedSizeKB, 'KB');
-              return compressed;
-            }
-
-            // Reduzir qualidade mais agressivamente
-            currentQuality -= 0.15;
-            if (currentQuality < 0.3) currentQuality = 0.3; // Mínimo de qualidade
-            return tryCompress();
-          };
-
-          const result = tryCompress();
-          resolve(result);
+          console.log('[Compress] ✅ Compressão PNG concluída:', compressedSizeKB, 'KB');
+          
+          // Se ainda muito grande, tentar reduzir mais (recursivo)
+          if (compressedSizeKB > maxSizeKB && targetWidth > minDimension && targetHeight > minDimension) {
+            console.log('[Compress] Ainda grande, tentando reduzir mais...');
+            // Chamar recursivamente com a imagem já reduzida
+            compressImage(compressed, maxSizeKB).then(resolve).catch(reject);
+          } else {
+            resolve(compressed);
+          }
 
         } catch (err) {
           reject(err);
@@ -128,7 +126,7 @@ export async function compressIfNeeded(base64: string): Promise<string> {
   // Railway/Vercel têm limite de ~4.5MB, mas deixamos margem para headers
   if (sizeKB > 2500) {
     console.log('[Compress] Imagem muito grande (' + sizeKB + 'KB), comprimindo...');
-    return await compressImage(base64, 2500, 0.85);
+    return await compressImage(base64, 2500);
   }
 
   return base64;

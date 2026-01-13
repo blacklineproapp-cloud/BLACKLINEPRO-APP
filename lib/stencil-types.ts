@@ -26,6 +26,10 @@ export interface AdjustControls {
   // Suavização (opcional)
   removeNoise: boolean;      // Remover ruído (padrão: false)
   noiseReduction: number;    // 0.5 a 2.0 (padrão: 1.0)
+
+  // Cor do Contorno (visualização)
+  lineColor: string;         // Cor hex do contorno (padrão: '#000000' = preto)
+  colorThreshold: number;    // Limiar de branco para recoloração (200-255, padrão: 250)
 }
 
 // Controles específicos do Modo Topográfico
@@ -64,7 +68,11 @@ export const DEFAULT_ADJUST_CONTROLS: AdjustControls = {
 
   // Suavização
   removeNoise: false,
-  noiseReduction: 1.0
+  noiseReduction: 1.0,
+
+  // Cor do Contorno
+  lineColor: '#000000',  // Preto padrão
+  colorThreshold: 250    // Limiar de sensibilidade (pixels >= 250 são fundo)
 };
 
 // Presets pré-configurados (SIMPLIFICADOS - apenas com controles essenciais)

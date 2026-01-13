@@ -113,7 +113,9 @@ export function applyPreset(
     removeNoise: newControls.removeNoise ?? false,
     noiseReduction: newControls.noiseReduction ?? 1,
     sharpen: newControls.sharpen ?? false,
-    sharpenAmount: newControls.sharpenAmount ?? 1
+    sharpenAmount: newControls.sharpenAmount ?? 1,
+    lineColor: newControls.lineColor ?? '#000000',
+    colorThreshold: newControls.colorThreshold ?? 250
   };
 }
 
@@ -134,7 +136,8 @@ export function isDefaultControls(controls: AdjustControls): boolean {
     !controls.flipVertical &&
     !controls.invert &&
     !controls.removeNoise &&
-    !controls.sharpen
+    !controls.sharpen &&
+    (controls.lineColor === '#000000' || !controls.lineColor)
   );
 }
 
@@ -156,7 +159,9 @@ export function resetControls(): AdjustControls {
     removeNoise: false,
     noiseReduction: 1,
     sharpen: false,
-    sharpenAmount: 1
+    sharpenAmount: 1,
+    lineColor: '#000000',
+    colorThreshold: 250
   };
 }
 

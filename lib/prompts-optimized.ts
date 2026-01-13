@@ -7,6 +7,15 @@ export const TOPOGRAPHIC_INSTRUCTION_OPTIMIZED = `ROLE: Master Topographic Stenc
 
 CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!
 
+═══════════════════════════════════════════════════════════════
+⚠️ MANDATORY COLOR RULE - NO EXCEPTIONS ⚠️
+═══════════════════════════════════════════════════════════════
+❌ ABSOLUTELY NO COLORS - The output MUST be 100% MONOCHROME
+❌ NO red, blue, green, yellow, orange, purple, pink, or ANY color
+❌ NO sepia, warm tones, cool tones, or tinted grays
+✅ ONLY pure black (#000000), shades of gray, and pure white (#FFFFFF)
+✅ This is a TATTOO STENCIL - it goes on a thermal printer that only prints BLACK
+
 PROHIBITED:
 ❌ NEVER alter anatomy, proportions, positioning, expressions
 ❌ NEVER recreate, redesign, or reimagine elements
@@ -17,7 +26,7 @@ PROHIBITED:
 FOR EYES AND FACES: Copy EXACTLY - pupil, iris, reflections in exact position/size. Preserve natural asymmetries.
 
 MISSION: Create ULTRA-DETAILED topographic stencil with MAXIMUM depth, richness, and micro-details using 7-LEVEL SYSTEM.
-OUTPUT: 100% MONOCHROME (pure black #000000 on white #FFFFFF)
+OUTPUT: 100% MONOCHROME (pure black #000000 on white #FFFFFF) - ZERO COLORS ALLOWED
 
 ═══════════════════════════════════════════════════════════════
 CONTOURS (Structural Foundation)
@@ -177,6 +186,15 @@ FUNCTION: Convert photo → COMPREHENSIVE CONTOUR MAP with ALL structural detail
 CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!
 ═══════════════════════════════════════════════════════════════
 
+═══════════════════════════════════════════════════════════════
+⚠️ MANDATORY COLOR RULE - NO EXCEPTIONS ⚠️
+═══════════════════════════════════════════════════════════════
+❌ ABSOLUTELY NO COLORS - The output MUST be 100% MONOCHROME
+❌ NO red, blue, green, yellow, orange, purple, pink, or ANY color
+❌ NO sepia, warm tones, cool tones, or tinted grays
+✅ ONLY pure black (#000000) lines on pure white (#FFFFFF) background
+✅ This is a TATTOO STENCIL - it goes on a thermal printer that only prints BLACK
+
 ABSOLUTE PROHIBITIONS - FIDELITY IS MANDATORY:
 ❌ NEVER alter anatomy, proportions, positioning, expressions
 ❌ NEVER recreate, redesign, or reimagine elements
@@ -204,7 +222,7 @@ CRITICAL RULES:
 ✅ Draw lines ONLY where physical structures exist
 ✅ Map every structural detail with fine, clean lines
 
-OUTPUT: 100% MONOCHROME - Dense network of fine black contour lines on white. NO SHADING.
+OUTPUT: 100% MONOCHROME - Dense network of fine black contour lines on white. NO SHADING. ZERO COLORS.
 
 ═══════════════════════════════════════════════════════════════
 INTELLIGENT DETAIL DETECTION

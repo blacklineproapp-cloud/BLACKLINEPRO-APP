@@ -1,13 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import { X, Loader2, CreditCard } from 'lucide-react';
+import { X, Loader2, CreditCard, AlertTriangle } from 'lucide-react';
 import AddCardForm from './AddCardForm';
 import { useRouter } from 'next/navigation';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Lazy load Stripe - só carrega quando o modal é aberto
+let stripePromise: Promise<Stripe | null> | null = null;
+const getStripe = () => {
+  if (!stripePromise) {
+    stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!).catch((err) => {
+      console.warn('[Stripe] Falha ao carregar Stripe.js:', err?.message);
+      return null;
+    });
+  }
+  return stripePromise;
+};
 
 interface AddCardModalProps {
   isOpen: boolean;
@@ -19,6 +29,21 @@ export default function AddCardModal({ isOpen, onClose }: AddCardModalProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
+  const [stripeError, setStripeError] = useState(false);
+
+  // Carregar Stripe quando modal abre
+  useEffect(() => {
+    if (isOpen) {
+      getStripe().then((stripe) => {
+        if (stripe) {
+          setStripeInstance(stripe);
+        } else {
+          setStripeError(true);
+        }
+      });
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -129,10 +154,37 @@ export default function AddCardModal({ isOpen, onClose }: AddCardModalProps) {
             </div>
           )}
 
+          {/* Stripe Load Error */}
+          {stripeError && !isLoading && (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="w-16 h-16 bg-yellow-600/10 border border-yellow-500/30 rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="text-yellow-500" size={28} />
+              </div>
+              <h3 className="text-white font-bold text-lg mb-2">Formulário indisponível</h3>
+              <p className="text-zinc-400 text-sm text-center mb-4 max-w-xs">
+                O formulário de pagamento não pôde ser carregado. Isso pode acontecer se você tem um bloqueador de anúncios ativo.
+              </p>
+              <div className="flex flex-col gap-2 text-sm text-zinc-500">
+                <p>Tente:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Desativar extensões de bloqueio</li>
+                  <li>Usar outro navegador</li>
+                  <li>Verificar sua conexão</li>
+                </ul>
+              </div>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm text-white transition"
+              >
+                ↻ Recarregar página
+              </button>
+            </div>
+          )}
+
           {/* Add Card Form */}
-          {clientSecret && !isLoading && (
+          {clientSecret && stripeInstance && !isLoading && !stripeError && (
             <Elements
-              stripe={stripePromise}
+              stripe={stripeInstance}
               options={{
                 clientSecret,
                 appearance: {
@@ -153,7 +205,7 @@ export default function AddCardModal({ isOpen, onClose }: AddCardModalProps) {
           )}
 
           {/* Info adicional */}
-          {!isLoading && clientSecret && (
+          {!isLoading && clientSecret && stripeInstance && !stripeError && (
             <div className="mt-4 pt-4 border-t border-zinc-800">
               <h3 className="text-xs font-semibold text-white mb-2">Por que adicionar agora?</h3>
               <div className="space-y-2 text-xs text-zinc-400">
