@@ -54,7 +54,7 @@ export default function UsersManagementPage() {
   const [blockModal, setBlockModal] = useState<{ show: boolean; userId: string; email: string } | null>(null);
   const [blockReason, setBlockReason] = useState('');
   const [planChangeModal, setPlanChangeModal] = useState<{ userId: string; email: string; currentPlan: string } | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy'>('starter');
+  const [selectedPlan, setSelectedPlan] = useState<'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy'>('starter');
   const [planChangeMode, setPlanChangeMode] = useState<'courtesy' | 'recurring'>('courtesy');
   const [sendEmail, setSendEmail] = useState(false);
   const [planChangeLoading, setPlanChangeLoading] = useState(false);
@@ -63,10 +63,17 @@ export default function UsersManagementPage() {
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [userActivities, setUserActivities] = useState<Record<string, UserActivity>>({});
 
-  const loadUsers = useCallback(async () => {
+  const loadUsers = useCallback(async (searchQuery?: string, planFilter?: string, statusFilter?: string) => {
     try {
       setLoading(true);
-      const res = await fetch('/api/admin/users');
+      
+      // Construir query params para busca server-side
+      const params = new URLSearchParams();
+      if (searchQuery) params.set('search', searchQuery);
+      if (planFilter && planFilter !== 'all') params.set('plan', planFilter);
+      if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+      
+      const res = await fetch(`/api/admin/users?${params.toString()}`);
       if (res.status === 403) {
         router.push('/dashboard');
         return;
@@ -88,9 +95,15 @@ export default function UsersManagementPage() {
     loadUsers();
   }, [loadUsers]);
 
-  // Filtrar usuários
+  // Filtrar usuários (busca local adicional para refinamento rápido)
   const filteredUsers = users.filter(u => {
-    const matchSearch = !search || u.email.toLowerCase().includes(search.toLowerCase()) || u.name?.toLowerCase().includes(search.toLowerCase());
+    // Busca livre: email, nome, id, plano
+    const searchLower = search.toLowerCase();
+    const matchSearch = !search || 
+      u.email?.toLowerCase().includes(searchLower) || 
+      u.name?.toLowerCase().includes(searchLower) ||
+      u.id?.toLowerCase().includes(searchLower) ||
+      u.plan?.toLowerCase().includes(searchLower);
     const matchPlan = filterPlan === 'all' || u.plan === filterPlan;
     const matchStatus = filterStatus === 'all' || 
       (filterStatus === 'active' && !u.is_blocked) ||
@@ -261,7 +274,7 @@ export default function UsersManagementPage() {
             </div>
           </div>
           <button
-            onClick={loadUsers}
+            onClick={() => loadUsers()}
             className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition"
           >
             <RefreshCw size={18} className="text-zinc-400" />
@@ -299,7 +312,7 @@ export default function UsersManagementPage() {
                 <Search className="absolute left-3 top-3 text-zinc-500" size={18} />
                 <input
                   type="text"
-                  placeholder="Buscar por email..."
+                  placeholder="Buscar por email, nome, ID..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-lg pl-10 pr-4 py-2.5 text-sm focus:border-blue-500 outline-none transition"
@@ -730,6 +743,7 @@ export default function UsersManagementPage() {
                   onChange={(e) => setSelectedPlan(e.target.value as any)}
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm focus:border-blue-500 outline-none"
                 >
+                  <option value="free">Free</option>
                   <option value="starter">Starter</option>
                   <option value="pro">Pro</option>
                   <option value="studio">Studio</option>

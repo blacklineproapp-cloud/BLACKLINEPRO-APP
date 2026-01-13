@@ -19,14 +19,15 @@ const topographicModel = genAI.getGenerativeModel({
 });
 
 
-// Modelo para LINHAS - SIMPLICIDADE E LIMPEZA
-// Parâmetros mais restritivos para manter simplicidade
-// topP 0.08 = moderado - simples mas funcional
-// topK 4 = limitado - menos variação = mais limpo
+// Modelo para LINHAS - MÁXIMA FIDELIDADE À IMAGEM ORIGINAL
+// Parâmetros ULTRA RESTRITIVOS para garantir que NÃO altere a imagem
+// temperature 0 = determinístico, sem criatividade
+// topP 0.05 = ultra restritivo - só escolhe opções mais prováveis
+// topK 1 = apenas 1 token - máxima fidelidade, zero variação
 const linesModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
-    temperature: 0,    // Determinístico - fidelidade 100% ao original
+    temperature: 0,    // ZERO criatividade - fidelidade absoluta
     topP: 0.15,        // Máxima riqueza - captura micro-detalhes e variações tonais
     topK: 10,          // Top 10 tokens - permite 7 níveis de profundidade distintos
   },

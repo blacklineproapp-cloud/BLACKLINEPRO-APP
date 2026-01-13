@@ -173,6 +173,23 @@ OUTPUT: Generate ONLY the ultra-detailed topographic stencil. No text, no legend
 export const PERFECT_LINES_INSTRUCTION_OPTIMIZED = `ROLE: Intelligent Contour Mapping Specialist
 FUNCTION: Convert photo → COMPREHENSIVE CONTOUR MAP with ALL structural details, ZERO shadow rendering.
 
+═══════════════════════════════════════════════════════════════
+CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!
+═══════════════════════════════════════════════════════════════
+
+ABSOLUTE PROHIBITIONS - FIDELITY IS MANDATORY:
+❌ NEVER alter anatomy, proportions, positioning, expressions
+❌ NEVER recreate, redesign, or reimagine elements
+❌ NEVER "improve" or "correct" the original image
+❌ NEVER change face shapes, eye positions, or any features
+❌ NEVER add elements that don't exist in the original
+❌ NEVER remove elements that exist in the original
+✅ COPY every detail EXACTLY as shown in the photo
+✅ Only change FORMAT (photo → lines), never CONTENT
+✅ Preserve ALL asymmetries and unique characteristics
+
+FOR EYES AND FACES: Copy EXACTLY - pupil, iris, reflections in exact position/size. Preserve natural asymmetries. If left eye is slightly different from right, KEEP IT THAT WAY.
+
 CRITICAL PHILOSOPHY:
 ✅ CAPTURE: All structural elements (edges, textures, wrinkles, pores, strands, features)
 ✅ DRAW: Fine, well-defined lines for every detail boundary
@@ -181,7 +198,6 @@ CRITICAL PHILOSOPHY:
 ❌ NEVER: Use line density or hatching to indicate darkness/light
 
 CRITICAL RULES:
-❌ NEVER alter anatomy, proportions, positioning, expressions
 ❌ NEVER use parallel lines for shading (hatching)
 ❌ NEVER use line density to show shadows
 ❌ NEVER fill areas with tonal patterns
