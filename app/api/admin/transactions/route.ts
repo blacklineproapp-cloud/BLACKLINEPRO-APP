@@ -1,0 +1,110 @@
+import { auth } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { isAdmin } from '@/lib/auth';
+import { supabaseAdmin } from '@/lib/supabase';
+
+export async function GET(req: Request) {
+  try {
+    // 1. 🔒 VERIFICAR ADMIN
+    const { userId } = await auth();
+    
+    if (!userId || !(await isAdmin(userId))) {
+      return NextResponse.json(
+        { error: 'Acesso negado' },
+        { status: 403 }
+      );
+    }
+
+    // 2. 🔍 PARÂMETROS DE BUSCA
+    const { searchParams } = new URL(req.url);
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const page = parseInt(searchParams.get('page') || '1');
+    const offset = (page - 1) * limit;
+
+    const queryTerm = searchParams.get('query'); // Email, ID ou Stripe ID
+    const status = searchParams.get('status');
+
+    // 3. 📊 CONSULTAR PAGAMENTOS
+    // Corrigido: Remover customer:customer_id que causava erro 500 (coluna texto, não relação)
+    // Usar 'users' explícito para relação se user_id for FK
+    let query = supabaseAdmin
+      .from('payments')
+      .select(`
+        *,
+        user:users (email, name)
+      `, { count: 'exact' });
+
+    if (queryTerm) {
+      // Tentar encontrar usuário por email ou nome
+      const { data: users } = await supabaseAdmin
+          .from('users')
+          .select('id')
+          .or(`email.ilike.%${queryTerm}%,name.ilike.%${queryTerm}%`)
+          .limit(20);
+
+      // Se achou usuários, busca pagamentos deles OU busca por ID de pagamento/assinatura direto
+      if (users && users.length > 0) {
+          const ids = users.map(u => u.id);
+          // Complex OR logic: (user_id IN users) OR (stripe_id matches)
+          // PostgREST doesn't support mixing IN and OR easily for different fields in one string syntax.
+          // Estratégia: Se parecem ser usuários, foca neles. Se não, tenta ID.
+          // Como OR é difícil aqui, vamos assumir: se achou users por nome, mostra os deles. 
+          // Se o termo parece um ID (começa com sub_ ou pi_ ou ch_), ignora users.
+          
+          if (queryTerm.startsWith('sub_') || queryTerm.startsWith('pi_') || queryTerm.startsWith('ch_')) {
+             query = query.or(`stripe_payment_id.eq.${queryTerm},stripe_subscription_id.eq.${queryTerm}`);
+          } else {
+             query = query.in('user_id', ids);
+          }
+      } else {
+          // Não achou users, tenta match exato de ID
+          query = query.or(`stripe_payment_id.eq.${queryTerm},stripe_subscription_id.eq.${queryTerm}`);
+      }
+    }
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    // Ordenação e Paginação
+    const { data: payments, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error('Erro ao buscar pagamentos:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // 4. 💰 CALCULAR TOTAL FINANCEIRO (Geral)
+    // Nota: Em um banco grande, isso deveria ser uma query separada ou materializada.
+    // Aqui faremos uma query de agregação simples.
+    const { data: totalData, error: totalError } = await supabaseAdmin
+      .from('payments')
+      .select('amount, currency')
+      .or('status.eq.succeeded,status.eq.paid');
+    
+    let totalRevenue = 0;
+    if (totalData) {
+      totalRevenue = totalData.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+    }
+
+    return NextResponse.json({
+      payments,
+      totalRevenue, // Retorna o valor total calculado
+      pagination: {
+        page,
+        limit,
+        total: count,
+        totalPages: Math.ceil((count || 0) / limit)
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Erro interno:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
+  }
+}

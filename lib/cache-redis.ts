@@ -194,7 +194,39 @@ export async function getOrSetCache<T>(
   });
 
   return data;
+  return data;
 }
+
+/**
+ * Define um valor no cache explicitamente
+ */
+export async function setCache<T>(
+  key: string,
+  data: T,
+  options: CacheOptions = {}
+): Promise<void> {
+  const { ttl = 300000, namespace } = options;
+  const fullKey = namespace ? `${namespace}:${key}` : key;
+
+  if (redisClient) {
+    try {
+      await redisClient.setex(fullKey, Math.floor(ttl / 1000), JSON.stringify(data));
+      console.log(`✅ [Redis] Cache SET: ${fullKey}`);
+      return;
+    } catch (error) {
+      console.error(`[Redis] Erro ao definir cache:`, error);
+    }
+  }
+
+  // Memory fallback
+  memoryCache.set(fullKey, {
+    data,
+    expires: Date.now() + ttl,
+    tags: options.tags,
+  });
+  console.log(`✅ [Memory] Cache SET: ${fullKey}`);
+}
+
 
 /**
  * Invalida uma entrada específica do cache

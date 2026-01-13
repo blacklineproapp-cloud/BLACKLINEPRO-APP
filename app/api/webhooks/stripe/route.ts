@@ -267,7 +267,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   // 1. Buscar usuário
   const { data: user } = await supabaseAdmin
     .from('users')
-    .select('id, email, name')
+    .select('id, email, name, is_blocked')
     .eq('clerk_id', clerkId)
     .single();
 
@@ -340,6 +340,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             subscriptionStatus: subscription.status,
             adminId: undefined // Webhook não tem admin
           });
+
+          // 🆕 GARANTIA DE DESBLOQUEIO: Se o usuário estava bloqueado por cortesia expirada, liberar agora.
+          // O activateUserAtomic pode não limpar is_blocked dependendo da versão do RPC.
+          if (user.is_blocked) {
+             console.log('[Webhook] 🔓 Desbloqueando usuário após pagamento confirmado');
+             await supabaseAdmin.from('users').update({ 
+               is_blocked: false,
+               blocked_reason: null,
+               blocked_at: null 
+             }).eq('id', user.id);
+          }
 
           console.log(`[Webhook] ✅ Ativação atômica: ${result.message}`);
 

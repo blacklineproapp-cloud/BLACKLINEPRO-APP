@@ -5,7 +5,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Shield, Users, Gift, Zap, HelpCircle, LayoutGrid, Menu, X } from 'lucide-react';
+import { Shield, Users, Gift, Zap, HelpCircle, LayoutGrid, Menu, X, CreditCard, Image as ImageIcon, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 // Carregar UserButton apenas no cliente
@@ -97,7 +97,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500/30">
       
-      {/* 📱 Mobile Menu */}
+      {/* 📱 Mobile Menu - Expanded Drawer */}
       {isMenuOpen && (
         <>
           <div className="md:hidden fixed inset-0 z-[55]" onClick={() => setIsMenuOpen(false)} />
@@ -115,7 +115,7 @@ export default function AdminLayout({
                </div>
             </div>
 
-            <div className="p-1.5 flex flex-col gap-0.5">
+            <div className="p-1.5 flex flex-col gap-0.5 max-h-[60vh] overflow-y-auto">
                <Link 
                  href="/dashboard" 
                  onClick={() => setIsMenuOpen(false)} 
@@ -123,6 +123,63 @@ export default function AdminLayout({
                >
                   <LayoutGrid size={16} className="text-zinc-400" />
                   <span className="text-xs text-zinc-300 font-medium">Meu Dashboard</span>
+               </Link>
+
+               <div className="h-px bg-zinc-800 my-1" />
+
+               {/* Mobile Only Menu Items */}
+               <Link 
+                 href="/admin/courtesy" 
+                 onClick={() => setIsMenuOpen(false)} 
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/courtesy') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+               >
+                  <Gift size={16} className={pathname?.startsWith('/admin/courtesy') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <span className="text-xs font-medium">Cortesia</span>
+               </Link>
+
+               <Link 
+                 href="/admin/credits" 
+                 onClick={() => setIsMenuOpen(false)} 
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/credits') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+               >
+                  <Zap size={16} className={pathname?.startsWith('/admin/credits') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <span className="text-xs font-medium">Créditos</span>
+               </Link>
+
+               <Link 
+                 href="/admin/audit" 
+                 onClick={() => setIsMenuOpen(false)} 
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/audit') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+               >
+                  <Shield size={16} className={pathname?.startsWith('/admin/audit') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <span className="text-xs font-medium">Auditoria</span>
+               </Link>
+
+               <Link 
+                 href="/admin/generations" 
+                 onClick={() => setIsMenuOpen(false)} 
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/generations') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+               >
+                  <ImageIcon size={16} className={pathname?.startsWith('/admin/generations') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <span className="text-xs font-medium">Galeria</span>
+               </Link>
+
+               <Link 
+                 href="/admin/settings" 
+                 onClick={() => setIsMenuOpen(false)} 
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/settings') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+               >
+                  <Settings size={16} className={pathname?.startsWith('/admin/settings') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <span className="text-xs font-medium">Configurações</span>
+               </Link>
+
+               <Link 
+                 href="/admin/suporte" 
+                 onClick={() => setIsMenuOpen(false)} 
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/suporte') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+               >
+                  <HelpCircle size={16} className={pathname?.startsWith('/admin/suporte') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <span className="text-xs font-medium">Suporte</span>
                </Link>
 
                <div className="h-px bg-zinc-800 my-1" />
@@ -142,13 +199,14 @@ export default function AdminLayout({
       )}
 
       {/* Sidebar / Nav */}
-      <nav className="fixed bottom-0 left-0 w-full md:w-20 md:h-screen bg-zinc-900/80 backdrop-blur-xl border-t md:border-t-0 md:border-r border-zinc-800/50 z-50 flex md:flex-col items-center justify-between px-2 md:px-0 pb-safe md:pt-10 md:gap-10">
+      <nav className="fixed bottom-0 left-0 w-full md:w-20 md:h-screen bg-zinc-900/80 backdrop-blur-xl border-t md:border-t-0 md:border-r border-zinc-800/50 z-50 flex md:flex-col items-center justify-around md:justify-start px-2 md:px-0 pb-safe md:pt-10 md:gap-2">
         
         {/* Logo - Desktop only */}
         <div className="hidden md:flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl mb-4 shadow-lg shadow-purple-900/50">
           <Shield size={28} className="text-white" />
         </div>
 
+        {/* MOBILE: Only show Home, Users, Finance, Menu */}
         <NavItem 
           href="/admin"
           active={pathname === '/admin'} 
@@ -161,25 +219,55 @@ export default function AdminLayout({
           icon={<Users size={24} />} 
           label="Usuários" 
         />
+        <NavItem
+          href="/admin/finance"
+          active={pathname?.startsWith('/admin/finance')}
+          icon={<CreditCard size={24} />}
+          label="Financeiro"
+        />
+
+        {/* Desktop Only Items - Hidden on Mobile */}
         <NavItem 
           href="/admin/courtesy"
           active={pathname?.startsWith('/admin/courtesy')} 
           icon={<Gift size={24} />} 
-          label="Cortesia" 
+          label="Cortesia"
+          className="hidden md:flex"
         />
         <NavItem
           href="/admin/credits"
           active={pathname?.startsWith('/admin/credits')}
           icon={<Zap size={24} />}
           label="Créditos"
+          className="hidden md:flex"
         />
-
-        {/* Desktop Only Items */}
+        <NavItem
+          href="/admin/audit"
+          active={pathname?.startsWith('/admin/audit')}
+          icon={<Shield size={24} />}
+          label="Auditoria"
+          className="hidden md:flex"
+        />
+        <NavItem
+          href="/admin/generations"
+          active={pathname?.startsWith('/admin/generations')}
+          icon={<ImageIcon size={24} />}
+          label="Galeria"
+          className="hidden md:flex"
+        />
+        <NavItem
+          href="/admin/settings"
+          active={pathname?.startsWith('/admin/settings')}
+          icon={<Settings size={24} />}
+          label="Config"
+          className="hidden md:flex"
+        />
         <NavItem
           href="/admin/suporte"
           active={pathname?.startsWith('/admin/suporte')}
           icon={<HelpCircle size={24} />}
           label="Suporte"
+          className="hidden md:flex"
         />
 
         {/* Desktop User Section */}

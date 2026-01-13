@@ -105,10 +105,14 @@ export default function UsersManagementPage() {
   // Ações de usuário
   const handleUserAction = async (action: string, userId: string, data?: any) => {
     try {
-      const res = await fetch(`/api/admin/users/${action}`, {
+      const res = await fetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, ...data })
+        body: JSON.stringify({ 
+          action, 
+          targetUserId: userId,
+          ...data 
+        })
       });
 
       if (!res.ok) {
