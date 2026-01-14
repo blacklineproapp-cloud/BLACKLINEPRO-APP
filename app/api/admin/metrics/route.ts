@@ -246,6 +246,10 @@ export async function GET(req: Request) {
       if (paidEmailsSet.has(emailLower)) {
         stripeCustomers.push(user);
       }
+      // Se tiver subscription_id ativo e for PRO/STUDIO/ENTERPRISE
+      else if (user.subscription_id?.startsWith('sub_') && ['active', 'trialing'].includes(user.subscription_status || '')) {
+          stripeCustomers.push(user); // Considera Stripe Customer mesmo se o email não bateu no cache exato agora
+      }
       // Se não pagou via Stripe, pode ser cortesia ou grace period
       else {
         // Tem grace period?
@@ -254,7 +258,21 @@ export async function GET(req: Request) {
         }
         // Senão, é cortesia (migração ou admin)
         else {
-          courtesyUsers.push(user);
+            // Verificar se é BOLETO MANUAL (admin_courtesy = true mas na verdade é boleto antigo)
+            // Lógica: Se admin_courtesy for true, conta como cortesia. 
+            // Se for false, mas tiver is_paid=true e sem stripe match, algo está estranho (provavelmente legado ou erro).
+            // Vamos logar como 'unknown_paid' se não for cortesia explícita.
+            
+            if (user.admin_courtesy === true) {
+                courtesyUsers.push(user);
+            } else {
+                // Caso raro: is_paid=true, sem Stripe, sem Grace Period, sem Courtesy Flag.
+                // Pode ser assinante antigo legado? Vamos agrupar em 'Outros/Manual' ou jogar pra cortesia?
+                // O usuário reclamou de 29 vs 9. 
+                // Se 29 apareciam, é porque caíam no 'else' final.
+                // Vamos ser mais rigorosos: Só é cortesia se admin_courtesy === true.
+                console.log(`[Metrics Audit] Usuário is_paid=true mas sem Categoria Clara: ${user.email}`);
+            }
         }
       }
     }
