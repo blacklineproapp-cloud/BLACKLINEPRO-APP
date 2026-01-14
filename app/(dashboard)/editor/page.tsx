@@ -915,8 +915,8 @@ export default function EditorPage() {
             bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-800
             transition-transform duration-300 z-40 shadow-2xl lg:shadow-none
             rounded-t-2xl lg:rounded-none
+            max-h-[60vh] lg:max-h-none
           `}
-          style={{ maxHeight: '60vh' }}
         >
           {/* Drag handle - Clicável para abrir/fechar */}
           <div
@@ -926,14 +926,10 @@ export default function EditorPage() {
             <div className="w-12 h-1 bg-zinc-600 rounded-full"></div>
           </div>
 
-          {/* Container scrollável - COM SCROLL FORÇADO */}
+          {/* Container scrollável - MOBILE ONLY */}
           <div 
-            style={{ 
-              maxHeight: 'calc(60vh - 40px)', 
-              overflowY: 'scroll',
-              WebkitOverflowScrolling: 'touch'
-            }}
-            className="lg:max-h-none lg:overflow-visible"
+            className="max-h-[calc(60vh-40px)] lg:max-h-none overflow-y-auto lg:overflow-visible overscroll-contain"
+            style={{ WebkitOverflowScrolling: 'touch' }}
           >
             <div className="p-2 lg:p-5 space-y-1.5 lg:space-y-3 pb-24 lg:pb-5">
 

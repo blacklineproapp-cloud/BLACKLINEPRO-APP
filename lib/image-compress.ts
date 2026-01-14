@@ -4,6 +4,9 @@
  * 
  * ⚠️ IMPORTANTE: Stencils DEVEM permanecer em PNG (lossless)
  * JPEG corrompe imagens preto/branco com detalhes finos!
+ * 
+ * 🔧 LIMITE VERCEL: 4.5MB body máximo
+ * Usamos 2MB para ter margem para headers e metadados
  */
 
 /**
@@ -13,12 +16,14 @@
  * Nunca converte para JPEG (causa corrupção de stencils!)
  * 
  * @param base64 - Imagem em base64 (data:image/...;base64,...)
- * @param maxSizeKB - Tamanho máximo em KB (padrão: 2500 = 2.5MB)
+ * @param maxSizeKB - Tamanho máximo em KB (padrão: 2000 = 2MB)
+ * @param depth - Profundidade de recursão (interno, não usar)
  * @returns Promise<string> - Imagem comprimida em base64 (sempre PNG)
  */
 export async function compressImage(
   base64: string,
-  maxSizeKB: number = 2500
+  maxSizeKB: number = 2000,
+  depth: number = 0
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
@@ -86,14 +91,18 @@ export async function compressImage(
           const compressed = canvas.toDataURL('image/png');
           const compressedSizeKB = Math.round((compressed.length * 0.75) / 1024);
 
-          console.log('[Compress] ✅ Compressão PNG concluída:', compressedSizeKB, 'KB');
+          console.log('[Compress] ✅ Compressão PNG concluída:', compressedSizeKB, 'KB (tentativa', depth + 1, ')');
           
-          // Se ainda muito grande, tentar reduzir mais (recursivo)
-          if (compressedSizeKB > maxSizeKB && targetWidth > minDimension && targetHeight > minDimension) {
-            console.log('[Compress] Ainda grande, tentando reduzir mais...');
+          // Se ainda muito grande, tentar reduzir mais (recursivo com limite)
+          const MAX_RECURSION = 5;
+          if (compressedSizeKB > maxSizeKB && targetWidth > minDimension && targetHeight > minDimension && depth < MAX_RECURSION) {
+            console.log('[Compress] Ainda grande, tentando reduzir mais... (tentativa', depth + 2, ')');
             // Chamar recursivamente com a imagem já reduzida
-            compressImage(compressed, maxSizeKB).then(resolve).catch(reject);
+            compressImage(compressed, maxSizeKB, depth + 1).then(resolve).catch(reject);
           } else {
+            if (compressedSizeKB > maxSizeKB) {
+              console.warn('[Compress] ⚠️ Não foi possível reduzir abaixo de', maxSizeKB, 'KB. Tamanho final:', compressedSizeKB, 'KB');
+            }
             resolve(compressed);
           }
 
@@ -122,11 +131,11 @@ export async function compressImage(
 export async function compressIfNeeded(base64: string): Promise<string> {
   const sizeKB = Math.round((base64.length * 0.75) / 1024);
 
-  // 🔧 CORREÇÃO: Limite mais conservador (2.5MB em vez de 3MB)
-  // Railway/Vercel têm limite de ~4.5MB, mas deixamos margem para headers
-  if (sizeKB > 2500) {
-    console.log('[Compress] Imagem muito grande (' + sizeKB + 'KB), comprimindo...');
-    return await compressImage(base64, 2500);
+  // 🔧 Limite de 2MB para ter margem com o limite Vercel de 4.5MB
+  // (precisa margem para headers, metadados e múltiplas imagens na request)
+  if (sizeKB > 2000) {
+    console.log('[Compress] Imagem muito grande (' + sizeKB + 'KB), comprimindo para < 2MB...');
+    return await compressImage(base64, 2000);
   }
 
   return base64;

@@ -23,6 +23,7 @@ export async function GET(req: Request) {
 
     const queryTerm = searchParams.get('query'); // Email, ID ou Stripe ID
     const status = searchParams.get('status');
+    const method = searchParams.get('method');
 
     // 3. 📊 CONSULTAR PAGAMENTOS
     // Corrigido: Remover customer:customer_id que causava erro 500 (coluna texto, não relação)
@@ -64,6 +65,10 @@ export async function GET(req: Request) {
 
     if (status) {
       query = query.eq('status', status);
+    }
+
+    if (method) {
+      query = query.eq('payment_method', method);
     }
 
     // Ordenação e Paginação

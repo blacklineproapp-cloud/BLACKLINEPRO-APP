@@ -152,12 +152,23 @@ export async function POST(req: Request) {
         break;
 
       case 'checkout.session.async_payment_succeeded':
-        await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+        // 🔧 BOLETO PAGO: Usar handler dedicado que FORÇA isPaid=true
+        await handleAsyncPaymentSucceeded(event.data.object as Stripe.Checkout.Session);
         break;
 
       case 'checkout.session.async_payment_failed':
         // Log ou notificação de falha em pagamento assíncrono (Boleto não pago)
         console.warn(`[Webhook] ❌ Pagamento assíncrono falhou: ${event.id}`);
+        break;
+
+      case 'invoice.created':
+        // 🎫 BOLETO: Finalizar invoice para gerar boleto
+        await handleInvoiceCreated(event.data.object as Stripe.Invoice);
+        break;
+
+      case 'invoice.finalized':
+        // 🎫 BOLETO: Invoice finalizada, boleto está pronto
+        await handleInvoiceFinalized(event.data.object as Stripe.Invoice);
         break;
 
       case 'invoice.payment_succeeded':
@@ -400,6 +411,135 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // TODO: Enviar email de boas-vindas
     // await sendWelcomeEmail(user.email, user.name);
   }
+}
+
+/**
+ * checkout.session.async_payment_succeeded
+ * Quando BOLETO é compensado (pagamento assíncrono confirmado)
+ * 
+ * CRÍTICO: Este evento é disparado APÓS o boleto ser pago no banco.
+ * Precisamos FORÇAR isPaid=true pois o payment_status da session original
+ * pode ainda estar como 'unpaid' dependendo do timing.
+ */
+async function handleAsyncPaymentSucceeded(session: Stripe.Checkout.Session) {
+  console.log(`[Webhook] 🎉 BOLETO PAGO! Checkout ${session.id}`);
+  console.log(`  - payment_status original: "${session.payment_status}"`);
+  console.log(`  - payment_method_types: ${JSON.stringify(session.payment_method_types)}`);
+
+  const clerkId = session.client_reference_id || session.metadata?.clerk_id;
+  const plan = session.metadata?.plan as 'starter' | 'pro' | 'studio' | 'enterprise' | undefined;
+
+  if (!clerkId) {
+    throw new Error('Async payment session sem clerk_id');
+  }
+
+  // 1. Buscar usuário
+  const { data: user } = await supabaseAdmin
+    .from('users')
+    .select('id, email, name, is_blocked')
+    .eq('clerk_id', clerkId)
+    .single();
+
+  if (!user) {
+    throw new Error(`Usuário não encontrado: ${clerkId}`);
+  }
+
+  // 2. Processar subscription (se existir)
+  if (session.subscription) {
+    const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
+
+    console.log(`[Webhook] ✅ Ativando usuário ${user.email} via BOLETO PAGO`);
+
+    // 🔧 FORÇAR isPaid = true (independente do session.payment_status)
+    const planType = plan || 'starter';
+    
+    try {
+      const result = await activateUserAtomic(user.id, planType, {
+        isPaid: true, // SEMPRE true para async_payment_succeeded
+        toolsUnlocked: planType === 'pro' || planType === 'studio' || planType === 'enterprise',
+        subscriptionStatus: 'active',
+        adminId: undefined
+      });
+
+      // Desbloquear se estava bloqueado
+      if (user.is_blocked) {
+        console.log('[Webhook] 🔓 Desbloqueando usuário após boleto pago');
+        await supabaseAdmin.from('users').update({ 
+          is_blocked: false,
+          blocked_reason: null,
+          blocked_at: null 
+        }).eq('id', user.id);
+      }
+
+      // Atualizar subscription_id e expires_at
+      await supabaseAdmin.from('users').update({
+        subscription_id: subscription.id,
+        subscription_status: 'active',
+        subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString()
+      }).eq('id', user.id);
+
+      console.log(`[Webhook] ✅ BOLETO ativação: ${result.message}`);
+
+    } catch (activationError: any) {
+      console.error('[Webhook] ❌ Erro na ativação via boleto:', activationError);
+      
+      // Fallback: Atualizar manualmente
+      await supabaseAdmin
+        .from('users')
+        .update({
+          plan: planType,
+          is_paid: true,
+          subscription_status: 'active',
+          subscription_id: subscription.id,
+          subscription_expires_at: new Date(subscription.current_period_end * 1000).toISOString(),
+          tools_unlocked: planType === 'pro' || planType === 'studio' || planType === 'enterprise',
+          is_blocked: false,
+          blocked_reason: null
+        })
+        .eq('id', user.id);
+    }
+
+    // Buscar customer para registrar pagamento
+    const customer = await CustomerService.getByUserId(user.id);
+
+    // Atualizar pagamento existente de 'pending' para 'succeeded'
+    const { data: existingPayment } = await supabaseAdmin
+      .from('payments')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (existingPayment) {
+      await supabaseAdmin
+        .from('payments')
+        .update({
+          status: 'succeeded',
+          description: `Assinatura ${planType === 'pro' ? 'Pro' : 'Starter'} (Boleto Confirmado)`
+        })
+        .eq('id', existingPayment.id);
+      
+      console.log(`[Webhook] 💰 Pagamento ${existingPayment.id} atualizado para 'succeeded'`);
+    } else {
+      // Criar novo registro de pagamento
+      await supabaseAdmin.from('payments').insert({
+        user_id: user.id,
+        customer_id: customer?.id,
+        stripe_payment_id: session.payment_intent as string,
+        stripe_subscription_id: subscription.id,
+        amount: (session.amount_total || 0) / 100,
+        currency: session.currency || 'brl',
+        status: 'succeeded',
+        payment_method: 'boleto',
+        description: `Assinatura ${planType === 'pro' ? 'Pro' : 'Starter'} (Boleto Pago)`,
+        plan_type: planType
+      });
+    }
+  }
+
+  console.log(`[Webhook] ✅ Boleto processado com sucesso para ${user.email}`);
 }
 
 /**
@@ -672,6 +812,102 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 
   // TODO: Enviar email de confirmação de pagamento
   // await sendPaymentConfirmationEmail(customer.email, customer.nome, invoice);
+}
+
+/**
+ * invoice.created
+ * Quando invoice é criada (geralmente 3 dias antes do vencimento)
+ * Para boletos, precisamos FINALIZAR a invoice para gerar o boleto
+ */
+async function handleInvoiceCreated(invoice: Stripe.Invoice) {
+  console.log(`[Webhook] 📄 Invoice criada: ${invoice.id}`);
+  console.log(`  - status: ${invoice.status}`);
+  console.log(`  - collection_method: ${invoice.collection_method}`);
+  console.log(`  - subscription: ${invoice.subscription}`);
+
+  // Se invoice está como draft, finalizar para gerar boleto
+  if (invoice.status === 'draft' && invoice.subscription) {
+    try {
+      console.log(`[Webhook] 🎫 Finalizando invoice ${invoice.id} para gerar boleto...`);
+      
+      await stripe.invoices.finalizeInvoice(invoice.id, {
+        auto_advance: true // Permite que o Stripe tente cobrar automaticamente
+      });
+
+      console.log(`[Webhook] ✅ Invoice ${invoice.id} finalizada com sucesso`);
+
+    } catch (finalizeError: any) {
+      // Se já estiver finalizada, apenas logar
+      if (finalizeError.code === 'invoice_not_editable') {
+        console.log(`[Webhook] ℹ️ Invoice ${invoice.id} já estava finalizada`);
+      } else {
+        console.error(`[Webhook] ❌ Erro ao finalizar invoice:`, finalizeError.message);
+        throw finalizeError;
+      }
+    }
+  }
+}
+
+/**
+ * invoice.finalized
+ * Quando invoice é finalizada e boleto está pronto
+ * Aqui enviamos notificação ao usuário com link do boleto
+ */
+async function handleInvoiceFinalized(invoice: Stripe.Invoice) {
+  console.log(`[Webhook] 🎫 Invoice finalizada: ${invoice.id}`);
+  console.log(`  - hosted_invoice_url: ${invoice.hosted_invoice_url}`);
+
+  // Verificar se tem boleto
+  const paymentSettings = invoice.payment_settings;
+  const hasBoleto = paymentSettings?.payment_method_types?.includes('boleto');
+
+  if (!hasBoleto) {
+    console.log(`[Webhook] ℹ️ Invoice ${invoice.id} não é boleto, ignorando`);
+    return;
+  }
+
+  // Buscar customer
+  const customer = await CustomerService.getByStripeId(invoice.customer as string);
+
+  if (!customer) {
+    console.warn(`[Webhook] ⚠️ Customer não encontrado para invoice ${invoice.id}`);
+    return;
+  }
+
+  // Buscar dados do usuário
+  const { data: user } = await supabaseAdmin
+    .from('users')
+    .select('id, email, name')
+    .eq('id', customer.user_id)
+    .single();
+
+  if (!user) {
+    console.warn(`[Webhook] ⚠️ Usuário não encontrado para customer ${customer.id}`);
+    return;
+  }
+
+  // Inserir pagamento pendente no banco
+  await supabaseAdmin.from('payments').upsert({
+    user_id: user.id,
+    customer_id: customer.id,
+    stripe_payment_id: invoice.payment_intent as string || `inv_${invoice.id}`,
+    stripe_invoice_id: invoice.id,
+    stripe_subscription_id: invoice.subscription as string,
+    amount: (invoice.amount_due || 0) / 100,
+    currency: invoice.currency?.toUpperCase() || 'BRL',
+    status: 'pending',
+    payment_method: 'boleto',
+    description: `Boleto - Aguardando pagamento`,
+    invoice_url: invoice.hosted_invoice_url || undefined
+  }, {
+    onConflict: 'stripe_payment_id'
+  });
+
+  console.log(`[Webhook] ✅ Boleto disponível para ${user.email}`);
+  console.log(`  - Link: ${invoice.hosted_invoice_url}`);
+
+  // TODO: Enviar email com link do boleto
+  // await sendBoletoEmail(user.email, user.name, invoice.hosted_invoice_url);
 }
 
 /**

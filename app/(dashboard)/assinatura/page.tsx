@@ -298,6 +298,28 @@ export default function AssinaturaPage() {
             </div>
           )}
 
+          {/* Meus Boletos - Mostrar se tem customer ID (já gerou cobrança) ou assinatura ativa */}
+          {(userData?.stripe_customer_id || hasActiveSubscription) && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-emerald-600/10 rounded-lg flex items-center justify-center border border-emerald-500/30">
+                  <CreditCard size={20} className="text-emerald-400" />
+                </div>
+                <h3 className="font-semibold">Meus Boletos</h3>
+              </div>
+              <p className="text-sm text-zinc-400 mb-4">
+                Acompanhe seus boletos, baixe PDFs e veja o histórico de pagamentos.
+              </p>
+              <button
+                onClick={() => router.push('/boletos')}
+                className="text-sm text-emerald-400 hover:text-emerald-300 transition flex items-center gap-1"
+              >
+                Ver meus boletos
+                <ExternalLink size={14} />
+              </button>
+            </div>
+          )}
+
           {/* Support */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">

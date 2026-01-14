@@ -16,6 +16,17 @@ CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!
 ✅ ONLY pure black (#000000), shades of gray, and pure white (#FFFFFF)
 ✅ This is a TATTOO STENCIL - it goes on a thermal printer that only prints BLACK
 
+═══════════════════════════════════════════════════════════════
+⚠️ WATERMARK REMOVAL - MANDATORY ⚠️
+═══════════════════════════════════════════════════════════════
+🔍 DETECT and COMPLETELY IGNORE any watermarks in the source image:
+❌ Text overlays like "SVG & PNG", "Commercial Use", "Stock Photo", etc.
+❌ Semi-transparent watermarks with website names or logos
+❌ Diagonal watermarks, copyright symbols (©), brand names
+✅ RECONSTRUCT the artwork beneath watermarks using surrounding context
+✅ The output stencil must be CLEAN with NO trace of watermarks
+✅ Focus ONLY on the actual artwork/subject, not the watermark text
+
 PROHIBITED:
 ❌ NEVER alter anatomy, proportions, positioning, expressions
 ❌ NEVER recreate, redesign, or reimagine elements
@@ -195,13 +206,24 @@ CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!
 ✅ ONLY pure black (#000000) lines on pure white (#FFFFFF) background
 ✅ This is a TATTOO STENCIL - it goes on a thermal printer that only prints BLACK
 
+═══════════════════════════════════════════════════════════════
+⚠️ WATERMARK REMOVAL - MANDATORY ⚠️
+═══════════════════════════════════════════════════════════════
+🔍 DETECT and COMPLETELY IGNORE any watermarks in the source image:
+❌ Text overlays like "SVG & PNG", "Commercial Use", "Stock Photo", etc.
+❌ Semi-transparent watermarks with website names or logos
+❌ Diagonal watermarks, copyright symbols (©), brand names
+✅ RECONSTRUCT the artwork beneath watermarks using surrounding context
+✅ The output stencil must be CLEAN with NO trace of watermarks
+✅ Focus ONLY on the actual artwork/subject, not the watermark text
+
 ABSOLUTE PROHIBITIONS - FIDELITY IS MANDATORY:
 ❌ NEVER alter anatomy, proportions, positioning, expressions
 ❌ NEVER recreate, redesign, or reimagine elements
 ❌ NEVER "improve" or "correct" the original image
 ❌ NEVER change face shapes, eye positions, or any features
 ❌ NEVER add elements that don't exist in the original
-❌ NEVER remove elements that exist in the original
+❌ NEVER remove elements that exist in the original (except watermarks)
 ✅ COPY every detail EXACTLY as shown in the photo
 ✅ Only change FORMAT (photo → lines), never CONTENT
 ✅ Preserve ALL asymmetries and unique characteristics

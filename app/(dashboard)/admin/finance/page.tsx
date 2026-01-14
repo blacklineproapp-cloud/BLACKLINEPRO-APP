@@ -29,6 +29,7 @@ export default function FinancePage() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [methodFilter, setMethodFilter] = useState(''); // Novo filtro
 
   const loadPayments = async () => {
     setLoading(true);
@@ -36,6 +37,7 @@ export default function FinancePage() {
       let url = `/api/admin/transactions?page=${page}&limit=20`;
       if (search) url += `&query=${encodeURIComponent(search)}`;
       if (statusFilter) url += `&status=${statusFilter}`;
+      if (methodFilter) url += `&method=${methodFilter}`; // Envia para API
 
       const res = await fetch(url);
       if (!res.ok) throw new Error('Erro ao carregar pagamentos');
@@ -57,7 +59,7 @@ export default function FinancePage() {
       loadPayments();
     }, 500);
     return () => clearTimeout(timeout);
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, methodFilter]); // Adicionado methodFilter
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -119,8 +121,8 @@ export default function FinancePage() {
         </div>
 
         {/* Filtros e Busca */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 mb-6 flex flex-col md:flex-row gap-4">
-          <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 px-3 py-2 rounded-lg flex-1">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 mb-6 flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 px-3 py-2 rounded-lg flex-1 w-full">
             <Search size={16} className="text-zinc-500" />
             <input
               type="text"
@@ -131,19 +133,40 @@ export default function FinancePage() {
             />
           </div>
           
-          <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 px-3 py-2 rounded-lg md:w-48">
-            <Filter size={16} className="text-zinc-500" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-transparent border-none focus:outline-none text-sm w-full text-zinc-300"
-            >
-              <option value="">Todos Status</option>
-              <option value="succeeded">Sucesso (Succeeded)</option>
-              <option value="paid">Pago</option>
-              <option value="pending">Pendente</option>
-              <option value="failed">Falhou</option>
-            </select>
+          <div className="flex gap-2 w-full md:w-auto">
+              <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 px-3 py-2 rounded-lg flex-1 md:w-48">
+                <Filter size={16} className="text-zinc-500" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="bg-transparent border-none focus:outline-none text-sm w-full text-zinc-300"
+                >
+                  <option value="">Todos Status</option>
+                  <option value="succeeded">Sucesso (Succeeded)</option>
+                  <option value="paid">Pago</option>
+                  <option value="pending">Pendente</option>
+                  <option value="failed">Falhou</option>
+                </select>
+              </div>
+
+              {/* Botão Toggle Boleto - Estilo Reforçado */}
+              <button
+                onClick={() => {
+                    const newValue = methodFilter === 'boleto' ? '' : 'boleto';
+                    setMethodFilter(newValue);
+                    console.log('Filtro Boleto alterado para:', newValue);
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all whitespace-nowrap shadow-sm ${
+                    methodFilter === 'boleto' 
+                    ? 'bg-blue-600 border-blue-500 text-white shadow-blue-900/20' 
+                    : 'bg-zinc-800 border-zinc-700 text-zinc-200 hover:bg-zinc-700 hover:border-zinc-600'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></svg>
+                    {methodFilter === 'boleto' ? 'Boletos (Ativo)' : 'Filtrar Boletos'}
+                </div>
+              </button>
           </div>
         </div>
 
@@ -193,8 +216,15 @@ export default function FinancePage() {
                            {payment.status.toUpperCase()}
                          </span>
                        </td>
-                       <td className="p-4 text-zinc-400 capitalize">
-                         {payment.payment_method}
+                       <td className="p-4 text-zinc-400">
+                         {payment.payment_method === 'boleto' ? (
+                             <span className="flex items-center gap-1.5 text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/20 w-fit">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 5v14"/><path d="M8 5v14"/><path d="M12 5v14"/><path d="M17 5v14"/><path d="M21 5v14"/></svg>
+                                 Boleto
+                             </span>
+                         ) : (
+                             <span className="capitalize">{payment.payment_method}</span>
+                         )}
                        </td>
                        <td className="p-4 font-mono text-xs text-zinc-500 truncate max-w-[120px]">
                          {payment.stripe_payment_id}
