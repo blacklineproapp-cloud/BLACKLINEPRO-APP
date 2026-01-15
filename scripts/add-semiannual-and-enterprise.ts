@@ -250,7 +250,7 @@ function displayResults(semiannual: Record<string, string>, enterprise: { produc
 // EXECUTAR SCRIPT
 // ============================================================================
 
-async function main() {
+async function runSemiannualSetup() {
   console.log('\n' + '='.repeat(70));
   console.log('🚀 SETUP CONSOLIDADO: SEMESTRAIS + ENTERPRISE');
   console.log('='.repeat(70));
@@ -288,4 +288,4 @@ async function main() {
 }
 
 // Executar
-main();
+runSemiannualSetup();
