@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
   ShieldAlert, Search, Filter, RefreshCw, Calendar, 
-  User, Database, Terminal, AlertTriangle 
+  User, Database, Terminal, AlertTriangle, CheckCircle, Lock 
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -21,38 +21,80 @@ interface AuditLog {
   created_at: string;
 }
 
+interface ReconciliationData {
+    stripeOnly: { email: string; count: number; chargeIds: string[] }[];
+    dbOnly: { email: string; plan: string }[];
+    multiPayers: { email: string; count: number }[];
+    stats: {
+        processedCharges: number;
+        uniquePayers: number;
+        dbPaidCount: number;
+    };
+}
+
 export default function AuditPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [reconciliation, setReconciliation] = useState<ReconciliationData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fixing, setFixing] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   
   // Filtros
   const [filterAction, setFilterAction] = useState('');
 
-  const loadLogs = async () => {
+  const loadData = async (forceReconcile = false) => {
     setLoading(true);
     try {
       let url = `/api/admin/audit?page=${page}&limit=20`;
       if (filterAction) url += `&action=${filterAction}`;
+      if (forceReconcile) url += `&reconcile=true`;
 
       const res = await fetch(url);
-      if (!res.ok) throw new Error('Erro ao carregar logs');
+      if (!res.ok) throw new Error('Erro ao carregar dados');
       
       const data = await res.json();
       setLogs(data.logs || []);
+      if (data.reconciliation) {
+          setReconciliation(data.reconciliation);
+      }
       setTotalPages(data.pagination.totalPages);
     } catch (error) {
       console.error(error);
-      alert('Erro ao carregar logs de auditoria');
+      alert('Erro ao carregar dados de auditoria');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadLogs();
+    loadData(true); // Carrega reconciliação na primeira vez
   }, [page, filterAction]);
+
+  const handleFixStripeOnly = async (email: string) => {
+     if (!confirm(`Deseja ativar o plano PRO para ${email} baseado no histórico do Stripe?`)) return;
+     
+     setFixing(email);
+     try {
+         const res = await fetch('/api/admin/audit', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ action: 'fix_stripe_only', email, plan: 'pro' })
+         });
+         
+         if (!res.ok) {
+             const err = await res.json();
+             throw new Error(err.error || 'Erro ao corrigir');
+         }
+         
+         alert('Usuário ativado com sucesso!');
+         loadData(true); // Recarrega tudo
+     } catch (error: any) {
+         alert(error.message);
+     } finally {
+         setFixing(null);
+     }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white p-4 lg:p-6">
@@ -65,18 +107,113 @@ export default function AuditPage() {
               <ShieldAlert size={24} className="text-red-400" />
             </div>
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold">Auditoria de Segurança</h1>
-              <p className="text-zinc-400 text-sm">Registro de ações administrativas e alterações sensíveis</p>
+              <h1 className="text-2xl lg:text-3xl font-bold">Auditoria & Reconciliação</h1>
+              <p className="text-zinc-400 text-sm">Análise de integridade financeira e ações administrativas</p>
             </div>
           </div>
           <button
-            onClick={loadLogs}
-            className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg hover:bg-zinc-800 transition"
+            onClick={() => loadData(true)}
+            className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg hover:bg-zinc-800 transition flex items-center gap-2 text-sm text-zinc-400"
           >
-            <RefreshCw size={18} className="text-zinc-400" />
+            <RefreshCw size={16} />
+            Atualizar Análise
           </button>
         </div>
 
+        {/* RECONCILIAÇÃO CARDS */}
+        {reconciliation && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {/* Card 1: Stripe Only (CRÍTICO) */}
+                <div className="bg-zinc-900/50 border border-red-900/50 rounded-xl p-6 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <AlertTriangle size={64} className="text-red-500" />
+                    </div>
+                    <div className="relative z-10">
+                        <h3 className="text-red-400 font-medium mb-1 flex items-center gap-2">
+                             <AlertTriangle size={16} />
+                             Apenas Stripe (Crítico)
+                        </h3>
+                        <p className="text-3xl font-bold text-white mb-2">{reconciliation.stripeOnly.length}</p>
+                        <p className="text-zinc-500 text-sm">Usuários que pagaram mas não estão ativos no banco.</p>
+                    </div>
+                </div>
+
+                {/* Card 2: DB Only (WARNING) */}
+                <div className="bg-zinc-900/50 border border-amber-900/50 rounded-xl p-6 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <Database size={64} className="text-amber-500" />
+                    </div>
+                    <div className="relative z-10">
+                        <h3 className="text-amber-400 font-medium mb-1 flex items-center gap-2">
+                             <Lock size={16} />
+                             Apenas Banco (Alerta)
+                        </h3>
+                        <p className="text-3xl font-bold text-white mb-2">{reconciliation.dbOnly.length}</p>
+                        <p className="text-zinc-500 text-sm">Ativos no banco sem pagamento recente no Stripe (Boletos Manuais?).</p>
+                    </div>
+                </div>
+
+                {/* Card 3: Renovações (INFO) */}
+                <div className="bg-zinc-900/50 border border-blue-900/50 rounded-xl p-6 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
+                        <RefreshCw size={64} className="text-blue-500" />
+                    </div>
+                    <div className="relative z-10">
+                        <h3 className="text-blue-400 font-medium mb-1 flex items-center gap-2">
+                             <CheckCircle size={16} />
+                             Renovações
+                        </h3>
+                        <p className="text-3xl font-bold text-white mb-2">{reconciliation.multiPayers.length}</p>
+                        <p className="text-zinc-500 text-sm">Usuários com múltiplos pagamentos confirmados.</p>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* TABELA DE DISCREPÂNCIAS (Se houver críticas) */}
+        {reconciliation && reconciliation.stripeOnly.length > 0 && (
+            <div className="mb-8">
+                <h2 className="text-xl font-bold mb-4 text-red-400 flex items-center gap-2">
+                    <AlertTriangle size={20} />
+                    Ação Necessária: Usuários Pagantes Inativos
+                </h2>
+                <div className="bg-zinc-900 border border-red-900/30 rounded-xl overflow-hidden">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-red-950/20 text-red-200">
+                            <tr>
+                                <th className="p-4">Email</th>
+                                <th className="p-4">Pagamentos</th>
+                                <th className="p-4 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-zinc-800">
+                            {reconciliation.stripeOnly.map((item, idx) => (
+                                <tr key={idx} className="hover:bg-zinc-800/30">
+                                    <td className="p-4 font-mono text-zinc-300">{item.email}</td>
+                                    <td className="p-4 text-zinc-400">{item.count} pagamentos encontrados</td>
+                                    <td className="p-4 text-right">
+                                        <button 
+                                            onClick={() => handleFixStripeOnly(item.email)}
+                                            disabled={fixing === item.email}
+                                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-lg text-white font-medium text-xs transition"
+                                        >
+                                            {fixing === item.email ? 'Ativando...' : 'Corrigir (Ativar Pro)'}
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        )}
+
+        {/* Tabela de Logs (Existente) */}
+        <h2 className="text-xl font-bold mb-4 text-zinc-200 flex items-center gap-2">
+            <Terminal size={20} />
+            Logs do Sistema
+        </h2>
+        
         {/* Filtros */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 mb-6 flex flex-wrap gap-4">
           <div className="flex items-center gap-2 bg-zinc-950 border border-zinc-800 px-3 py-2 rounded-lg flex-1">
@@ -87,6 +224,7 @@ export default function AuditPage() {
               className="bg-transparent border-none focus:outline-none text-sm w-full text-zinc-300"
             >
               <option value="">Todas as Ações</option>
+              <option value="fix_discrepancy">Correções de Auditoria</option>
               <option value="ADD_CREDITS">Adicionar Créditos</option>
               <option value="REMOVE_CREDITS">Remover Créditos</option>
               <option value="RESET_USAGE">Resetar Uso</option>
@@ -100,9 +238,9 @@ export default function AuditPage() {
         </div>
 
         {/* Tabela de Logs */}
-        {loading ? (
+        {loading && !logs.length ? (
           <div className="flex justify-center py-20">
-            <LoadingSpinner text="Carregando logs..." />
+            <LoadingSpinner text="Carregando dados..." />
           </div>
         ) : logs.length === 0 ? (
           <div className="text-center py-20 bg-zinc-900/30 border border-zinc-800/50 rounded-xl">
@@ -136,6 +274,7 @@ export default function AuditPage() {
                        </td>
                        <td className="p-4">
                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border ${
+                           log.action === 'fix_discrepancy' ? 'bg-blue-900/20 text-blue-400 border-blue-800/30' :
                            log.action.includes('DELETE') || log.action.includes('BLOCK') ? 'bg-red-900/20 text-red-400 border-red-800/30' :
                            log.action.includes('ADD') ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/30' :
                            'bg-zinc-800 text-zinc-400 border-zinc-700'
@@ -184,3 +323,4 @@ export default function AuditPage() {
     </div>
   );
 }
+

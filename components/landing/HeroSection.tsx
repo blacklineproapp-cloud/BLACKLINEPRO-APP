@@ -33,24 +33,24 @@ export default function HeroSection() {
     },
     {
       title: 'Modo Topográfico',
-      description: 'Efeito de curvas de nível para sombreamentos complexos.',
-      image: '/screenshots/topografico-after.png',
+      description: 'Mapeamento de relevo 3D para fechamentos complexos',
+      image: '/screenshots/topografico-after.jpg',
       beforeImage: '/screenshots/topografico.jpeg',
-      afterImage: '/screenshots/topografico-after.png',
+      afterImage: '/screenshots/topografico-after.jpg',
+      color: 'from-blue-500/20 to-indigo-500/20',
       icon: Map,
-      color: 'text-blue-500',
-      bg: 'blue',
+      accent: 'text-indigo-400',
       isSlider: true
     },
     {
       title: 'Linhas Perfeitas',
-      description: 'Vetorização limpa para designs minimalistas e fine line.',
+      description: 'Traços limpos e definidos prontos para decalque',
       image: '/screenshots/lines-after.png',
-      beforeImage: '/screenshots/lines-before.png',
+      beforeImage: '/screenshots/lines-before.jpg',
       afterImage: '/screenshots/lines-after.png',
+      color: 'from-violet-500/20 to-purple-500/20',
       icon: PenTool,
-      color: 'text-zinc-400',
-      bg: 'zinc',
+      accent: 'text-purple-400',
       isSlider: true
     }
   ];

@@ -6,9 +6,10 @@ import { useUser } from '@clerk/nextjs';
 import { 
   Crown, Zap, Sparkles, CreditCard, Calendar, 
   ExternalLink, Loader2, CheckCircle, XCircle,
-  ArrowLeft, Settings
+  ArrowLeft, Settings, AlertTriangle
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import CancellationModal from '@/components/subscription/CancellationModal';
 
 interface UserData {
   plan: string;
@@ -17,6 +18,7 @@ interface UserData {
   subscription_expires_at: string | null;
   admin_courtesy: boolean;
   stripe_customer_id: string | null;
+  scheduled_to_cancel_at?: string | null;
 }
 
 export default function AssinaturaPage() {
@@ -25,6 +27,8 @@ export default function AssinaturaPage() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
 
   const loadUserData = useCallback(async () => {
     try {
@@ -67,6 +71,31 @@ export default function AssinaturaPage() {
     } catch (error: any) {
       alert(error.message || 'Erro ao abrir portal de pagamento');
       setPortalLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async (reason: string, feedback: string) => {
+    setCancelLoading(true);
+    try {
+      const res = await fetch('/api/billing/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason, feedback }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erro ao cancelar assinatura');
+      }
+
+      // Recarregar dados para atualizar UI
+      await loadUserData();
+      setCancelModalOpen(false);
+      alert('Assinatura cancelada com sucesso. Seu acesso continuará até o fim do período.');
+    } catch (error: any) {
+      alert(error.message || 'Erro ao processar cancelamento');
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -120,9 +149,9 @@ export default function AssinaturaPage() {
   const currentPlan = planDetails[userData.plan as keyof typeof planDetails] || planDetails.free;
   const isCourtesy = userData.admin_courtesy;
   const hasActiveSubscription = userData.is_paid && userData.subscription_status === 'active';
+  const isScheduledToCancel = !!userData.scheduled_to_cancel_at;
   
   // Mostrar botão de gerenciar para qualquer usuário pago que não seja cortesia
-  // O Stripe vai criar o customer_id automaticamente se necessário
   const canManageSubscription = hasActiveSubscription && !isCourtesy;
 
   return (
@@ -175,10 +204,15 @@ export default function AssinaturaPage() {
                   <Sparkles size={16} className="text-blue-400" />
                   <span className="text-blue-400 font-medium">Cortesia</span>
                 </>
-              ) : hasActiveSubscription ? (
+              ) : hasActiveSubscription && !isScheduledToCancel ? (
                 <>
                   <CheckCircle size={16} className="text-green-400" />
                   <span className="text-green-400 font-medium">Ativo</span>
+                </>
+              ) : isScheduledToCancel ? (
+                 <>
+                  <AlertTriangle size={16} className="text-amber-400" />
+                  <span className="text-amber-400 font-medium">Cancelamento Agendado</span>
                 </>
               ) : (
                 <>
@@ -209,18 +243,25 @@ export default function AssinaturaPage() {
 
           {/* Subscription Info */}
           {hasActiveSubscription && userData.subscription_expires_at && (
-            <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4 mb-4">
+            <div className={`border rounded-lg p-4 mb-4 ${
+              isScheduledToCancel ? 'bg-amber-900/10 border-amber-900/30' : 'bg-zinc-950 border-zinc-800'
+            }`}>
               <div className="flex items-center gap-2 text-sm text-zinc-400 mb-1">
-                <Calendar size={16} />
-                Próxima cobrança
+                <Calendar size={16} className={isScheduledToCancel ? 'text-amber-500' : ''} />
+                {isScheduledToCancel ? 'Acesso disponível até' : 'Próxima cobrança'}
               </div>
-              <p className="text-white font-medium">
-                {new Date(userData.subscription_expires_at).toLocaleDateString('pt-BR', {
+              <p className={`font-medium ${isScheduledToCancel ? 'text-amber-200' : 'text-white'}`}>
+                {new Date(userData.scheduled_to_cancel_at || userData.subscription_expires_at).toLocaleDateString('pt-BR', {
                   day: '2-digit',
                   month: 'long',
                   year: 'numeric'
                 })}
               </p>
+              {isScheduledToCancel && (
+                <p className="text-xs text-amber-400 mt-2">
+                  Sua assinatura não será renovada.
+                </p>
+              )}
             </div>
           )}
 
@@ -253,10 +294,19 @@ export default function AssinaturaPage() {
                 ) : (
                   <>
                     <Settings size={20} />
-                    Gerenciar Assinatura
+                    Gerenciar Pagamento
                     <ExternalLink size={16} />
                   </>
                 )}
+              </button>
+            )}
+
+            {canManageSubscription && !isScheduledToCancel && (
+               <button
+                onClick={() => setCancelModalOpen(true)}
+                className="flex-[0.5] px-6 py-3 bg-zinc-800 hover:bg-red-900/40 hover:text-red-200 hover:border-red-900/50 text-zinc-400 border border-zinc-700 rounded-xl font-medium transition flex items-center justify-center gap-2"
+              >
+                Cancelar
               </button>
             )}
 
@@ -340,6 +390,13 @@ export default function AssinaturaPage() {
           </div>
         </div>
       </div>
+
+      <CancellationModal 
+        isOpen={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        onConfirm={handleCancelSubscription}
+        isLoading={cancelLoading}
+      />
     </div>
   );
 }

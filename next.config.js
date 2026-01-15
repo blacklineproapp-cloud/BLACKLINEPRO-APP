@@ -73,7 +73,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co https://clerk.stencilflow.com.br https://*.clerk.accounts.dev https://api.stripe.com https://generativelanguage.googleapis.com https://www.facebook.com https://www.google-analytics.com https://*.ingest.us.sentry.io https://capig.madgicx.ai",
+              "connect-src 'self' https://*.supabase.co https://clerk.stencilflow.com.br https://*.clerk.accounts.dev https://api.stripe.com https://generativelanguage.googleapis.com https://www.facebook.com https://connect.facebook.net https://www.google-analytics.com https://*.ingest.us.sentry.io https://capig.madgicx.ai",
               "frame-src 'self' https://challenges.cloudflare.com https://js.stripe.com",
               "worker-src 'self' blob:",
               "object-src 'none'",
@@ -151,9 +151,9 @@ const sentryWebpackPluginOptions = {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
 
-  // Não subir source maps se não tiver configuração
-  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
-  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  // Disable source map upload to prevent build failure (Invalid Token 401)
+  disableServerWebpackPlugin: true, 
+  disableClientWebpackPlugin: true,
 };
 
 // Wrap config com Sentry apenas se DSN estiver configurado

@@ -107,65 +107,77 @@ export default function FeaturesShowcase() {
           </div>
         </div>
 
-        {/* Feature 3: Modos - DOIS SLIDERS LADO A LADO */}
+        {/* Feature 3: Modo Topográfico */}
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="w-14 h-14 rounded-xl bg-blue-600/10 border border-blue-600/20 flex items-center justify-center mb-6">
-              <Map className="text-blue-500" size={28} />
-            </div>
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-              Dois Estilos, Infinitas Possibilidades
-            </h2>
-            <p className="text-lg text-zinc-400 mb-8">
-              <strong className="text-white">Modo Topográfico:</strong> Cria efeito de mapa topográfico com curvas de nível. Ideal para sombreamentos complexos e efeitos 3D.
-              <br /><br />
-              <strong className="text-white">Modo Linhas Perfeitas:</strong> Vetoriza a imagem em linhas limpas e precisas. Perfeito para tattoos minimalistas e designs line work.
+          <div className="relative h-[500px] w-full bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800">
+            <BeforeAfterSlider
+              beforeImage="/screenshots/topografico.jpeg"
+              afterImage="/screenshots/topografico-after.jpg"
+              className="aspect-[3/4]"
+              beforeLabel="Original"
+              afterLabel="Topográfico"
+            />
+          </div>
+          <div className="space-y-6">
+            <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                <Map className="w-6 h-6 text-indigo-400" />
+              </div>
+              Modo Topográfico
+            </h3>
+            <p className="text-zinc-400 leading-relaxed">
+              Mapeie volumes e curvas com precisão milimétrica. Ideal para fechamentos e áreas complexas do corpo.
             </p>
             <ul className="space-y-3">
               {[
-                'Vetorização inteligente',
-                'Linhas suaves e precisas',
-                'Efeitos topográficos 3D',
-                'Pronto para tatuar',
-                'Ajuste fino de parâmetros'
-              ].map((feature, i) => (
-                <li key={i} className="flex items-start gap-3 text-zinc-300">
-                  <span className="text-blue-500 mt-1">✓</span>
-                  <span>{feature}</span>
+                'Analise a volumetria da região',
+                'Curvas de nível automáticas',
+                'Adaptação perfeita à anatomia',
+                'Visualização 3D simulada'
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-zinc-300">
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                  {item}
                 </li>
               ))}
             </ul>
           </div>
-          
-          {/* Comparações Interativas Antes/Depois - DOIS MODOS */}
-          <div className="space-y-6">
-            {/* Modo Topográfico */}
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                Modo Topográfico
-              </h3>
-              <BeforeAfterSlider
-                beforeImage="/screenshots/topografico.jpeg"
-                afterImage="/screenshots/topografico-after.png"
-                beforeLabel="Original"
-                afterLabel="Topográfico"
-              />
-            </div>
+        </div>
 
-            {/* Modo Linhas Perfeitas */}
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                Modo Linhas Perfeitas
-              </h3>
-              <BeforeAfterSlider
-                beforeImage="/screenshots/lines-before.png"
-                afterImage="/screenshots/lines-after.png"
-                beforeLabel="Original"
-                afterLabel="Linhas"
-              />
-            </div>
+        {/* Feature 3: Linhas Perfeitas */}
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="space-y-6 order-2 lg:order-1">
+            <h3 className="text-2xl font-bold text-white flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                <PenTool className="w-6 h-6 text-purple-400" />
+              </div>
+              Linhas Perfeitas
+            </h3>
+            <p className="text-zinc-400 leading-relaxed">
+              Transforme qualquer imagem em um decalque de linhas nítidas e prontas para tatuar. Esqueça o papel carbono.
+            </p>
+            <ul className="space-y-3">
+              {[
+                'Extração inteligente de linhas',
+                'Controle de espessura e detalhe',
+                'Limpeza automática de ruído',
+                'Pronto para impressão térmica'
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-zinc-300">
+                  <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="relative h-[500px] w-full bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-800 order-1 lg:order-2">
+            <BeforeAfterSlider
+              beforeImage="/screenshots/lines-before.jpg"
+              afterImage="/screenshots/lines-after.png"
+              className="aspect-[3/4]"
+              beforeLabel="Original"
+              afterLabel="Linhas"
+            />
           </div>
         </div>
 

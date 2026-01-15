@@ -21,35 +21,42 @@ export default async function DashboardPage() {
     );
   }
 
-  const { data: projects } = await supabaseAdmin
-    .from('projects')
-    .select('id, name, original_image, stencil_image, created_at, style, width_cm, height_cm')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(50); // Limitar a 50 projetos mais recentes
+  // 🚀 PARALLEL DATA FETCHING (Performance MAXIMA)
+  const [
+    projectsResponse, 
+    aiGenImagesResponse,
+    usageResponse
+  ] = await Promise.all([
+    // 1. Meus Projetos
+    supabaseAdmin
+      .from('projects')
+      .select('id, name, original_image, stencil_image, created_at, style, width_cm, height_cm')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50),
 
-  // Buscar imagens IA Gen (mesmo padrão dos projetos)
-  const { data: aiGenImages } = await supabaseAdmin
-    .from('ai_usage')
-    .select('id, created_at, metadata')
-    .eq('user_id', user.id)
-    .eq('operation_type', 'generate_idea')
-    .order('created_at', { ascending: false })
-    .limit(50); // Limitar a 50 imagens mais recentes
+    // 2. Histórico IA
+    supabaseAdmin
+      .from('ai_usage')
+      .select('id, created_at, metadata')
+      .eq('user_id', user.id)
+      .eq('operation_type', 'generate_idea')
+      .order('created_at', { ascending: false })
+      .limit(50),
+
+    // 3. Uso do Mês
+    supabaseAdmin
+      .from('ai_usage')
+      .select('id', { count: 'exact', head: true }) // Count otimizado (head only)
+      .eq('user_id', user.id)
+      .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
+  ]);
+
+  const projects = projectsResponse.data || [];
+  const aiGenImages = aiGenImagesResponse.data || [];
+  const currentUsage = usageResponse.count || 0; // Usar count retornado do head: true
 
   const isSubscribed = user.is_paid && user.subscription_status === 'active';
-
-  // Buscar uso do mês atual
-  const now = new Date();
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const { data: usageData } = await supabaseAdmin
-    .from('ai_usage')
-    .select('id')
-    .eq('user_id', user.id)
-    .gte('created_at', firstDayOfMonth.toISOString());
-
-  const currentUsage = usageData?.length || 0;
 
   // Determinar limite baseado no plano
   const limits: Record<string, number | null> = {

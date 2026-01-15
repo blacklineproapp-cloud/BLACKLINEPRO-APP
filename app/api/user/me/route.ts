@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { getOrCreateUser } from '@/lib/auth';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET() {
   try {
@@ -23,6 +24,22 @@ export async function GET() {
 
     console.log('[User API] Usuário encontrado:', user.email);
 
+    // Verificar se existe agendamento de cancelamento
+    let scheduledToCancelAt = null;
+    if (user.subscription_id) {
+      const { data: sub } = await supabaseAdmin
+        .from('subscriptions')
+        .select('canceled_at, current_period_end')
+        .eq('stripe_subscription_id', user.subscription_id)
+        .single();
+      
+      // Se tiver canceled_at mas status ainda é ativo (verificado no frontend pelo user.subscription_status),
+      // então é um cancelamento agendado.
+      if (sub?.canceled_at) {
+        scheduledToCancelAt = sub.current_period_end;
+      }
+    }
+
     // Retornar apenas os campos necessários
     return NextResponse.json({
       plan: user.plan || 'free',
@@ -30,7 +47,8 @@ export async function GET() {
       subscription_status: user.subscription_status || 'inactive',
       subscription_expires_at: user.subscription_expires_at || null,
       admin_courtesy: user.admin_courtesy || false,
-      stripe_customer_id: user.stripe_customer_id || null
+      stripe_customer_id: user.stripe_customer_id || null, // Necessário para portal e boletos
+      scheduled_to_cancel_at: scheduledToCancelAt
     });
   } catch (error: any) {
     console.error('[User API] Erro:', error);
