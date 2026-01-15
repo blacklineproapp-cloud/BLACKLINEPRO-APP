@@ -129,7 +129,9 @@ export const stencilWorker = new Worker<StencilJobData>(
   },
   {
     connection: redisConnection,
-    concurrency: 5, // Processar até 5 jobs em paralelo
+    // Concorrência configurável via ENV (Padrão: 5)
+    // Para escalar no Railway, aumente WORKER_CONCURRENCY_STENCIL
+    concurrency: parseInt(process.env.WORKER_CONCURRENCY_STENCIL || '5'),
     limiter: {
       max: 10, // Máximo 10 jobs
       duration: 60000, // por minuto
@@ -189,7 +191,7 @@ export const enhanceWorker = new Worker<EnhanceJobData>(
   },
   {
     connection: redisConnection,
-    concurrency: 3,
+    concurrency: parseInt(process.env.WORKER_CONCURRENCY_ENHANCE || '3'),
   }
 );
 
@@ -245,7 +247,7 @@ export const iaGenWorker = new Worker<IaGenJobData>(
   },
   {
     connection: redisConnection,
-    concurrency: 3,
+    concurrency: parseInt(process.env.WORKER_CONCURRENCY_GEN || '3'),
   }
 );
 

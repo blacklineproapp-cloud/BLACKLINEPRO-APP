@@ -3,11 +3,7 @@ import { NextResponse } from 'next/server';
 import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { generateStencilFromImage } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
-import {
-  createStencilLimiter,
-  getRateLimitIdentifier,
-  withRateLimit,
-} from '@/lib/rate-limit';
+import { rateLimit } from '@/lib/ratelimit';
 import { checkEditorLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
 import { BRL_COST } from '@/lib/credits';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
@@ -20,6 +16,19 @@ export async function POST(req: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+
+    // 🛡️ RATE LIMIT: 10 requisições por minuto por usuário
+    // Protege contra scripts e abuso de GPU
+    const { success, limit, remaining, reset } = await rateLimit(`stencil-gen:${userId}`, 10, 60);
+    
+    if (!success) {
+      return NextResponse.json({
+        error: 'Too Many Requests',
+        message: 'Você está gerando muito rápido! Aguarde alguns segundos.',
+        remaining,
+        resetDate: new Date(reset).toISOString()
+      }, { status: 429 });
     }
 
     // 1. Buscar usuário completo (precisa do UUID user.id)
