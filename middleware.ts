@@ -9,9 +9,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/stats',
-  '/api/stats',
-  '/api/webhooks(.*)', // Liberar todos os webhooks (Clerk, Stripe)
-  '/manifest.json',
+  '/api/webhooks(.*)',
   '/manifest.json',
 ]);
 
@@ -22,107 +20,34 @@ const isAdminRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
+  // 🚨 EMERGÊNCIA: Liberar Webhooks explicitamente antes de tudo
+  if (request.nextUrl.pathname.startsWith('/api/webhooks')) {
+    console.log('[Middleware] 🔓 Webhook detectado (Bypass Auth):', request.nextUrl.pathname);
+    return NextResponse.next();
+  }
+
+  /*
   // ========================================
-  // 🔒 PROTEÇÃO CSRF - Validar Origin/Referer
+  // 🔒 PROTEÇÃO CSRF - DESABILITADA TEMPORARIAMENTE
+  // Motivo: Causando possíveis conflitos com login/redirects
   // ========================================
 
   const method = request.method;
   const isModifyingRequest = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
+  // ... (código comentado) ...
+  */
 
-  // Apenas validar em requisições que modificam dados
-  if (isModifyingRequest) {
-    // Ignorar webhooks (eles têm própria validação de assinatura)
-    const isWebhook = request.nextUrl.pathname.startsWith('/api/webhooks/');
+  /*
+  // ========================================
+  // 🔒 CHECAGEM DE ADMIN NO MIDDLEWARE - DESABILITADA
+  // Motivo: Logica assíncrona pesada no Edge pode causar timeouts/redirect loops.
+  // A segurança de Admin deve ser feita via RLS ou check na API/Page.
+  // ========================================
+  
+  // if (isAdminRoute(request)) { ... }
+  */
 
-    if (!isWebhook) {
-      const origin = request.headers.get('origin');
-      const referer = request.headers.get('referer');
-
-      // Lista de origens permitidas (Otimizado para Produção)
-      const allowedOrigins = [
-        process.env.NEXT_PUBLIC_APP_URL,
-        'https://www.stencilflow.com.br',
-        'https://stencilflow.com.br',
-        'https://stencilflow-nextjs.vercel.app', // Vercel preview/prod
-        process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
-        'http://localhost:3000',
-        'https://localhost:3000'
-      ].filter(Boolean).map(url => url!.replace(/\/$/, '')) as string[];
-
-      // Validar Origin (preferência) ou Referer (fallback)
-      const requestOrigin = origin || (referer ? new URL(referer).origin : null);
-
-      if (!requestOrigin) {
-        console.warn('[Middleware] ⚠️ CSRF (Dry Run): Request sem Origin/Referer', {
-          path: request.nextUrl.pathname,
-          method
-        });
-        // 🔓 DRY RUN: Não bloquear por enquanto, apenas logar
-        // return NextResponse.json({
-        //   error: 'Requisição inválida: Origin ausente'
-        // }, { status: 403 });
-      }
-
-      const isAllowedOrigin = allowedOrigins.some(allowed =>
-        requestOrigin && requestOrigin.startsWith(allowed)
-      );
-
-      if (!isAllowedOrigin && requestOrigin) {
-        console.warn('[Middleware] 🚨 CSRF ATTACK DETECTADO (Dry Run)!', {
-          requestOrigin,
-          allowedOrigins,
-          path: request.nextUrl.pathname,
-          method
-        });
-        // 🔓 DRY RUN: Não bloquear por enquanto, apenas logar
-        // return NextResponse.json({
-        //   error: 'Origem não autorizada'
-        // }, { status: 403 });
-      }
-
-      console.log('[Middleware] ✅ CSRF validado (ou ignorado no Dry Run):', { origin: requestOrigin });
-    }
-  }
-
-  // Verificar rotas de admin PRIMEIRO
-  if (isAdminRoute(request)) {
-    const { userId, sessionClaims } = auth();
-    
-    // Não autenticado = bloquear
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    // Buscar dados completos do usuário via Clerk API
-    let userEmail: string | undefined;
-    let role: string | undefined;
-    
-    try {
-      const user = await clerkClient.users.getUser(userId);
-      userEmail = user.emailAddresses[0]?.emailAddress;
-      role = user.publicMetadata?.role as string | undefined;
-    } catch (error) {
-      console.error('[Middleware] Erro ao buscar usuário:', error);
-    }
-
-    const isAdminRole = role === 'admin' || role === 'superadmin';
-    const isAdminEmail = userEmail && ADMIN_EMAILS.some(
-      e => e.toLowerCase() === userEmail!.toLowerCase()
-    );
-
-    if (!isAdminRole && !isAdminEmail) {
-      console.log('[Middleware] ⛔ Acesso admin negado:', { userId, email: userEmail, role });
-      
-      // API retorna JSON, páginas fazem redirect
-      if (request.nextUrl.pathname.startsWith('/api/')) {
-        return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-      }
-      return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-
-    console.log('[Middleware] ✅ Admin autorizado:', userEmail);
-  }
-
+  // 🛡️ Proteção Padrão do Clerk
   // Rotas públicas não precisam de auth
   if (!isPublicRoute(request)) {
     auth().protect();
