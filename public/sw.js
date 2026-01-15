@@ -4,7 +4,7 @@
  */
 
 // ⚡ VERSÃO DO CACHE - Mudar a cada deploy para forçar atualização!
-const CACHE_VERSION = '5.2.1'; // Incrementar a cada deploy
+const CACHE_VERSION = '5.2.2'; // Incrementar a cada deploy
 const CACHE_NAME = `stencilflow-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -108,6 +108,14 @@ self.addEventListener('fetch', (event) => {
     url.pathname === '/manifest.json';
 
   const isApiRoute = url.pathname.startsWith('/api/');
+  
+  // ⚡ ERRO CORRIGIDO: Não cachear páginas dinâmicas/autenticadas
+  // Isso causava "Insufficient resources" e stale data
+  const isDynamicPage = 
+    url.pathname.startsWith('/dashboard') || 
+    url.pathname.startsWith('/admin') ||
+    url.pathname.startsWith('/sign-in') ||
+    url.pathname.startsWith('/sign-up');
 
   // Estratégia de cache otimizada
   if (isStaticAsset) {
@@ -117,8 +125,8 @@ self.addEventListener('fetch', (event) => {
         .catch(() => networkFirst(request, 2000)) // 2s timeout
         .catch(() => offlineFallback(request))
     );
-  } else if (isApiRoute) {
-    // 🌐 NETWORK-ONLY para API (sempre dados frescos)
+  } else if (isApiRoute || isDynamicPage) {
+    // 🌐 NETWORK-ONLY para API e Páginas Dinâmicas (sempre dados frescos, sem cache)
     event.respondWith(
       fetch(request).catch(() => offlineFallback(request))
     );
