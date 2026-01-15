@@ -21,8 +21,12 @@ const isAdminRoute = createRouteMatcher([
 
 export default clerkMiddleware(async (auth, request) => {
   // 🚨 EMERGÊNCIA: Liberar Webhooks explicitamente antes de tudo
-  if (request.nextUrl.pathname.startsWith('/api/webhooks')) {
-    console.log('[Middleware] 🔓 Webhook detectado (Bypass Auth):', request.nextUrl.pathname);
+  // 🚨 EMERGÊNCIA: Liberar Webhooks explicitamente (Robustez Máxima)
+  if (request.url.includes('/api/webhooks')) {
+    console.log('[Middleware] 🔓 Webhook Bypass:', {
+      url: request.url,
+      path: request.nextUrl.pathname
+    });
     return NextResponse.next();
   }
 

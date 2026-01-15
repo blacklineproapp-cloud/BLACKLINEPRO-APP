@@ -56,7 +56,14 @@ export async function POST(req: Request) {
       await handleUserDeleted(data);
       break;
 
+    case 'session.created':
+    case 'session.ended':
+    case 'session.removed':
+      console.log(`[Webhook] Sessão ignorada: ${type}`);
+      return new NextResponse('OK', { status: 200 });
+
     default:
+      console.log(`[Webhook] Evento não tratado: ${type}`);
   }
 
   return new NextResponse('OK', { status: 200 });
