@@ -25,12 +25,24 @@ import { supabaseAdmin } from './supabase';
 // Parser manual para evitar conflito de versões do ioredis
 function parseRedisUrl(url: string): ConnectionOptions {
   const urlObj = new URL(url);
+  const isTls = urlObj.protocol === 'rediss:';
+
   return {
     host: urlObj.hostname,
     port: parseInt(urlObj.port) || 6379,
     password: urlObj.password || undefined,
     username: urlObj.username || undefined,
     maxRetriesPerRequest: null,
+    enableReadyCheck: false, // Melhora estabilidade em algumas clouds
+    keepAlive: 10000, // Enviar keep-alive a cada 10s para evitar timeout
+    tls: isTls ? {
+      rejectUnauthorized: false // Aceitar certificados self-signed (comum em clouds)
+    } : undefined,
+    retryStrategy: (times) => {
+      // Retry com backoff exponencial: 50, 100, 200, 400, 800... max 2s
+      const delay = Math.min(times * 50, 2000);
+      return delay;
+    }
   };
 }
 

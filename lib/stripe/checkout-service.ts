@@ -155,7 +155,7 @@ export class CheckoutService {
     userEmail: string;
     userName?: string;
     priceId: string;
-    planType: 'starter' | 'pro' | 'studio';
+    planType: 'starter' | 'pro' | 'studio' | 'legacy';
     adminId: string;
     clerkId: string;
   }): Promise<CreateCheckoutSessionResponse> {

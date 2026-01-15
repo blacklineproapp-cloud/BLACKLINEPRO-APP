@@ -20,7 +20,8 @@ export const PRICES = {
 // TIPOS DE PLANOS
 // ============================================================================
 
-export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise';
+export type PlanTier = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
+export type PlanType = PlanTier;
 
 // ============================================================================
 // FEATURES DOS PLANOS
@@ -69,6 +70,17 @@ export const PLAN_FEATURES = {
       'Uso ilimitado',
       'Suporte prioritário',
       'Ideal para estúdios',
+    ],
+  },
+  legacy: {
+    name: 'Legacy (Editor)',
+    price: 25,
+    priceId: process.env.STRIPE_PRICE_LEGACY_MONTHLY,
+    generationLimit: 100,
+    features: [
+      'Apenas Editor de Stencils',
+      'Sem ferramentas de IA avançada',
+      '100 gerações/mês',
     ],
   },
 };

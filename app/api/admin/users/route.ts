@@ -248,7 +248,10 @@ export async function POST(req: Request) {
           updates.tools_unlocked = false;
           updates.subscription_status = 'active';
           
-          if (isCourtesy) {
+          // LÓGICA DE CORTESIA AUTOMÁTICA (STARTER)
+          const shouldBeCourtesy = isCourtesy !== false;
+
+          if (shouldBeCourtesy) {
             updates.admin_courtesy = true;
             updates.admin_courtesy_granted_by = adminCheck.adminId;
             updates.admin_courtesy_granted_at = new Date().toISOString();
@@ -256,20 +259,36 @@ export async function POST(req: Request) {
             const expirationDate = new Date();
             expirationDate.setDate(expirationDate.getDate() + 30);
             updates.admin_courtesy_expires_at = expirationDate.toISOString();
+          } else {
+             updates.admin_courtesy = false;
+             updates.admin_courtesy_expires_at = null;
           }
         } else if (newPlan === 'pro' || newPlan === 'studio' || newPlan === 'enterprise') {
           updates.is_paid = true;
           updates.tools_unlocked = true;
           updates.subscription_status = 'active';
           
-          if (isCourtesy) {
+          // LÓGICA DE CORTESIA AUTOMÁTICA
+          // Se o admin altera manualmente, é cortesia por padrão (30 dias)
+          // a menos que explicitamente dito que NÃO é cortesia (ex: correção de erro)
+          const shouldBeCourtesy = isCourtesy !== false;
+
+          if (shouldBeCourtesy) {
             updates.admin_courtesy = true;
             updates.admin_courtesy_granted_by = adminCheck.adminId;
             updates.admin_courtesy_granted_at = new Date().toISOString();
-            // Cortesia expira em 30 dias
+            
+            // Cortesia expira em 30 dias (padrão)
             const expirationDate = new Date();
             expirationDate.setDate(expirationDate.getDate() + 30);
             updates.admin_courtesy_expires_at = expirationDate.toISOString();
+            
+            console.log(`[Admin] Aplicando cortesia automática de 30 dias para ${targetUserId}`);
+          } else {
+             // Admin explicitamente desativou a cortesia (migração definitiva manual)
+             console.log(`[Admin] Admin desativou cortesia explícita para ${targetUserId}`);
+             updates.admin_courtesy = false;
+             updates.admin_courtesy_expires_at = null;
           }
         }
 

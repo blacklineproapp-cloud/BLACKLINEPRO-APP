@@ -13,7 +13,7 @@ import type { BillingCycle } from '../stripe/types';
 // TIPOS
 // ============================================================================
 
-export type PlanTier = 'starter' | 'pro' | 'studio' | 'enterprise';
+export type PlanTier = 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
 
 export interface PlanMapping {
   tier: PlanTier;
@@ -40,6 +40,20 @@ export function getPlanFromPriceId(priceId: string): PlanMapping | null {
   }
   if (priceId === process.env.STRIPE_PRICE_STARTER_YEARLY) {
     return { tier: 'starter', cycle: 'yearly' };
+  }
+
+  // Legacy (R$ 25/mês)
+  if (priceId === process.env.STRIPE_PRICE_LEGACY_MONTHLY) {
+    return { tier: 'legacy', cycle: 'monthly' };
+  }
+  if (priceId === process.env.STRIPE_PRICE_LEGACY_QUARTERLY) {
+    return { tier: 'legacy', cycle: 'quarterly' };
+  }
+  if (priceId === process.env.STRIPE_PRICE_LEGACY_SEMIANNUAL) {
+    return { tier: 'legacy', cycle: 'semiannual' };
+  }
+  if (priceId === process.env.STRIPE_PRICE_LEGACY_YEARLY) {
+    return { tier: 'legacy', cycle: 'yearly' };
   }
 
   // Pro (R$ 100/mês)
@@ -122,6 +136,11 @@ export function getAllPriceIds(): string[] {
     process.env.STRIPE_PRICE_STUDIO_QUARTERLY,
     process.env.STRIPE_PRICE_STUDIO_SEMIANNUAL,
     process.env.STRIPE_PRICE_STUDIO_YEARLY,
+    // Legacy
+    process.env.STRIPE_PRICE_LEGACY_MONTHLY,
+    process.env.STRIPE_PRICE_LEGACY_QUARTERLY,
+    process.env.STRIPE_PRICE_LEGACY_SEMIANNUAL,
+    process.env.STRIPE_PRICE_LEGACY_YEARLY,
   ].filter(Boolean) as string[];
 }
 

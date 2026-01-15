@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { getPriceIdFromPlan } from '@/lib/billing/stripe-plan-mapping';
 import type { BillingCycle } from '@/lib/stripe/types';
 
-type CheckoutPlan = 'starter' | 'pro' | 'studio' | 'enterprise';
+type CheckoutPlan = 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
 
 // Versão que retorna objeto (para JSON response)
 async function handleCheckoutWithResult(req: Request, plan: CheckoutPlan, cycle: BillingCycle = 'monthly'): Promise<{ url: string } | { redirect: URL }> {
@@ -186,7 +186,7 @@ export async function GET(req: Request) {
     const cycle = (url.searchParams.get('cycle') as BillingCycle) || 'monthly';
 
     // Validar plano
-    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio') {
+    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio' && plan !== 'legacy') {
       // Se é fetch (Accept: application/json), retornar JSON
       const acceptHeader = req.headers.get('accept') || '';
       if (acceptHeader.includes('application/json')) {
@@ -252,7 +252,7 @@ export async function POST(req: Request) {
     }
 
     // Validar plano
-    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio') {
+    if (plan !== 'starter' && plan !== 'pro' && plan !== 'studio' && plan !== 'legacy') {
       return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
     }
 

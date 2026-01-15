@@ -46,20 +46,53 @@ catalogs/
 *.zip
 
 # Development scripts (keep essential ones)
+# Development scripts (keep essential ones like railway-worker.ts)
 scripts/populate-*.ts
-scripts/activate-test-users.js
+scripts/activate-*.ts
+scripts/activate-*.js
 scripts/stripe-*.sh
-scripts/verify-setup.ts
+scripts/verify-*.ts
 scripts/check-*.ts
+scripts/check-*.js
 scripts/audit-*.ts
+scripts/list-*.ts
+scripts/migrate-*.ts
+scripts/fix-*.ts
+scripts/unlock-*.ts
+scripts/update-*.ts
+scripts/diagnose-*.ts
+scripts/create-*.ts
+scripts/create-*.sql
+scripts/add-*.ts
+scripts/add-*.js
+scripts/archive-*.ts
+scripts/assign-*.ts
+scripts/convert-*.ts
+scripts/compare-*.ts
+scripts/deep-*.ts
 scripts/extract-*.py
 scripts/extract-*.ts
-scripts/scrape-*.py
+scripts/find-*.ts
+scripts/generate-*.js
+scripts/identify-*.ts
+scripts/import-*.ts
+scripts/import-*.py
+scripts/investigate-*.ts
+scripts/make-*.sql
 scripts/merge-*.py
 scripts/remove-*.py
-scripts/*-colors*.py
-scripts/*-colors*.ts
-scripts/import-colors-to-db.ts
+scripts/remove-*.js
+scripts/reset-*.ts
+scripts/reset-*.bat
+scripts/reset-*.sh
+scripts/retry-*.ts
+scripts/scrape-*.py
+scripts/setup-*.ts
+scripts/setup-*.sql
+scripts/test-*.ts
+scripts/validate-*.ts
+scripts/*.old
+scripts/*.sql
 
 # Supabase local (development only)
 supabase/
