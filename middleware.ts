@@ -91,11 +91,17 @@ export default clerkMiddleware(async (auth, request) => {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    // Verificação OTIMIZADA usando sessionClaims (JWT)
-    // Isso evita uma chamada de API bloqueante para o Clerk em cada request (+500ms)
-    // PRODUCTION SAFETY: Safe to use JWT claims. If role changes, user needs to re-login or wait for token refresh (short TTL).
-    const role = (sessionClaims?.metadata as any)?.role as string | undefined;
-    const userEmail = sessionClaims?.email as string | undefined;
+    // Buscar dados completos do usuário via Clerk API
+    let userEmail: string | undefined;
+    let role: string | undefined;
+    
+    try {
+      const user = await clerkClient.users.getUser(userId);
+      userEmail = user.emailAddresses[0]?.emailAddress;
+      role = user.publicMetadata?.role as string | undefined;
+    } catch (error) {
+      console.error('[Middleware] Erro ao buscar usuário:', error);
+    }
 
     const isAdminRole = role === 'admin' || role === 'superadmin';
     const isAdminEmail = userEmail && ADMIN_EMAILS.some(
@@ -103,16 +109,14 @@ export default clerkMiddleware(async (auth, request) => {
     );
 
     if (!isAdminRole && !isAdminEmail) {
-      console.log('[Middleware] ⛔ Acesso admin negado (Fast Check):', { userId, role });
+      console.log('[Middleware] ⛔ Acesso admin negado:', { userId, email: userEmail, role });
       
-      // API returns JSON, pages redirect
+      // API retorna JSON, páginas fazem redirect
       if (request.nextUrl.pathname.startsWith('/api/')) {
         return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
       }
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
-
-    console.log('[Middleware] ✅ Admin autorizado (Fast Check):', userId);
 
     console.log('[Middleware] ✅ Admin autorizado:', userEmail);
   }

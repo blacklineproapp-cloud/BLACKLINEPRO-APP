@@ -467,7 +467,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                         className="object-contain"
                         sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1200px) 22vw, 18vw"
                         loading="lazy"
-                        // unoptimized removed for performance - Critical for mobile speed
+                        // unoptimized removed for performance
                         quality={60} // Lower quality for thumbnails is fine
                       />
                     </div>
