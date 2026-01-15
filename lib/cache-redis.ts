@@ -24,6 +24,8 @@ if (process.env.REDIS_URL) {
     redisClient = new Redis(process.env.REDIS_URL, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
+      commandTimeout: 3000, // Timeout de 3s para comandos (evita travar response)
+      connectTimeout: 5000, // Timeout de 5s para conexão
       // Configurações de reconnection
       retryStrategy(times) {
         const delay = Math.min(times * 50, 2000);
@@ -134,13 +136,12 @@ export async function getOrSetCache<T>(
   options: CacheOptions = {}
 ): Promise<T> {
   // 🚀 OTIMIZAÇÃO: TTL padrão aumentado de 1min para 5min
-  // Reduz cache misses em 30% (menos requests Redis)
   const { ttl = 300000, tags, namespace } = options;
 
   // Construir chave completa com namespace
   const fullKey = namespace ? `${namespace}:${key}` : key;
 
-  // REDIS: Tentar buscar do Redis
+  // 1. Tentar buscar do Redis (sem rodar fetcher ainda)
   if (redisClient) {
     try {
       const cached = await redisClient.get(fullKey);
@@ -149,51 +150,45 @@ export async function getOrSetCache<T>(
         console.log(`✅ [Redis] Cache HIT: ${fullKey}`);
         return JSON.parse(cached) as T;
       }
-
-      // Cache MISS: buscar dados
-      console.log(`🔄 [Redis] Cache MISS: ${fullKey}`);
-      const data = await fetcher();
-
-      // Salvar no Redis com TTL (ioredis sintaxe: key, seconds, value)
-      await redisClient.setex(fullKey, Math.floor(ttl / 1000), JSON.stringify(data));
-
-      // 🚀 OTIMIZAÇÃO: Tags removidas para reduzir requests Redis
-      // Antes: cada tag = 2 requests extras (sadd + expire)
-      // Depois: apenas 1 request (setex)
-      // Invalidação por namespace é mais eficiente: invalidateCacheByPattern('*', namespace)
-      //
-      // if (tags && tags.length > 0) {
-      //   for (const tag of tags) {
-      //     await redisClient.sadd(`tag:${tag}`, fullKey);
-      //     await redisClient.expire(`tag:${tag}`, Math.floor(ttl / 1000));
-      //   }
-      // }
-
-      return data;
     } catch (error) {
-      console.error(`[Redis] Erro ao acessar cache:`, error);
-      // Fallback para memória em caso de erro do Redis
+      console.error(`[Redis] Erro ao acessar cache (GET):`, error);
+      // Apenas logar erro do Redis e continuar para fallback/fetcher
+      // NÃO chamar fetcher aqui dentro
     }
   }
 
-  // MEMÓRIA: Fallback para cache em memória
-  const cached = memoryCache.get(fullKey);
-
-  if (cached && cached.expires > Date.now()) {
+  // 2. Tentar buscar da Memória (se Redis falhou ou deu miss)
+  const memoryCached = memoryCache.get(fullKey);
+  if (memoryCached && memoryCached.expires > Date.now()) {
     console.log(`✅ [Memory] Cache HIT: ${fullKey}`);
-    return cached.data as T;
+    return memoryCached.data as T;
   }
 
-  console.log(`🔄 [Memory] Cache MISS: ${fullKey}`);
+  // 3. Cache Miss (ambos): Executar fetcher
+  // Se o fetcher falhar, o erro sobe (não é engolido) e não tentamos 2x
+  console.log(`🔄 [Cache] MISS (Redis+Mem): ${fullKey}`);
   const data = await fetcher();
 
-  memoryCache.set(fullKey, {
-    data,
-    expires: Date.now() + ttl,
-    tags,
-  });
+  // 4. Salvar no Cache (Background - não bloquear resposta)
+  // Usar Promise.allSettled ou fire-and-forget para não atrasar o return
+  (async () => {
+    // Salvar memória
+    memoryCache.set(fullKey, {
+      data,
+      expires: Date.now() + ttl,
+      tags,
+    });
 
-  return data;
+    // Salvar Redis
+    if (redisClient) {
+      try {
+        await redisClient.setex(fullKey, Math.floor(ttl / 1000), JSON.stringify(data));
+      } catch (error) {
+        console.error(`[Redis] Erro ao definir cache (SET):`, error);
+      }
+    }
+  })();
+
   return data;
 }
 

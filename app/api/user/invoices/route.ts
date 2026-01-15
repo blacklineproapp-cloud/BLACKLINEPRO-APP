@@ -1,6 +1,8 @@
 'use server';
 
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
+
 import { auth } from '@clerk/nextjs/server';
 import { stripe } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';

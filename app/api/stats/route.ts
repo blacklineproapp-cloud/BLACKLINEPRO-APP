@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { auth } from '@clerk/nextjs/server';
 import { isAdmin } from '@/lib/auth';
 
-export const revalidate = 300; // Revalidar a cada 5 minutos (cache)
+export const dynamic = 'force-dynamic'; // Não cachear estaticamente
 
 /**
  * Estatísticas do sistema

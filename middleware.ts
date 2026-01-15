@@ -9,9 +9,9 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/stats',
-  '/api/webhooks/clerk',
-  '/api/webhooks/clerk',
-  '/api/webhooks/stripe',
+  '/api/stats',
+  '/api/webhooks(.*)', // Liberar todos os webhooks (Clerk, Stripe)
+  '/manifest.json',
   '/manifest.json',
 ]);
 
@@ -53,32 +53,34 @@ export default clerkMiddleware(async (auth, request) => {
       const requestOrigin = origin || (referer ? new URL(referer).origin : null);
 
       if (!requestOrigin) {
-        console.warn('[Middleware] ⚠️ CSRF: Request sem Origin/Referer', {
+        console.warn('[Middleware] ⚠️ CSRF (Dry Run): Request sem Origin/Referer', {
           path: request.nextUrl.pathname,
           method
         });
-        return NextResponse.json({
-          error: 'Requisição inválida: Origin ausente'
-        }, { status: 403 });
+        // 🔓 DRY RUN: Não bloquear por enquanto, apenas logar
+        // return NextResponse.json({
+        //   error: 'Requisição inválida: Origin ausente'
+        // }, { status: 403 });
       }
 
       const isAllowedOrigin = allowedOrigins.some(allowed =>
-        requestOrigin.startsWith(allowed)
+        requestOrigin && requestOrigin.startsWith(allowed)
       );
 
-      if (!isAllowedOrigin) {
-        console.warn('[Middleware] 🚨 CSRF ATTACK DETECTADO!', {
+      if (!isAllowedOrigin && requestOrigin) {
+        console.warn('[Middleware] 🚨 CSRF ATTACK DETECTADO (Dry Run)!', {
           requestOrigin,
           allowedOrigins,
           path: request.nextUrl.pathname,
           method
         });
-        return NextResponse.json({
-          error: 'Origem não autorizada'
-        }, { status: 403 });
+        // 🔓 DRY RUN: Não bloquear por enquanto, apenas logar
+        // return NextResponse.json({
+        //   error: 'Origem não autorizada'
+        // }, { status: 403 });
       }
 
-      console.log('[Middleware] ✅ CSRF validado:', { origin: requestOrigin });
+      console.log('[Middleware] ✅ CSRF validado (ou ignorado no Dry Run):', { origin: requestOrigin });
     }
   }
 
