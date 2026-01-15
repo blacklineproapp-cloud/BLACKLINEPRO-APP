@@ -21,7 +21,9 @@
     "remarketing": "tsx scripts/send-remarketing-emails.ts",
     "remarketing:auto": "tsx scripts/automated-remarketing.ts",
     "email:dev": "email dev --dir emails",
-    "email:sync": "tsx scripts/sync-email-templates.ts"
+    "email:sync": "tsx scripts/sync-email-templates.ts",
+    "diagnose:db": "tsx scripts/diagnose-database.ts",
+    "cleanup": "tsx scripts/cleanup-old-data.ts"
   },
   "dependencies": {
     "@clerk/localizations": "^3.30.1",
@@ -35,8 +37,6 @@
     "@supabase/supabase-js": "^2.43.0",
     "@techstark/opencv-js": "^4.12.0-release.1",
     "@types/ioredis": "^4.28.10",
-    "@upstash/ratelimit": "^2.0.7",
-    "@upstash/redis": "^1.35.8",
     "bullmq": "^5.66.2",
     "dotenv": "^17.2.3",
     "idb-keyval": "^6.2.2",
@@ -45,7 +45,6 @@
     "jszip": "^3.10.1",
     "lucide-react": "^0.378.0",
     "next": "^14.2.35",
-    "pdf2pic": "^3.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-easy-crop": "^5.5.6",

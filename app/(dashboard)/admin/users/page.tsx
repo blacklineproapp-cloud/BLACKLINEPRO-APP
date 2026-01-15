@@ -512,6 +512,15 @@ export default function UsersManagementPage() {
                             </button>
 
                             <button
+                              onClick={() => router.push(`/admin/users/${u.id}/logs`)}
+                              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded-lg text-xs font-medium transition flex items-center gap-1"
+                              title="Ver logs de atividade"
+                            >
+                              <Activity size={14} />
+                              Logs
+                            </button>
+
+                            <button
                               onClick={() => loadUserActivity(u.id)}
                               className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-xs font-medium transition flex items-center gap-1"
                             >

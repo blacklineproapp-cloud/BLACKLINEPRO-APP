@@ -106,30 +106,6 @@ export async function POST(req: Request) {
   }
 
   // ========================================
-  // 3. REGISTRAR WEBHOOK NO LOG (legado - manter para compatibilidade)
-  // ========================================
-
-  let logId: string | null = null;
-
-  try {
-    const { data: log } = await supabaseAdmin
-      .from('webhook_logs')
-      .insert({
-        event: event.type,
-        stripe_event_id: event.id,
-        payload: event as any,
-        processed: false
-      })
-      .select()
-      .single();
-
-    logId = log?.id || null;
-  } catch (logError: any) {
-    // Se falhar ao registrar log, apenas avisar mas continuar processamento
-    console.error('[Webhook] Erro ao registrar log:', logError.message);
-  }
-
-  // ========================================
   // 3. PROCESSAR EVENTO
   // ========================================
 
@@ -195,22 +171,11 @@ export async function POST(req: Request) {
       })
       .eq('event_id', event.id);
 
-    // Marcar log como processado (legado)
-    if (logId) {
-      await supabaseAdmin
-        .from('webhook_logs')
-        .update({
-          processed: true,
-          processed_at: new Date().toISOString()
-        })
-        .eq('id', logId);
-    }
-
-    console.log(`[Webhook] ✅ Evento ${event.type} (${event.id}) processado com sucesso`);
+    console.log(`[Webhook Stripe] ✅ Evento ${event.type} (${event.id}) processado com sucesso`);
     return new NextResponse('OK', { status: 200 });
 
   } catch (error: any) {
-    console.error(`❌ [Webhook] Erro ao processar ${event.type}:`, error);
+    console.error(`❌ [Webhook Stripe] Erro ao processar ${event.type}:`, error);
 
     // Marcar evento como failed (idempotência)
     await supabaseAdmin
@@ -225,23 +190,6 @@ export async function POST(req: Request) {
         })
       })
       .eq('event_id', event.id);
-
-    // Registrar erro no log (legado)
-    if (logId) {
-      await supabaseAdmin
-        .from('webhook_logs')
-        .update({
-          processed: false,
-          error: JSON.stringify({
-            message: error.message,
-            stack: error.stack,
-            type: error.type,
-            code: error.code,
-            statusCode: error.statusCode
-          })
-        })
-        .eq('id', logId);
-    }
 
     // 🔒 SEGURANÇA: Retornar 500 para Stripe RETENTAR automaticamente
     // Stripe fará retry com exponential backoff (1h, 2h, 4h, etc.)
