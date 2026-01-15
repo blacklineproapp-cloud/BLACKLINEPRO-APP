@@ -273,7 +273,12 @@ export default function AssinaturaPage() {
                 <strong>Plano Cortesia</strong>
               </p>
               <p className="text-zinc-400 text-xs mt-1">
-                Você tem acesso gratuito permanente concedido pela equipe StencilFlow.
+                Você tem acesso cortesia concedido pela equipe StencilFlow.
+                {userData.subscription_expires_at && (
+                  <span className="block mt-1 text-blue-300 font-medium">
+                    Válido até: {new Date(userData.subscription_expires_at).toLocaleDateString('pt-BR')}
+                  </span>
+                )}
               </p>
             </div>
           )}

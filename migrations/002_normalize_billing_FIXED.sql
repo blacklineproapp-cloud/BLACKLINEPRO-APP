@@ -24,6 +24,7 @@ CREATE INDEX IF NOT EXISTS idx_customers_stripe_id ON customers(stripe_customer_
 CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
 
 -- Trigger para atualizar updated_at
+-- Trigger para atualizar updated_at
 CREATE OR REPLACE FUNCTION update_customers_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -32,6 +33,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS customers_updated_at_trigger ON customers;
 CREATE TRIGGER customers_updated_at_trigger
 BEFORE UPDATE ON customers
 FOR EACH ROW
@@ -49,7 +51,8 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   stripe_product_id VARCHAR(255),
   status VARCHAR(50) CHECK (status IN (
     'active', 'trialing', 'past_due', 'canceled',
-    'unpaid', 'incomplete', 'incomplete_expired', 'paused'
+    'unpaid', 'incomplete', 'incomplete_expired', 'paused',
+    'inactive'
   )),
   current_period_start TIMESTAMP,
   current_period_end TIMESTAMP,
@@ -61,6 +64,15 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- GARANTIR que a constraint esteja atualizada (mesmo se tabela já existia)
+ALTER TABLE subscriptions DROP CONSTRAINT IF EXISTS subscriptions_status_check;
+ALTER TABLE subscriptions ADD CONSTRAINT subscriptions_status_check 
+  CHECK (status IN (
+    'active', 'trialing', 'past_due', 'canceled',
+    'unpaid', 'incomplete', 'incomplete_expired', 'paused',
+    'inactive'
+  ));
 
 -- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_subscriptions_customer_id ON subscriptions(customer_id);
@@ -77,6 +89,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS subscriptions_updated_at_trigger ON subscriptions;
 CREATE TRIGGER subscriptions_updated_at_trigger
 BEFORE UPDATE ON subscriptions
 FOR EACH ROW
@@ -131,7 +144,7 @@ ALTER TABLE users DROP CONSTRAINT IF EXISTS users_plan_check;
 
 -- Adicionar novo constraint com todos os planos
 ALTER TABLE users ADD CONSTRAINT users_plan_check
-  CHECK (plan IN ('free', 'pro', 'studio', 'editor_only', 'full_access'));
+  CHECK (plan IN ('free', 'starter', 'pro', 'studio', 'enterprise', 'legacy'));
 
 -- ============================================================================
 -- 6. MIGRAR DADOS EXISTENTES

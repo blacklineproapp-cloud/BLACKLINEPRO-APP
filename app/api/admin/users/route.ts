@@ -220,7 +220,7 @@ export async function POST(req: Request) {
           }, { status: 403 });
         }
 
-        const { isCourtesy, sendPaymentLink } = body;
+        const { isCourtesy, sendPaymentLink, courtesyDurationDays } = body;
 
         if (!newPlan || !['free', 'starter', 'pro', 'studio', 'enterprise', 'legacy'].includes(newPlan)) {
           return NextResponse.json({ error: 'Plano inválido' }, { status: 400 });
@@ -228,77 +228,28 @@ export async function POST(req: Request) {
 
         const updates: any = { plan: newPlan };
 
-        if (newPlan === 'free') {
+        // Configuração de Status Baseado no Plano
+        if (newPlan === 'free' || newPlan === 'legacy') {
           updates.is_paid = false;
           updates.tools_unlocked = false;
           updates.subscription_status = 'inactive';
-          updates.admin_courtesy = false;
-          updates.admin_courtesy_granted_by = null;
-          updates.admin_courtesy_granted_at = null;
-          updates.admin_courtesy_expires_at = null;
-        } else if (newPlan === 'legacy') {
-          // Legacy: Atribui plano mas NÃO marca como pago (usuário paga via banner)
-          updates.is_paid = false;
-          updates.tools_unlocked = false;
-          updates.subscription_status = 'inactive';
-          updates.admin_courtesy = false;
-          // Não registra como cortesia - usuário precisa pagar
-        } else if (newPlan === 'starter') {
+        } else {
+          // Planos Pagos (Starter, Pro, Studio...)
           updates.is_paid = true;
-          updates.tools_unlocked = false;
           updates.subscription_status = 'active';
-          
-          // LÓGICA DE CORTESIA AUTOMÁTICA (STARTER)
-          const shouldBeCourtesy = isCourtesy !== false;
-
-          if (shouldBeCourtesy) {
-            updates.admin_courtesy = true;
-            updates.admin_courtesy_granted_by = adminCheck.adminId;
-            updates.admin_courtesy_granted_at = new Date().toISOString();
-            // Cortesia expira em 30 dias
-            const expirationDate = new Date();
-            expirationDate.setDate(expirationDate.getDate() + 30);
-            updates.admin_courtesy_expires_at = expirationDate.toISOString();
-          } else {
-             updates.admin_courtesy = false;
-             updates.admin_courtesy_expires_at = null;
-          }
-        } else if (newPlan === 'pro' || newPlan === 'studio' || newPlan === 'enterprise') {
-          updates.is_paid = true;
-          updates.tools_unlocked = true;
-          updates.subscription_status = 'active';
-          
-          // LÓGICA DE CORTESIA AUTOMÁTICA
-          // Se o admin altera manualmente, é cortesia por padrão (30 dias)
-          // a menos que explicitamente dito que NÃO é cortesia (ex: correção de erro)
-          const shouldBeCourtesy = isCourtesy !== false;
-
-          if (shouldBeCourtesy) {
-            updates.admin_courtesy = true;
-            updates.admin_courtesy_granted_by = adminCheck.adminId;
-            updates.admin_courtesy_granted_at = new Date().toISOString();
-            
-            // Cortesia expira em 30 dias (padrão)
-            const expirationDate = new Date();
-            expirationDate.setDate(expirationDate.getDate() + 30);
-            updates.admin_courtesy_expires_at = expirationDate.toISOString();
-            
-            console.log(`[Admin] Aplicando cortesia automática de 30 dias para ${targetUserId}`);
-          } else {
-             // Admin explicitamente desativou a cortesia (migração definitiva manual)
-             console.log(`[Admin] Admin desativou cortesia explícita para ${targetUserId}`);
-             updates.admin_courtesy = false;
-             updates.admin_courtesy_expires_at = null;
-          }
+          updates.tools_unlocked = ['pro', 'studio', 'enterprise'].includes(newPlan);
         }
 
-        // ✅ USAR FUNÇÃO ATÔMICA (previne race condition + garante atomicidade)
+        // ✅ USAR FUNÇÃO ATÔMICA UNIFICADA
         try {
           const result = await activateUserAtomic(targetUserId, newPlan, {
             isPaid: updates.is_paid,
             toolsUnlocked: updates.tools_unlocked,
             subscriptionStatus: updates.subscription_status,
-            adminId: adminCheck.adminId
+            adminId: adminCheck.adminId,
+            // 🆕 Lógica Unificada de Cortesia
+            isCourtesy: isCourtesy, 
+            courtesyDurationDays: courtesyDurationDays || 30 // Default 30 dias se não especificado
           });
 
           console.log(`[Admin] ✅ ${result.message}`);

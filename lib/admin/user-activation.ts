@@ -54,10 +54,14 @@ export async function activateUserAtomic(
     toolsUnlocked: boolean;
     subscriptionStatus: string;
     adminId?: string;
+    courtesyDurationDays?: number; // Se definido, aplica cortesia
+    isCourtesy?: boolean; // Forçar flag (default: true se duration > 0)
   }
 ): Promise<ActivateUserResult> {
-  console.log(`[UserActivation] 🔐 Ativando usuário ${userId} → ${newPlan} (ATOMIC)`);
+  const isCourtesy = options.isCourtesy !== false && (!!options.courtesyDurationDays || options.isCourtesy === true);
+  console.log(`[UserActivation] 🔐 Ativando usuário ${userId} → ${newPlan} (ATOMIC) | Cortesia: ${isCourtesy}`);
 
+  // 1. Executar RPC Atômica (Plano, Pagamento, Limites)
   const { data, error } = await supabaseAdmin
     .rpc('activate_user_with_reset', {
       p_user_id: userId,
@@ -77,6 +81,35 @@ export async function activateUserAtomic(
 
   if (!result.success) {
     throw new Error(result.message);
+  }
+
+  // 2. Atualizar Campos de Cortesia (Pós-RPC)
+  // Como não podemos alterar a RPC facilmente, fazemos o update logo em seguida.
+  // A consistência eventual é aceitável aqui (o pior caso é usuário ter plano sem flag de cortesia por alguns ms)
+  if (isCourtesy || options.isCourtesy === false) {
+     let expiresAt = null;
+     
+     if (isCourtesy && options.courtesyDurationDays) {
+         const date = new Date();
+         date.setDate(date.getDate() + options.courtesyDurationDays);
+         expiresAt = date.toISOString();
+     }
+
+     // Se explicitamente removendo cortesia (isCourtesy=false), limpa os campos
+     // Se concedendo (isCourtesy=true), seta os campos
+     const courtesyUpdates = {
+         admin_courtesy: isCourtesy,
+         admin_courtesy_expires_at: expiresAt,
+         admin_courtesy_granted_by: isCourtesy ? options.adminId : null,
+         admin_courtesy_granted_at: isCourtesy ? new Date().toISOString() : null
+     };
+
+     await supabaseAdmin
+         .from('users')
+         .update(courtesyUpdates)
+         .eq('id', userId);
+         
+     console.log(`[UserActivation] 🎁 Campos de cortesia atualizados:`, courtesyUpdates);
   }
 
   console.log(`[UserActivation] ✅ ${result.message}`);

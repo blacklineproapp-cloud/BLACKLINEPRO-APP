@@ -22,7 +22,7 @@ interface AuditLog {
 }
 
 interface ReconciliationData {
-    stripeOnly: { email: string; count: number; chargeIds: string[] }[];
+    stripeOnly: { email: string; count: number; chargeIds: string[]; suggestedPlan?: string }[];
     dbOnly: { email: string; plan: string }[];
     multiPayers: { email: string; count: number }[];
     stats: {
@@ -42,6 +42,7 @@ export default function AuditPage() {
   
   // Filtros
   const [filterAction, setFilterAction] = useState('');
+  const [selectedView, setSelectedView] = useState<'stripeOnly' | 'dbOnly' | 'multiPayers' | null>('stripeOnly');
 
   const loadData = async (forceReconcile = false) => {
     setLoading(true);
@@ -71,15 +72,21 @@ export default function AuditPage() {
     loadData(true); // Carrega reconciliação na primeira vez
   }, [page, filterAction]);
 
-  const handleFixStripeOnly = async (email: string) => {
-     if (!confirm(`Deseja ativar o plano PRO para ${email} baseado no histórico do Stripe?`)) return;
+  const handleFixStripeOnly = async (email: string, plan: string = 'pro') => {
+     if (!confirm(`Deseja ativar o plano ${plan.toUpperCase()} para ${email} (Cortesia de 30 dias até sincronizar)?`)) return;
      
      setFixing(email);
      try {
          const res = await fetch('/api/admin/audit', {
              method: 'POST',
              headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({ action: 'fix_stripe_only', email, plan: 'pro' })
+             // Envia 30 dias de cortesia para cobrir o período até o próximo webhook do Stripe
+             body: JSON.stringify({ 
+                 action: 'fix_stripe_only', 
+                 email, 
+                 plan,
+                 courtesyDurationDays: 30 
+             })
          });
          
          if (!res.ok) {
@@ -87,7 +94,7 @@ export default function AuditPage() {
              throw new Error(err.error || 'Erro ao corrigir');
          }
          
-         alert('Usuário ativado com sucesso!');
+         alert('Usuário ativado com sucesso! (Válido por 30 dias ou até o Stripe atualizar)');
          loadData(true); // Recarrega tudo
      } catch (error: any) {
          alert(error.message);
@@ -124,7 +131,14 @@ export default function AuditPage() {
         {reconciliation && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {/* Card 1: Stripe Only (CRÍTICO) */}
-                <div className="bg-zinc-900/50 border border-red-900/50 rounded-xl p-6 relative overflow-hidden group">
+                <button 
+                    onClick={() => setSelectedView('stripeOnly')}
+                    className={`text-left p-6 rounded-xl relative overflow-hidden group transition-all ${
+                        selectedView === 'stripeOnly' 
+                        ? 'bg-red-900/20 border-2 border-red-500 ring-2 ring-red-500/20' 
+                        : 'bg-zinc-900/50 border border-red-900/50 hover:bg-zinc-900 hover:border-red-800'
+                    }`}
+                >
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
                         <AlertTriangle size={64} className="text-red-500" />
                     </div>
@@ -136,10 +150,17 @@ export default function AuditPage() {
                         <p className="text-3xl font-bold text-white mb-2">{reconciliation.stripeOnly.length}</p>
                         <p className="text-zinc-500 text-sm">Usuários que pagaram mas não estão ativos no banco.</p>
                     </div>
-                </div>
+                </button>
 
                 {/* Card 2: DB Only (WARNING) */}
-                <div className="bg-zinc-900/50 border border-amber-900/50 rounded-xl p-6 relative overflow-hidden group">
+                <button
+                    onClick={() => setSelectedView('dbOnly')}
+                    className={`text-left p-6 rounded-xl relative overflow-hidden group transition-all ${
+                        selectedView === 'dbOnly' 
+                        ? 'bg-amber-900/20 border-2 border-amber-500 ring-2 ring-amber-500/20' 
+                        : 'bg-zinc-900/50 border border-amber-900/50 hover:bg-zinc-900 hover:border-amber-800'
+                    }`}
+                >
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
                         <Database size={64} className="text-amber-500" />
                     </div>
@@ -149,12 +170,19 @@ export default function AuditPage() {
                              Apenas Banco (Alerta)
                         </h3>
                         <p className="text-3xl font-bold text-white mb-2">{reconciliation.dbOnly.length}</p>
-                        <p className="text-zinc-500 text-sm">Ativos no banco sem pagamento recente no Stripe (Boletos Manuais?).</p>
+                        <p className="text-zinc-500 text-sm">Ativos no banco sem pagamento recente no Stripe.</p>
                     </div>
-                </div>
+                </button>
 
                 {/* Card 3: Renovações (INFO) */}
-                <div className="bg-zinc-900/50 border border-blue-900/50 rounded-xl p-6 relative overflow-hidden group">
+                <button
+                    onClick={() => setSelectedView('multiPayers')}
+                    className={`text-left p-6 rounded-xl relative overflow-hidden group transition-all ${
+                        selectedView === 'multiPayers' 
+                        ? 'bg-blue-900/20 border-2 border-blue-500 ring-2 ring-blue-500/20' 
+                        : 'bg-zinc-900/50 border border-blue-900/50 hover:bg-zinc-900 hover:border-blue-800'
+                    }`}
+                >
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition">
                         <RefreshCw size={64} className="text-blue-500" />
                     </div>
@@ -166,13 +194,13 @@ export default function AuditPage() {
                         <p className="text-3xl font-bold text-white mb-2">{reconciliation.multiPayers.length}</p>
                         <p className="text-zinc-500 text-sm">Usuários com múltiplos pagamentos confirmados.</p>
                     </div>
-                </div>
+                </button>
             </div>
         )}
 
-        {/* TABELA DE DISCREPÂNCIAS (Se houver críticas) */}
-        {reconciliation && reconciliation.stripeOnly.length > 0 && (
-            <div className="mb-8">
+        {/* DETALHES DA SELEÇÃO */}
+        {reconciliation && selectedView === 'stripeOnly' && reconciliation.stripeOnly.length > 0 && (
+            <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
                 <h2 className="text-xl font-bold mb-4 text-red-400 flex items-center gap-2">
                     <AlertTriangle size={20} />
                     Ação Necessária: Usuários Pagantes Inativos
@@ -192,18 +220,93 @@ export default function AuditPage() {
                                     <td className="p-4 font-mono text-zinc-300">{item.email}</td>
                                     <td className="p-4 text-zinc-400">{item.count} pagamentos encontrados</td>
                                     <td className="p-4 text-right">
-                                        <button 
-                                            onClick={() => handleFixStripeOnly(item.email)}
+                                        <button
+                                            onClick={() => handleFixStripeOnly(item.email, item.suggestedPlan || 'pro')}
                                             disabled={fixing === item.email}
                                             className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-lg text-white font-medium text-xs transition"
                                         >
-                                            {fixing === item.email ? 'Ativando...' : 'Corrigir (Ativar Pro)'}
+                                            {fixing === item.email ? 'Ativando...' : `Corrigir (Ativar ${item.suggestedPlan?.toUpperCase() || 'PRO'})`}
                                         </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                </div>
+            </div>
+        )}
+
+        {reconciliation && selectedView === 'dbOnly' && (
+             <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
+                <h2 className="text-xl font-bold mb-4 text-amber-400 flex items-center gap-2">
+                    <Database size={20} />
+                    Apenas no Banco (Possíveis Cortesia ou Erro)
+                </h2>
+                <div className="bg-zinc-900 border border-amber-900/30 rounded-xl overflow-hidden">
+                     {reconciliation.dbOnly.length === 0 ? (
+                        <div className="p-8 text-center text-zinc-500">Nenhum registro encontrado nesta categoria.</div>
+                     ) : (
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-amber-950/20 text-amber-200">
+                                <tr>
+                                    <th className="p-4">Email</th>
+                                    <th className="p-4">Plano Atual</th>
+                                    <th className="p-4 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-800">
+                                {reconciliation.dbOnly.map((item, idx) => (
+                                    <tr key={idx} className="hover:bg-zinc-800/30">
+                                        <td className="p-4 font-mono text-zinc-300">{item.email}</td>
+                                        <td className="p-4">
+                                            <span className="px-2 py-1 bg-zinc-800 rounded text-xs text-zinc-300 uppercase">{item.plan}</span>
+                                        </td>
+                                        <td className="p-4 text-right text-zinc-500 text-xs">
+                                            Investigar Manualmente
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                     )}
+                </div>
+            </div>
+        )}
+
+        {reconciliation && selectedView === 'multiPayers' && (
+             <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
+                <h2 className="text-xl font-bold mb-4 text-blue-400 flex items-center gap-2">
+                    <RefreshCw size={20} />
+                    Renovações Recentes ({reconciliation.multiPayers.length})
+                </h2>
+                <div className="bg-zinc-900 border border-blue-900/30 rounded-xl overflow-hidden">
+                     {reconciliation.multiPayers.length === 0 ? (
+                        <div className="p-8 text-center text-zinc-500">Nenhum registro encontrado nesta categoria.</div>
+                     ) : (
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-blue-950/20 text-blue-200">
+                                <tr>
+                                    <th className="p-4">Email</th>
+                                    <th className="p-4">Total de Pagamentos</th>
+                                    <th className="p-4 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zinc-800">
+                                {reconciliation.multiPayers.map((item, idx) => (
+                                    <tr key={idx} className="hover:bg-zinc-800/30">
+                                        <td className="p-4 font-mono text-zinc-300">{item.email}</td>
+                                        <td className="p-4 text-zinc-400 font-medium">{item.count} pagamentos</td>
+                                        <td className="p-4 text-right">
+                                            <span className="flex items-center justify-end gap-1 text-emerald-400 text-xs">
+                                                <CheckCircle size={14} />
+                                                Cliente Fiel
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                     )}
                 </div>
             </div>
         )}

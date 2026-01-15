@@ -93,6 +93,7 @@ scripts/test-*.ts
 scripts/validate-*.ts
 scripts/*.old
 scripts/*.sql
+scripts/*.backfill-*.ts
 
 # Supabase local (development only)
 supabase/

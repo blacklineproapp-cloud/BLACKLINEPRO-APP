@@ -74,9 +74,10 @@ export async function GET(req: Request) {
 
       const successfulCharges = charges.data.filter(c => c.status === 'succeeded' && c.paid);
       
-      // Agrupar por email
+      // Agrupar por email e analisar valores
       const chargesByEmail = new Map<string, number>();
       const emailToChargeIds = new Map<string, string[]>();
+      const emailToLastAmount = new Map<string, number>();
 
       for (const charge of successfulCharges) {
         let email = charge.billing_details?.email || charge.receipt_email || '';
@@ -88,9 +89,16 @@ export async function GET(req: Request) {
         if (email) {
           email = email.toLowerCase().trim();
           chargesByEmail.set(email, (chargesByEmail.get(email) || 0) + 1);
+          
           const ids = emailToChargeIds.get(email) || [];
           ids.push(charge.id);
           emailToChargeIds.set(email, ids);
+
+          // Guardar o maior valor pago (assumindo upgrade ou plano mais alto)
+          const currentMax = emailToLastAmount.get(email) || 0;
+          if (charge.amount > currentMax) {
+              emailToLastAmount.set(email, charge.amount);
+          }
         }
       }
 
@@ -107,13 +115,23 @@ export async function GET(req: Request) {
       const dbOnly: any[] = [];
       const multiPayers: any[] = [];
 
+      // Helper para adivinhar plano pelo valor (em centavos)
+      const guessPlan = (amount: number) => {
+          if (amount < 6000) return 'starter'; // ~R$ 50,00
+          if (amount < 15000) return 'pro';     // ~R$ 100,00
+          return 'studio';                      // > R$ 150,00
+      };
+
       // 1. Stripe Only (Pagou mas não tá ativo)
       for (const email of chargesByEmail.keys()) {
           if (!dbPaidEmails.has(email)) {
+              const amount = emailToLastAmount.get(email) || 0;
               stripeOnly.push({
                   email,
                   count: chargesByEmail.get(email),
-                  chargeIds: emailToChargeIds.get(email)
+                  chargeIds: emailToChargeIds.get(email),
+                  suggestedPlan: guessPlan(amount),
+                  lastAmount: amount
               });
           }
            // 3. Multi Payers
@@ -192,11 +210,15 @@ export async function POST(req: Request) {
             // Importar função atômica (gambiarra para não importar em cima se não usado)
             const { activateUserAtomic } = await import('@/lib/admin/user-activation');
             
+            const courtesyDays = body.courtesyDurationDays || 30;
+
             await activateUserAtomic(user.id, newPlan, {
                 isPaid: true,
                 adminId: userId, // ID CLERK do admin
                 subscriptionStatus: 'active',
-                toolsUnlocked: true // Required field
+                toolsUnlocked: true,
+                isCourtesy: true,
+                courtesyDurationDays: courtesyDays
             });
 
             // Logar ação
