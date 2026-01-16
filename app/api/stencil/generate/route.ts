@@ -8,7 +8,6 @@ import { checkEditorLimit, recordUsage, getLimitMessage } from '@/lib/billing/li
 import { BRL_COST } from '@/lib/credits';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
-import { trackTrialUsage, getClientIP } from '@/lib/abuse-prevention';
 
 export async function POST(req: Request) {
   try {

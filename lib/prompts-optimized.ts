@@ -22,6 +22,26 @@ GEOMETRIC LOCK:
 - Think: "I am TRACING then ENRICHING" not "I am DRAWING something similar"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚫 ZERO ADDITIONS - ABSOLUTE PROHIBITION 🚫
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+YOU MUST NOT ADD ANYTHING THAT DOES NOT EXIST IN THE SOURCE IMAGE:
+- ❌ If there is NO eyebrow → DO NOT draw an eyebrow
+- ❌ If there is NO nose → DO NOT draw a nose
+- ❌ If there is NO eyelash → DO NOT draw eyelashes
+- ❌ If there is NO background → DO NOT add a background
+- ❌ NEVER "complete" what you think is missing
+- ❌ NEVER assume the image is cropped and add the "rest"
+
+CRITICAL: The source image may contain ONLY a partial face, a single eye, 
+just lips, or any isolated element. THIS IS INTENTIONAL.
+Your job is to trace EXACTLY what exists, nothing more.
+
+EXAMPLE: If the image shows ONLY an eye with eyelashes:
+✅ OUTPUT: Eye + eyelashes ONLY
+❌ WRONG: Eye + eyelashes + eyebrow you invented
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!
 
@@ -207,37 +227,42 @@ TECHNICAL:
 
 OUTPUT: Generate ONLY the ultra-detailed topographic stencil. No text, no legends. PNG black on white.`;
 
-// LINHAS - Mapeamento Inteligente de Contornos (TODOS os detalhes estruturais, ZERO sombras)
-export const PERFECT_LINES_INSTRUCTION_OPTIMIZED = `ROLE: Intelligent Contour Mapping Specialist
-FUNCTION: Convert photo → COMPREHENSIVE CONTOUR MAP with ALL structural details, ZERO shadow rendering.
-
+// LINHAS - Versão SIMPLIFICADA para evitar alucinações
+export const PERFECT_LINES_INSTRUCTION_OPTIMIZED = `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ GEOMETRIC PRESERVATION - HIGHEST PRIORITY ⚠️
+🚫🚫🚫 ABSOLUTE RULE #1 - READ THIS FIRST 🚫🚫🚫
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-YOU ARE A PRECISION TRACER, NOT AN ARTIST:
-- TRACE every edge from the source image with MATHEMATICAL PRECISION
-- Every pixel position in OUTPUT must map 1:1 to the INPUT
-- Do NOT shift, resize, reposition, or "fix" ANY element
-- Eye in pixel (X,Y) → EXACT same (X,Y) in output
-- Nose contour → EXACT same pixel path in output
-- Crooked line in original → Crooked line in output (NO "corrections")
+DO NOT ADD ANYTHING THAT DOES NOT EXIST IN THE SOURCE IMAGE.
 
-VERIFICATION TEST (apply to your output):
-□ Overlay test: Does EVERY feature align EXACTLY with original?
-□ Can I see the original image "through" the stencil lines?
-□ Is this a TRACE or a REDRAWING? (MUST be TRACE)
-□ Did I alter ANY position, proportion, or shape? (MUST be NO)
+The source image may be INTENTIONALLY CROPPED or PARTIAL.
+If you see ONLY an eye → draw ONLY that eye
+If there is NO eyebrow in the image → DO NOT DRAW AN EYEBROW
+If there is NO nose → DO NOT DRAW A NOSE
+NEVER "complete" or "fill in" what you think is missing.
 
-YOU ARE NOT:
-❌ Drawing a "similar" version
-❌ Creating a "better" interpretation
-❌ Making an "inspired by" artwork
-YOU ARE:
-✅ Tracing the EXACT edges that exist in the source
-✅ Performing a geometric transformation (photo → lines) with ZERO content change
+EXAMPLE:
+Source: Eye + eyelashes (no eyebrow visible)
+✅ CORRECT OUTPUT: Eye + eyelashes only
+❌ WRONG OUTPUT: Eye + eyelashes + eyebrow you invented
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ROLE: Edge Tracer
+FUNCTION: Trace visible edges as black lines on white. Nothing more.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GEOMETRIC PRESERVATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- TRACE edges exactly where they exist in the source
+- Every line in output must correspond to a visible edge in source
+- Do NOT shift, resize, or reposition anything
+- If a contour is crooked in source, it stays crooked in output
+
+VERIFICATION:
+□ Did I add ANYTHING not in source? (MUST be NO)
+□ Does every output line match a source edge? (MUST be YES)
 
 ═══════════════════════════════════════════════════════════════
 CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!
