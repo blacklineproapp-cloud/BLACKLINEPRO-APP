@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { retryGeminiAPI } from './retry';
-import { TOPOGRAPHIC_INSTRUCTION_OPTIMIZED, PERFECT_LINES_INSTRUCTION_OPTIMIZED, SIMPLIFY_TOPOGRAPHIC_TO_LINES } from './prompts-optimized';
+import { TOPOGRAPHIC_INSTRUCTION_OPTIMIZED, PERFECT_LINES_INSTRUCTION_OPTIMIZED, SIMPLIFY_TOPOGRAPHIC_TO_LINES, ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED } from './prompts-optimized';
 
 const apiKey = process.env.GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -28,6 +28,19 @@ const linesModel = genAI.getGenerativeModel({
     temperature: 0,    // ZERO criatividade - fidelidade 100%
     topP: 0.15,        // Mesmo do Topográfico (funcionou)
     topK: 10,          // Mesmo do Topográfico (funcionou)
+  },
+});
+
+
+// Modelo para ANIME/ILUSTRAÇÃO - Ultra conservador
+// Para animes, desenhos, Maori, Tribal e qualquer arte com linhas de contorno fortes
+// Objetivo: LIMPAR e PRESERVAR linhas existentes, não criar novas
+const animeModel = genAI.getGenerativeModel({
+  model: 'gemini-2.5-flash-image',
+  generationConfig: {
+    temperature: 0,    // ZERO criatividade - apenas limpar
+    topP: 0.1,         // Ultra conservador - não adiciona nada
+    topK: 5,           // Poucos tokens - mantém simplicidade
   },
 });
 
@@ -66,28 +79,41 @@ const textModel = genAI.getGenerativeModel({
 export async function generateStencilFromImage(
   base64Image: string,
   promptDetails: string = '',
-  style: 'standard' | 'perfect_lines' = 'standard'
+  style: 'standard' | 'perfect_lines' | 'anime' = 'standard'
 ): Promise<string> {
-  // INVERTIDO: standard = LINHAS, perfect_lines = TOPOGRÁFICO
-  // USANDO PROMPTS OTIMIZADOS (~50% menores) para melhor velocidade
-  const systemInstruction = style === 'standard'
-    ? PERFECT_LINES_INSTRUCTION_OPTIMIZED
-    : TOPOGRAPHIC_INSTRUCTION_OPTIMIZED;
+  // Seleção de prompt baseado no estilo
+  // standard = LINHAS (para fotos)
+  // perfect_lines = TOPOGRÁFICO (7 níveis)
+  // anime = ANIME/ILUSTRAÇÃO (para desenhos, animes, Maori, Tribal)
+  let systemInstruction: string;
+  let model: any;
+  let modeInfo: string;
+  let traceInstruction: string;
 
-  // Seleção inteligente de modelo
-  const model = style === 'standard' ? linesModel : topographicModel;
-
-  // Log detalhado para debug
-  const modeInfo = style === 'standard'
-    ? 'LINHAS DETALHADAS (temp: 0, topP: 0.15, topK: 10) - TODOS DETALHES, LINHAS LIMPAS'
-    : 'TOPOGRÁFICO V3.0 (temp: 0, topP: 0.15, topK: 10) - 7 NÍVEIS, MÁXIMA RIQUEZA';
-
-  // Construir prompt final - ENFATIZA TRAÇADO, NÃO RECRIAÇÃO
-  const traceInstruction = style === 'standard'
-    ? 'TRACE this exact image into a line stencil. Do NOT redraw. Apply a geometric line transformation to the EXACT pixels. Every contour MUST overlay perfectly with the original.'
-    : 'TRACE this exact image into a topographic stencil with rich depth and detail. Do NOT redraw. Apply a geometric transformation preserving ALL positions. Add 7-level shading following the EXACT source geometry.';
+  switch (style) {
+    case 'anime':
+      systemInstruction = ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED;
+      model = animeModel;
+      modeInfo = 'ANIME/ILUSTRAÇÃO (temp: 0, topP: 0.1, topK: 5) - LIMPAR E PRESERVAR LINHAS';
+      traceInstruction = 'CLEAN this illustration into a line stencil. PRESERVE all existing contour lines. REMOVE all solid black fills - convert to outline only. REMOVE backgrounds. Output: black lines on white only.';
+      break;
+    case 'perfect_lines':
+      systemInstruction = TOPOGRAPHIC_INSTRUCTION_OPTIMIZED;
+      model = topographicModel;
+      modeInfo = 'TOPOGRÁFICO V3.0 (temp: 0, topP: 0.15, topK: 10) - 7 NÍVEIS, MÁXIMA RIQUEZA';
+      traceInstruction = 'TRACE this exact image into a topographic stencil with rich depth and detail. Do NOT redraw. Apply a geometric transformation preserving ALL positions. Add 7-level shading following the EXACT source geometry.';
+      break;
+    case 'standard':
+    default:
+      systemInstruction = PERFECT_LINES_INSTRUCTION_OPTIMIZED;
+      model = linesModel;
+      modeInfo = 'LINHAS DETALHADAS (temp: 0, topP: 0.15, topK: 10) - TODOS DETALHES, LINHAS LIMPAS';
+      traceInstruction = 'TRACE this exact image into a line stencil. Do NOT redraw. Apply a geometric line transformation to the EXACT pixels. Every contour MUST overlay perfectly with the original.';
+      break;
+  }
   
   const fullPrompt = `${systemInstruction}\n\n${promptDetails ? `DETALHES ADICIONAIS: ${promptDetails}\n\n` : ''}${traceInstruction}`;
+
 
   // Verificar se é URL e baixar a imagem
   let cleanBase64: string;

@@ -199,10 +199,12 @@ export class SubscriptionService {
   }
 
   /**
-   * Sincroniza subscription do Stripe com banco
+   * Sincroniza subscription do Stripe com banco (UPSERT)
+   * Se não existir no banco, cria automaticamente
    */
   static async syncFromStripe(
-    stripeSubscriptionId: string
+    stripeSubscriptionId: string,
+    customerId?: string
   ): Promise<Subscription> {
     try {
       // 1. Buscar do Stripe
@@ -211,14 +213,80 @@ export class SubscriptionService {
       );
 
       // 2. Buscar no banco
-      const subscription = await this.getByStripeId(stripeSubscriptionId);
+      let subscription = await this.getByStripeId(stripeSubscriptionId);
 
+      // 3. Se não existir, criar (UPSERT)
       if (!subscription) {
-        throw new Error('Subscription não encontrada no banco');
+        console.log(`[SubscriptionService] Subscription ${stripeSubscriptionId} não existe no banco. Criando...`);
+
+        // Buscar customer_id se não foi passado
+        let dbCustomerId = customerId;
+        if (!dbCustomerId) {
+          const stripeCustomerId = typeof stripeSubscription.customer === 'string'
+            ? stripeSubscription.customer
+            : stripeSubscription.customer.id;
+
+          const { data: customer } = await supabaseAdmin
+            .from('customers')
+            .select('id')
+            .eq('stripe_customer_id', stripeCustomerId)
+            .single();
+
+          if (customer) {
+            dbCustomerId = customer.id;
+          }
+        }
+
+        if (!dbCustomerId) {
+          console.warn(`[SubscriptionService] Customer não encontrado para subscription ${stripeSubscriptionId}. Pulando criação.`);
+          // Retornar objeto mínimo para não quebrar o fluxo
+          return {
+            id: 'temp-' + stripeSubscriptionId,
+            stripe_subscription_id: stripeSubscriptionId,
+            status: stripeSubscription.status as SubscriptionStatus,
+          } as Subscription;
+        }
+
+        // Criar subscription no banco
+        const { data: newSubscription, error: insertError } = await supabaseAdmin
+          .from('subscriptions')
+          .insert({
+            customer_id: dbCustomerId,
+            stripe_subscription_id: stripeSubscription.id,
+            stripe_price_id: stripeSubscription.items.data[0].price.id,
+            stripe_product_id: typeof stripeSubscription.items.data[0].price.product === 'string'
+              ? stripeSubscription.items.data[0].price.product
+              : stripeSubscription.items.data[0].price.product.id,
+            status: stripeSubscription.status as SubscriptionStatus,
+            current_period_start: safeTimestampToISO(stripeSubscription.current_period_start)!,
+            current_period_end: safeTimestampToISO(stripeSubscription.current_period_end)!,
+            trial_start: safeTimestampToISO(stripeSubscription.trial_start),
+            trial_end: safeTimestampToISO(stripeSubscription.trial_end),
+            canceled_at: safeTimestampToISO(stripeSubscription.canceled_at),
+            ended_at: safeTimestampToISO(stripeSubscription.ended_at),
+            metadata: stripeSubscription.metadata || {}
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          // Se erro de duplicação, tentar buscar novamente
+          if (insertError.code === '23505') {
+            subscription = await this.getByStripeId(stripeSubscriptionId);
+            if (subscription) {
+              console.log(`[SubscriptionService] Subscription já existia (race condition), usando existente`);
+            }
+          } else {
+            throw new Error(`Erro ao criar subscription: ${insertError.message}`);
+          }
+        } else {
+          console.log(`[SubscriptionService] ✅ Subscription criada: ${newSubscription?.id}`);
+          return newSubscription!;
+        }
       }
 
-      // 3. Atualizar com dados do Stripe
-      return await this.updateSubscription(subscription.id, {
+      // 4. Atualizar com dados do Stripe
+      return await this.updateSubscription(subscription!.id, {
         status: stripeSubscription.status as SubscriptionStatus,
         stripe_price_id: stripeSubscription.items.data[0].price.id,
         current_period_start: safeTimestampToISO(stripeSubscription.current_period_start)!,

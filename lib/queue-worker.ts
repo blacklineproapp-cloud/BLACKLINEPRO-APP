@@ -7,7 +7,7 @@ import {
 } from './queue';
 import { generateStencilFromImage, enhanceImage, generateTattooIdea, analyzeImageColors } from './gemini';
 import { recordUsage } from './billing/limits';
-import { BRL_COST } from './credits';
+import { BRL_COST } from './billing/costs';
 import { supabaseAdmin } from './supabase';
 
 /**

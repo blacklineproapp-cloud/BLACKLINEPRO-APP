@@ -4,7 +4,7 @@ import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { generateTattooIdea } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkAILimit, checkGenerateIdeaLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
-import { BRL_COST } from '@/lib/credits';
+import { BRL_COST } from '@/lib/billing/costs';
 
 export async function POST(req: Request) {
   try {

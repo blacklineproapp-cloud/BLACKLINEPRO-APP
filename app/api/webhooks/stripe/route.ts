@@ -304,10 +304,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           // O activateUserAtomic pode não limpar is_blocked dependendo da versão do RPC.
           if (user.is_blocked) {
              console.log('[Webhook] 🔓 Desbloqueando usuário após pagamento confirmado');
-             await supabaseAdmin.from('users').update({ 
+             await supabaseAdmin.from('users').update({
                is_blocked: false,
                blocked_reason: null,
-               blocked_at: null 
+               blocked_at: null
              }).eq('id', user.id);
           }
 
@@ -315,7 +315,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
         } catch (activationError: any) {
           console.error('[Webhook] ❌ Erro na ativação atômica:', activationError);
-          // Não throw - continuar processando webhook (já logado)
+          // 🔧 CORREÇÃO: Propagar erro para Stripe fazer retry
+          throw activationError;
         }
       } else {
         // Boleto PENDENTE - apenas atualizar status sem liberar limites
@@ -346,15 +347,48 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         }
       });
 
+      // 🆕 CORREÇÃO: Salvar subscription no banco (previne erro em webhooks subsequentes)
+      if (customer?.id) {
+        try {
+          const { error: subError } = await supabaseAdmin
+            .from('subscriptions')
+            .upsert({
+              customer_id: customer.id,
+              stripe_subscription_id: subscription.id,
+              stripe_price_id: subscription.items.data[0].price.id,
+              stripe_product_id: typeof subscription.items.data[0].price.product === 'string'
+                ? subscription.items.data[0].price.product
+                : subscription.items.data[0].price.product.id,
+              status: subscription.status,
+              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+              trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+              metadata: subscription.metadata || {}
+            }, {
+              onConflict: 'stripe_subscription_id'
+            });
+
+          if (subError) {
+            console.warn(`[Webhook] ⚠️ Erro ao salvar subscription: ${subError.message}`);
+          } else {
+            console.log(`[Webhook] ✅ Subscription ${subscription.id} salva no banco`);
+          }
+        } catch (subSaveError: any) {
+          console.warn(`[Webhook] ⚠️ Erro ao salvar subscription: ${subSaveError.message}`);
+          // Não throw - subscription pode ser criada pelo webhook customer.subscription.created
+        }
+      }
+
       // Log se foi iniciado pelo admin e concluiu pagamento
       if (isAdminInitiated && adminId && isPaid) {
-      await supabaseAdmin.from('admin_logs').insert({
-        admin_user_id: adminId,
-        action: 'user_completed_payment',
-        target_user_id: user.id,
-        details: { plan: plan || 'starter', subscription_id: subscription.id }
-      });
-    }
+        await supabaseAdmin.from('admin_logs').insert({
+          admin_user_id: adminId,
+          action: 'user_completed_payment',
+          target_user_id: user.id,
+          details: { plan: plan || 'starter', subscription_id: subscription.id }
+        });
+      }
 
     // TODO: Enviar email de boas-vindas
     // await sendWelcomeEmail(user.email, user.name);
@@ -485,6 +519,38 @@ async function handleAsyncPaymentSucceeded(session: Stripe.Checkout.Session) {
         plan_type: planType
       });
     }
+
+    // 🆕 CORREÇÃO: Salvar subscription no banco (previne erro em webhooks subsequentes)
+    if (customer?.id) {
+      try {
+        const { error: subError } = await supabaseAdmin
+          .from('subscriptions')
+          .upsert({
+            customer_id: customer.id,
+            stripe_subscription_id: subscription.id,
+            stripe_price_id: subscription.items.data[0].price.id,
+            stripe_product_id: typeof subscription.items.data[0].price.product === 'string'
+              ? subscription.items.data[0].price.product
+              : subscription.items.data[0].price.product.id,
+            status: subscription.status,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            trial_start: subscription.trial_start ? new Date(subscription.trial_start * 1000).toISOString() : null,
+            trial_end: subscription.trial_end ? new Date(subscription.trial_end * 1000).toISOString() : null,
+            metadata: subscription.metadata || {}
+          }, {
+            onConflict: 'stripe_subscription_id'
+          });
+
+        if (subError) {
+          console.warn(`[Webhook] ⚠️ Erro ao salvar subscription (boleto): ${subError.message}`);
+        } else {
+          console.log(`[Webhook] ✅ Subscription ${subscription.id} salva no banco (boleto)`);
+        }
+      } catch (subSaveError: any) {
+        console.warn(`[Webhook] ⚠️ Erro ao salvar subscription (boleto): ${subSaveError.message}`);
+      }
+    }
   }
 
   console.log(`[Webhook] ✅ Boleto processado com sucesso para ${user.email}`);
@@ -494,14 +560,95 @@ async function handleAsyncPaymentSucceeded(session: Stripe.Checkout.Session) {
  * customer.subscription.created
  * Quando nova assinatura é criada
  * ATUALIZADO: Cria organização automaticamente para Studio/Enterprise
+ * ATUALIZADO: Cria customer automaticamente se não existir
  */
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
+  const stripeCustomerId = subscription.customer as string;
 
-  // Buscar customer
-  const customer = await CustomerService.getByStripeId(subscription.customer as string);
+  // Buscar customer - se não existir, tentar criar
+  let customer = await CustomerService.getByStripeId(stripeCustomerId);
 
   if (!customer) {
-    throw new Error(`Customer não encontrado: ${subscription.customer}`);
+    console.log(`[Webhook] Customer ${stripeCustomerId} não encontrado. Tentando criar...`);
+
+    // Buscar dados do customer no Stripe
+    const stripeCustomer = await stripe.customers.retrieve(stripeCustomerId);
+
+    if (stripeCustomer.deleted) {
+      throw new Error(`Customer ${stripeCustomerId} foi deletado no Stripe`);
+    }
+
+    // Tentar encontrar usuário pelo email ou clerk_id nos metadados
+    const customerEmail = stripeCustomer.email;
+    const clerkId = subscription.metadata?.clerk_id || stripeCustomer.metadata?.clerk_id;
+
+    let userId: string | null = null;
+
+    // Buscar por clerk_id primeiro (mais confiável)
+    if (clerkId) {
+      const { data: userByClerk } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('clerk_id', clerkId)
+        .single();
+
+      if (userByClerk) {
+        userId = userByClerk.id;
+      }
+    }
+
+    // Se não encontrou por clerk_id, buscar por email
+    if (!userId && customerEmail) {
+      const { data: userByEmail } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .ilike('email', customerEmail)
+        .single();
+
+      if (userByEmail) {
+        userId = userByEmail.id;
+      }
+    }
+
+    if (!userId) {
+      console.error(`[Webhook] ❌ Não foi possível encontrar usuário para customer ${stripeCustomerId}`);
+      console.error(`  - Email: ${customerEmail}`);
+      console.error(`  - Clerk ID: ${clerkId}`);
+      throw new Error(`Usuário não encontrado para customer ${stripeCustomerId}`);
+    }
+
+    // Criar customer no banco
+    const { data: newCustomer, error: customerError } = await supabaseAdmin
+      .from('customers')
+      .insert({
+        user_id: userId,
+        stripe_customer_id: stripeCustomerId,
+        email: customerEmail || '',
+        nome: stripeCustomer.name || ''
+      })
+      .select()
+      .single();
+
+    if (customerError) {
+      // Se erro de duplicação, buscar novamente
+      if (customerError.code === '23505') {
+        customer = await CustomerService.getByStripeId(stripeCustomerId);
+        if (!customer) {
+          throw new Error(`Erro ao criar customer: ${customerError.message}`);
+        }
+        console.log(`[Webhook] Customer já existia (race condition), usando existente`);
+      } else {
+        throw new Error(`Erro ao criar customer: ${customerError.message}`);
+      }
+    } else {
+      customer = newCustomer;
+      console.log(`[Webhook] ✅ Customer criado: ${customer?.id}`);
+    }
+  }
+
+  // Validação final: garantir que customer existe
+  if (!customer) {
+    throw new Error(`Customer não pôde ser criado ou encontrado: ${stripeCustomerId}`);
   }
 
   // Determinar plano baseado no price_id

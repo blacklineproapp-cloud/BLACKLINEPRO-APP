@@ -4,7 +4,7 @@ import { isAdmin as checkIsAdmin } from '@/lib/auth';
 import { removeBackground } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkToolsLimit, checkRemoveBackgroundLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
-import { BRL_COST } from '@/lib/credits';
+import { BRL_COST } from '@/lib/billing/costs';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';

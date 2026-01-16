@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { PLAN_LIMITS as BILLING_LIMITS } from '@/lib/billing/limits';
-import { PLAN_LIMITS as CREDITS_LIMITS } from '@/lib/credits';
 
 export async function GET(req: Request) {
   try {
@@ -115,10 +114,7 @@ export async function GET(req: Request) {
             : 0
         }
       },
-      limits: {
-        billing: billingLimits,
-        credits: CREDITS_LIMITS[plan as keyof typeof CREDITS_LIMITS]
-      },
+      limits: billingLimits,
       nextReset: nextReset.toISOString()
     });
 

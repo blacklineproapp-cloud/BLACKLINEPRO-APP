@@ -5,7 +5,7 @@ import { generateStencilFromImage } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { rateLimit } from '@/lib/ratelimit';
 import { checkEditorLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
-import { BRL_COST } from '@/lib/credits';
+import { BRL_COST } from '@/lib/billing/costs';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
 
@@ -137,8 +137,8 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
   }
 
   // VALIDAÇÃO: Garantir que style é um valor válido
-  const validStyles = ['standard', 'perfect_lines'] as const;
-  const selectedStyle = (validStyles as readonly string[]).includes(style) ? style as 'standard' | 'perfect_lines' : 'standard';
+  const validStyles = ['standard', 'perfect_lines', 'anime'] as const;
+  const selectedStyle = (validStyles as readonly string[]).includes(style) ? style as 'standard' | 'perfect_lines' | 'anime' : 'standard';
 
   logger.info('[Generate] Gerando stencil', {
     ...validation.metadata,
@@ -150,11 +150,18 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
   const stencilImage = await generateStencilFromImage(image, promptDetails, selectedStyle);
 
   // ✅ REGISTRAR USO após geração bem-sucedida
+  // Mapear estilo para tipo de operação para custo correto
+  const operationCost = selectedStyle === 'anime' 
+    ? BRL_COST.anime 
+    : selectedStyle === 'perfect_lines' 
+      ? BRL_COST.topographic 
+      : BRL_COST.lines;
+
   await recordUsage({
     userId: userUuid,
     type: 'editor_generation',
     operationType: 'generate_stencil',
-    cost: selectedStyle === 'perfect_lines' ? BRL_COST.lines : BRL_COST.topographic,
+    cost: operationCost,
     metadata: {
       style: selectedStyle,
       operation: 'generate_stencil',

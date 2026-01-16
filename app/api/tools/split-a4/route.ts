@@ -4,7 +4,7 @@ import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { generateStencilFromImage } from '@/lib/gemini';
 import { checkToolsLimit, checkSplitA4Limit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
-import { BRL_COST } from '@/lib/credits';
+import { BRL_COST } from '@/lib/billing/costs';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
 import sharp from 'sharp';
 
@@ -57,7 +57,7 @@ interface SplitOptions {
   overlapCm: number;
   offsetXCm: number;
   offsetYCm: number;
-  processMode: 'reference' | 'topographic' | 'perfect_lines';
+  processMode: 'reference' | 'topographic' | 'perfect_lines' | 'anime';
   forcedCols?: number; // Grid fixo definido pelo usuário
   forcedRows?: number; // Grid fixo definido pelo usuário
   userUuid?: string; // UUID do usuário para registrar uso
@@ -212,10 +212,11 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
   // STEP 2: Aplicar processamento Gemini se necessário
   // ---------------------------------------------------------------------------
 
-  if (processMode === 'topographic' || processMode === 'perfect_lines') {
+  if (processMode === 'topographic' || processMode === 'perfect_lines' || processMode === 'anime') {
 
     const resizedBase64 = `data:image/png;base64,${processedBuffer.toString('base64')}`;
-    const stencilStyle = processMode === 'perfect_lines' ? 'perfect_lines' : 'standard';
+    // Para anime, usar estilo 'anime', para perfect_lines usar 'perfect_lines', para topographic usar 'standard'
+    const stencilStyle = processMode === 'anime' ? 'anime' : processMode === 'perfect_lines' ? 'perfect_lines' : 'standard';
 
     try {
       const stencilBase64 = await generateStencilFromImage(resizedBase64, '', stencilStyle);
@@ -574,7 +575,7 @@ export async function POST(req: Request) {
       overlap?: number;
       offsetX?: number;
       offsetY?: number;
-      processMode?: 'reference' | 'topographic' | 'perfect_lines';
+      processMode?: 'reference' | 'topographic' | 'perfect_lines' | 'anime';
       forcedCols?: number;
       forcedRows?: number;
       croppedArea?: CropArea;

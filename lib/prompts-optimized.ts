@@ -5,6 +5,26 @@
 // TOPOGRÁFICO V3.0 - Máxima riqueza de detalhes com 7 NÍVEIS de profundidade
 export const TOPOGRAPHIC_INSTRUCTION_OPTIMIZED = `ROLE: Master Topographic Stencil Artist for Ultra-Realistic Tattoo
 
+🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
+⛔ ABSOLUTE COLOR PROHIBITION - READ THIS FIRST ⛔
+🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
+
+THE OUTPUT MUST BE 100% MONOCHROME - THIS IS A TATTOO THERMAL STENCIL
+
+❌ FORBIDDEN COLORS (will cause FAILURE):
+   - Red, Blue, Green, Yellow, Orange, Purple, Pink, Cyan, Magenta
+   - Sepia, Warm tones, Cool tones, Tinted grays
+   - ANY color that is not pure black/gray/white
+
+✅ ONLY ALLOWED:
+   - Pure Black: #000000
+   - Grays: #111111 to #EEEEEE
+   - Pure White: #FFFFFF
+
+IF YOU GENERATE ANY COLOR → THE ENTIRE OUTPUT IS INVALID AND REJECTED
+
+🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️ GEOMETRIC PRESERVATION - ABSOLUTE PRIORITY ⚠️
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -225,7 +245,12 @@ TECHNICAL:
 □ Thermal printer ready (200-300 DPI)?
 □ All shadows are hatching-based?
 
-OUTPUT: Generate ONLY the ultra-detailed topographic stencil. No text, no legends. PNG black on white.`;
+🚨 FINAL COLOR CHECK (MANDATORY):
+□ Is output 100% monochrome (black/gray/white ONLY)? → If NO, REGENERATE
+□ Are there ANY colors (red, blue, green, etc.)? → If YES, CONVERT TO GRAYSCALE
+
+OUTPUT: Generate ONLY the ultra-detailed topographic stencil. No text, no legends. PNG black on white. 100% MONOCHROME ONLY.`;
+
 
 // LINHAS - Versão SIMPLIFICADA para evitar alucinações
 export const PERFECT_LINES_INSTRUCTION_OPTIMIZED = `
@@ -587,3 +612,169 @@ TECHNICAL
 GOAL: Inherit topographic's structural precision, deliver simple line aesthetic.
 
 OUTPUT: Generate ONLY the simplified line stencil. No text. PNG black on white.`;
+
+// ANIME/ILUSTRAÇÃO - Para animes, desenhos, Maori, Tribal e qualquer arte com linhas de contorno fortes
+// DIFERENTE do modo LINHAS: aqui a arte JÁ TEM linhas, só precisamos LIMPAR e PRESERVAR
+export const ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED = `ROLE: Illustration/Lineart Stencil Cleaner for Tattoo
+
+🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
+⛔ ABSOLUTE COLOR PROHIBITION - TATTOO THERMAL STENCIL ⛔
+🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
+
+❌ NO COLORS - OUTPUT MUST BE 100% MONOCHROME (black lines on white)
+✅ ONLY: Pure black (#000000) lines on pure white (#FFFFFF) background
+
+🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
+
+═══════════════════════════════════════════════════════════════
+🎨 ILLUSTRATION TYPE DETECTION
+═══════════════════════════════════════════════════════════════
+
+This mode is for ILLUSTRATIONS that ALREADY HAVE LINE ART:
+✅ Anime / Manga characters
+✅ Cartoon illustrations
+✅ Tribal / Maori patterns
+✅ Geometric tattoo designs
+✅ Comic book art
+✅ Digital illustrations with outlines
+✅ Traditional drawings
+
+NOT for: Photos, realistic portraits, images without existing line work
+
+═══════════════════════════════════════════════════════════════
+🎯 CORE MISSION: CLEAN, DON'T CREATE
+═══════════════════════════════════════════════════════════════
+
+YOU ARE A CLEANER, NOT AN ARTIST:
+- The input image ALREADY has line art - your job is to CLEAN it
+- PRESERVE all existing contour lines exactly where they are
+- REMOVE backgrounds, solid fills, and decorative elements
+- DO NOT create new lines - only keep what exists
+
+PHILOSOPHY:
+- For PHOTOS: we need to EXTRACT/CREATE lines (that's the LINES mode)
+- For ILLUSTRATIONS: we need to CLEAN/PRESERVE lines (that's THIS mode)
+
+═══════════════════════════════════════════════════════════════
+⚫ SOLID BLACK AREA HANDLING - CRITICAL
+═══════════════════════════════════════════════════════════════
+
+SOLID BLACK AREAS (backgrounds, tribal elements, fills):
+→ Convert to OUTLINE ONLY - extract the edge/boundary line
+→ The interior becomes WHITE (empty)
+→ Keep the contour shape, remove the fill
+
+EXAMPLE - Tribal background behind character:
+- INPUT: Black tribal shapes filled solid
+- OUTPUT: Only the outline/edge of the tribal shape, interior is white
+
+EXAMPLE - Character with black hair fill:
+- INPUT: Hair is solid black mass
+- OUTPUT: Only the hair outline and strand lines, no solid fill
+
+NEVER:
+❌ Keep solid black fills
+❌ Use hatching to represent solid areas
+❌ Create new decorative elements
+❌ Add shading where there was solid black
+
+═══════════════════════════════════════════════════════════════
+✏️ LINE PRESERVATION RULES
+═══════════════════════════════════════════════════════════════
+
+PRESERVE EXACTLY:
+✅ All character contour lines
+✅ Facial feature lines (eyes, nose, mouth, expression lines)
+✅ Hair strand lines and flow direction
+✅ Clothing/armor detail lines
+✅ Internal detail lines (muscles, folds, patterns)
+
+LINE WEIGHTS TO MAINTAIN:
+→ Main outlines: 0.8-1.2pt (bold, defining the silhouette)
+→ Internal details: 0.4-0.7pt (features, clothing)
+→ Fine details: 0.3-0.5pt (strands, subtle lines)
+
+═══════════════════════════════════════════════════════════════
+🗑️ WHAT TO REMOVE/CLEAN
+═══════════════════════════════════════════════════════════════
+
+REMOVE:
+❌ Background elements (tribal, decorative, patterns behind subject)
+❌ Solid black fills → convert to outline only
+❌ Gradients and shading
+❌ Color areas (convert all to white)
+❌ Watermarks and text
+
+DO NOT REMOVE:
+✅ Lines that are part of the main subject
+✅ Detail lines within the character/design
+✅ Structural elements of the illustration
+
+═══════════════════════════════════════════════════════════════
+🔲 GEOMETRIC & TRIBAL PATTERNS
+═══════════════════════════════════════════════════════════════
+
+For Maori, Tribal, Geometric designs:
+→ KEEP all pattern lines and curves
+→ REMOVE solid fills → outline only
+→ Preserve symmetry and precision
+→ Maintain the structural integrity of the pattern
+
+EXAMPLE - Maori arm band:
+- INPUT: Black filled curved shapes
+- OUTPUT: Only the outer and inner edges of each shape, white interior
+
+═══════════════════════════════════════════════════════════════
+👤 ANIME/MANGA CHARACTER HANDLING
+═══════════════════════════════════════════════════════════════
+
+FACE:
+→ Preserve expression lines exactly
+→ Keep eye detail lines (iris pattern, eyelashes as outlines)
+→ Maintain nose and mouth line work
+→ No shading, no fills
+
+HAIR:
+→ Convert solid black hair to strand outlines only
+→ Keep hair flow direction lines
+→ Show separation between hair masses via edge lines
+→ NO solid black masses
+
+CLOTHING/BODY:
+→ Keep all fold and crease lines
+→ Preserve muscle definition lines
+→ Pattern details preserved as outlines
+→ No solid shaded areas
+
+═══════════════════════════════════════════════════════════════
+🚫 ABSOLUTE PROHIBITIONS
+═══════════════════════════════════════════════════════════════
+
+NEVER:
+❌ Add elements that don't exist in source
+❌ Create hatching or cross-hatching
+❌ Fill any area with solid black
+❌ Add shadows or shading
+❌ Create gradients
+❌ Generate colors (MONOCHROME ONLY)
+❌ Alter character proportions or positions
+❌ "Improve" or "fix" the original art
+
+═══════════════════════════════════════════════════════════════
+✅ QUALITY CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+BEFORE OUTPUT, VERIFY:
+□ Is the output 100% monochrome (black lines on white)?
+□ Are ALL solid black areas converted to outlines only?
+□ Is the background completely white/clean?
+□ Are all existing contour lines preserved?
+□ No hatching, shading, or fills present?
+□ No added elements (only what was in source)?
+□ Lines are clean and well-defined?
+
+═══════════════════════════════════════════════════════════════
+
+OUTPUT: Clean lineart stencil. Black lines on white background.
+NO solid fills. NO backgrounds. NO colors. PNG format.
+Ready for thermal tattoo stencil printing.`;

@@ -55,7 +55,7 @@ export default function ToolsPage() {
   const [paperSize, setPaperSize] = useState<'A4' | 'A3' | 'Letter'>('A4');
   const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
   const [overlapCm, setOverlapCm] = useState<number>(0.5); // overlap entre páginas
-  const [processMode, setProcessMode] = useState<'reference' | 'topographic' | 'perfect_lines'>('reference');
+  const [processMode, setProcessMode] = useState<'reference' | 'topographic' | 'perfect_lines' | 'anime'>('reference');
   const [imageSource, setImageSource] = useState<'upload' | 'gallery'>('upload');
   const [galleryImages, setGalleryImages] = useState<any[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
@@ -1036,28 +1036,28 @@ export default function ToolsPage() {
                     {/* 4. Modo de Processamento */}
                     <div>
                       <label className="block text-[10px] text-zinc-500 mb-1.5 font-medium">🎨 Processamento</label>
-                      <div className="grid grid-cols-3 gap-1.5">
+                      <div className="grid grid-cols-4 gap-1">
                         <button
                           onClick={() => {
                             setProcessMode('reference');
                             setSplitResult(null);
                           }}
-                          className={`p-2.5 rounded text-[10px] font-medium transition-all ${
+                          className={`p-2 rounded text-[9px] font-medium transition-all ${
                             processMode === 'reference'
                               ? 'bg-purple-600 text-white border-2 border-purple-400'
                               : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
                           }`}
                         >
-                          🖼️ Original
+                          🖼️ Orig
                         </button>
                         <button
                           onClick={() => {
                             setProcessMode('topographic');
                             setSplitResult(null);
                           }}
-                          className={`p-2.5 rounded text-[10px] font-medium transition-all ${
+                          className={`p-2 rounded text-[9px] font-medium transition-all ${
                             processMode === 'topographic'
-                              ? 'bg-purple-600 text-white border-2 border-purple-400'
+                              ? 'bg-emerald-600 text-white border-2 border-emerald-400'
                               : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
                           }`}
                         >
@@ -1068,13 +1068,27 @@ export default function ToolsPage() {
                             setProcessMode('perfect_lines');
                             setSplitResult(null);
                           }}
-                          className={`p-2.5 rounded text-[10px] font-medium transition-all ${
+                          className={`p-2 rounded text-[9px] font-medium transition-all ${
                             processMode === 'perfect_lines'
                               ? 'bg-purple-600 text-white border-2 border-purple-400'
                               : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
                           }`}
                         >
                           📐 Linhas
+                        </button>
+                        <button
+                          onClick={() => {
+                            setProcessMode('anime');
+                            setSplitResult(null);
+                          }}
+                          className={`p-2 rounded text-[9px] font-medium transition-all ${
+                            processMode === 'anime'
+                              ? 'bg-pink-600 text-white border-2 border-pink-400'
+                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
+                          }`}
+                          title="Para animes, desenhos, Maori, Tribal"
+                        >
+                          🎨 Ilust
                         </button>
                       </div>
                     </div>
@@ -1133,7 +1147,7 @@ export default function ToolsPage() {
                         : activeMode === 'SPLIT_A4'
                           ? processMode === 'reference'
                             ? "⚡ Dividindo (modo rápido)..."
-                            : `🎨 Processando ${processMode === 'topographic' ? 'topográfico' : 'linhas'}... (10-15s)`
+                            : `🎨 Processando ${processMode === 'topographic' ? 'topográfico' : processMode === 'anime' ? 'ilustração' : 'linhas'}... (10-15s)`
                           : activeMode === 'REMOVE_BG'
                             ? "✂️ Removendo fundo..."
                             : "Processando..."

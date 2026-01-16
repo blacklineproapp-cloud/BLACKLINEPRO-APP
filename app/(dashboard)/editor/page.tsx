@@ -7,7 +7,7 @@ import StencilAdjustControls from '@/components/editor/StencilAdjustControls';
 
 import QualityIndicator from '@/components/editor/QualityIndicator';
 import ResizeModal from '@/components/editor/ResizeModal';
-import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Printer, Settings, ChevronUp, Ruler, Undo, Redo, CheckCircle, AlertCircle, XCircle, Copy } from 'lucide-react';
+import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Printer, Settings, ChevronUp, Ruler, Undo, Redo, CheckCircle, AlertCircle, XCircle, Copy, Brush } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEditorHistory } from '@/hooks/useEditorHistory';
 import { DEFAULT_ADJUST_CONTROLS, type AdjustControls } from '@/lib/stencil-types';
@@ -16,7 +16,7 @@ import { processImageOnClient } from '@/lib/canvas-processor';
 import { storage } from '@/lib/client-storage';
 import { compressIfNeeded } from '@/lib/image-compress';
 
-type Style = 'standard' | 'perfect_lines';
+type Style = 'standard' | 'perfect_lines' | 'anime';
 type ComparisonMode = 'wipe' | 'overlay' | 'split';
 
 export default function EditorPage() {
@@ -989,15 +989,21 @@ export default function EditorPage() {
                     <ChevronUp size={14} className={`lg:hidden text-zinc-500 transition-transform ${showModeSection ? 'rotate-180' : ''}`} />
                   </button>
                   
-                  <div className={`${showModeSection ? 'block' : 'hidden'} lg:block px-2 pb-2`}>
-                    <div className="grid grid-cols-2 gap-1.5">
+                <div className={`${showModeSection ? 'block' : 'hidden'} lg:block px-2 pb-2`}>
+                    <div className="grid grid-cols-3 gap-1.5">
                       <button onClick={() => setSelectedStyle('perfect_lines')} className={`flex flex-col items-center p-2 rounded-lg border text-xs font-medium ${selectedStyle === 'perfect_lines' ? 'bg-emerald-900/30 border-emerald-500 text-emerald-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`}>
                         <Zap size={16} className="mb-1" /> Topográfico
                       </button>
                       <button onClick={() => setSelectedStyle('standard')} className={`flex flex-col items-center p-2 rounded-lg border text-xs font-medium ${selectedStyle === 'standard' ? 'bg-purple-900/30 border-purple-500 text-purple-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`}>
                         <PenTool size={16} className="mb-1" /> Linhas
                       </button>
+                      <button onClick={() => setSelectedStyle('anime')} className={`flex flex-col items-center p-2 rounded-lg border text-xs font-medium ${selectedStyle === 'anime' ? 'bg-pink-900/30 border-pink-500 text-pink-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`} title="Para animes, desenhos, Maori, Tribal">
+                        <Brush size={16} className="mb-1" /> Ilustração
+                      </button>
                     </div>
+                    <p className="text-[9px] text-zinc-600 mt-1 text-center">
+                      {selectedStyle === 'anime' ? '🎨 Anime, Desenhos, Maori, Tribal' : selectedStyle === 'standard' ? '✏️ Fotos → Linhas' : '🗺️ Máximo detalhe'}
+                    </p>
                   </div>
                 </div>
 
@@ -1007,13 +1013,15 @@ export default function EditorPage() {
                   onClick={handleGenerate}
                   disabled={isProcessing || !originalImage}
                   className={`w-full py-2.5 lg:py-3 rounded-xl font-bold text-sm lg:text-base flex items-center justify-center gap-2 disabled:opacity-50 ${
-                    selectedStyle === 'perfect_lines'
-                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30'
-                      : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/30'
+                    selectedStyle === 'anime'
+                      ? 'bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-900/30'
+                      : selectedStyle === 'perfect_lines'
+                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30'
+                        : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/30'
                   }`}
                 >
-                  {selectedStyle === 'perfect_lines' ? <Zap size={14} /> : <PenTool size={14} />}
-                  Gerar Estêncil
+                  {selectedStyle === 'anime' ? <Brush size={14} /> : selectedStyle === 'perfect_lines' ? <Zap size={14} /> : <PenTool size={14} />}
+                  {selectedStyle === 'anime' ? 'Gerar (Ilustração)' : 'Gerar Estêncil'}
                 </button>
               </>
             )}
