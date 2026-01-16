@@ -84,8 +84,12 @@ export async function generateStencilFromImage(
     ? 'LINHAS DETALHADAS (temp: 0, topP: 0.15, topK: 10) - TODOS DETALHES, LINHAS LIMPAS'
     : 'TOPOGRÁFICO V3.0 (temp: 0, topP: 0.15, topK: 10) - 7 NÍVEIS, MÁXIMA RIQUEZA';
 
-  // Construir prompt final
-  const fullPrompt = `${systemInstruction}\n\n${promptDetails ? `DETALHES ADICIONAIS: ${promptDetails}\n\n` : ''}Converta esta imagem em estêncil de tatuagem seguindo as instruções acima.`;
+  // Construir prompt final - ENFATIZA TRAÇADO, NÃO RECRIAÇÃO
+  const traceInstruction = style === 'standard'
+    ? 'TRACE this exact image into a line stencil. Do NOT redraw. Apply a geometric line transformation to the EXACT pixels. Every contour MUST overlay perfectly with the original.'
+    : 'TRACE this exact image into a topographic stencil with rich depth and detail. Do NOT redraw. Apply a geometric transformation preserving ALL positions. Add 7-level shading following the EXACT source geometry.';
+  
+  const fullPrompt = `${systemInstruction}\n\n${promptDetails ? `DETALHES ADICIONAIS: ${promptDetails}\n\n` : ''}${traceInstruction}`;
 
   // Verificar se é URL e baixar a imagem
   let cleanBase64: string;

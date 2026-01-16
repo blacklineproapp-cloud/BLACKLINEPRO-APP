@@ -5,6 +5,24 @@
 // TOPOGRÁFICO V3.0 - Máxima riqueza de detalhes com 7 NÍVEIS de profundidade
 export const TOPOGRAPHIC_INSTRUCTION_OPTIMIZED = `ROLE: Master Topographic Stencil Artist for Ultra-Realistic Tattoo
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ GEOMETRIC PRESERVATION - ABSOLUTE PRIORITY ⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+YOU ARE A TRACER WITH ARTISTIC DEPTH, NOT A RECREATOR:
+- TRACE every contour from the source image with MATHEMATICAL PRECISION
+- Every pixel position in OUTPUT must map to the EXACT same position in INPUT
+- Do NOT shift, resize, or reposition ANY element
+- Eye position → SAME pixel coordinates | Nose shape → SAME pixel boundaries
+- If a line is crooked in the original, it stays crooked
+
+GEOMETRIC LOCK:
+- Overlay your output on the original → ALL features must align EXACTLY
+- You are adding DEPTH and DETAIL to the original structure, NOT redesigning it
+- Think: "I am TRACING then ENRICHING" not "I am DRAWING something similar"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!
 
 ═══════════════════════════════════════════════════════════════
@@ -192,6 +210,34 @@ OUTPUT: Generate ONLY the ultra-detailed topographic stencil. No text, no legend
 // LINHAS - Mapeamento Inteligente de Contornos (TODOS os detalhes estruturais, ZERO sombras)
 export const PERFECT_LINES_INSTRUCTION_OPTIMIZED = `ROLE: Intelligent Contour Mapping Specialist
 FUNCTION: Convert photo → COMPREHENSIVE CONTOUR MAP with ALL structural details, ZERO shadow rendering.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ GEOMETRIC PRESERVATION - HIGHEST PRIORITY ⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+YOU ARE A PRECISION TRACER, NOT AN ARTIST:
+- TRACE every edge from the source image with MATHEMATICAL PRECISION
+- Every pixel position in OUTPUT must map 1:1 to the INPUT
+- Do NOT shift, resize, reposition, or "fix" ANY element
+- Eye in pixel (X,Y) → EXACT same (X,Y) in output
+- Nose contour → EXACT same pixel path in output
+- Crooked line in original → Crooked line in output (NO "corrections")
+
+VERIFICATION TEST (apply to your output):
+□ Overlay test: Does EVERY feature align EXACTLY with original?
+□ Can I see the original image "through" the stencil lines?
+□ Is this a TRACE or a REDRAWING? (MUST be TRACE)
+□ Did I alter ANY position, proportion, or shape? (MUST be NO)
+
+YOU ARE NOT:
+❌ Drawing a "similar" version
+❌ Creating a "better" interpretation
+❌ Making an "inspired by" artwork
+YOU ARE:
+✅ Tracing the EXACT edges that exist in the source
+✅ Performing a geometric transformation (photo → lines) with ZERO content change
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ═══════════════════════════════════════════════════════════════
 CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Link from 'next/link';
+import SentryAlertsDashboard from './components/SentryAlertsDashboard';
 
 
 interface Metrics {
@@ -1136,6 +1137,10 @@ export default function AdminPage() {
           </div>
         </div>
       )}
+
+      {/* 🚨 ALERTAS EM TEMPO REAL - SENTRY (no final do dashboard) */}
+      <SentryAlertsDashboard />
+
       </div>
     </div>
   );

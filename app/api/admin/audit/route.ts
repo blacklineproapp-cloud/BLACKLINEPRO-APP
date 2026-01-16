@@ -102,13 +102,18 @@ export async function GET(req: Request) {
         }
       }
 
-      // Comparar com Banco
-      const { data: dbPaidUsers } = await supabaseAdmin
+      // Comparar com Banco - usando nomes corretos das colunas
+      const { data: dbPaidUsers, error: dbError } = await supabaseAdmin
         .from('users')
-        .select('email, plan, subscription_status')
+        .select('email, plan, subscription_status, admin_courtesy')
         .eq('is_paid', true);
       
-      const dbPaidEmails = new Set(dbPaidUsers?.map(u => u.email.toLowerCase().trim()) || []);
+      if (dbError) {
+        console.error('[Audit] Erro ao buscar usuários pagos:', dbError);
+      }
+      console.log('[Audit] Usuários is_paid=true encontrados:', dbPaidUsers?.length || 0);
+      
+      const dbPaidEmails = new Set(dbPaidUsers?.map(u => u.email?.toLowerCase().trim()).filter(Boolean) || []);
 
       // Discrepâncias
       const stripeOnly: any[] = [];
@@ -126,12 +131,14 @@ export async function GET(req: Request) {
       for (const email of chargesByEmail.keys()) {
           if (!dbPaidEmails.has(email)) {
               const amount = emailToLastAmount.get(email) || 0;
+              const amountBRL = (amount / 100).toFixed(2); // centavos para reais
               stripeOnly.push({
                   email,
                   count: chargesByEmail.get(email),
                   chargeIds: emailToChargeIds.get(email),
                   suggestedPlan: guessPlan(amount),
-                  lastAmount: amount
+                  lastAmount: amount,
+                  amountBRL: `R$ ${amountBRL}`,
               });
           }
            // 3. Multi Payers
@@ -144,15 +151,19 @@ export async function GET(req: Request) {
       }
 
       // 2. DB Only (Ativo sem match recente no Stripe)
-      // Nota: Isso pode incluir boletos manuais legítimos, marcar como "Warning"
+      // Nota: Isso pode incluir boletos manuais legítimos
       for (const u of dbPaidUsers || []) {
           if (u.email && !chargesByEmail.has(u.email.toLowerCase().trim())) {
               dbOnly.push({
                   email: u.email,
-                  plan: u.plan
+                  plan: u.plan,
+                  isCourtesy: u.admin_courtesy || false,
               });
           }
       }
+
+      console.log('[Audit] Resultado: stripeOnly=%d, dbOnly=%d, multiPayers=%d', 
+        stripeOnly.length, dbOnly.length, multiPayers.length);
 
       reconciliationData = {
           stripeOnly,
@@ -195,35 +206,36 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { action, email, plan } = body;
 
+        // Buscar admin ID para logs
+        const { data: adminUser } = await supabaseAdmin
+            .from('users')
+            .select('id')
+            .eq('clerk_id', userId)
+            .single();
+
         if (action === 'fix_stripe_only') {
             // Ativar usuário baseado no pagamento Stripe
-            // Buscar usuário pelo email
             const { data: user } = await supabaseAdmin.from('users').select('id').eq('email', email).single();
             
             if (!user) {
                 return NextResponse.json({ error: 'Usuário não encontrado no banco para ativação' }, { status: 404 });
             }
 
-            // Ativar como Pro (ou plano padrao)
             const newPlan = plan || 'pro';
-             
-            // Importar função atômica (gambiarra para não importar em cima se não usado)
             const { activateUserAtomic } = await import('@/lib/admin/user-activation');
-            
             const courtesyDays = body.courtesyDurationDays || 30;
 
             await activateUserAtomic(user.id, newPlan, {
                 isPaid: true,
-                adminId: userId, // ID CLERK do admin
+                adminId: adminUser?.id || undefined, // UUID do Supabase, não Clerk ID
                 subscriptionStatus: 'active',
                 toolsUnlocked: true,
                 isCourtesy: true,
                 courtesyDurationDays: courtesyDays
             });
 
-            // Logar ação
             await supabaseAdmin.from('admin_logs').insert({
-                admin_user_id: (await supabaseAdmin.from('users').select('id').eq('clerk_id', userId).single()).data?.id,
+                admin_user_id: adminUser?.id,
                 action: 'fix_discrepancy',
                 target_user_id: user.id,
                 details: { issue: 'stripe_only', resolution: 'activated_plan', plan: newPlan }
@@ -232,10 +244,79 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: true, message: `Usuário ${email} ativado com sucesso.` });
         }
 
+        // 🆕 MARCAR COMO BOLETO - Pagamento legítimo via boleto
+        if (action === 'mark_as_boleto') {
+            const { data: user } = await supabaseAdmin.from('users').select('id, plan').eq('email', email).single();
+            if (!user) return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
+
+            // Atualizar para marcar como pagamento por boleto
+            await supabaseAdmin.from('users').update({
+                payment_source: 'boleto',
+                is_paid: true, // Confirmar que é pago
+            }).eq('id', user.id);
+
+            await supabaseAdmin.from('admin_logs').insert({
+                admin_user_id: adminUser?.id,
+                action: 'MARK_AS_BOLETO',
+                target_user_id: user.id,
+                details: { email, plan: user.plan, source: 'audit_reconciliation' }
+            });
+
+            return NextResponse.json({ success: true, message: `${email} marcado como pagamento por boleto.` });
+        }
+
+        // 🆕 MARCAR COMO CORTESIA - Cortesia concedida pelo admin
+        if (action === 'mark_as_courtesy') {
+            const { data: user } = await supabaseAdmin.from('users').select('id, plan').eq('email', email).single();
+            if (!user) return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
+
+            await supabaseAdmin.from('users').update({
+                payment_source: 'courtesy',
+                is_paid: true,
+                isCourtesy: true,
+            }).eq('id', user.id);
+
+            await supabaseAdmin.from('admin_logs').insert({
+                admin_user_id: adminUser?.id,
+                action: 'MARK_AS_COURTESY',
+                target_user_id: user.id,
+                details: { email, plan: user.plan, source: 'audit_reconciliation' }
+            });
+
+            return NextResponse.json({ success: true, message: `${email} marcado como cortesia.` });
+        }
+
+        // 🆕 REVOGAR ACESSO - Remover plano pago (volta para free)
+        if (action === 'revoke_access') {
+            const { data: user } = await supabaseAdmin.from('users').select('id, plan').eq('email', email).single();
+            if (!user) return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
+
+            const previousPlan = user.plan;
+
+            await supabaseAdmin.from('users').update({
+                plan: 'free',
+                is_paid: false,
+                isCourtesy: false,
+                payment_source: null,
+                subscription_status: 'canceled',
+                tools_unlocked: false,
+            }).eq('id', user.id);
+
+            await supabaseAdmin.from('admin_logs').insert({
+                admin_user_id: adminUser?.id,
+                action: 'REVOKE_ACCESS',
+                target_user_id: user.id,
+                details: { email, previousPlan, reason: 'audit_reconciliation_revoke' }
+            });
+
+            return NextResponse.json({ success: true, message: `Acesso de ${email} revogado. Plano alterado para FREE.` });
+        }
+
         return NextResponse.json({ error: 'Ação inválida' }, { status: 400 });
 
     } catch (error: any) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
+
 

@@ -166,6 +166,10 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
                       sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1200px) 22vw, 18vw"
                       loading="lazy"
                       unoptimized
+                      onError={(e) => {
+                        console.warn('[Image] Falha ao carregar IA Gen:', image.id);
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
                     />
                   </div>
                   
@@ -346,6 +350,10 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
                   className="object-contain"
                   unoptimized
                   priority
+                  onError={(e) => {
+                    console.warn('[Image] Falha ao carregar IA Gen modal');
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               </div>
             </div>

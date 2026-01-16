@@ -4,7 +4,7 @@
  */
 
 // ⚡ VERSÃO DO CACHE - Mudar a cada deploy para forçar atualização!
-const CACHE_VERSION = '5.2.2'; // Incrementar a cada deploy
+const CACHE_VERSION = '5.2.3'; // Incrementar a cada deploy
 const CACHE_NAME = `stencilflow-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -59,12 +59,18 @@ self.addEventListener('activate', (event) => {
     })
     .then(() => {
       // Notificar todos os clientes que a atualização está completa
+      // 🔧 CORREÇÃO: try-catch para WebViews (Instagram, Facebook) que podem ter clientes stale
       return self.clients.matchAll().then(clients => {
         clients.forEach(client => {
-          client.postMessage({
-            type: 'SW_ACTIVATED',
-            version: CACHE_VERSION
-          });
+          try {
+            client.postMessage({
+              type: 'SW_ACTIVATED',
+              version: CACHE_VERSION
+            });
+          } catch (err) {
+            // Silenciar erro em WebViews onde cliente Java foi destruído
+            console.warn('[SW] ⚠️ Cliente não disponível para postMessage (WebView)');
+          }
         });
       });
     })
@@ -120,10 +126,21 @@ self.addEventListener('fetch', (event) => {
   // Estratégia de cache otimizada
   if (isStaticAsset) {
     // ⚡ CACHE-FIRST para assets estáticos (JS, CSS, imagens, fontes)
+    // 🔧 OTIMIZAÇÃO: Aumentado timeout para imagens (10s) - conexões móveis instáveis
+    const isImage = url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i);
+    const timeout = isImage ? 10000 : 3000; // 10s para imagens, 3s para outros
+    
     event.respondWith(
       cacheFirst(request)
-        .catch(() => networkFirst(request, 2000)) // 2s timeout
-        .catch(() => offlineFallback(request))
+        .catch(() => networkFirst(request, timeout))
+        .catch(() => {
+          // Para imagens, retornar placeholder silenciosamente
+          if (isImage) {
+            console.log('[SW] 🖼️ Imagem não carregou, retornando vazio:', request.url);
+            return new Response('', { status: 200, headers: { 'Content-Type': 'image/svg+xml' } });
+          }
+          return offlineFallback(request);
+        })
     );
   } else if (isApiRoute || isDynamicPage) {
     // 🌐 NETWORK-ONLY para API e Páginas Dinâmicas (sempre dados frescos, sem cache)

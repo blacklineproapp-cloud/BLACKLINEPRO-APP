@@ -33,6 +33,7 @@ Sentry.init({
     'NetworkError',
     'Network request failed',
     'Failed to fetch',
+    'Load failed', // Erro de carregamento de imagem em mobile
 
     // Erros de extensões de navegador
     'ResizeObserver loop limit exceeded',
@@ -40,6 +41,9 @@ Sentry.init({
 
     // Erros conhecidos do Clerk/Supabase
     'AbortError',
+    
+    // Erros de WebViews (Instagram, Facebook, etc.)
+    'Java object is gone', // WebView Android stale reference
   ],
 
   // Filtrar breadcrumbs sensíveis

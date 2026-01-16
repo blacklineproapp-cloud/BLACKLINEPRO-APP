@@ -146,22 +146,19 @@ const nextConfig = {
   },
 };
 
-// Sentry configuration
+// Sentry configuration - DESABILITADO para evitar erro 403 no build
+// O Sentry ainda funciona para capturar erros, só não faz upload de source maps
 const sentryWebpackPluginOptions = {
-  // Apenas em produção
-  silent: process.env.NODE_ENV !== 'production',
-
-  // Upload source maps apenas se tiver token
-  authToken: process.env.SENTRY_AUTH_TOKEN,
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
-
-  // Disable source map upload to prevent build failure (Invalid Token 401)
-  disableServerWebpackPlugin: true, 
-  disableClientWebpackPlugin: true,
+  silent: true,
+  // Upload desabilitado completamente
+  sourcemaps: {
+    disable: true, // Desabilita upload de source maps
+  },
+  release: {
+    create: false, // Não criar release automaticamente
+    finalize: false,
+  },
 };
 
-// Wrap config com Sentry apenas se DSN estiver configurado
-module.exports = process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
-  : nextConfig;
+// Build sem Sentry plugin para evitar erro 403
+module.exports = nextConfig;

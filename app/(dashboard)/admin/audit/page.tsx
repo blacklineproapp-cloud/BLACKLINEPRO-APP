@@ -23,7 +23,7 @@ interface AuditLog {
 
 interface ReconciliationData {
     stripeOnly: { email: string; count: number; chargeIds: string[]; suggestedPlan?: string }[];
-    dbOnly: { email: string; plan: string }[];
+    dbOnly: { email: string; plan: string; paymentSource?: string | null; isCourtesy?: boolean }[];
     multiPayers: { email: string; count: number }[];
     stats: {
         processedCharges: number;
@@ -80,7 +80,6 @@ export default function AuditPage() {
          const res = await fetch('/api/admin/audit', {
              method: 'POST',
              headers: { 'Content-Type': 'application/json' },
-             // Envia 30 dias de cortesia para cobrir o período até o próximo webhook do Stripe
              body: JSON.stringify({ 
                  action: 'fix_stripe_only', 
                  email, 
@@ -95,7 +94,67 @@ export default function AuditPage() {
          }
          
          alert('Usuário ativado com sucesso! (Válido por 30 dias ou até o Stripe atualizar)');
-         loadData(true); // Recarrega tudo
+         loadData(true);
+     } catch (error: any) {
+         alert(error.message);
+     } finally {
+         setFixing(null);
+     }
+  };
+
+  // Classificar usuário como Boleto
+  const handleMarkAsBoleto = async (email: string) => {
+     if (!confirm(`Confirma que ${email} pagou via BOLETO?`)) return;
+     setFixing(email);
+     try {
+         const res = await fetch('/api/admin/audit', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ action: 'mark_as_boleto', email })
+         });
+         if (!res.ok) throw new Error((await res.json()).error || 'Erro');
+         alert('Usuário marcado como pagamento por boleto ✅');
+         loadData(true);
+     } catch (error: any) {
+         alert(error.message);
+     } finally {
+         setFixing(null);
+     }
+  };
+
+  // Classificar usuário como Cortesia
+  const handleMarkAsCourtesy = async (email: string) => {
+     if (!confirm(`Confirma que ${email} recebeu CORTESIA administrativa?`)) return;
+     setFixing(email);
+     try {
+         const res = await fetch('/api/admin/audit', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ action: 'mark_as_courtesy', email })
+         });
+         if (!res.ok) throw new Error((await res.json()).error || 'Erro');
+         alert('Usuário marcado como cortesia ✅');
+         loadData(true);
+     } catch (error: any) {
+         alert(error.message);
+     } finally {
+         setFixing(null);
+     }
+  };
+
+  // Revogar acesso (voltar para free)
+  const handleRevokeAccess = async (email: string) => {
+     if (!confirm(`⚠️ ATENÇÃO: Isso vai REMOVER o acesso pago de ${email}. O usuário volta para plano FREE. Continuar?`)) return;
+     setFixing(email);
+     try {
+         const res = await fetch('/api/admin/audit', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ action: 'revoke_access', email })
+         });
+         if (!res.ok) throw new Error((await res.json()).error || 'Erro');
+         alert('Acesso revogado. Usuário agora é FREE.');
+         loadData(true);
      } catch (error: any) {
          alert(error.message);
      } finally {
@@ -210,23 +269,38 @@ export default function AuditPage() {
                         <thead className="bg-red-950/20 text-red-200">
                             <tr>
                                 <th className="p-4">Email</th>
-                                <th className="p-4">Pagamentos</th>
+                                <th className="p-4">Plano Pago</th>
+                                <th className="p-4">Valor</th>
+                                <th className="p-4 text-center">Qtd</th>
                                 <th className="p-4 text-right">Ação</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-800">
-                            {reconciliation.stripeOnly.map((item, idx) => (
+                            {reconciliation.stripeOnly.map((item: any, idx: number) => (
                                 <tr key={idx} className="hover:bg-zinc-800/30">
-                                    <td className="p-4 font-mono text-zinc-300">{item.email}</td>
-                                    <td className="p-4 text-zinc-400">{item.count} pagamentos encontrados</td>
+                                    <td className="p-4 font-mono text-zinc-300 text-xs">{item.email}</td>
+                                    <td className="p-4">
+                                        <span className="px-2 py-1 bg-zinc-800 rounded text-xs text-zinc-300 uppercase">{item.suggestedPlan}</span>
+                                    </td>
+                                    <td className="p-4 text-emerald-400 font-medium">{item.amountBRL || `R$ ${(item.lastAmount / 100).toFixed(2)}`}</td>
+                                    <td className="p-4 text-zinc-500 text-center">{item.count}x</td>
                                     <td className="p-4 text-right">
-                                        <button
-                                            onClick={() => handleFixStripeOnly(item.email, item.suggestedPlan || 'pro')}
-                                            disabled={fixing === item.email}
-                                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-lg text-white font-medium text-xs transition"
-                                        >
-                                            {fixing === item.email ? 'Ativando...' : `Corrigir (Ativar ${item.suggestedPlan?.toUpperCase() || 'PRO'})`}
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => handleFixStripeOnly(item.email, item.suggestedPlan || 'starter')}
+                                                disabled={fixing === item.email}
+                                                className="px-2 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-white font-medium text-xs transition"
+                                            >
+                                                {fixing === item.email ? '...' : `${item.suggestedPlan?.toUpperCase() || 'STARTER'}`}
+                                            </button>
+                                            <button
+                                                onClick={() => handleFixStripeOnly(item.email, 'legacy')}
+                                                disabled={fixing === item.email}
+                                                className="px-2 py-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 rounded text-white font-medium text-xs transition"
+                                            >
+                                                LEGACY
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -250,22 +324,55 @@ export default function AuditPage() {
                             <thead className="bg-amber-950/20 text-amber-200">
                                 <tr>
                                     <th className="p-4">Email</th>
-                                    <th className="p-4">Plano Atual</th>
-                                    <th className="p-4 text-right">Status</th>
+                                    <th className="p-4">Plano</th>
+                                    <th className="p-4">Valor Plano</th>
+                                    <th className="p-4 text-right">Ações</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-800">
-                                {reconciliation.dbOnly.map((item, idx) => (
+                                {reconciliation.dbOnly.map((item: any, idx: number) => {
+                                    const planPrices: Record<string, string> = {
+                                        starter: 'R$ 50',
+                                        pro: 'R$ 100',
+                                        studio: 'R$ 300',
+                                        legacy: 'R$ 25',
+                                        free: 'Grátis'
+                                    };
+                                    return (
                                     <tr key={idx} className="hover:bg-zinc-800/30">
-                                        <td className="p-4 font-mono text-zinc-300">{item.email}</td>
+                                        <td className="p-4 font-mono text-zinc-300 text-xs">{item.email}</td>
                                         <td className="p-4">
                                             <span className="px-2 py-1 bg-zinc-800 rounded text-xs text-zinc-300 uppercase">{item.plan}</span>
+                                            {item.isCourtesy && <span className="ml-2 px-2 py-1 bg-blue-900/30 text-blue-400 rounded text-xs">🎁</span>}
                                         </td>
-                                        <td className="p-4 text-right text-zinc-500 text-xs">
-                                            Investigar Manualmente
+                                        <td className="p-4 text-amber-400 font-medium">{planPrices[item.plan] || '-'}</td>
+                                        <td className="p-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => handleMarkAsBoleto(item.email)}
+                                                    disabled={fixing === item.email}
+                                                    className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-white text-xs font-medium"
+                                                >
+                                                    {fixing === item.email ? '...' : 'Boleto'}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleMarkAsCourtesy(item.email)}
+                                                    disabled={fixing === item.email}
+                                                    className="px-2 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded text-white text-xs font-medium"
+                                                >
+                                                    Cortesia
+                                                </button>
+                                                <button
+                                                    onClick={() => handleRevokeAccess(item.email)}
+                                                    disabled={fixing === item.email}
+                                                    className="px-2 py-1 bg-red-600/80 hover:bg-red-500 disabled:opacity-50 rounded text-white text-xs font-medium"
+                                                >
+                                                    Revogar
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
-                                ))}
+                                )})}
                             </tbody>
                         </table>
                      )}

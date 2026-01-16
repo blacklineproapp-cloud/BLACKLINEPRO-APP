@@ -138,15 +138,6 @@ export default function AdminLayout({
                </Link>
 
                <Link 
-                 href="/admin/credits" 
-                 onClick={() => setIsMenuOpen(false)} 
-                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/credits') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
-               >
-                  <Zap size={16} className={pathname?.startsWith('/admin/credits') ? 'text-emerald-500' : 'text-zinc-400'} />
-                  <span className="text-xs font-medium">Créditos</span>
-               </Link>
-
-               <Link 
                  href="/admin/audit" 
                  onClick={() => setIsMenuOpen(false)} 
                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/audit') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
@@ -232,13 +223,6 @@ export default function AdminLayout({
           active={pathname?.startsWith('/admin/courtesy')} 
           icon={<Gift size={24} />} 
           label="Cortesia"
-          className="hidden md:flex"
-        />
-        <NavItem
-          href="/admin/credits"
-          active={pathname?.startsWith('/admin/credits')}
-          icon={<Zap size={24} />}
-          label="Créditos"
           className="hidden md:flex"
         />
         <NavItem
