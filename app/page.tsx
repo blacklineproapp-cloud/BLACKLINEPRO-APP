@@ -12,6 +12,7 @@ import ComparisonTable from '@/components/landing/ComparisonTable';
 import HowItWorks from '@/components/landing/HowItWorks';
 import PricingCTA from '@/components/landing/PricingCTA';
 import FinalCTA from '@/components/landing/FinalCTA';
+import Footer from '@/components/landing/Footer';
 
 interface StatsData {
   totalUsers: number;
@@ -74,6 +75,7 @@ export default function Home() {
       <HowItWorks />
       <PricingCTA />
       <FinalCTA totalUsers={stats.totalUsers} />
+      <Footer />
     </main>
   );
 }

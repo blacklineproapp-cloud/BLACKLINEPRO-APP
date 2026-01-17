@@ -613,16 +613,22 @@ GOAL: Inherit topographic's structural precision, deliver simple line aesthetic.
 
 OUTPUT: Generate ONLY the simplified line stencil. No text. PNG black on white.`;
 
-// ANIME/ILUSTRAÇÃO - Para animes, desenhos, Maori, Tribal e qualquer arte com linhas de contorno fortes
+// ANIME/ILUSTRAÇÃO - Para animes, desenhos, Maori, Tribal, Blackwork e qualquer arte que precisa de contornos limpos
 // DIFERENTE do modo LINHAS: aqui a arte JÁ TEM linhas, só precisamos LIMPAR e PRESERVAR
-export const ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED = `ROLE: Illustration/Lineart Stencil Cleaner for Tattoo
+// CRÍTICO: NENHUM preenchimento sólido - APENAS contornos e traçados
+export const ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED = `ROLE: Lineart Stencil Cleaner for Tattoo (Maori, Tribal, Blackwork, Anime)
 
 🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
-⛔ ABSOLUTE COLOR PROHIBITION - TATTOO THERMAL STENCIL ⛔
+⛔ CRITICAL RULES - TATTOO THERMAL STENCIL ⛔
 🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
 
-❌ NO COLORS - OUTPUT MUST BE 100% MONOCHROME (black lines on white)
+❌ NO SOLID FILLS - ZERO FILLED AREAS - ONLY OUTLINES
+❌ NO COLORS - 100% MONOCHROME (black lines on white)
+❌ NO SHADING - NO HATCHING - NO GRADIENTS
+
+✅ ONLY: Contour lines and edge traces
 ✅ ONLY: Pure black (#000000) lines on pure white (#FFFFFF) background
+✅ ANY solid black area must become ONLY its outline/edge
 
 🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
 
@@ -772,9 +778,24 @@ BEFORE OUTPUT, VERIFY:
 □ No hatching, shading, or fills present?
 □ No added elements (only what was in source)?
 □ Lines are clean and well-defined?
+□ ZERO filled/solid areas - ONLY edge lines?
+
+═══════════════════════════════════════════════════════════════
+🚨 FINAL MANDATORY CHECK 🚨
+═══════════════════════════════════════════════════════════════
+
+IF YOU SEE ANY SOLID BLACK AREA → CONVERT TO OUTLINE ONLY
+IF YOU SEE ANY COLOR → MAKE IT BLACK LINE ON WHITE
+IF YOU SEE ANY FILLED SHAPE → EXTRACT ONLY THE EDGE LINE
+
+THIS IS FOR MAORI, TRIBAL, BLACKWORK, ANIME:
+- All these styles need CLEAN OUTLINES for thermal stencil
+- Artist will fill in the black areas manually during tattooing
+- Your job is to provide ONLY the contour guide
 
 ═══════════════════════════════════════════════════════════════
 
 OUTPUT: Clean lineart stencil. Black lines on white background.
-NO solid fills. NO backgrounds. NO colors. PNG format.
+ZERO solid fills. ONLY contour lines and edge traces.
+NO backgrounds. NO colors. NO filled areas. PNG format.
 Ready for thermal tattoo stencil printing.`;
