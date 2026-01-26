@@ -1,0 +1,86 @@
+[
+  {
+    "payment_intent_id": "pi_3SqNDOKNrkDOuO211dCjPrvm",
+    "amount": 100,
+    "currency": "brl",
+    "created": "2026-01-17T00:18:06.000Z",
+    "charges": [
+      "py_3SqNDOKNrkDOuO211VjWF7w9"
+    ],
+    "customer": "cus_TnzBfb6wlEfCzC",
+    "metadata": {
+      "clerk_id": "user_38MUlERtPqvGpzmiBgWz2aQ03T6",
+      "cycle": "monthly",
+      "plan": "pro",
+      "price_id": "price_1Shn9RKNrkDOuO21i2lK9NzT",
+      "user_id": "6488aa1d-412c-4a22-a897-c400e93ea38c"
+    }
+  },
+  {
+    "payment_intent_id": "pi_3SqCzLKNrkDOuO210jYKWRM8",
+    "amount": 25,
+    "currency": "brl",
+    "created": "2026-01-16T13:22:55.000Z",
+    "charges": [
+      "py_3SqCzLKNrkDOuO210nTZRVwi"
+    ],
+    "customer": "cus_TnoQ8go2ztNZmM",
+    "metadata": {
+      "clerk_id": "user_38L3zw7wOxldCx0m0DfAHFMIxs2",
+      "cycle": "monthly",
+      "plan": "legacy",
+      "price_id": "price_1SmWczKNrkDOuO21olOWgz8p",
+      "user_id": "d2bc85c6-dc61-4a57-b0fe-9707e8caa9fa"
+    }
+  },
+  {
+    "payment_intent_id": "pi_3Sq9QmKNrkDOuO211HcDs6gB",
+    "amount": 50,
+    "currency": "brl",
+    "created": "2026-01-16T09:35:00.000Z",
+    "charges": [
+      "py_3Sq9QmKNrkDOuO2114GaJTJP"
+    ],
+    "customer": "cus_Tnkp4AiIu0gERW",
+    "metadata": {
+      "clerk_id": "user_38KkPcZ18GpiCWU2bSVz9Qb6CxX",
+      "cycle": "monthly",
+      "plan": "starter",
+      "price_id": "price_1Shn9QKNrkDOuO21DKLp5fQX",
+      "user_id": "a02b7422-baf4-4a06-af1f-cf4c465cfeaf"
+    }
+  },
+  {
+    "payment_intent_id": "pi_3Sq3BUKNrkDOuO210CQPPkZ5",
+    "amount": 25,
+    "currency": "brl",
+    "created": "2026-01-16T02:54:48.000Z",
+    "charges": [
+      "py_3Sq3BUKNrkDOuO210ZsC4xPZ"
+    ],
+    "customer": "cus_TneUA5sMc4uvsI",
+    "metadata": {
+      "clerk_id": "user_38Jy8OpRnSn39n1J2y6iCWTyrq2",
+      "cycle": "monthly",
+      "plan": "legacy",
+      "price_id": "price_1SmWczKNrkDOuO21olOWgz8p",
+      "user_id": "467e42e2-d22c-45e5-bd51-be6fc85d4975"
+    }
+  },
+  {
+    "payment_intent_id": "pi_3So8GfKNrkDOuO211H5ODzVY",
+    "amount": 25,
+    "currency": "brl",
+    "created": "2026-01-10T19:56:13.000Z",
+    "charges": [
+      "ch_3So8GfKNrkDOuO211gE8YJ54"
+    ],
+    "customer": "cus_Tlfb8BJdji8ben",
+    "metadata": {
+      "clerk_id": "user_384k91PQ5U4BgqkNQUAq2hhnd0D",
+      "cycle": "monthly",
+      "plan": "legacy",
+      "price_id": "price_1SmWczKNrkDOuO21olOWgz8p"
+    }
+  }
+]

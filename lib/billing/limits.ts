@@ -20,7 +20,7 @@ export const STUDIO_LIMIT = 680;  // Gerações/mês
 export const STUDIO_WARNING_THRESHOLD = 0.80;  // Alerta aos 80% (544 gerações)
 
 export interface UsageLimits {
-  editorGenerations: number;  // -1 = ilimitado verdadeiro, 0 = bloqueado, >0 = limite
+  editorGenerations: number;  // 0 = bloqueado, >0 = limite
   aiRequests: number;
   toolsUsage: number;          // DEPRECATED: Mantido para backward compatibility
   // 🆕 Limites individuais por ferramenta
@@ -32,7 +32,7 @@ export interface UsageLimits {
 
 export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
   free: {
-    editorGenerations: 0,    // 🔒 Bloqueado: Necessário assinatura
+    editorGenerations: 3,    // 🎣 ISCA: 3 previews com blur (upsell)
     aiRequests: 0,           // 🔒 Bloqueado: Necessário assinatura
     toolsUsage: 0,           // DEPRECATED
     // 🔒 BLOQUEADO: Sem testes gratuitos (Exclusivo para assinantes)
@@ -78,9 +78,9 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
     splitA4: STUDIO_LIMIT
   },
   enterprise: {
-    editorGenerations: 1400,  // 🏢 1400 gerações/mês
-    aiRequests: 1400,         // 🏢 1400 requests IA/mês
-    toolsUsage: 1400,         // 🏢 1400 ferramentas/mês
+    editorGenerations: 1400,  // 🏢 ENTERPRISE: Limite alto para uso profissional
+    aiRequests: 1400,         // 🏢 ENTERPRISE: Limite alto
+    toolsUsage: 1400,         // 🏢 ENTERPRISE: Limite alto
     removeBackground: 1400,
     enhance4K: 1400,
     colorMatch: 1400,
@@ -196,7 +196,7 @@ async function checkLimit(
 
     const limit = PLAN_LIMITS[plan][limitKey];
 
-    // 🏢 ENTERPRISE: Verdadeiramente ilimitado (-1)
+    // Suporte para planos ilimitados (-1) - reservado para casos especiais
     if (limit === -1) {
       return {
         allowed: true,

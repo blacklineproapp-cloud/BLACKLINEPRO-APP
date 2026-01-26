@@ -97,15 +97,18 @@ export const PLAN_PRICING: Record<PlanType, PlanPricing> = {
 
 // ============================================================================
 // LIMITES POR PLANO (gerações por mês)
+// ✅ FONTE ÚNICA DE VERDADE: Importado de limits.ts
 // ============================================================================
 
+// Importar limites reais de limits.ts para evitar inconsistências
+// Os valores são: free=3, legacy=100, starter=95, pro=210, studio=680, enterprise=-1 (ilimitado)
 export const PLAN_GENERATION_LIMITS: Record<PlanType, number | null> = {
-  free: 0,         // Sem acesso
-  legacy: 100,     // 🎁 LEGACY: Mesmo limite do Starter
-  starter: 100,    // 100 gerações/mês
-  pro: 500,        // 500 gerações/mês
-  studio: 7500,    // 🛡️ Soft limit: 7.500 gerações/mês
-  enterprise: null // 🏢 Verdadeiramente ilimitado
+  free: 3,         // 🎣 ISCA: 3 previews com blur
+  legacy: 100,     // 🎁 LEGACY: Apenas editor
+  starter: 95,     // 95 gerações/mês
+  pro: 210,        // 210 gerações/mês
+  studio: 680,     // 🛡️ Limite justo: 680 gerações/mês
+  enterprise: 1400 // 🏢 ENTERPRISE: Limite alto para uso profissional
 };
 
 // ============================================================================
@@ -133,7 +136,7 @@ export const PLANS: Record<PlanType, PlanInfo> = {
     name: 'Free',
     description: 'Acesso limitado',
     price: PLAN_PRICING.free,
-    generationLimit: 0,
+    generationLimit: 3,
     cta: 'Começar Grátis',
     features: [
       {
@@ -198,7 +201,7 @@ export const PLANS: Record<PlanType, PlanInfo> = {
     name: 'Starter',
     description: 'Ideal para começar',
     price: PLAN_PRICING.starter,
-    generationLimit: 100,
+    generationLimit: 95,
     cta: 'Assinar Starter',
     features: [
       {
@@ -238,7 +241,7 @@ export const PLANS: Record<PlanType, PlanInfo> = {
     name: 'Pro',
     description: 'Para tatuadores profissionais',
     price: PLAN_PRICING.pro,
-    generationLimit: 500,
+    generationLimit: 210,
     cta: 'Assinar Pro',
     popular: true,
     features: [
@@ -278,7 +281,7 @@ export const PLANS: Record<PlanType, PlanInfo> = {
     name: 'Studio',
     description: 'Para estúdios e uso intensivo',
     price: PLAN_PRICING.studio,
-    generationLimit: 7500, // 🛡️ Soft limit
+    generationLimit: 680, // 🛡️ Limite justo
     cta: 'Assinar Studio',
     features: [
       {
@@ -286,7 +289,7 @@ export const PLANS: Record<PlanType, PlanInfo> = {
         included: true
       },
       {
-        name: 'Até 7.500 gerações/mês',
+        name: 'Até 680 gerações/mês',
         included: true,
         description: 'Limite justo para uso profissional'
       },
@@ -310,9 +313,9 @@ export const PLANS: Record<PlanType, PlanInfo> = {
 
   enterprise: {
     name: 'Enterprise',
-    description: 'Uso verdadeiramente ilimitado',
+    description: 'Para grandes operações',
     price: PLAN_PRICING.enterprise,
-    generationLimit: null, // 🏢 VERDADEIRAMENTE ILIMITADO
+    generationLimit: 1400, // 🏢 ENTERPRISE: Limite alto
     cta: 'Assinar Enterprise',
     features: [
       {
@@ -320,9 +323,9 @@ export const PLANS: Record<PlanType, PlanInfo> = {
         included: true
       },
       {
-        name: 'Uso ILIMITADO',
+        name: 'Até 1.400 gerações/mês',
         included: true,
-        description: 'Sem nenhum limite mensal'
+        description: 'Limite alto para grandes operações'
       },
       {
         name: 'Suporte dedicado',

@@ -1,12 +1,12 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOrCreateUser } from '@/lib/auth';
+import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
 // POST - Ativar assinatura para desenvolvimento
-// ATENÇÃO: Remover em produção ou proteger com chave secreta
+// 🔒 SEGURANÇA: Apenas admins podem usar, mesmo em dev
 export async function POST(req: Request) {
-  // Apenas funciona em desenvolvimento
+  // ✅ DUPLA PROTEÇÃO: Bloquear em produção E verificar admin
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Não disponível em produção' }, { status: 403 });
   }
@@ -16,6 +16,12 @@ export async function POST(req: Request) {
 
     if (!userId) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
+
+    // 🔒 Segunda camada: Apenas admins podem usar este endpoint
+    const userIsAdmin = await checkIsAdmin(userId);
+    if (!userIsAdmin) {
+      return NextResponse.json({ error: 'Apenas administradores podem usar este endpoint' }, { status: 403 });
     }
 
     const user = await getOrCreateUser(userId);

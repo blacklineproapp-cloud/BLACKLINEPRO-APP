@@ -15,6 +15,10 @@ import { applyAdjustments, resetControls } from '@/lib/stencil-adjustments';
 import { processImageOnClient } from '@/lib/canvas-processor';
 import { storage } from '@/lib/client-storage';
 import { compressIfNeeded } from '@/lib/image-compress';
+import BlurPreviewModal from '@/components/upsell/BlurPreviewModal';
+import CheckoutModal from '@/components/CheckoutModal';
+import type { PlanType } from '@/lib/billing/plans';
+import type { BillingCycle } from '@/lib/stripe/types';
 
 type Style = 'standard' | 'perfect_lines' | 'anime';
 type ComparisonMode = 'wipe' | 'overlay' | 'split';
@@ -58,6 +62,15 @@ export default function EditorPage() {
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isRestoringHistoryRef = useRef(false); // Flag para ignorar mudanças do histórico
   const rafIdRef = useRef<number | null>(null); // RequestAnimationFrame para slider suave
+
+  // Blur Preview Modal (upsell para free users)
+  const [showBlurPreview, setShowBlurPreview] = useState(false);
+  const [blurredPreviewImage, setBlurredPreviewImage] = useState<string | null>(null);
+
+  // Checkout Modal (pagamento Stripe estilizado)
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<'starter' | 'pro'>('starter');
+  const [checkoutCycle, setCheckoutCycle] = useState<BillingCycle>('monthly');
 
   // Toast notifications
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -394,6 +407,14 @@ export default function EditorPage() {
       const data = await res.json();
 
       if (res.ok) {
+        // 🎣 FREE USERS: Se é preview (blur + watermark), mostrar modal de upsell
+        if (data.isPreview) {
+          setBlurredPreviewImage(data.image);
+          setShowBlurPreview(true);
+          setShowControls(true);
+          return;
+        }
+
         let finalStencil = data.image;
 
         // 📐 RESIZE: Redimensionar stencil para o tamanho físico escolhido
@@ -433,10 +454,8 @@ export default function EditorPage() {
         // AUTO-SAVE após gerar com sucesso
         autoSaveProject(finalStencil);
       } else if (data.requiresSubscription) {
-        if (confirm(`${data.message}\n\nDeseja assinar agora?`)) {
-          window.location.href = '/api/payments/create-checkout?plan=' + data.subscriptionType;
-        }
         setShowControls(true);
+        showToast(data.message || 'Limite de gerações atingido. Assine para continuar!', 'error');
       } else {
         alert(data.error || 'Erro ao gerar estêncil.');
         setShowControls(true);
@@ -482,6 +501,15 @@ export default function EditorPage() {
     } catch (error) {
       console.error('Erro ao auto-salvar:', error);
     }
+  };
+
+  // Handler para quando o usuário clica em assinar no BlurPreviewModal
+  const handleUpsellSubscribe = (plan: PlanType, cycle: BillingCycle) => {
+    setShowBlurPreview(false);
+    // Abrir o CheckoutModal estilizado com Stripe Elements
+    setCheckoutPlan(plan as 'starter' | 'pro');
+    setCheckoutCycle(cycle);
+    setShowCheckout(true);
   };
 
   const handleSave = async () => {
@@ -1116,6 +1144,22 @@ export default function EditorPage() {
         currentWidthCm={widthCm}
         currentHeightCm={heightCm}
         onResizeComplete={handleResizeComplete}
+      />
+
+      {/* Blur Preview Modal (Upsell para free users) */}
+      <BlurPreviewModal
+        isOpen={showBlurPreview}
+        onClose={() => setShowBlurPreview(false)}
+        blurredImageSrc={blurredPreviewImage || ''}
+        onSubscribe={handleUpsellSubscribe}
+      />
+
+      {/* Checkout Modal (Stripe Elements estilizado) */}
+      <CheckoutModal
+        plan={checkoutPlan}
+        cycle={checkoutCycle}
+        isOpen={showCheckout}
+        onClose={() => setShowCheckout(false)}
       />
 
       {/* Toast Notification */}

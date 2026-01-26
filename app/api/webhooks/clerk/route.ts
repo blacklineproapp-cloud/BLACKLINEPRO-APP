@@ -1,5 +1,4 @@
 import { Webhook } from 'svix';
-import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -12,22 +11,22 @@ export async function POST(req: Request) {
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 
-  // Pegar headers
-  const headerPayload = headers();
-  const svix_id = headerPayload.get('svix-id');
-  const svix_timestamp = headerPayload.get('svix-timestamp');
-  const svix_signature = headerPayload.get('svix-signature');
+  // Pegar headers diretamente do Request (mais confiável que next/headers)
+  const svix_id = req.headers.get('svix-id');
+  const svix_timestamp = req.headers.get('svix-timestamp');
+  const svix_signature = req.headers.get('svix-signature');
 
   if (!svix_id || !svix_timestamp || !svix_signature) {
     console.error('[Webhook Clerk] ❌ Headers Svix ausentes');
     return new NextResponse('Headers ausentes', { status: 400 });
   }
 
-  // Pegar body
-  const payload = await req.json();
-  const body = JSON.stringify(payload);
+  // 🔑 CRÍTICO: Usar req.text() para obter o body RAW original
+  // req.json() + JSON.stringify() pode alterar a ordem das keys/espaçamento,
+  // quebrando a verificação de assinatura Svix
+  const body = await req.text();
 
-  // Verificar webhook
+  // Verificar webhook com o body EXATO recebido
   const wh = new Webhook(WEBHOOK_SECRET);
   let evt: any;
 
@@ -38,7 +37,7 @@ export async function POST(req: Request) {
       'svix-signature': svix_signature,
     });
   } catch (err) {
-    console.error('[Webhook Clerk] ❌ Erro ao verificar assinatura:', err);
+    console.error('[Webhook Clerk] ❌ Verificação de assinatura falhou');
     return new NextResponse('Assinatura inválida', { status: 400 });
   }
 
@@ -184,7 +183,7 @@ function validateAndNormalizeClerkData(data: any): { email: string; name: string
   // Validar email
   const email = data.email_addresses?.[0]?.email_address;
   if (!email || typeof email !== 'string') {
-    console.error('[Webhook Clerk] ❌ Email ausente ou inválido no payload:', data);
+    console.error('[Webhook Clerk] ❌ Email ausente ou inválido no payload do evento');
     return null;
   }
 
@@ -227,11 +226,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
 
   // Se encontrou múltiplos usuários com mesmo email = PROBLEMA!
   if (existingUsers && existingUsers.length > 1) {
-    console.error('[Webhook Clerk] ⚠️ ALERTA: Múltiplos usuários com mesmo email:', {
-      email: email,
-      count: existingUsers.length,
-      users: existingUsers.map(u => ({ id: u.id, clerk_id: u.clerk_id, email: u.email }))
-    });
+    console.error('[Webhook Clerk] ⚠️ ALERTA: Múltiplos usuários encontrados para clerk_id:', data.id, 'count:', existingUsers.length);
     // Usar o mais antigo como base
     existingUsers.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   }
@@ -285,11 +280,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
   if (error) {
     // Verificar se é erro de duplicação (UNIQUE constraint)
     if (error.code === '23505') {
-      console.warn('[Webhook Clerk] ⚠️ Tentativa de criar usuário duplicado (constraint violation):', {
-        email: email,
-        clerk_id: data.id,
-        error: error.message
-      });
+      console.warn('[Webhook Clerk] ⚠️ Constraint violation ao criar usuário, tentando atualizar...');
 
       // Tentar buscar e atualizar o usuário existente
       const { data: duplicateUser } = await supabaseAdmin
@@ -369,5 +360,6 @@ async function handleUserDeleted(data: any, eventId: string): Promise<void> {
   console.log(`[Webhook Clerk] ✅ Usuário deletado com sucesso: ${data.id}`);
 }
 
-// Configurar como edge function
-export const runtime = 'edge';
+// ⚠️ NÃO usar Edge Runtime para webhooks!
+// Edge não suporta crypto completo do svix e pode quebrar supabaseAdmin
+// O runtime padrão (Node.js) é obrigatório aqui.

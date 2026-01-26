@@ -128,21 +128,21 @@ export default function AssinaturaPage() {
       icon: Zap,
       color: 'emerald',
       price: 'R$ 50/mês',
-      features: ['100 gerações/mês', 'Editor completo', 'Modo topográfico']
+      features: ['95 gerações/mês', 'Editor completo', 'Modo topográfico']
     },
     pro: {
       name: 'Pro',
       icon: Crown,
       color: 'purple',
       price: 'R$ 100/mês',
-      features: ['500 gerações/mês', 'IA Generativa', 'Color Match + A4']
+      features: ['210 gerações/mês', 'IA Generativa', 'Color Match + A4']
     },
     studio: {
       name: 'Studio',
       icon: Sparkles,
       color: 'amber',
       price: 'R$ 300/mês',
-      features: ['1000 gerações/mês', 'Tudo do Pro', 'Suporte prioritário']
+      features: ['680 gerações/mês', 'Tudo do Pro', 'Suporte prioritário']
     }
   };
 

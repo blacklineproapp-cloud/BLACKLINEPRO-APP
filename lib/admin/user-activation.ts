@@ -84,11 +84,10 @@ export async function activateUserAtomic(
   }
 
   // 2. Atualizar Campos de Cortesia (Pós-RPC)
-  // Como não podemos alterar a RPC facilmente, fazemos o update logo em seguida.
-  // A consistência eventual é aceitável aqui (o pior caso é usuário ter plano sem flag de cortesia por alguns ms)
+  // CORREÇÃO: Adicionado tratamento de erro e retry para garantir consistência
   if (isCourtesy || options.isCourtesy === false) {
      let expiresAt = null;
-     
+
      if (isCourtesy && options.courtesyDurationDays) {
          const date = new Date();
          date.setDate(date.getDate() + options.courtesyDurationDays);
@@ -104,12 +103,32 @@ export async function activateUserAtomic(
          admin_courtesy_granted_at: isCourtesy ? new Date().toISOString() : null
      };
 
-     await supabaseAdmin
-         .from('users')
-         .update(courtesyUpdates)
-         .eq('id', userId);
-         
-     console.log(`[UserActivation] 🎁 Campos de cortesia atualizados:`, courtesyUpdates);
+     // Retry com 3 tentativas em caso de falha
+     let lastError = null;
+     for (let attempt = 1; attempt <= 3; attempt++) {
+       const { error: courtesyError } = await supabaseAdmin
+           .from('users')
+           .update(courtesyUpdates)
+           .eq('id', userId);
+
+       if (!courtesyError) {
+         console.log(`[UserActivation] 🎁 Campos de cortesia atualizados:`, courtesyUpdates);
+         lastError = null;
+         break;
+       }
+
+       lastError = courtesyError;
+       console.warn(`[UserActivation] ⚠️ Tentativa ${attempt}/3 falhou ao atualizar cortesia:`, courtesyError.message);
+
+       if (attempt < 3) {
+         await new Promise(resolve => setTimeout(resolve, 100 * attempt)); // Backoff simples
+       }
+     }
+
+     if (lastError) {
+       // Log crítico mas não falha a operação principal (plano já foi ativado)
+       console.error(`[UserActivation] ❌ CRÍTICO: Falha ao atualizar campos de cortesia após 3 tentativas. Usuário ${userId} pode precisar de correção manual.`);
+     }
   }
 
   console.log(`[UserActivation] ✅ ${result.message}`);

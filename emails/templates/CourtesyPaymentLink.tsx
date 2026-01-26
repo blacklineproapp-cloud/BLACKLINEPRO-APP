@@ -36,21 +36,21 @@ export const CourtesyPaymentLink = ({
 
   const planFeatures: Record<string, string[]> = {
     starter: [
-      '100 gerações de stencil por mês',
+      '95 gerações de stencil por mês',
       'Editor completo com todas as ferramentas',
       'Salvar projetos ilimitados',
       'Suporte prioritário',
     ],
     pro: [
-      '300 gerações de stencil por mês',
+      '210 gerações de stencil por mês',
       'Editor completo + ferramentas PRO',
-      'Geração IA ilimitada',
-      'Color Match IA ilimitado',
-      'Dividir A4 ilimitado',
-      'Aprimorar 4K ilimitado',
+      'Geração IA',
+      'Color Match IA',
+      'Dividir A4',
+      'Aprimorar 4K',
     ],
     studio: [
-      '1000 gerações de stencil por mês',
+      '680 gerações de stencil por mês',
       'Todas as ferramentas PRO',
       'Multi-usuário (3 contas)',
       'Prioridade máxima no suporte',

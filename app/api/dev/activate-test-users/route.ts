@@ -1,14 +1,27 @@
+import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { isAdmin as checkIsAdmin } from '@/lib/auth';
 
 /**
  * Endpoint de desenvolvimento para ativar usuários de teste
- * Apenas funciona em ambiente de desenvolvimento
+ * 🔒 SEGURANÇA: Apenas admins podem usar, mesmo em dev
  */
 export async function POST(req: Request) {
-  // Apenas em desenvolvimento
+  // ✅ DUPLA PROTEÇÃO: Bloquear em produção E verificar admin
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Not allowed in production' }, { status: 403 });
+  }
+
+  // 🔒 Segunda camada: Verificar se é admin
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  }
+
+  const userIsAdmin = await checkIsAdmin(userId);
+  if (!userIsAdmin) {
+    return NextResponse.json({ error: 'Apenas administradores podem usar este endpoint' }, { status: 403 });
   }
 
   const testEmails = [
@@ -55,11 +68,23 @@ export async function POST(req: Request) {
 
 /**
  * GET para facilitar teste no navegador
+ * 🔒 SEGURANÇA: Apenas admins podem ver
  */
 export async function GET(req: Request) {
-  // Apenas em desenvolvimento
+  // ✅ DUPLA PROTEÇÃO: Bloquear em produção E verificar admin
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Not allowed in production' }, { status: 403 });
+  }
+
+  // 🔒 Segunda camada: Verificar se é admin
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  }
+
+  const userIsAdmin = await checkIsAdmin(userId);
+  if (!userIsAdmin) {
+    return NextResponse.json({ error: 'Apenas administradores podem usar este endpoint' }, { status: 403 });
   }
 
   return NextResponse.json({

@@ -75,7 +75,7 @@ export const RemarketingInitial = ({
                   R$ 50<span style={{ fontSize: '16px', fontWeight: 'normal' }}>/mês</span>
                 </Text>
                 <Text style={styles.priceFeatures}>
-                  100 gerações/mês • Editor Completo • Salvar Projetos Ilimitados
+                  95 gerações/mês • Editor Completo • Salvar Projetos Ilimitados
                 </Text>
                 <Text style={styles.priceSavings}>
                   💰 Economize 40% no plano anual (R$ 30/mês)

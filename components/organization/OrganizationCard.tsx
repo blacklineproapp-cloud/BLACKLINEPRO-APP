@@ -135,7 +135,7 @@ export default function OrganizationCard({
               d="M13 10V3L4 14h7v7l9-11h-7z"
             />
           </svg>
-          <span>7.500 gerações/mês compartilhadas</span>
+          <span>680 gerações/mês compartilhadas</span>
         </div>
       )}
     </div>

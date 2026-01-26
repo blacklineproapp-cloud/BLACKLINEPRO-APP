@@ -1,20 +1,84 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import sharp from 'sharp';
 import { retryGeminiAPI } from './retry';
 import { TOPOGRAPHIC_INSTRUCTION_OPTIMIZED, PERFECT_LINES_INSTRUCTION_OPTIMIZED, SIMPLIFY_TOPOGRAPHIC_TO_LINES, ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED } from './prompts-optimized';
+
+/**
+ * Pré-processa a imagem para forçar o modelo a gerar linhas, não copiar a foto
+ *
+ * Para imagens escuras/baixa qualidade:
+ * 1. Detecta se é escura (média de pixels baixa)
+ * 2. Aplica correção gamma para clarear
+ * 3. Aumenta contraste agressivamente
+ * 4. Aplica sharpening forte para realçar bordas
+ *
+ * Isso "força" o Gemini a ver bordas claras que ele pode converter em contornos
+ */
+async function prepareImageForStencil(base64: string): Promise<string> {
+  const buffer = Buffer.from(base64, 'base64');
+
+  // Obter estatísticas da imagem para detectar se é escura
+  const stats = await sharp(buffer).stats();
+  const avgBrightness = stats.channels.reduce((sum, ch) => sum + ch.mean, 0) / stats.channels.length;
+
+  console.log(`[Gemini] Brilho médio da imagem: ${avgBrightness.toFixed(1)} (0-255)`);
+
+  let processed = sharp(buffer);
+
+  // Se a imagem é escura (média < 100), aplicar correção gamma agressiva
+  if (avgBrightness < 100) {
+    console.log('[Gemini] Imagem escura detectada, aplicando correção gamma');
+    processed = processed.gamma(2.2); // Gamma > 1 clareia a imagem
+  }
+
+  // Se a imagem é muito escura (média < 60), clarear ainda mais
+  if (avgBrightness < 60) {
+    console.log('[Gemini] Imagem muito escura, aplicando brilho adicional');
+    processed = processed.modulate({ brightness: 1.5 }); // +50% brilho
+  }
+
+  // Aplicar processamento para realçar bordas (em todas as imagens)
+  const finalBuffer = await processed
+    .normalize()                                    // Esticar histograma (máximo contraste)
+    .sharpen({ sigma: 2.0, m1: 1.5, m2: 0.7 })     // Sharpening agressivo para bordas
+    .jpeg({ quality: 90 })
+    .toBuffer();
+
+  return finalBuffer.toString('base64');
+}
+
+/**
+ * Remove qualquer cor da imagem (converte para greyscale puro)
+ * NÃO aplica threshold - preserva os tons de cinza que representam
+ * densidade de linhas e hatching no stencil
+ */
+async function enforceMonochrome(base64DataUri: string): Promise<string> {
+  const cleanBase64 = base64DataUri.replace(/^data:image\/[a-z]+;base64,/, '');
+  const buffer = Buffer.from(cleanBase64, 'base64');
+
+  const monoBuffer = await sharp(buffer)
+    .greyscale()                    // Remove toda informação de cor (sem threshold!)
+    .png({ compressionLevel: 6 })  // Saída PNG limpa
+    .toBuffer();
+
+  return `data:image/png;base64,${monoBuffer.toString('base64')}`;
+}
 
 const apiKey = process.env.GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Modelo para TOPOGRÁFICO V3.0 - MÁXIMA RIQUEZA DE DETALHES
-// Temperature 0 = mantém fidelidade (não inventa)
-// topP 0.15 = permite explorar mais variações de densidade (captura mais detalhes)
-// topK 10 = permite mais nuances na representação de profundidade e texturas
+// Modelo para TOPOGRÁFICO V7.0 - MAPEAMENTO TOPOGRÁFICO INTERPRETATIVO
+// Temperature 0.4 = permite criar contornos e hatching criativamente
+// topP 0.4 = seleção ampla para variar padrões de linhas
+// topK 20 = mais opções para criar padrões de hatching diferenciados
+// NOTA: temp=0 fazia o modelo apenas COPIAR a foto.
+// O topográfico precisa INTERPRETAR a foto e criar linhas NOVAS.
 const topographicModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
-    temperature: 0,    // Determinístico - fidelidade 100% ao original
-    topP: 0.15,        // Máxima riqueza - captura micro-detalhes e variações tonais
-    topK: 10,          // Top 10 tokens - permite 7 níveis de profundidade distintos
+    temperature: 0.4,  // Criatividade para interpretar e criar contornos
+    topP: 0.4,         // Amplo o suficiente para variar hatching/textura
+    topK: 20,          // Mais opções para padrões de linha diferenciados
   },
 });
 
@@ -95,13 +159,37 @@ export async function generateStencilFromImage(
       systemInstruction = ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED;
       model = animeModel;
       modeInfo = 'ANIME/ILUSTRAÇÃO (temp: 0, topP: 0.1, topK: 5) - LIMPAR E PRESERVAR LINHAS';
-      traceInstruction = 'CLEAN this illustration into a line stencil. PRESERVE all existing contour lines. REMOVE all solid black fills - convert to outline only. REMOVE backgrounds. Output: black lines on white only.';
+      traceInstruction = 'EXTRACT clean lineart from this image. If it is an illustration, PRESERVE existing contour lines and REMOVE fills. If it is a photo, CONVERT it to anime-style lineart (bold outlines, no shading). Output: black lines on white background only. NO solid fills. PNG format.';
       break;
     case 'perfect_lines':
       systemInstruction = TOPOGRAPHIC_INSTRUCTION_OPTIMIZED;
       model = topographicModel;
-      modeInfo = 'TOPOGRÁFICO V3.0 (temp: 0, topP: 0.15, topK: 10) - 7 NÍVEIS, MÁXIMA RIQUEZA';
-      traceInstruction = 'TRACE this exact image into a topographic stencil with rich depth and detail. Do NOT redraw. Apply a geometric transformation preserving ALL positions. Add 7-level shading following the EXACT source geometry.';
+      modeInfo = 'TOPOGRÁFICO V7.0 (temp: 0.4, topP: 0.4, topK: 20) - INTERPRETAÇÃO TOPOGRÁFICA';
+      traceInstruction = `⛔ CRITICAL: DO NOT OUTPUT A PHOTO. OUTPUT ONLY LINES. ⛔
+
+You MUST generate a TOPOGRAPHIC LINE MAP stencil. The output CANNOT look like the input photo.
+
+🚨 IF THE INPUT IS DARK OR LOW QUALITY:
+- DO NOT try to "fix" or "enhance" the photo
+- DO NOT output a cleaner version of the same image
+- STILL output ONLY contour lines and hatching patterns
+- If you can barely see details, draw lines where you detect ANY edge
+
+MANDATORY OUTPUT FORMAT:
+- BLACK LINES on WHITE BACKGROUND only
+- NO photographs, NO realistic rendering, NO gray areas, NO solid fills
+- ONLY: contour lines, hatching patterns, and texture strokes
+
+WHAT TO DRAW:
+1. CONTOUR LINES at every depth/tone transition (like a terrain elevation map)
+2. HATCHING inside shadow zones (parallel lines - denser = darker)
+3. TEXTURE STROKES showing material (skin=curves, hair=flowing strokes, fabric=fold lines)
+4. Lines must FOLLOW the 3D surface direction
+
+TEST: If someone looks at your output, they should see LINES AND PATTERNS, not a photo.
+If your output still looks like a photograph, YOU HAVE FAILED. Try again with ONLY lines.
+
+OUTPUT: Black line stencil. Contours + hatching + textures. PNG format.`;
       break;
     case 'standard':
     default:
@@ -139,6 +227,16 @@ export async function generateStencilFromImage(
     cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
   }
 
+  // Pré-processar imagem: sharpening + contraste para melhorar detecção de bordas
+  // Isso ajuda especialmente com imagens de baixa qualidade (JPEG comprimido, borradas)
+  try {
+    cleanBase64 = await prepareImageForStencil(cleanBase64);
+    console.log('[Gemini] Imagem pré-processada (sharpen + normalize)');
+  } catch (prepError) {
+    console.warn('[Gemini] Pré-processamento falhou, usando imagem original:', prepError);
+    // Continuar com a imagem original se o pré-processamento falhar
+  }
+
   // Usar retry logic para lidar com falhas temporárias do Gemini
   return retryGeminiAPI(async () => {
     try {
@@ -166,7 +264,10 @@ export async function generateStencilFromImage(
           // @ts-ignore - Check for inline image data
           if (part.inlineData) {
             // @ts-ignore
-            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+            const rawImage = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+            // 🎯 FORÇAR MONOCROMÁTICO: Remove qualquer cor que o Gemini tenha gerado
+            console.log('[Gemini] Aplicando enforceMonochrome para garantir saída B&W');
+            return await enforceMonochrome(rawImage);
           }
         }
       }

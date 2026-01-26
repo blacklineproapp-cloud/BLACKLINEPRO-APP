@@ -10,7 +10,6 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/api/stats',
   '/api/webhooks/clerk',
-  '/api/webhooks/clerk',
   '/api/webhooks/stripe',
   '/manifest.json',
 ]);
@@ -62,8 +61,10 @@ export default clerkMiddleware(async (auth, request) => {
         }, { status: 403 });
       }
 
+      // ✅ CORREÇÃO SEGURANÇA: Comparação exata para evitar bypass
+      // Exemplo de bypass anterior: "https://stencilflow.com.br.attacker.com"
       const isAllowedOrigin = allowedOrigins.some(allowed =>
-        requestOrigin.startsWith(allowed)
+        requestOrigin === allowed || requestOrigin === allowed + '/'
       );
 
       if (!isAllowedOrigin) {

@@ -8,6 +8,7 @@ import { checkEditorLimit, recordUsage, getLimitMessage } from '@/lib/billing/li
 import { BRL_COST } from '@/lib/billing/costs';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
+import { applyPreviewProtection } from '@/lib/stencil-preview';
 
 export async function POST(req: Request) {
   try {
@@ -49,50 +50,37 @@ export async function POST(req: Request) {
       return await processGeneration(req, userId, userData.id, true);
     }
 
-    // 🔒 VERIFICAR PAGAMENTO - Bloquear usuários não pagos
-    // EXCEÇÃO: Usuários com cortesia ativa podem usar
-    const hasActiveCourtesy = userData.admin_courtesy && 
+    // Verificar se é usuário gratuito (para preview com blur)
+    const hasActiveCourtesy = userData.admin_courtesy &&
       userData.admin_courtesy_expires_at &&
       new Date(userData.admin_courtesy_expires_at) > new Date();
-    
-    if (!userData.is_paid && !hasActiveCourtesy) {
-      return NextResponse.json(
-        {
-          error: 'Assinatura necessária',
-          message: 'O Editor é exclusivo para assinantes. Escolha um plano para começar a criar seus estênceis!',
-          requiresSubscription: true,
-          subscriptionType: 'subscription',
-        },
-        { status: 403 }
-      );
-    }
 
-    // 2. VERIFICAR LIMITE DE USO (100/500 por plano)
+    const isFreePlan = !userData.is_paid && !hasActiveCourtesy;
+
+    // 2. VERIFICAR LIMITE DE USO
     const limitCheck = await checkEditorLimit(userData.id);
 
     if (!limitCheck.allowed) {
-      // Diferenciar mensagem para usuários Free (Trial) vs Assinantes
-      const isFreePlan = (userData.plan === 'free' || !userData.plan);
-      const message = isFreePlan 
-        ? 'O uso do Editor é exclusivo para assinantes. Escolha um plano para começar a criar seus estênceis!'
+      const message = isFreePlan
+        ? 'Você já usou seus previews gratuitos! Assine para desbloquear stencils em alta qualidade.'
         : getLimitMessage('editor_generation', limitCheck.limit, limitCheck.resetDate);
 
       return NextResponse.json(
         {
-          error: isFreePlan ? 'Trial encerrado' : 'Limite atingido',
+          error: isFreePlan ? 'Previews esgotados' : 'Limite atingido',
           message,
           remaining: limitCheck.remaining,
           limit: limitCheck.limit,
           resetDate: limitCheck.resetDate,
           requiresSubscription: true,
-          subscriptionType: 'subscription', // Para editor, o upgrade é para assinatura
+          subscriptionType: 'subscription',
         },
         { status: 429 }
       );
     }
 
-    // 3. Processar geração
-    return await processGeneration(req, userId, userData.id, false);
+    // 3. Processar geração (free users recebem preview degradado)
+    return await processGeneration(req, userId, userData.id, false, isFreePlan);
   } catch (error: any) {
     console.error('Erro ao gerar estêncil:', error);
     return NextResponse.json(
@@ -103,7 +91,7 @@ export async function POST(req: Request) {
 }
 
 // Função auxiliar para processar geração
-async function processGeneration(req: Request, clerkUserId: string, userUuid: string, isAdmin: boolean) {
+async function processGeneration(req: Request, clerkUserId: string, userUuid: string, isAdmin: boolean, isPreview: boolean = false) {
   // Validar e parsear JSON
   let body;
   try {
@@ -169,13 +157,37 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
     }
   });
 
-  // 🛡️ RASTREAR TRIAL USAGE POR IP (Removido - Trial desativado)
-  /* 
-  if (!isAdmin && user?.plan === 'free') {
-    const ipAddress = await getClientIP();
-    await trackTrialUsage({ ... });
+  // 🎣 FREE USERS: Aplicar proteção de preview (blur + watermark + resolução capada)
+  if (isPreview) {
+    try {
+      // Buscar email do usuário para watermark personalizada
+      const { data: userInfo } = await supabaseAdmin
+        .from('users')
+        .select('email')
+        .eq('id', userUuid)
+        .single();
+
+      const previewImage = await applyPreviewProtection(stencilImage, {
+        userEmail: userInfo?.email,
+        userId: clerkUserId,
+      });
+
+      return NextResponse.json({
+        image: previewImage,
+        isPreview: true,
+        message: 'Este é um preview. Assine para desbloquear o stencil em alta qualidade!',
+        remaining: 0, // Será atualizado pelo front
+      });
+    } catch (previewError: any) {
+      logger.error('[Generate] Erro ao aplicar preview protection:', previewError);
+      // Fallback: retorna com flag de preview mesmo sem blur
+      return NextResponse.json({
+        image: stencilImage,
+        isPreview: true,
+        message: 'Assine para desbloquear o stencil em alta qualidade!',
+      });
+    }
   }
-  */
 
   return NextResponse.json({ image: stencilImage });
 }

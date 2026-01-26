@@ -1,255 +1,331 @@
-// Prompts otimizados para geração de stencils
-// TOPOGRÁFICO = Máxima riqueza de detalhes, profundidade 3D, sombra rica (7 níveis)
+// Prompts otimizados para geração de stencils V6.0
+//
+// REGRA UNIVERSAL: Nunca alterar posição, proporção, ângulo ou anatomia
+// Apenas CONVERTER o formato (foto → stencil)
+//
+// TOPOGRÁFICO = Mapa topográfico de profundidade com 7 níveis (contornos + hatching)
 // LINHAS = Limpo, simples, menos detalhes, contornos básicos (3 tons)
+// ANIME = Para ilustrações (limpar linhas) ou fotos (converter para lineart anime-style)
+// DOTWORK = Tudo em pontos individuais separados (preto no branco)
 
-// TOPOGRÁFICO V3.0 - Máxima riqueza de detalhes com 7 NÍVEIS de profundidade
-export const TOPOGRAPHIC_INSTRUCTION_OPTIMIZED = `ROLE: Master Topographic Stencil Artist for Ultra-Realistic Tattoo
-
-🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
-⛔ ABSOLUTE COLOR PROHIBITION - READ THIS FIRST ⛔
-🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
-
-THE OUTPUT MUST BE 100% MONOCHROME - THIS IS A TATTOO THERMAL STENCIL
-
-❌ FORBIDDEN COLORS (will cause FAILURE):
-   - Red, Blue, Green, Yellow, Orange, Purple, Pink, Cyan, Magenta
-   - Sepia, Warm tones, Cool tones, Tinted grays
-   - ANY color that is not pure black/gray/white
-
-✅ ONLY ALLOWED:
-   - Pure Black: #000000
-   - Grays: #111111 to #EEEEEE
-   - Pure White: #FFFFFF
-
-IF YOU GENERATE ANY COLOR → THE ENTIRE OUTPUT IS INVALID AND REJECTED
-
-🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ GEOMETRIC PRESERVATION - ABSOLUTE PRIORITY ⚠️
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-YOU ARE A TRACER WITH ARTISTIC DEPTH, NOT A RECREATOR:
-- TRACE every contour from the source image with MATHEMATICAL PRECISION
-- Every pixel position in OUTPUT must map to the EXACT same position in INPUT
-- Do NOT shift, resize, or reposition ANY element
-- Eye position → SAME pixel coordinates | Nose shape → SAME pixel boundaries
-- If a line is crooked in the original, it stays crooked
-
-GEOMETRIC LOCK:
-- Overlay your output on the original → ALL features must align EXACTLY
-- You are adding DEPTH and DETAIL to the original structure, NOT redesigning it
-- Think: "I am TRACING then ENRICHING" not "I am DRAWING something similar"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🚫 ZERO ADDITIONS - ABSOLUTE PROHIBITION 🚫
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-YOU MUST NOT ADD ANYTHING THAT DOES NOT EXIST IN THE SOURCE IMAGE:
-- ❌ If there is NO eyebrow → DO NOT draw an eyebrow
-- ❌ If there is NO nose → DO NOT draw a nose
-- ❌ If there is NO eyelash → DO NOT draw eyelashes
-- ❌ If there is NO background → DO NOT add a background
-- ❌ NEVER "complete" what you think is missing
-- ❌ NEVER assume the image is cropped and add the "rest"
-
-CRITICAL: The source image may contain ONLY a partial face, a single eye, 
-just lips, or any isolated element. THIS IS INTENTIONAL.
-Your job is to trace EXACTLY what exists, nothing more.
-
-EXAMPLE: If the image shows ONLY an eye with eyelashes:
-✅ OUTPUT: Eye + eyelashes ONLY
-❌ WRONG: Eye + eyelashes + eyebrow you invented
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!
+// ═══════════════════════════════════════════════════════════════
+// TOPOGRÁFICO V7.0 - MAPEAMENTO TOPOGRÁFICO ULTRA-DETALHADO
+// O mais detalhado do mercado: TODOS elementos, TODAS texturas, TODA profundidade
+// ═══════════════════════════════════════════════════════════════
+export const TOPOGRAPHIC_INSTRUCTION_OPTIMIZED = `YOU ARE THE WORLD'S MOST DETAILED TOPOGRAPHIC STENCIL GENERATOR
 
 ═══════════════════════════════════════════════════════════════
-⚠️ MANDATORY COLOR RULE - NO EXCEPTIONS ⚠️
+🚨 ABSOLUTE RULE: COMPLETE COVERAGE - ZERO OMISSIONS 🚨
 ═══════════════════════════════════════════════════════════════
-❌ ABSOLUTELY NO COLORS - The output MUST be 100% MONOCHROME
-❌ NO red, blue, green, yellow, orange, purple, pink, or ANY color
-❌ NO sepia, warm tones, cool tones, or tinted grays
-✅ ONLY pure black (#000000), shades of gray, and pure white (#FFFFFF)
-✅ This is a TATTOO STENCIL - it goes on a thermal printer that only prints BLACK
 
-═══════════════════════════════════════════════════════════════
-⚠️ WATERMARK REMOVAL - MANDATORY ⚠️
-═══════════════════════════════════════════════════════════════
-🔍 DETECT and COMPLETELY IGNORE any watermarks in the source image:
-❌ Text overlays like "SVG & PNG", "Commercial Use", "Stock Photo", etc.
-❌ Semi-transparent watermarks with website names or logos
-❌ Diagonal watermarks, copyright symbols (©), brand names
-✅ RECONSTRUCT the artwork beneath watermarks using surrounding context
-✅ The output stencil must be CLEAN with NO trace of watermarks
-✅ Focus ONLY on the actual artwork/subject, not the watermark text
+EVERY SINGLE ELEMENT in the image MUST be mapped with lines.
+NOTHING is skipped. NOTHING is simplified. NOTHING is left blank.
 
-PROHIBITED:
-❌ NEVER alter anatomy, proportions, positioning, expressions
-❌ NEVER recreate, redesign, or reimagine elements
-❌ NEVER "improve" or "correct" the original image
-✅ COPY every detail EXACTLY as shown in the photo
-✅ Only change FORMAT (photo → lines), never CONTENT
+✅ Main subject → fully mapped with depth lines
+✅ Background elements → fully mapped with depth lines
+✅ Secondary objects → fully mapped with depth lines
+✅ Textures (skin, hair, fabric, metal, wood, stone) → all mapped
+✅ Shadows → mapped with hatching density
+✅ Light sources → mapped as white zones surrounded by contours
+✅ Depth transitions → contour boundaries everywhere tone changes
+✅ Every fold, wrinkle, pore, strand, edge, surface → MAPPED
 
-FOR EYES AND FACES: Copy EXACTLY - pupil, iris, reflections in exact position/size. Preserve natural asymmetries.
-
-MISSION: Create ULTRA-DETAILED topographic stencil with MAXIMUM depth, richness, and micro-details using 7-LEVEL SYSTEM.
-OUTPUT: 100% MONOCHROME (pure black #000000 on white #FFFFFF) - ZERO COLORS ALLOWED
+IF AN AREA EXISTS IN THE SOURCE → IT MUST HAVE LINES IN THE OUTPUT
+The ONLY white areas allowed are genuine HIGHLIGHTS (brightest points of light).
 
 ═══════════════════════════════════════════════════════════════
-CONTOURS (Structural Foundation)
+🚨 NEVER "IMPROVE" OR "CLEAN UP" THE PHOTO 🚨
 ═══════════════════════════════════════════════════════════════
-MAIN CONTOURS (0.8-1.5pt): Define major shapes, strong and crisp
-SECONDARY CONTOURS (0.5-0.8pt): Internal structures, anatomical divisions
-TERTIARY CONTOURS (0.3-0.5pt): Fine details, subtle edges
-HATCHING (0.3-0.6pt): Create depth/volume through density, ALWAYS directional following 3D form
 
-═══════════════════════════════════════════════════════════════
-7-LEVEL TONAL SYSTEM (Maximum Depth & Richness)
-═══════════════════════════════════════════════════════════════
-LEVEL 1 - ULTRA DENSE SHADOW (0.25-0.35mm spacing, 0.4-0.6pt)
-  → Deepest blacks: pupils, deep cavities, core shadows
-  → NEVER solid fill - always visible separated lines
-  → Maximum darkness while maintaining line structure
+YOUR JOB IS TO CONVERT, NOT ENHANCE.
+Even if the input image is:
+- Low quality, blurry, pixelated, or compressed
+- Noisy, dark, or poorly lit
+- Small or low resolution
 
-LEVEL 2 - DENSE SHADOW (0.35-0.5mm spacing, 0.4-0.5pt)
-  → Dark intense areas: strong shadows, recessed forms
-  → Clear directional hatching following anatomy
-
-LEVEL 3 - MEDIUM-DENSE SHADOW (0.5-0.8mm spacing, 0.4-0.5pt)
-  → Moderate dark tones: transition zones, secondary shadows
-  → Rich tonal depth
-
-LEVEL 4 - MEDIUM TONE (0.8-1.2mm spacing, 0.3-0.5pt)
-  → Middle grays: neutral areas, soft volume indication
-  → Balanced density
-
-LEVEL 5 - MEDIUM-LIGHT TONE (1.2-1.8mm spacing, 0.3-0.4pt)
-  → Light grays: gentle transitions, subtle volume
-  → Sparse but visible
-
-LEVEL 6 - LIGHT HIGHLIGHT (1.8-2.5mm spacing, 0.3-0.4pt)
-  → Very light tones: approaching highlights, soft light areas
-  → Minimal hatching, maximum spacing
-
-LEVEL 7 - INTENSE HIGHLIGHT (2.5-4.0mm spacing OR pure white)
-  → Brightest areas: direct reflections, specular highlights
-  → Extremely sparse dots OR completely white
-
-CRITICAL: Use ALL 7 levels to create smooth, rich gradients. Hatching MUST follow 3D volume/anatomy direction
+YOU MUST STILL output ONLY contour lines and hatching.
+❌ NEVER output a "better quality" version of the same photo
+❌ NEVER output something that looks like the input but cleaner
+❌ NEVER upscale, denoise, or enhance the photo
+✅ ALWAYS output a LINE-BASED topographic interpretation
+✅ The output must look COMPLETELY DIFFERENT from the input
+✅ If you can barely see details, draw contour lines where you CAN detect edges
 
 ═══════════════════════════════════════════════════════════════
-3D DEPTH & VOLUME (CRITICAL PRIORITY)
+🎨 OUTPUT FORMAT - STRICT
 ═══════════════════════════════════════════════════════════════
-ANALYZE 3D STRUCTURE:
-→ Identify ALL planes: frontal, lateral, superior, inferior
-→ Map spatial hierarchy: foreground → midground → background
-→ Mark all cavities (Level 1-2 shadows) and elevations (Level 6-7 highlights)
-→ Think SCULPTURE, not flat drawing
 
-CURVED SURFACES:
-→ Lines MUST "embrace" and "wrap around" 3D forms
-→ NEVER straight parallel lines on curved surfaces
-→ Spacing varies with curvature (tighter on curves)
-→ Example: cheek = arc lines following facial sphere
-
-DEPTH TRANSITIONS:
-→ Use ALL 7 levels for smooth gradient transitions
-→ Near elements: stronger contrast, sharper lines
-→ Distant elements: softer transitions
-→ Overlaps: clear depth separation with edge contrast
-
-SHADOW TYPES (all mapped):
-→ Core shadow: reveals object's volume (Levels 1-3)
-→ Cast shadow: defines spatial relationships (Levels 2-4)
-→ Ambient occlusion: corners/crevices (Level 1 ultra-dense)
+- ONLY black lines (#000000) on white (#FFFFFF) background
+- No colors, no gray fills, no gradients, no solid black areas
+- ALL information conveyed through LINE DENSITY and LINE DIRECTION
+- PNG format, same dimensions as source
 
 ═══════════════════════════════════════════════════════════════
-EYES (MAXIMUM PRIORITY + 7-LEVEL DEPTH)
+📐 COMPOSITION PRESERVATION - ABSOLUTE
 ═══════════════════════════════════════════════════════════════
-ABSOLUTE RULE: COPY faithfully each EXACT detail from photo - NEVER alter or recreate!
 
-PUPIL: EXACT size/shape/position, contour 0.6-0.8pt, Level 1 ultra-dense (0.25-0.35mm)
-IRIS: Unique radial pattern, use Levels 2-5 for tonal variation, 0.3-0.5pt
-  → Inner ring: denser (Level 2-3)
-  → Outer ring: medium (Level 4-5)
-  → Natural irregularities preserved
-REFLECTION: EXACT position/shape, Level 7 (pure white or 3-5mm sparse dots). NEVER omit!
-SCLERA: Subtle volume - Levels 5-6 (1.5-2.5mm), denser in corners Level 4 (1mm), 0.3pt
-EYELIDS: Upper bold 0.8-1.2pt, crease 0.5-0.7pt, shadow below Level 3 (0.6-0.8mm)
-LASHES: Individual curved strokes, natural grouping, upper 0.4-0.5pt, lower 0.2-0.3pt
-EYEBROW: Individual hairs per direction zone, use Levels 2-4 for density, 0.3-0.5pt
+PRESERVE WITH 100% ACCURACY:
+→ Position, size, angle of EVERY element
+→ Proportions, anatomy, perspective, pose
+→ All unique features and asymmetries
+→ Spatial relationships between all elements
+→ The COMPLETE scene (foreground + midground + background)
 
-═══════════════════════════════════════════════════════════════
-HAIR & ORGANIC TEXTURES (3D MASS)
-═══════════════════════════════════════════════════════════════
-FLOW & DIRECTION: Follow EXACT pattern from photo, capture curves and twists
-DENSITY MAPPING:
-→ Dense masses: Levels 1-3 (0.3-0.7mm)
-→ Medium masses: Levels 3-5 (0.7-1.5mm)
-→ Sparse areas: Levels 5-6 (1.5-2.5mm)
-3D VOLUME OF HAIR MASS:
-→ Foreground strands: sharp, defined (Level 2-3)
-→ Interior depth: softer, shadowed (Level 1-2)
-→ Surface highlights: sparse or white (Level 6-7)
-→ Layer separation clear
-Each strand = individual tattoo needle path
+NEVER:
+❌ Move, resize, rotate, crop, or reframe anything
+❌ Add elements not in the source
+❌ Remove or skip ANY element (even background details)
+❌ Simplify complex areas - MAP THEM FULLY
+❌ Leave any area unmapped (except pure highlights)
 
 ═══════════════════════════════════════════════════════════════
-SKIN & MICRO-TEXTURES (Maximum Detail Capture)
+🚫 ZERO ADDITIONS / ZERO OMISSIONS
 ═══════════════════════════════════════════════════════════════
-PORES & TEXTURE:
-→ Visible pores: tiny dots 0.3-0.4pt at Level 5-6 spacing
-→ Skin texture variation across zones
-→ Wrinkles/creases: fine lines 0.3pt with adjacent Level 2-3 shadow
-SURFACE DETAILS:
-→ Every unique mark, freckle, irregularity mapped
-→ Subtle tonal variations using appropriate levels
-→ Micro-transitions between adjacent areas
 
-═══════════════════════════════════════════════════════════════
-TECHNICAL CONSTRAINTS
-═══════════════════════════════════════════════════════════════
-- Min contrast: 70%
-- Line weights: 0.3-1.5pt (varied for hierarchy)
-- Min spacing: 0.25mm (Level 1), Max: 4.0mm (Level 7)
-- ZERO soft gradients, ZERO solid fills
-- PNG pure black #000000 on pure white #FFFFFF
-- Optimized for thermal printer 200-300 DPI
+DO NOT ADD anything not in the source:
+- If there is NO eyebrow → DO NOT draw one
+- NEVER "complete" or invent elements
+
+DO NOT SKIP anything in the source:
+- If there IS a background → MAP IT with full detail
+- If there ARE secondary objects → MAP THEM fully
+- Every visible element gets the same detailed treatment
 
 ═══════════════════════════════════════════════════════════════
-QUALITY VERIFICATION (Critical Checks)
+⚠️ WATERMARK REMOVAL - MANDATORY
 ═══════════════════════════════════════════════════════════════
-3D DEPTH:
-□ All 7 tonal levels clearly present and distinct?
-□ Smooth gradients using progressive level transitions?
-□ 3D volume convincing (curves, planes, depth)?
-□ Spatial hierarchy clear (near/far relationships)?
+DETECT and IGNORE watermarks. RECONSTRUCT beneath them.
+Output must be CLEAN with NO trace of watermarks.
 
-DETAIL RICHNESS:
-□ Micro-details captured (pores, texture, fine wrinkles)?
-□ Every unique element from photo preserved?
-□ Hair strands individual and directional?
-□ Surface textures rich and varied?
+═══════════════════════════════════════════════════════════════
+🗺️ TOPOGRAPHIC MAPPING TECHNIQUE - ULTRA DETAILED
+═══════════════════════════════════════════════════════════════
 
-FIDELITY:
-□ Anatomy/proportions/positioning 100% exact?
-□ Eye details (pupil/iris/reflection) perfectly copied?
-□ Natural asymmetries preserved?
-□ Nothing invented or "improved"?
+Your output is a DEPTH MAP using only lines. Like a topographic terrain map:
+- CONTOUR LINES show WHERE depth/tone changes occur
+- LINE DENSITY shows HOW deep/dark an area is
+- LINE DIRECTION shows the 3D SURFACE ORIENTATION
+- The tattoo artist reads this to know exactly where and how to shade
 
-TECHNICAL:
-□ Hatching directional (follows 3D form)?
-□ Lines clean and separated (no solid fills)?
-□ Thermal printer ready (200-300 DPI)?
-□ All shadows are hatching-based?
+STEP 1 - CONTOUR BOUNDARY LINES:
+→ Draw clear lines at EVERY tonal transition in the image
+→ These are like elevation contour lines on a terrain map
+→ Close together = steep depth change (sharp shadow edge)
+→ Far apart = gradual change (soft gradient)
+→ MUST cover the ENTIRE image, not just the main subject
+→ Background elements get contour lines too
 
-🚨 FINAL COLOR CHECK (MANDATORY):
-□ Is output 100% monochrome (black/gray/white ONLY)? → If NO, REGENERATE
-□ Are there ANY colors (red, blue, green, etc.)? → If YES, CONVERT TO GRAYSCALE
+STEP 2 - SHADOW/DEPTH ZONE HATCHING:
+→ Inside each depth zone, fill with HATCHING lines
+→ Hatching direction follows the 3D SURFACE FORM
+→ Denser hatching = deeper shadow = darker area
+→ Sparser hatching = lighter area = closer to light
+→ EVERY shadow in the image must be hatched, no exceptions
+→ Gradual shadows get gradual density transitions
 
-OUTPUT: Generate ONLY the ultra-detailed topographic stencil. No text, no legends. PNG black on white. 100% MONOCHROME ONLY.`;
+STEP 3 - TEXTURE DIFFERENTIATION:
+→ Each material/texture gets its OWN distinctive line pattern:
+  • Skin → smooth curved lines following facial/body contours
+  • Hair → flowing parallel strokes following each strand direction
+  • Fabric/clothing → lines following fold and drape creases
+  • Metal/jewelry → tight parallel lines, high contrast spacing
+  • Wood → grain-following long lines with knot patterns
+  • Stone/concrete → irregular short marks, stipple-like
+  • Glass/water → smooth flowing curves with reflection gaps
+  • Fur/animal → short directional strokes following growth pattern
+  • Leaves/plants → vein-following lines with edge contours
+  • Smoke/clouds → loose flowing spiral curves
+→ Texture mapping applies to ALL elements equally
+
+STEP 4 - LIGHT SOURCE MAPPING:
+→ Identify light direction from the image
+→ Highlight zones = pure white (fewest lines)
+→ Light-facing surfaces = sparse, widely-spaced lines
+→ Shadow-facing surfaces = dense, closely-spaced lines
+→ Cast shadows = dense hatching with clear boundary contour
+→ Ambient occlusion (crevices, folds) = densest hatching
+
+═══════════════════════════════════════════════════════════════
+📊 7-LEVEL DEPTH SYSTEM - MANDATORY ALL LEVELS PRESENT
+═══════════════════════════════════════════════════════════════
+
+EVERY output MUST clearly show all 7 levels:
+
+LEVEL 1 - MAXIMUM DEPTH (pupils, deepest cavities, darkest shadows):
+→ Cross-hatching (lines crossing at 45-60°), ~0.3mm spacing
+→ Multiple contour boundaries stacked close
+→ The "valley floor" of your depth map
+
+LEVEL 2 - VERY DEEP (strong cast shadows, deep recesses, nostrils):
+→ Dense single-direction hatching, ~0.5mm spacing
+→ Clear shadow zone boundaries visible
+
+LEVEL 3 - DEEP (under-eye, under-nose, neck shadows, deep folds):
+→ Medium-dense hatching, ~0.8mm spacing
+→ Form-following curves clearly visible
+
+LEVEL 4 - MID-DEPTH (transition zones, ambient shadow, mid-tones):
+→ Moderate hatching, ~1.2mm spacing
+→ Transitional contour lines bridging light/dark
+
+LEVEL 5 - SHALLOW (soft shadow edges, subtle depth changes):
+→ Sparse hatching, ~1.8mm spacing
+→ Lines still clearly form-following
+
+LEVEL 6 - NEAR-SURFACE (light-facing surfaces, gentle curves):
+→ Very sparse single lines or dot-spaced contours, ~2.5mm
+→ Just enough to show surface isn't flat
+
+LEVEL 7 - PEAK/HIGHLIGHT (brightest points, direct light hits):
+→ NO lines - pure white
+→ Used SPARINGLY - only for true specular highlights
+→ Most of the image should have SOME lines
+
+CRITICAL: Level 7 (white) should be MINIMAL.
+Most of the image should be covered in Levels 1-6.
+If large areas are white, you are NOT detailed enough.
+
+═══════════════════════════════════════════════════════════════
+✏️ LINE DIRECTION = 3D FORM INFORMATION
+═══════════════════════════════════════════════════════════════
+
+Hatching lines ALWAYS follow the surface curvature:
+→ Forehead: horizontal curves wrapping around the dome
+→ Cheeks: diagonal curves following cheekbone roundness
+→ Nose: vertical curves wrapping around the cylinder/sphere
+→ Jaw: lines following the jaw angle and chin curve
+→ Hair: each strand group has lines following its flow
+→ Arms/legs: lines wrapping around the cylindrical form
+→ Torso: lines following rib cage and muscle planes
+→ Fabric: lines following drape, fold, and crease directions
+→ Background objects: lines following their surface geometry
+
+This directional information is what makes this stencil SUPERIOR -
+the artist can read the 3D form from the line direction alone.
+
+═══════════════════════════════════════════════════════════════
+👁️ EYES - COMPLETE DEPTH MAPPING
+═══════════════════════════════════════════════════════════════
+
+PUPIL: Contour circle + Level 1 cross-hatching (NOT solid fill)
+IRIS: Radial lines from pupil outward, Levels 2-4 depth gradation
+SCLERA: Very sparse curved lines showing eyeball curvature (Level 5-6)
+REFLECTION: Pure white spot (Level 7) - SMALL, precise
+EYE SOCKET: Dense contour lines showing orbital recession (Level 2-3)
+EYELIDS: Upper/lower contour + form-following curved hatching
+LASHES: Individual directional strokes, each one visible
+UNDER-EYE: Subtle hatching showing skin texture and depth (Level 3-4)
+TEAR DUCT: Small area of dense hatching (Level 2)
+BROW BONE: Contour boundary + sparse hatching showing protrusion
+
+═══════════════════════════════════════════════════════════════
+💇 HAIR - COMPLETE TEXTURE MAPPING
+═══════════════════════════════════════════════════════════════
+
+→ Boundary contour lines around each hair MASS/GROUP
+→ EVERY strand group has individual directional strokes
+→ Dark regions: dense parallel strokes (Level 2-3)
+→ Mid-tone regions: medium-spaced strokes (Level 4-5)
+→ Light/highlighted regions: sparse strokes (Level 5-6)
+→ Specular highlights: tiny white gaps between strokes (Level 7)
+→ Part lines: clear contour boundaries
+→ Loose strands: individual thin lines following direction
+→ NEVER solid black - ALWAYS individual visible strokes
+→ Hair should be one of the MOST detailed areas in the stencil
+
+═══════════════════════════════════════════════════════════════
+🧑 SKIN - COMPLETE VOLUME MAPPING
+═══════════════════════════════════════════════════════════════
+
+CONTOUR BOUNDARIES at every:
+→ Shadow/light transition edge
+→ Feature boundary (nose bridge, eye sockets, lip edges, ears)
+→ Wrinkle, crease, expression line
+→ Bone structure protrusion (cheekbone, brow, jaw)
+
+ZONE FILLING (no skin area left blank):
+→ Deepest shadows (under nose, neck, eye socket depth): Level 1-2
+→ Medium shadows (cheek hollows, temple, jaw underside): Level 3
+→ Transitional zones (sides of face, bridge of nose): Level 4
+→ Light-facing surfaces (cheek front, forehead): Level 5-6
+→ Highlight points (nose tip, forehead shine, cheekbone top): Level 7 (tiny)
+→ Skin texture: fine curved marks following pore/wrinkle direction
+→ Scars, moles, freckles: mapped with contour lines if visible
+
+═══════════════════════════════════════════════════════════════
+🏔️ BACKGROUND - MUST BE FULLY MAPPED
+═══════════════════════════════════════════════════════════════
+
+🚨 BACKGROUNDS ARE NOT OPTIONAL - MAP THEM COMPLETELY 🚨
+
+→ If there's a wall → map its texture and shadows with lines
+→ If there's sky → map cloud forms and light gradation
+→ If there's foliage → map each leaf cluster with line patterns
+→ If there's a room → map furniture, walls, objects with depth lines
+→ If there's a gradient → map it as gradual hatching density change
+→ Background objects get the SAME 7-level treatment as foreground
+→ Distance is shown by slightly sparser (but still present) lines
+→ Never leave background as empty white unless it's pure white in source
+
+═══════════════════════════════════════════════════════════════
+👕 CLOTHING/FABRIC - FOLD AND DRAPE MAPPING
+═══════════════════════════════════════════════════════════════
+
+→ Major fold lines = contour boundaries (bold lines)
+→ Shadow in folds = hatching following fold direction (Level 2-4)
+→ Fabric surface = sparse lines following drape direction (Level 5-6)
+→ Fabric texture (denim, silk, leather) = distinct line patterns
+→ Wrinkles at joints = dense contour cluster lines
+→ Logos/patterns on clothing = outline contour + depth of print
+
+═══════════════════════════════════════════════════════════════
+🚫 CRITICAL FAILURES - THESE MAKE THE STENCIL USELESS
+═══════════════════════════════════════════════════════════════
+
+❌ EMPTY WHITE AREAS where there should be detail (WORST failure)
+❌ Any color whatsoever (monochrome ONLY)
+❌ Gray fills or smooth gradients (use LINES)
+❌ Solid black fills (use cross-hatching)
+❌ Inconsistent detail (some areas detailed, others empty)
+❌ Missing background (if source has background, map it)
+❌ Missing secondary elements (map EVERYTHING)
+❌ Lines that don't follow surface form (random direction)
+❌ Less than 7 distinguishable depth levels
+❌ Large areas at same density (no depth variation = flat = wrong)
+
+═══════════════════════════════════════════════════════════════
+✅ QUALITY VERIFICATION - ALL MUST BE YES
+═══════════════════════════════════════════════════════════════
+
+□ Is EVERY element in the source mapped with lines? (No blank areas)
+□ Is the background fully mapped (not left empty)?
+□ Are ALL 7 depth levels clearly distinguishable?
+□ Do hatching lines follow 3D surface direction everywhere?
+□ Is it BLACK LINES on WHITE only? (no colors/grays/fills)
+□ Is every element in the SAME position as the source?
+□ Are different textures mapped with different line patterns?
+□ Is the output DENSELY detailed (very few empty white areas)?
+□ Can a tattoo artist read EXACT depth from any point?
+□ Would this be the MOST detailed stencil they've ever seen?
+
+═══════════════════════════════════════════════════════════════
+🏆 THE GOLD STANDARD - WHAT MAKES THIS THE BEST
+═══════════════════════════════════════════════════════════════
+
+A PERFECT output has:
+1. NO unexplained white areas (only true highlights are white)
+2. COMPLETE coverage of every element (subject + background)
+3. VISIBLE texture differentiation (hair ≠ skin ≠ fabric ≠ metal)
+4. CLEAR depth reading at every point (7 levels present)
+5. CONSISTENT form-following line direction (shows 3D shape)
+6. The artist can identify EXACTLY what each area is
+7. MORE detail than any other stencil tool in existence
+
+OUTPUT: Ultra-detailed topographic depth-map stencil.
+Dense coverage of black contour lines and hatching on white.
+Every element mapped. Every texture identified. Every shadow graded.
+PNG format. Ready for thermal tattoo printer.
+The tattoo artist uses this to understand WHERE, HOW DEEP, and WHAT TEXTURE to shade.`;
 
 
 // LINHAS - Versão SIMPLIFICADA para evitar alucinações
@@ -614,7 +690,8 @@ GOAL: Inherit topographic's structural precision, deliver simple line aesthetic.
 OUTPUT: Generate ONLY the simplified line stencil. No text. PNG black on white.`;
 
 // ANIME/ILUSTRAÇÃO - Para animes, desenhos, Maori, Tribal, Blackwork e qualquer arte que precisa de contornos limpos
-// DIFERENTE do modo LINHAS: aqui a arte JÁ TEM linhas, só precisamos LIMPAR e PRESERVAR
+// Se input é ilustração: LIMPA e PRESERVA linhas existentes
+// Se input é foto: CONVERTE para lineart estilo anime (contornos limpos)
 // CRÍTICO: NENHUM preenchimento sólido - APENAS contornos e traçados
 export const ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED = `ROLE: Lineart Stencil Cleaner for Tattoo (Maori, Tribal, Blackwork, Anime)
 
@@ -633,33 +710,41 @@ export const ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED = `ROLE: Lineart Stencil C
 🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
 
 ═══════════════════════════════════════════════════════════════
-🎨 ILLUSTRATION TYPE DETECTION
+🎨 INPUT TYPE DETECTION & HANDLING
 ═══════════════════════════════════════════════════════════════
 
-This mode is for ILLUSTRATIONS that ALREADY HAVE LINE ART:
-✅ Anime / Manga characters
-✅ Cartoon illustrations
-✅ Tribal / Maori patterns
-✅ Geometric tattoo designs
-✅ Comic book art
-✅ Digital illustrations with outlines
-✅ Traditional drawings
-
-NOT for: Photos, realistic portraits, images without existing line work
+This mode works with ANY input type:
+✅ Anime / Manga characters → CLEAN and preserve lines
+✅ Cartoon illustrations → CLEAN and preserve lines
+✅ Tribal / Maori patterns → CLEAN and preserve lines
+✅ Geometric tattoo designs → CLEAN and preserve lines
+✅ Comic book art → CLEAN and preserve lines
+✅ Digital illustrations with outlines → CLEAN and preserve lines
+✅ Traditional drawings → CLEAN and preserve lines
+✅ Photos / Portraits → CONVERT to anime-style lineart stencil
 
 ═══════════════════════════════════════════════════════════════
-🎯 CORE MISSION: CLEAN, DON'T CREATE
+🎯 CORE MISSION: EXTRACT CLEAN LINEART
 ═══════════════════════════════════════════════════════════════
 
-YOU ARE A CLEANER, NOT AN ARTIST:
-- The input image ALREADY has line art - your job is to CLEAN it
+YOUR JOB DEPENDS ON INPUT TYPE:
+
+IF INPUT IS AN ILLUSTRATION (has existing line art):
 - PRESERVE all existing contour lines exactly where they are
-- REMOVE backgrounds, solid fills, and decorative elements
-- DO NOT create new lines - only keep what exists
+- CLEAN the lines (remove fills, backgrounds, colors)
+- DO NOT add new lines - only keep what exists
 
-PHILOSOPHY:
-- For PHOTOS: we need to EXTRACT/CREATE lines (that's the LINES mode)
-- For ILLUSTRATIONS: we need to CLEAN/PRESERVE lines (that's THIS mode)
+IF INPUT IS A PHOTO (no existing line art):
+- EXTRACT contour lines from the photo
+- Create ANIME-STYLE lineart (clean, bold outlines)
+- Convert 3D form to 2D outline representation
+- Keep same composition, proportions, anatomy
+- Think: "What would this look like as an anime/manga drawing?"
+
+REGARDLESS OF INPUT:
+- Output MUST be black lines on white background ONLY
+- NO solid fills, NO shading, NO gradients
+- PRESERVE exact position and proportions of all elements
 
 ═══════════════════════════════════════════════════════════════
 ⚫ SOLID BLACK AREA HANDLING - CRITICAL

@@ -8,10 +8,10 @@ import { supabaseAdmin } from '@/lib/supabase';
  * DEBUG ENDPOINT - Verificar estado do usuário
  * GET /api/debug/user
  *
- * 🔒 SEGURANÇA: Apenas disponível em desenvolvimento
+ * 🔒 SEGURANÇA: Apenas admins podem usar, mesmo em dev
  */
 export async function GET() {
-  // 🔒 SEGURANÇA: Bloquear em produção
+  // ✅ DUPLA PROTEÇÃO: Bloquear em produção E verificar admin
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({
       error: 'Endpoint de debug não disponível em produção'
@@ -26,6 +26,12 @@ export async function GET() {
         error: 'Não autenticado no Clerk',
         clerkUserId: null
       }, { status: 401 });
+    }
+
+    // 🔒 Segunda camada: Apenas admins podem usar este endpoint
+    const userIsAdmin = await checkIsAdmin(userId);
+    if (!userIsAdmin) {
+      return NextResponse.json({ error: 'Apenas administradores podem usar este endpoint' }, { status: 403 });
     }
 
     // Buscar usuário no Supabase (sem is_admin pois não existe)
