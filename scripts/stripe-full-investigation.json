@@ -1,0 +1,845 @@
+{
+  "generatedAt": "2026-01-28T12:42:38.298Z",
+  "customers": 307,
+  "subscriptions": {
+    "total": 109,
+    "byStatus": {
+      "incomplete": 4,
+      "incomplete_expired": 96,
+      "canceled": 9
+    }
+  },
+  "checkoutSessions": {
+    "total": 50,
+    "byStatus": {
+      "expired": 50
+    },
+    "byPaymentStatus": {
+      "unpaid": 50
+    },
+    "revenue": 0
+  },
+  "paymentIntents": {
+    "total": 592,
+    "byStatus": {
+      "requires_payment_method": 363,
+      "succeeded": 130,
+      "canceled": 99
+    },
+    "revenue": 6750
+  },
+  "charges": {
+    "total": 168,
+    "byStatus": {
+      "succeeded": 130,
+      "failed": 38
+    },
+    "byPaymentMethod": {
+      "card": 100,
+      "boleto": 30
+    },
+    "revenue": 6750
+  },
+  "recentCharges": [
+    {
+      "id": "ch_3SuLx2KNrkDOuO2104SwTvGM",
+      "amount": 50,
+      "date": "2026-01-27",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SuLaTKNrkDOuO211WDMUlPF",
+      "amount": 50,
+      "date": "2026-01-27",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SuGjeKNrkDOuO211a2VTNuF",
+      "amount": 50,
+      "date": "2026-01-27",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SuF49KNrkDOuO211sYu6dDf",
+      "amount": 25,
+      "date": "2026-01-27",
+      "email": "maikydemelo999@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SuFUXKNrkDOuO210zMytMEh",
+      "amount": 25,
+      "date": "2026-01-27",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3StqBsKNrkDOuO210merDez4",
+      "amount": 50,
+      "date": "2026-01-26",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3StCklKNrkDOuO210jk3D4Oj",
+      "amount": 50,
+      "date": "2026-01-24",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3St9maKNrkDOuO210Q1DlvCo",
+      "amount": 100,
+      "date": "2026-01-24",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3St5boKNrkDOuO210hOipVoh",
+      "amount": 25,
+      "date": "2026-01-24",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3St56ZKNrkDOuO210Z2zRQQt",
+      "amount": 50,
+      "date": "2026-01-24",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SswLnKNrkDOuO2112XzPRIz",
+      "amount": 25,
+      "date": "2026-01-24",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SsrKQKNrkDOuO210Rs2jD6n",
+      "amount": 50,
+      "date": "2026-01-23",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Sslb1KNrkDOuO211VAA2EtG",
+      "amount": 50,
+      "date": "2026-01-23",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SsFnhKNrkDOuO2118mO8nLV",
+      "amount": 25,
+      "date": "2026-01-23",
+      "email": "davidglauber360@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SsZSgKNrkDOuO211vmKan7o",
+      "amount": 50,
+      "date": "2026-01-23",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SsRaDKNrkDOuO210JdNoKXh",
+      "amount": 25,
+      "date": "2026-01-22",
+      "email": "taynanantunes@outlook.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SsRN4KNrkDOuO210jkcKGRw",
+      "amount": 25,
+      "date": "2026-01-22",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SsO45KNrkDOuO210Zk3QrTG",
+      "amount": 25,
+      "date": "2026-01-22",
+      "email": "Ricardo.lourenco2015@outlook.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SsO6OKNrkDOuO210KWEwdGY",
+      "amount": 50,
+      "date": "2026-01-22",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SsMwRKNrkDOuO211r5sQ7z6",
+      "amount": 50,
+      "date": "2026-01-22",
+      "email": "pretotatoo1710@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3Ss88nKNrkDOuO210JP4GiNj",
+      "amount": 25,
+      "date": "2026-01-21",
+      "email": "brenomoreiratattoo@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Ss3x5KNrkDOuO210rxp0kUh",
+      "amount": 50,
+      "date": "2026-01-21",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Ss37MKNrkDOuO210zHDRMzi",
+      "amount": 50,
+      "date": "2026-01-21",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SrljpKNrkDOuO2103JXvwGN",
+      "amount": 50,
+      "date": "2026-01-20",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SrlZ2KNrkDOuO210mpoM99S",
+      "amount": 25,
+      "date": "2026-01-20",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SrkQeKNrkDOuO211VWocAKK",
+      "amount": 50,
+      "date": "2026-01-20",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SrgmNKNrkDOuO210GJCqGPI",
+      "amount": 50,
+      "date": "2026-01-20",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SreadKNrkDOuO211Y2OoIQD",
+      "amount": 25,
+      "date": "2026-01-20",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SqhyXKNrkDOuO211YS5lXVt",
+      "amount": 50,
+      "date": "2026-01-20",
+      "email": "denilsonpaulinho@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SqijFKNrkDOuO210nCARWrT",
+      "amount": 25,
+      "date": "2026-01-20",
+      "email": "viniciuscaramussancar@hotmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SrRKFKNrkDOuO210mU0kKML",
+      "amount": 50,
+      "date": "2026-01-19",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SrPlLKNrkDOuO211SfhKXa2",
+      "amount": 100,
+      "date": "2026-01-19",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SrI6GKNrkDOuO210NaSJFy0",
+      "amount": 25,
+      "date": "2026-01-19",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SrFuvKNrkDOuO2103WOxqy2",
+      "amount": 50,
+      "date": "2026-01-19",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Sr3u6KNrkDOuO210YOFAxoo",
+      "amount": 50,
+      "date": "2026-01-18",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Sr0m0KNrkDOuO210A1l0Fc2",
+      "amount": 25,
+      "date": "2026-01-18",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Sqz6IKNrkDOuO210YzZRitv",
+      "amount": 360,
+      "date": "2026-01-18",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SquXiKNrkDOuO211w8KVmNr",
+      "amount": 50,
+      "date": "2026-01-18",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqisjKNrkDOuO211YQeOrh3",
+      "amount": 25,
+      "date": "2026-01-17",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqiLfKNrkDOuO211GwxBCPy",
+      "amount": 25,
+      "date": "2026-01-17",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqejFKNrkDOuO210FjvVU3g",
+      "amount": 50,
+      "date": "2026-01-17",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqeTqKNrkDOuO211WgNsQXD",
+      "amount": 50,
+      "date": "2026-01-17",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqaWKKNrkDOuO210svowxvP",
+      "amount": 50,
+      "date": "2026-01-17",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqZdrKNrkDOuO210J6CSPCD",
+      "amount": 50,
+      "date": "2026-01-17",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqZe9KNrkDOuO210H94S6CY",
+      "amount": 50,
+      "date": "2026-01-17",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SqNDOKNrkDOuO211VjWF7w9",
+      "amount": 100,
+      "date": "2026-01-17",
+      "email": "moisesvrlinhares@hotmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqIJNKNrkDOuO210mgMrRBX",
+      "amount": 25,
+      "date": "2026-01-16",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqHaGKNrkDOuO211g7bSgXt",
+      "amount": 25,
+      "date": "2026-01-16",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqFNzKNrkDOuO211u53M1Ir",
+      "amount": 25,
+      "date": "2026-01-16",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SqCzLKNrkDOuO210nTZRVwi",
+      "amount": 25,
+      "date": "2026-01-16",
+      "email": "flavio.smachado060711@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SqDtvKNrkDOuO210uElYuAL",
+      "amount": 50,
+      "date": "2026-01-16",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3Sq3BUKNrkDOuO210ZsC4xPZ",
+      "amount": 25,
+      "date": "2026-01-16",
+      "email": "paulo.callegari@icloud.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3Sq9QmKNrkDOuO2114GaJTJP",
+      "amount": 50,
+      "date": "2026-01-16",
+      "email": "dnartspetropolis@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpuQIKNrkDOuO210O8vovB6",
+      "amount": 50,
+      "date": "2026-01-15",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpsmAKNrkDOuO211EPM4S2y",
+      "amount": 50,
+      "date": "2026-01-15",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SppODKNrkDOuO210bHXqxk8",
+      "amount": 25,
+      "date": "2026-01-15",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpexvKNrkDOuO210qhdb4mD",
+      "amount": 25,
+      "date": "2026-01-15",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SpaLIKNrkDOuO211JF62pfY",
+      "amount": 25,
+      "date": "2026-01-15",
+      "email": "Randsondiniz@hotmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpdekKNrkDOuO210pRoU1eS",
+      "amount": 50,
+      "date": "2026-01-14",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SpaWaKNrkDOuO2101aPCl8Q",
+      "amount": 25,
+      "date": "2026-01-14",
+      "email": "junior141194@yahoo.com.br",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SpaBtKNrkDOuO211lt0pUda",
+      "amount": 25,
+      "date": "2026-01-14",
+      "email": "marciodiastavares0@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Spb0PKNrkDOuO2109wHsaXm",
+      "amount": 25,
+      "date": "2026-01-14",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpXvuKNrkDOuO210vB2syMP",
+      "amount": 50,
+      "date": "2026-01-14",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SpVC7KNrkDOuO210pGO29sf",
+      "amount": 25,
+      "date": "2026-01-14",
+      "email": "Fabriciohbueno@hotmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpUHrKNrkDOuO210E9QPE30",
+      "amount": 25,
+      "date": "2026-01-14",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpTReKNrkDOuO210Pgvboe5",
+      "amount": 25,
+      "date": "2026-01-14",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpShkKNrkDOuO211gptTXa1",
+      "amount": 50,
+      "date": "2026-01-14",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SpEqJKNrkDOuO210gToa4ki",
+      "amount": 50,
+      "date": "2026-01-13",
+      "email": "valentin.tattoo.cn@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpFioKNrkDOuO210FRDEAyb",
+      "amount": 50,
+      "date": "2026-01-13",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpEu3KNrkDOuO211xDK1unP",
+      "amount": 25,
+      "date": "2026-01-13",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpER9KNrkDOuO210kXCuh9y",
+      "amount": 50,
+      "date": "2026-01-13",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpEHmKNrkDOuO211kd5sOuu",
+      "amount": 50,
+      "date": "2026-01-13",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SpB4DKNrkDOuO210J8pZibY",
+      "amount": 50,
+      "date": "2026-01-13",
+      "email": "renatolucas2208@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpCUJKNrkDOuO210Em1mmDZ",
+      "amount": 50,
+      "date": "2026-01-13",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpCDSKNrkDOuO210pVSmqmv",
+      "amount": 25,
+      "date": "2026-01-13",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpBTWKNrkDOuO210tKEN2ci",
+      "amount": 25,
+      "date": "2026-01-13",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SpAFRKNrkDOuO210sjEH5Io",
+      "amount": 25,
+      "date": "2026-01-13",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3Souv2KNrkDOuO210jeRf0aQ",
+      "amount": 25,
+      "date": "2026-01-13",
+      "email": "tatuadoracarla@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Sp01bKNrkDOuO211QVDghJu",
+      "amount": 100,
+      "date": "2026-01-13",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SoswOKNrkDOuO210levlkOm",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SopzmKNrkDOuO211flHRfRy",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SooNvKNrkDOuO210QMj5UpM",
+      "amount": 270,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Sonh5KNrkDOuO211ikd4cEG",
+      "amount": 50,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SolcrKNrkDOuO2109fUcSm6",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "Gian21hiphop@hotmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SonJ4KNrkDOuO210nTnRSg3",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SolHsKNrkDOuO211j3EDHCK",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "Raphasantoslima@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SolnKKNrkDOuO211d6Y7GqX",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "py_3SojnoKNrkDOuO210ie0DJjR",
+      "amount": 50,
+      "date": "2026-01-12",
+      "email": "Arleson0804@gmail.com",
+      "paymentMethod": "boleto",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SolNzKNrkDOuO210sO1nQHv",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SolFXKNrkDOuO211Y6ZIvSj",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SokdfKNrkDOuO210mbDeiXN",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Sok8MKNrkDOuO211mPmOelG",
+      "amount": 360,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SoaOtKNrkDOuO211w3WbFJA",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3Soa5XKNrkDOuO210JhHrkYC",
+      "amount": 25,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SoYZVKNrkDOuO210CIYZnaU",
+      "amount": 50,
+      "date": "2026-01-12",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SoY9cKNrkDOuO2106fuEYMX",
+      "amount": 25,
+      "date": "2026-01-11",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SoUO4KNrkDOuO211qmqjL4Y",
+      "amount": 50,
+      "date": "2026-01-11",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SoR69KNrkDOuO211sQomoQm",
+      "amount": 50,
+      "date": "2026-01-11",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3SoO5HKNrkDOuO211ByiCGg2",
+      "amount": 100,
+      "date": "2026-01-11",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    },
+    {
+      "id": "ch_3So8GfKNrkDOuO211gE8YJ54",
+      "amount": 25,
+      "date": "2026-01-10",
+      "email": "N/A",
+      "paymentMethod": "card",
+      "description": "N/A"
+    }
+  ]
+}

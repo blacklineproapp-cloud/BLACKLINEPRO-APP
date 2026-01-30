@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOrCreateUser } from '@/lib/auth';
+import { getOrCreateUser, isAdmin } from '@/lib/auth';
 import { hasAnyTrialRemaining } from '@/lib/billing/limits';
 
 // GET - Retorna status do usuário (assinatura, tools, etc)
@@ -20,15 +20,19 @@ export async function GET() {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    // ✅ Desbloqueia ferramentas apenas se já pagou (sem trial para free)
+    // ✅ Verificar se é admin (Clerk metadata ou lista de emails)
+    const userIsAdmin = await isAdmin();
+
+    // ✅ Desbloqueia ferramentas se já pagou OU se é admin
     const trialRemaining = await hasAnyTrialRemaining(user.id);
-    const toolsUnlocked = user.tools_unlocked; // Removido fallback trialRemaining
+    const toolsUnlocked = user.tools_unlocked || userIsAdmin;
 
     return NextResponse.json({
       id: user.id,
       email: user.email,
       name: user.name,
       picture: user.picture,
+      isAdmin: userIsAdmin, // ✅ Flag para frontend liberar tools para admins
       isSubscribed: user.is_paid && user.subscription_status === 'active',
       subscriptionStatus: user.subscription_status,
       subscriptionExpiresAt: user.subscription_expires_at,

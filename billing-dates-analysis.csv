@@ -1,0 +1,155 @@
+email,nome,plano,tipo,stripe_customer_id,primeiro_pagamento,ultimo_pagamento,total_pagamentos,cortesia,cortesia_liberada_em,dia_cobranca,proxima_cobranca
+chilenotatto@gmail.com,Alessander venegas,starter,pagante,cus_TsjCuNA4JBlPiT,2026-01-29,2026-01-29,1,nao,,29,2026-02-28
+fabianaluizdossantos177@gmail.com,Paulla  Eduarda,pro,pagante,cus_Tsc3iolv9WbTQN,2026-01-29,2026-01-29,1,nao,,29,2026-02-28
+bossmanlink@gmail.com,Link Bossman,starter,pagante,cus_TsUmWnR1WrlicY,2026-01-29,2026-01-29,1,nao,,28,2026-02-28
+millodesign87@gmail.com,Simone Millo,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-28,27,2026-02-27
+stephany.barros829@icloud.com,stephany  campos,starter,cortesia_pagou,cus_TsMdvpNtqyYzmw,2026-01-28,2026-01-28,1,sim,2026-01-29,28,2026-02-28
+fabiocaxatattoo@gmail.com,Fabio Caxa,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-28,27,2026-02-27
+hulevieira@gmail.com,Hugo Oliveira,starter,cortesia_pagou,cus_Ts0f3AAxYAgS3F,2026-01-27,2026-01-27,1,sim,2026-01-29,27,2026-02-27
+alexandrepenna2013@gmail.com,Alexandre Penna,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-27,26,2026-02-26
+tatuadordanilolucena198@gmail.com,Danilo  Lucena,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-25,24,2026-02-24
+dariosalles2.ds@gmail.com,Darop sales,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-25,24,2026-02-24
+ngtattooart@gmail.com,Lean Augusto Xisto,legacy,cortesia_pagou,cus_TqddBbgXjxlUB6,2026-01-24,2026-01-24,1,sim,2026-01-25,23,2026-02-23
+fliparte@outlook.com,Edson De Freitas Aguiar Júnior,legacy,cortesia_pagou,cus_Tqd5fnXRcEVt77,2026-01-24,2026-01-24,1,sim,2026-01-25,24,2026-02-24
+lucaspolicarpo061@gmail.com,Lucas  Castro,starter,cortesia_pagou,cus_TqYRyn0t8zC6y1,2026-01-23,2026-01-23,1,sim,2026-01-25,23,2026-02-23
+michele.lino1985@gmail.com,Michele Lino,starter,pagante,cus_TqS42nFQN0XYBf,2026-01-23,2026-01-23,1,nao,2026-01-25,23,2026-02-23
+lelecotode99@gmail.com,Leandro  Robert,starter,cortesia_pagou,cus_TqFy1dUBk0RXCD,2026-01-23,2026-01-23,1,sim,2026-01-25,22,2026-02-22
+bicygo@hotmail.com,Junior aroldo andrade junior,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-22,21,2026-02-21
+daniel@handarbeit-tattoo.de,Daniel Eckstein,pro,cortesia_pagou,cus_TqrUcjQ0ApNt1p,2026-01-24,2026-01-24,1,sim,2026-01-25,24,2026-02-24
+taynanantunes@outlook.com,Taynan  Antunes,legacy,cortesia_pagou,cus_Tq7pkVbiBMmfve,2026-01-22,2026-01-22,1,sim,2026-01-25,22,2026-02-22
+pretotatoo1710@gmail.com,José Ronaldo Araújo santos,starter,cortesia_pagou,cus_Tq32nSrfU6WmUW,2026-01-22,2026-01-22,1,sim,2026-01-25,22,2026-02-22
+ricardo_tattoo@icloud.com,Ricardo Silva,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-21,20,2026-02-20
+brenomoreiratattoo@gmail.com,Breno Moreira,legacy,cortesia_pagou,cus_Tpnkhx7Qz0Ee4C,2026-01-21,2026-01-21,1,sim,2026-01-25,21,2026-02-21
+penovferreira@gmail.com,Paulo  Cesar,starter,cortesia_pagou,cus_TpjP6zWNUMJQCd,2026-01-21,2026-01-21,1,sim,2026-01-24,21,2026-02-21
+contato@glaubergoncalves.com.br,Glauber  Gonçalves,starter,cortesia_pagou,cus_TpiYybrlx3hYOp,2026-01-21,2026-01-21,1,sim,2026-01-25,21,2026-02-21
+abelvargas86@gmail.com,Abel  Vargas,legacy,cortesia_pagou,cus_Tq7cDjdokY8Anl,2026-01-22,2026-01-22,1,sim,2026-01-25,22,2026-02-22
+andrebernardohahn2804@gmail.com,Andre Bernardo ferreira,pro,cortesia_pagou,cus_TpQbiBCESFOJ9c,2026-01-20,2026-01-20,1,sim,2026-01-24,20,2026-02-20
+marcstattoo@gmail.com,José  Marcos,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-20,19,2026-02-19
+nicolas.zazalol@gmail.com,Nicolas Zaza,starter,cortesia_pagou,cus_TpLTHm1qz9ojmz,2026-01-20,2026-01-20,1,sim,2026-01-21,20,2026-02-20
+bomanitattoo@gmail.com,Thiago Bomani,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-20,19,2026-02-19
+luciano_tattoo123@hotmail.com,Ojuara Tattoos,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-19,18,2026-02-18
+ricardo.lourenco2015@outlook.com,Ricardo Lourenco,legacy,cortesia_pagou,cus_Tq4Cm3I1zLYHqI,2026-01-22,2026-01-22,1,sim,2026-01-25,22,2026-02-22
+tykodr8@gmail.com,Guilherme  Aires,starter,cortesia_pagou,cus_TpPEfpnGK75bsa,2026-01-20,2026-01-20,1,sim,2026-01-25,20,2026-02-20
+bollaotattoo@gmail.com,diego beziazacinai,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-19,17,2026-02-18
+jonasrotam22@gmail.com,Jonas Almeida,legacy,cortesia_pagou,cus_Toe4fjveaEhx32,2026-01-18,2026-01-18,1,sim,2026-01-19,18,2026-02-18
+manoel100mala@gmail.com,Jose Manoel  Ieira de Almeida,starter,cortesia_pagou,cus_TocFjcbiLYLbsM,2026-01-18,2026-01-18,1,sim,2026-01-19,18,2026-02-18
+alextakahashi65@gmail.com,Alex Takahashi,starter,cortesia_pagou,cus_Toti3IuhYheBdh,2026-01-19,2026-01-19,1,sim,2026-01-20,19,2026-02-19
+netoantonio486@gmail.com,Antonio Rodrigues,starter,cortesia_pagou,cus_ToXcZLdyuj5P7q,2026-01-18,2026-01-18,1,sim,2026-01-19,18,2026-02-18
+sombratattoo222@gmail.com,Sombra  Tattoo,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-18,16,2026-02-17
+vitorvab4@gmail.com,Vitor Alves,starter,pagante,cus_ToN55BtZnGSftm,2026-01-22,2026-01-24,2,nao,2026-01-25,22,2026-02-22
+viniciuscaramussancar@hotmail.com,vinicius Rangel,starter,cortesia_pagou,cus_ToLQv2oUzvayNm,2026-01-17,2026-01-20,2,sim,2026-01-18,17,2026-02-17
+denilsonpaulinho@gmail.com,Denilson  Tiburcio,starter,cortesia_pagou,cus_ToKdDJS0RTZVeD,2026-01-20,2026-01-20,1,sim,2026-01-20,20,2026-02-20
+zurielarts10@gmail.com,Zuriel Jaime,starter,cortesia_pagou,cus_ToHHTXTfeuTekY,2026-01-17,2026-01-17,1,sim,2026-01-19,17,2026-02-17
+blackandwhitetattoojf@gmail.com,Cristian Nascimento,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-17,16,2026-02-16
+biratatuadorms@gmail.com,Ubiratan Neves,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-17,16,2026-02-16
+agendardoze@gmail.com,Pedro felipe da silva  Ribeiro,starter,cortesia_pagou,cus_ToCwaukqriPvqI,2026-01-17,2026-01-17,1,sim,2026-01-19,17,2026-02-17
+thiagolm154@gmail.com,Thiago  Araujo,starter,cortesia_pagou,cus_ToC1sPD6Y3F8h2,2026-01-17,2026-01-17,1,sim,2026-01-19,17,2026-02-17
+wljguimaraes@gmail.com,Wesley Guimarães,starter,cortesia_pagou,cus_ToBzZr4Wilxd5i,2026-01-17,2026-01-17,1,sim,2026-01-19,17,2026-02-17
+moisesvrlinhares@hotmail.com,Moises  Linhares,pro,cortesia_pagou,cus_TnzBfb6wlEfCzC,2026-01-17,2026-01-17,1,sim,2026-01-17,17,2026-02-17
+lukaschacall@gmail.com,Lucas  Rodrigues,starter,cortesia_pagou,cus_Tnz4l8oMK8jc8C,2026-01-18,2026-01-18,1,sim,2026-01-20,18,2026-02-18
+leomayerart@gmail.com,Leo Mayer,starter,cortesia_pagou,cus_TnvMHQaXqZh0Ny,2026-01-17,2026-01-17,1,sim,2026-01-19,17,2026-02-17
+cynthiatattoo@hotmail.com,Cynthia  Amaral,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-16,15,2026-02-15
+hslvendas@hotmail.com,Henrique Lage,legacy,cortesia_pagou,cus_TovywBP5s9B0h3,2026-01-19,2026-01-19,1,sim,2026-01-20,19,2026-02-19
+hankeyjee@gmail.com,Hankey Jee,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-16,15,2026-02-15
+gabreugomestattoo@outlook.com,Gabriel  Mantovanini,starter,cortesia_pagou,cus_Tnr63YapulDwBI,2026-01-16,2026-01-16,1,sim,2026-01-17,16,2026-02-16
+ramonandruchiv6@gmail.com,Ramon Andruchiv,starter,cortesia_pagou,cus_TnpZ7pXvdjnb0R,2026-01-16,2026-01-16,1,sim,2026-01-17,16,2026-02-16
+danylostefan80@gmail.com,Danylo Stefan,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-24,23,2026-02-23
+maypinheirotattoo@gmail.com,Mayara Pinheiro,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-16,15,2026-02-15
+flavio.smachado060711@gmail.com,Flavio Machado,legacy,cortesia_pagou,cus_TnoQ8go2ztNZmM,2026-01-16,2026-01-16,1,sim,2026-01-16,16,2026-02-16
+dnartspetropolis@gmail.com,Denis  Nogueira,starter,cortesia_pagou,cus_Tnkp4AiIu0gERW,2026-01-16,2026-01-16,1,sim,2026-01-16,16,2026-02-16
+paulo.callegari@icloud.com,Paulo Callegari,legacy,cortesia_pagou,cus_TneUA5sMc4uvsI,2026-01-16,2026-01-16,1,sim,2026-01-16,16,2026-02-16
+jotasilvadunv@gmail.com,Vlademir Da silva farias junior,starter,cortesia_pagou,cus_Tp5VPqBP8py2x9,2026-01-19,2026-01-19,1,sim,2026-01-21,19,2026-02-19
+davidaraujo25022002@gmail.com,David  De lima,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-15,14,2026-02-14
+chinaidergeek@hotmail.com,steifane chinaider,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-16,15,2026-02-15
+wesleytwd.com@gmail.com,Wesley  Tattoo,starter,cortesia_pagou,cus_TnTjsuKztfe1FA,2026-01-15,2026-01-15,1,sim,2026-01-16,15,2026-02-15
+tainnyjoice@yahoo.com.br,Tainny  Joice,legacy,cortesia_pagou,cus_TncnkNRvoDll8A,2026-01-16,2026-01-16,1,sim,2026-01-17,16,2026-02-16
+willietatto@gmail.com,William  Deola,starter,cortesia_pagou,cus_TnDyLCUZY5TIeU,2026-01-14,2026-01-14,1,sim,2026-01-16,14,2026-02-14
+cgabrielleborges@gmail.com,Kauany  Vergilio,legacy,cortesia_pagou,cus_TnQEtGQOCp4qM6,2026-01-15,2026-01-15,1,sim,2026-01-16,15,2026-02-15
+junior141194@yahoo.com.br,Bruxinho  Tattoo,starter,pagante,cus_TnAr8QdhXkZW04,2026-01-14,2026-01-14,1,nao,,14,2026-02-14
+giseleamaralbarros@gmail.com,Marcio  Dias,pro,pagante,cus_TnAJnMbhLQiN6d,2026-01-14,2026-01-14,1,nao,,14,2026-02-14
+claudswanps3@hotmail.com,Claudia  Bastos,legacy,cortesia_pagou,cus_TnFShvHqtfbut8,2026-01-15,2026-01-15,1,sim,2026-01-16,14,2026-02-14
+taelnatanael1@gmail.com,NATANAEL LOPES,starter,cortesia_pagou,cus_Tn8CxCxuxtdlQQ,2026-01-14,2026-01-14,1,sim,2026-01-16,14,2026-02-14
+randsondiniz@hotmail.com,Randson,legacy,cortesia_pagou,cus_TnAgUYhk1UfsrS,2026-01-15,2026-01-15,1,sim,2026-01-16,14,2026-02-14
+ronansoares725@gmail.com,Jose Ronan,legacy,cortesia_pagou,cus_TnAwVPY70qktxn,2026-01-14,2026-01-14,1,sim,2026-01-16,14,2026-02-14
+12joaomonteiro@gmail.com,Joao Monteiro,pro,cortesia_pagou,cus_Tn4QLTlbEpyGM9,2026-01-14,2026-01-14,1,sim,2026-01-16,14,2026-02-14
+fabriciohbueno@hotmail.com,Fabricio Henrique,legacy,cortesia_pagou,cus_Tn5MUPO1Zk26hi,2026-01-14,2026-01-14,1,sim,2026-01-16,14,2026-02-14
+lameurenatodasilva@gmail.com,Renato da silva  Lameu,starter,cortesia_pagou,cus_Tn3YAbl3ualT3K,2026-01-14,2026-01-14,1,sim,2026-01-15,14,2026-02-14
+guedesmuller8@gmail.com,Muller Guedes,starter,cortesia_pagou,cus_Tn2nfhn0afWcoT,2026-01-14,2026-01-14,1,sim,2026-01-16,14,2026-02-14
+valentin.tattoo.cn@gmail.com,Cleiton Valentin do Nascimento  Valentin do Nascimento,pro,pagante,cus_TmoTVujUw8rHZ5,2026-01-13,2026-01-13,1,nao,,13,2026-02-13
+paulocesarmito12@gmail.com,Paulo Cesar Rodrigues,legacy,cortesia_pagou,cus_TmoKhy6ScfSy9h,2026-01-13,2026-01-13,1,sim,2026-01-16,13,2026-02-13
+rafahfreitasps4@gmail.com,Rafael Freitas,pro,pagante,cus_TmnlWaWFQ4yDhi,2026-01-13,2026-01-13,2,nao,,13,2026-02-13
+vitorleite0069@gmail.com,Vitor  Leite,starter,cortesia_pagou,cus_Tmm1LngDs6tVLM,2026-01-13,2026-01-13,1,sim,2026-01-16,13,2026-02-13
+miller170170@gmail.com,Marlon danyel  Silva Alves,pro,pagante,cus_Tmlkrp2CTSQ7MU,2026-01-13,2026-01-13,1,nao,,13,2026-02-13
+juniortattooaps1@gmail.com,Milton De Sousa Junior,legacy,cortesia_pagou,cus_TmkzKoNDdzwKtQ,2026-01-13,2026-01-13,1,sim,2026-01-16,13,2026-02-13
+renatolucas2208@gmail.com,Renato  Anderson,starter,pagante,cus_TmkW9V3QvSJ9LG,2026-01-13,2026-01-13,1,nao,,13,2026-02-13
+leticiaoliveira.branding@outlook.com,Leticia Oliveira,starter,cortesia_pagou,cus_TmjlG6PluzI7EL,2026-01-15,2026-01-15,1,sim,2026-01-16,15,2026-02-15
+jrtattoo83@gmail.com,Valmir  Junior,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-16,15,2026-02-15
+thiagoengenheiro@outlook.com,Thiago Rodrigo  Silva,starter,cortesia_pagou,cus_TpQIy1SsRY4t9J,2026-01-20,2026-01-20,1,sim,2026-01-21,20,2026-02-20
+gustavofernandesmachado@gmail.com,Gustavo Machado,pro,pagante,cus_TmZ8ZsRIzatoij,2026-01-13,2026-01-13,1,nao,,13,2026-02-13
+tatuadoracarla@gmail.com,Carla Bechtlufft,pro,pagante,cus_TmTst0nY3qJIVT,2026-01-13,2026-01-13,1,nao,,13,2026-02-13
+davidglauber360@gmail.com,David  Glauber,legacy,cortesia_pagou,cus_TpvfdKDIzaDqPw,2026-01-23,2026-01-23,1,sim,2026-01-25,23,2026-02-23
+gianfalero@hotmail.com,Gian Lucca  Betiol falero,legacy,cortesia_pagou,cus_TmjiNeWuCWg3l3,2026-01-13,2026-01-13,1,sim,2026-01-16,13,2026-02-13
+gian21hiphop@hotmail.com,Gian Carlos,pro,pagante,cus_TmKCidfiFWPav4,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+rafael_barman@hotmail.com,rafael  pontes,pro,pagante,cus_TmRgIsjAOm1iNd,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+raphasantoslima@gmail.com,RAPHAEL Santos Lima,starter,pagante,cus_TmJvHOmdhX6Du2,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+juninhutattooo@gmail.com,Tiago Rodrigues,pro,pagante,cus_TmJtFTbotEMonu,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+soares.jhonatan18@gmail.com,jhonatan soares,pro,pagante,cus_TmK2DVlR5i3bFG,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+marciotattoo@gmail.com,Marcio Nascimento,pro,pagante,cus_TmIjSY5QVyEkSY,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+diegoetiene5@gmail.com,Diego Etiene,starter,pagante,cus_TmJF48lSkJpB5u,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+alessandrons@yahoo.com.br,Alessandro  Nogueira da Silva,starter,pagante,cus_TmM1GTCzdd1i89,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+arleson0804@gmail.com,Arleson  Galvão,pro,pagante,cus_TmIIjemGIgJF5g,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+ferrnanda.leticiaa@gmail.com,Fernanda  Letícia,pro,pagante,cus_TmN8M9qdNrSzgR,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+rafael.inked01@gmail.com,Rafael Schreiber,starter,pagante,cus_Tm8LGdusItr7MQ,2026-01-12,2026-01-12,1,nao,,11,2026-02-11
+ph-rico1@hotmail.com,Paulo Rico,pro,pagante,cus_Tm6nI2FL23CaPX,2026-01-12,2026-01-12,1,nao,,11,2026-02-11
+cleisontatuador@gmail.com,Cleison  Rodrigues,starter,cortesia_pagou,cus_Tm6N6jUlsXBXEu,2026-01-27,2026-01-27,1,sim,2026-01-29,27,2026-02-27
+molanmarcos@gmail.com,Marcos  Molan,pro,pagante,cus_Tm6MbBTztOJxzP,2026-01-11,2026-01-11,1,nao,,11,2026-02-11
+aluan0670@gmail.com,Luan Amaral,starter,cortesia_pagou,cus_Tm2RuBroChn10I,2026-01-11,2026-01-13,2,sim,2026-01-16,11,2026-02-11
+guadalupetattooshop@hotmail.com,FELIPE GARCIA,starter,pagante,cus_Tlz1DbmxKCqPpV,2026-01-11,2026-01-11,1,nao,,11,2026-02-11
+educarolitattoo@gmail.com,Eduardo Caroli,starter,pagante,cus_TmKNs4vFIne9GM,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+tiaguinhosj@gmail.com,TIAGO  Lopes,starter,cortesia_pagou,cus_TmYHGH9n1CCRZp,2026-01-17,2026-01-17,1,sim,2026-01-19,17,2026-02-17
+yagopaschoal@gmail.com,Yago Paschoal,pro,pagante,cus_Tlvxbl0ZJlOtSH,2026-01-11,2026-01-11,1,nao,,11,2026-02-11
+samuelhkkauehmw@gmail.com,KAUE Henrique  Maciel,starter,pagante,cus_Tlfb8BJdji8ben,2026-01-10,2026-01-10,1,nao,,10,2026-02-10
+mackenzyetattooinkoficial@gmail.com,Thor  Tattoo,pro,pagante,cus_TkvqipGfYFXBQY,2026-01-08,2026-01-08,1,nao,,8,2026-02-08
+joaognr2010@hotmail.com,Joao Vinicius Duque,starter,pagante,cus_TkfWgFFqgvtqa3,2026-01-09,2026-01-09,1,nao,,9,2026-02-09
+paulinhosilvatattoo@gmail.com,Paulo  Roberto Silva,starter,pagante,cus_TkexeRqxGqN8NB,2026-01-08,2026-01-08,1,nao,,8,2026-02-08
+jottatattoo16@gmail.com,Jotta Braga,pro,pagante,cus_Tkd8eniKHHM5q1,2026-01-08,2026-01-08,1,nao,,7,2026-02-07
+djalmalimak@gmail.com,Djalma  Lima,starter,pagante,cus_TkcKEKF0NX7buJ,2026-01-08,2026-01-08,1,nao,2026-01-09,8,2026-02-08
+dgtattooartist10@gmail.com,Diego  Augusto,starter,pagante,cus_Tka4x5tjckjwra,2026-01-07,2026-01-07,1,nao,,7,2026-02-07
+ediporenner32@gmail.com,Édipo  Renner,starter,pagante,cus_TlAoWNY1Fw9URJ,2026-01-09,2026-01-09,1,nao,,9,2026-02-09
+mfotatto@gmail.com,Arthur  Martins,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-07,6,2026-02-06
+ivan-scream@hotmail.com,Ivan  Rocini mesquiara,starter,cortesia_pagou,cus_TkRMqUhYuqzum5,2026-01-07,2026-01-07,1,sim,2026-01-22,7,2026-02-07
+francion_rcf@hotmail.com,Francion Fogaça,pro,pagante,cus_TmOnbf0PP3YWhR,2026-01-12,2026-01-12,1,nao,,12,2026-02-12
+j.rafatattooart2@gmail.com,João  Rafael,pro,pagante,cus_Tm8gzz5B3Gcjus,2026-01-12,2026-01-12,1,nao,,11,2026-02-11
+graffiti.nstattoo@gmail.com,Anderson Silva,starter,pagante,cus_TkAWeaatmJx3Hp,2026-01-06,2026-01-06,1,nao,,6,2026-02-06
+vinicius.grande@live.com,vinicius Grande,pro,pagante,cus_TlDxTNS8Ht2hIf,2026-01-09,2026-01-09,1,nao,,9,2026-02-09
+tiagorodrigues7022@gmail.com,Usuário,pro,pagante,cus_TkVBoVbl2zhMgi,2026-01-07,2026-01-07,1,nao,,7,2026-02-07
+bruxotattoo@icloud.com,Júlio César  Diaz,pro,pagante,cus_TjtpJatTAcYZCb,2026-01-08,2026-01-08,1,nao,,7,2026-02-07
+contato.amorink@gmail.com,Thales Amorim,legacy,cortesia_pagou,cus_TpJD1M8Ievufs6,2026-01-20,2026-01-20,1,sim,2026-01-21,20,2026-02-20
+jr.tattoo2013@gmail.com,Edson Souto da Cunha Júnior,pro,cortesia_pagou,cus_Tj4ni9l5Fg95Dz,2026-01-03,2026-01-03,1,sim,2026-01-19,3,2026-02-03
+victor-carrara@live.com,Victor  Carrara,pro,cortesia_pagou,cus_Tp3tqywlYyn5Ma,2026-01-19,2026-01-19,1,sim,2026-01-21,19,2026-02-19
+garopaba4k@gmail.com,Thiago  Da silva santos,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-03,2,2026-02-02
+klebyz.tattoo@outlook.com,Kleber Soares Silva,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-02,1,2026-02-01
+diegosilvatst90@yahoo.com.br,Diego  Moitinho Silva,pro,pagante,cus_TiNE4PCNUnuDjC,2026-01-02,2026-01-02,1,nao,,1,2026-02-01
+andre.damiao1995@gmail.com,Andre  oliveira,starter,pagante,cus_ThRN0JMQESKPgG,2025-12-30,2025-12-30,1,nao,,30,2026-01-30
+raphalopesfonseca@gmail.com,Raphael  Lopes,pro,cortesia_pagou,cus_ThGAHSmv9elIA8,2025-12-30,2025-12-30,1,sim,2026-01-23,30,2026-01-30
+ffabiano001@gmail.com,Fabiano Francisco da Silva,starter,pagante,cus_Th5UwOO6KKI12F,2025-12-29,2025-12-29,1,nao,,29,2026-02-28
+marciodiastavares0@gmail.com,Marcio Dias,legacy,cortesia_nunca_pagou,,,,0,sim,2026-01-16,15,2026-02-15
+raphaeldahmer@gmail.com,Raphael Dahmer,starter,cortesia_pagou,cus_Ts5mAuzFNXcdWi,2026-01-27,2026-01-27,1,sim,2026-01-29,27,2026-02-27
+jamesbryan1719@gmail.com,Bryan  James,starter,pagante,cus_Tgvkw13fHEiw1l,2025-12-29,2025-12-29,1,nao,,29,2026-02-28
+luizsilva061014@hotmail.com,Luiz Silva,starter,cortesia_pagou,cus_TrZKUFPrCkZQ8T,2026-01-26,2026-01-26,1,sim,2026-01-27,26,2026-02-26
+yanmelo1997@icloud.com,Yan  Melo,pro,pagante,cus_TgNCfw8yUS5byW,2025-12-27,2026-01-12,2,nao,,27,2026-02-27
+galvao1807@gmail.com,Rafael  Galvao,starter,pagante,cus_TgK3uyFHS7KEm8,2025-12-27,2025-12-27,1,nao,,27,2026-02-27
+caikperes01@gmail.com,Caik Peres Queiroz de Aguiar,starter,pagante,cus_TgJqbRCL3GkhOn,2025-12-28,2025-12-28,1,nao,,28,2026-02-28
+rangelhenriquee@icloud.com,Rangel  Guilherme,starter,pagante,cus_TgHmLWAkRTYcI8,2025-12-27,2025-12-27,1,nao,,27,2026-02-27
+jeanlagoa@gmail.com,Jean Aquino,starter,cortesia_pagou,cus_TmIZgCj8OzCnyi,2026-01-24,2026-01-24,1,sim,2026-01-25,24,2026-02-24
+anboritattoo79@gmail.com,Shimabukuro  Anderson,pro,pagante,cus_Tg6eRjSuoEatpp,2025-12-26,2025-12-26,1,nao,,26,2026-02-26
+felipeagrabarber@gmail.com,Felipe  Souza agra,starter,pagante,cus_Tg5yAoeKuWQ7vr,2025-12-26,2025-12-26,1,nao,,26,2026-02-26
+anacarolinacortezdasilva@gmail.com,Ana Carolina  Cortez da Silva,starter,pagante,cus_Tg4oSp0241ufP0,2025-12-26,2025-12-26,1,nao,,26,2026-02-26
+wedsontattoo8@gmail.com,Wesdson Rodrigues,pro,pagante,cus_Tg4UQ9EmtVqcNw,2025-12-27,2025-12-27,2,nao,,27,2026-02-27
+maikydemelo999@gmail.com,maiky de melo Junior,starter,cortesia_pagou,cus_Tg3PhIa2F7o01j,2026-01-27,2026-01-27,2,sim,2026-01-28,27,2026-02-27
+edsonlopestattoo@outlook.com,Edson  Cassiano Lopes,pro,pagante,cus_Tg2NLItWsBKGTk,2025-12-26,2025-12-26,1,nao,,26,2026-02-26
+alexandro61266@gmail.com,ALEXANDRO DA SILVA,starter,cortesia_nunca_pagou,,,,0,sim,2026-01-24,23,2026-02-23
+trashtattoo@gmail.com,Trash Marchioni,legacy,cortesia_pagou,cus_TlDAeyl0VlUNsl,2026-01-16,2026-01-16,1,sim,2026-01-17,16,2026-02-16
+arievilopedro@gmail.com,Pedro Oliveira,pro,cortesia_nunca_pagou,,,,0,sim,2026-01-15,14,2026-02-14
+cluiz5344@gmail.com,Luiz Carlos,pro,pagante,cus_TfD3EnQFkTGIrT,2025-12-24,2025-12-24,1,nao,,24,2026-02-24
+rickberberian@gmail.com,Rick Berberian,starter,pagante,cus_TfB0W5dJ1DckcG,2025-12-24,2025-12-24,1,nao,,24,2026-02-24

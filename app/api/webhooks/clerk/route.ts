@@ -1,6 +1,7 @@
 import { Webhook } from 'svix';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { maskEmail } from '@/lib/logger';
 
 
 export async function POST(req: Request) {
@@ -213,7 +214,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
   }
 
   const { email, name } = validated;
-  console.log(`[Webhook Clerk] 👤 user.created: ${email} (clerk_id: ${data.id})`);
+  console.log(`[Webhook Clerk] 👤 user.created: ${maskEmail(email)} (clerk_id: ${data.id})`);
 
 
 
@@ -234,7 +235,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
   const existing = existingUsers?.[0];
 
   if (existing) {
-    console.log(`[Webhook Clerk] 🔄 Usuário já existe (${existing.email}), atualizando dados...`);
+    console.log(`[Webhook Clerk] 🔄 Usuário já existe (${maskEmail(existing.email)}), atualizando dados...`);
 
     // Atualizar dados do usuário existente
     const { error: updateError } = await supabaseAdmin
@@ -252,12 +253,12 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
       throw new Error(`Erro ao atualizar usuário existente: ${updateError.message}`);
     }
 
-    console.log(`[Webhook Clerk] ✅ Usuário atualizado: ${email}`);
+    console.log(`[Webhook Clerk] ✅ Usuário atualizado: ${maskEmail(email)}`);
     return;
   }
 
   // Inserir apenas se NÃO existir
-  console.log(`[Webhook Clerk] ➕ Criando novo usuário: ${email}`);
+  console.log(`[Webhook Clerk] ➕ Criando novo usuário: ${maskEmail(email)}`);
 
   const { error, data: newUser } = await supabaseAdmin
     .from('users')
@@ -299,7 +300,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
           })
           .eq('id', duplicateUser.id);
 
-        console.log(`[Webhook Clerk] ✅ Usuário duplicado atualizado: ${email}`);
+        console.log(`[Webhook Clerk] ✅ Usuário duplicado atualizado: ${maskEmail(email)}`);
         return;
       }
 
@@ -309,7 +310,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
     throw new Error(`Erro ao criar usuário: ${error.message}`);
   }
 
-  console.log(`[Webhook Clerk] ✅ Novo usuário criado: ${email} (ID: ${newUser?.id})`);
+  console.log(`[Webhook Clerk] ✅ Novo usuário criado: ${maskEmail(email)} (ID: ${newUser?.id})`);
 }
 
 /**
@@ -323,7 +324,7 @@ async function handleUserUpdated(data: any, eventId: string): Promise<void> {
   }
 
   const { email, name } = validated;
-  console.log(`[Webhook Clerk] 🔄 user.updated: ${email} (clerk_id: ${data.id})`);
+  console.log(`[Webhook Clerk] 🔄 user.updated: ${maskEmail(email)} (clerk_id: ${data.id})`);
 
   const { error } = await supabaseAdmin
     .from('users')
@@ -339,7 +340,7 @@ async function handleUserUpdated(data: any, eventId: string): Promise<void> {
     throw new Error(`Erro ao atualizar usuário: ${error.message}`);
   }
 
-  console.log(`[Webhook Clerk] ✅ Usuário atualizado com sucesso: ${email}`);
+  console.log(`[Webhook Clerk] ✅ Usuário atualizado com sucesso: ${maskEmail(email)}`);
 }
 
 /**

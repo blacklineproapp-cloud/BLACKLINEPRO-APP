@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { PenTool, Sparkles, Map, Package, ChevronRight } from 'lucide-react';
 import BeforeAfterSlider from './BeforeAfterSlider';
+import LanguageSelector from './LanguageSelector';
 
 export default function HeroSection() {
   const { isSignedIn } = useAuth();
@@ -65,6 +66,11 @@ export default function HeroSection() {
 
   return (
     <section className="min-h-screen bg-black flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Language Selector - Fixed top right */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
+
       {/* Gradient background with more depth */}
       <div className="absolute inset-0 bg-zinc-950" />
       <div className="absolute inset-0 bg-gradient-to-tr from-emerald-900/10 via-black to-purple-900/5" />

@@ -2,6 +2,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from './supabase';
 import { getOrSetCache, invalidateCache } from './cache';
 import { checkAndRevertExpiredCourtesy } from './courtesy-service';
+import { maskEmail } from './logger';
 
 // Função auxiliar para retry com backoff exponencial
 async function retryWithBackoff<T>(
@@ -94,7 +95,7 @@ export async function getOrCreateUser(clerkId: string) {
           .maybeSingle();
 
         if (emailUser) {
-          console.log(`⚠️ Usuário com email ${normalizedEmail} já existe, atualizando clerk_id...`);
+          console.log(`⚠️ Usuário com email ${maskEmail(normalizedEmail)} já existe, atualizando clerk_id...`);
 
           // Atualizar clerk_id do usuário existente
           const { data: updated, error: updateError } = await supabaseAdmin
@@ -113,7 +114,7 @@ export async function getOrCreateUser(clerkId: string) {
             throw updateError;
           }
 
-          console.log(`✅ Usuário existente atualizado: ${normalizedEmail}`);
+          console.log(`✅ Usuário existente atualizado: ${maskEmail(normalizedEmail)}`);
           return updated;
         }
 
@@ -164,7 +165,7 @@ export async function getOrCreateUser(clerkId: string) {
           return data;
         });
 
-        console.log(`✅ Usuário criado automaticamente: ${normalizedEmail}`);
+        console.log(`✅ Usuário criado automaticamente: ${maskEmail(normalizedEmail)}`);
         return newUser;
       },
       {
@@ -244,7 +245,7 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     const isAdminRole = role === 'admin' || role === 'superadmin';
 
     if (isAdminRole) {
-      console.log('[Auth] ✅ Admin verificado (Clerk metadata):', user.emailAddresses[0]?.emailAddress, 'role:', role);
+      console.log('[Auth] ✅ Admin verificado (Clerk metadata):', maskEmail(user.emailAddresses[0]?.emailAddress), 'role:', role);
       return true;
     }
 
@@ -254,7 +255,7 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     const userEmail = user.emailAddresses[0]?.emailAddress?.toLowerCase() || '';
 
     if (isAdminEmail(userEmail)) {
-      console.log('[Auth] ✅ Admin verificado (email):', userEmail);
+      console.log('[Auth] ✅ Admin verificado (email):', maskEmail(userEmail));
       return true;
     }
 

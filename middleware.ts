@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher, clerkClient } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { ADMIN_EMAILS } from "./lib/admin-config";
+import { maskEmail } from "./lib/logger";
 
 const isPublicRoute = createRouteMatcher([
   '/',
@@ -11,6 +12,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/stats',
   '/api/webhooks/clerk',
   '/api/webhooks/stripe',
+  '/api/webhooks/asaas',
   '/manifest.json',
 ]);
 
@@ -62,7 +64,6 @@ export default clerkMiddleware(async (auth, request) => {
       }
 
       // ✅ CORREÇÃO SEGURANÇA: Comparação exata para evitar bypass
-      // Exemplo de bypass anterior: "https://stencilflow.com.br.attacker.com"
       const isAllowedOrigin = allowedOrigins.some(allowed =>
         requestOrigin === allowed || requestOrigin === allowed + '/'
       );
@@ -110,7 +111,7 @@ export default clerkMiddleware(async (auth, request) => {
     );
 
     if (!isAdminRole && !isAdminEmail) {
-      console.log('[Middleware] ⛔ Acesso admin negado:', { userId, email: userEmail, role });
+      console.log('[Middleware] ⛔ Acesso admin negado:', { userId, email: maskEmail(userEmail), role });
       
       // API retorna JSON, páginas fazem redirect
       if (request.nextUrl.pathname.startsWith('/api/')) {
@@ -119,7 +120,7 @@ export default clerkMiddleware(async (auth, request) => {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
-    console.log('[Middleware] ✅ Admin autorizado:', userEmail);
+    console.log('[Middleware] ✅ Admin autorizado:', maskEmail(userEmail));
   }
 
   // Rotas públicas não precisam de auth

@@ -7,7 +7,7 @@ import StencilAdjustControls from '@/components/editor/StencilAdjustControls';
 
 import QualityIndicator from '@/components/editor/QualityIndicator';
 import ResizeModal from '@/components/editor/ResizeModal';
-import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Printer, Settings, ChevronUp, Ruler, Undo, Redo, CheckCircle, AlertCircle, XCircle, Copy, Brush } from 'lucide-react';
+import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Printer, Settings, ChevronUp, Ruler, Undo, Redo, CheckCircle, AlertCircle, XCircle, Copy, Brush, Edit3 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEditorHistory } from '@/hooks/useEditorHistory';
 import { DEFAULT_ADJUST_CONTROLS, type AdjustControls } from '@/lib/stencil-types';
@@ -17,6 +17,8 @@ import { storage } from '@/lib/client-storage';
 import { compressIfNeeded } from '@/lib/image-compress';
 import BlurPreviewModal from '@/components/upsell/BlurPreviewModal';
 import CheckoutModal from '@/components/CheckoutModal';
+import { DrawingEditor } from '@/components/drawing';
+import type { Stroke } from '@/lib/drawing/types';
 import type { PlanType } from '@/lib/billing/plans';
 import type { BillingCycle } from '@/lib/stripe/types';
 
@@ -71,6 +73,10 @@ export default function EditorPage() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState<'starter' | 'pro'>('starter');
   const [checkoutCycle, setCheckoutCycle] = useState<BillingCycle>('monthly');
+
+  // Drawing Mode (modo de desenho)
+  const [showDrawingEditor, setShowDrawingEditor] = useState(false);
+  const [drawingDimensions, setDrawingDimensions] = useState({ width: 800, height: 600 });
 
   // Toast notifications
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
@@ -648,22 +654,78 @@ export default function EditorPage() {
   // Copiar stencil para clipboard
   const handleCopyToClipboard = async () => {
     if (!currentStencil) return;
-    
+
     try {
       const response = await fetch(currentStencil);
       const blob = await response.blob();
-      
+
       await navigator.clipboard.write([
         new ClipboardItem({
           [blob.type]: blob
         })
       ]);
-      
+
       showToast('Copiado para a área de transferência!', 'success');
     } catch (error) {
       showToast('Erro ao copiar - tente o download', 'error');
     }
   };
+
+  // Abrir modo de desenho
+  const handleOpenDrawingMode = useCallback(() => {
+    if (!currentStencil) return;
+
+    // Calcular dimensões baseadas no tamanho real da imagem
+    const img = new window.Image();
+    img.src = currentStencil;
+    img.onload = () => {
+      setDrawingDimensions({
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      });
+      setShowDrawingEditor(true);
+    };
+  }, [currentStencil]);
+
+  // Salvar desenho do modo de desenho
+  const handleDrawingSave = useCallback((imageDataUrl: string, strokes: Stroke[]) => {
+    // Atualizar o stencil ajustado com a imagem editada
+    setAdjustedStencil(imageDataUrl);
+    setShowDrawingEditor(false);
+    showToast(`Desenho salvo com ${strokes.length} traços!`, 'success');
+  }, []);
+
+  // Enviar desenho para IA refinar
+  const handleDrawingSendToAI = useCallback(async (imageDataUrl: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/stencil/refine-drawing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: imageDataUrl,
+          style: selectedStyle,
+          prompt: 'Refine os traços manuais para ficarem consistentes com o estilo do stencil, mantendo as adições do usuário mas tornando as linhas mais profissionais'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao processar com IA');
+      }
+
+      const data = await response.json();
+
+      // Atualizar o stencil com a versão refinada
+      setAdjustedStencil(data.image);
+      setShowDrawingEditor(false);
+      showToast('Stencil refinado com IA!', 'success');
+
+      return data.image;
+    } catch (error) {
+      console.error('Erro ao refinar com IA:', error);
+      throw error;
+    }
+  }, [selectedStyle]);
+
   const applyPreset = (preset: string) => {
     switch(preset) {
       case 'A4':
@@ -895,33 +957,41 @@ export default function EditorPage() {
 
         {/* MOBILE: Barra de ações fixa quando stencil está gerado */}
         {currentStencil && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 p-3 safe-area-pb">
-            <div className="flex gap-2">
+          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 p-2 safe-area-pb">
+            {/* Linha 1: Ações principais */}
+            <div className="flex gap-1.5 mb-1.5">
               <button
                 onClick={() => setShowControls(!showControls)}
-                className="w-14 bg-purple-900/50 hover:bg-purple-800 text-purple-400 hover:text-white py-3 rounded-xl flex items-center justify-center border border-purple-800"
+                className="w-11 bg-purple-900/50 hover:bg-purple-800 text-purple-400 hover:text-white py-2.5 rounded-lg flex items-center justify-center border border-purple-800"
                 title="Ajustes"
               >
-                <Settings size={18} />
+                <Settings size={16} />
+              </button>
+              <button
+                onClick={handleOpenDrawingMode}
+                className="w-11 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white py-2.5 rounded-lg flex items-center justify-center shadow-lg"
+                title="Modo Desenho"
+              >
+                <Edit3 size={16} />
               </button>
               <button
                 onClick={handleDownload}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-lg font-semibold flex items-center justify-center gap-1.5 shadow-lg text-sm"
               >
-                <Download size={18} /> Baixar
+                <Download size={16} /> Baixar
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2"
+                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-lg font-medium flex items-center justify-center gap-1.5 text-sm"
               >
-                <Save size={18} /> Salvar
+                <Save size={16} /> Salvar
               </button>
               <button
                 onClick={handleNewUpload}
-                className="w-14 bg-red-900/50 hover:bg-red-800 text-red-400 hover:text-white py-3 rounded-xl flex items-center justify-center border border-red-800"
+                className="w-11 bg-red-900/50 hover:bg-red-800 text-red-400 hover:text-white py-2.5 rounded-lg flex items-center justify-center border border-red-800"
                 title="Nova Imagem"
               >
-                <X size={18} />
+                <X size={16} />
               </button>
             </div>
           </div>
@@ -1058,19 +1128,12 @@ export default function EditorPage() {
             {generatedStencil && (
               <>
                 {/* Botões de Ação - Desktop */}
-                <div className="hidden lg:grid grid-cols-3 gap-2">
+                <div className="hidden lg:grid grid-cols-2 gap-2">
                   <button
                     onClick={handleDownload}
                     className="bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
                   >
                     <Download size={16} /> Baixar
-                  </button>
-                  <button
-                    onClick={handleCopyToClipboard}
-                    className="bg-zinc-700 hover:bg-zinc-600 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
-                    title="Copiar para área de transferência"
-                  >
-                    <Copy size={16} /> Copiar
                   </button>
                   <button
                     onClick={handleSave}
@@ -1080,6 +1143,17 @@ export default function EditorPage() {
                     <Save size={16} /> {isSaving ? 'Salvando...' : 'Salvar'}
                   </button>
                 </div>
+
+                {/* Botão Modo Desenho - Destaque */}
+                <button
+                  onClick={handleOpenDrawingMode}
+                  className="hidden lg:flex w-full items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-orange-900/30 transition-all"
+                  title="Adicionar traços manualmente"
+                >
+                  <Edit3 size={18} />
+                  <span>Modo Desenho</span>
+                  <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded">PRO</span>
+                </button>
 
                 {/* Indicador de Qualidade/DPI */}
                 <QualityIndicator
@@ -1161,6 +1235,19 @@ export default function EditorPage() {
         isOpen={showCheckout}
         onClose={() => setShowCheckout(false)}
       />
+
+      {/* Drawing Editor Modal */}
+      {showDrawingEditor && currentStencil && originalImage && (
+        <DrawingEditor
+          originalImage={originalImage}
+          stencilImage={currentStencil}
+          width={drawingDimensions.width}
+          height={drawingDimensions.height}
+          onClose={() => setShowDrawingEditor(false)}
+          onSave={handleDrawingSave}
+          onSendToAI={handleDrawingSendToAI}
+        />
+      )}
 
       {/* Toast Notification */}
       {toast && (

@@ -150,7 +150,7 @@ export default function DashboardLayout({
       )}
 
       {/* Sidebar / Nav (Mobile bottom, Desktop left) */}
-      <nav className="fixed bottom-0 left-0 w-full md:w-20 md:h-screen bg-zinc-900/80 backdrop-blur-xl border-t md:border-t-0 md:border-r border-zinc-800/50 z-50 flex md:flex-col items-center justify-between px-2 md:px-0 pb-safe md:pt-10 md:gap-10">
+      <nav className="fixed bottom-0 left-0 w-full md:w-20 md:h-screen bg-zinc-900/80 backdrop-blur-xl border-t md:border-t-0 md:border-r border-zinc-800/50 z-40 flex md:flex-col items-center justify-between px-2 md:px-0 pb-safe md:pt-6 md:pb-4 md:gap-4 md:overflow-y-auto md:overflow-x-hidden">
         
         {/* Logo - Desktop only */}
         <div className="hidden md:flex items-center justify-center w-12 h-12 bg-emerald-600 rounded-xl mb-4 shadow-lg shadow-emerald-900/50">

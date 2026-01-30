@@ -120,13 +120,13 @@ const textToImageModel = genAI.getGenerativeModel({
 });
 
 // Modelo DEDICADO para Aprimoramento - Gemini 2.5 Flash
-// Configuração otimizada para detalhes
+// Configuração otimizada para reconstrução de alta qualidade
 const dedicatedEnhanceModel = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash-image',
   generationConfig: {
-    temperature: 0, // ZERO criatividade para garantir que o que é humano continue humano
-    topP: 0.1,
-    topK: 1,
+    temperature: 0.1, // Mínima criatividade para permitir reconstrução inteligente de detalhes
+    topP: 0.2,        // Conservador mas permite reconstrução de texturas
+    topK: 5,          // Poucas opções para manter fidelidade
   },
 });
 
@@ -441,24 +441,64 @@ GERE A IMAGEM AGORA:`;
 
 // Aprimorar imagem (upscale 4K)
 export async function enhanceImage(base64Image: string): Promise<string> {
-  const prompt = `ACT AS: Precision Image Restoration Engine.
+  const prompt = `🎯 MISSION: PROFESSIONAL 4K IMAGE ENHANCEMENT & SUPER-RESOLUTION
 
-MISSION: Perform an absolute high-fidelity reconstruction. You are a digital restorer, NOT an artist. 
+You are a PROFESSIONAL IMAGE ENHANCEMENT ENGINE. Your task is to transform this image into a HIGH-QUALITY 4K version while maintaining ABSOLUTE FIDELITY to the original content.
 
-STRICT IDENTITY RULES:
-1. SUBJECT INTEGRITY: Every person, face, and object must retain its exact species, age, and identity. A child must remain a child.
-2. ANATOMICAL MAPPING: Every pixel must be anchored to the original geometry. Do NOT move, change, or hallucinate features.
-3. CONTENT PRESERVATION: Do NOT add objects or transform the nature of what is in the image.
+═══════════════════════════════════════════════════════════════
+📐 TECHNICAL SPECIFICATIONS - OUTPUT REQUIREMENTS:
+═══════════════════════════════════════════════════════════════
 
-RECONSTRUCTION TASKS:
-- Apply super-resolution to increase optical sharpness.
-- Reconstruct high-frequency textures (skin pores, fabric, edges) with professional clarity.
-- Remove digital noise and compression artifacts without over-smoothing.
-- Re-render with modern optical clarity while keeping the exact original lighting layout.
+1. RESOLUTION ENHANCEMENT:
+   - Upscale to maximum possible resolution (target: 4K / 4096px on longest side)
+   - Use intelligent super-resolution to add REAL detail, not blur
+   - Every edge should be crisp and well-defined
+   - Fine details (text, patterns, textures) must be sharp and readable
 
-OUTPUT: Return ONLY the reconstructed image. No text.
+2. QUALITY RECONSTRUCTION:
+   - REMOVE all JPEG compression artifacts (blocks, banding, mosquito noise)
+   - REMOVE digital noise and grain while preserving intentional film grain if artistic
+   - RECONSTRUCT lost details in shadows and highlights
+   - ENHANCE micro-contrast for depth and dimension
+   - SHARPEN edges without creating halos or artifacts
 
-EXECUTE ZERO-CREATIVITY HIGH-FIDELITY RESTORATION NOW:`;
+3. TEXTURE ENHANCEMENT:
+   - Skin: Reconstruct pores, fine lines, and natural texture (NOT plastic/smooth)
+   - Fabric: Enhance weave patterns, thread details, folds
+   - Hair: Individual strands should be visible and defined
+   - Metal/Glass: Reflections and highlights should be crisp
+   - Nature: Leaves, bark, grass should have natural detail
+
+═══════════════════════════════════════════════════════════════
+🔒 ABSOLUTE PRESERVATION RULES - DO NOT VIOLATE:
+═══════════════════════════════════════════════════════════════
+
+❌ DO NOT change the subject, pose, or composition
+❌ DO NOT alter facial features, expressions, or identity
+❌ DO NOT add or remove objects from the scene
+❌ DO NOT change colors, lighting direction, or mood
+❌ DO NOT apply artistic filters or style transfer
+❌ DO NOT crop or reframe the image
+❌ DO NOT change backgrounds or environments
+
+✅ DO enhance what already exists
+✅ DO make blurry areas sharp
+✅ DO remove compression artifacts
+✅ DO increase resolution intelligently
+✅ DO preserve the EXACT same image, just in higher quality
+
+═══════════════════════════════════════════════════════════════
+🎬 QUALITY BENCHMARK:
+═══════════════════════════════════════════════════════════════
+
+The output should look like:
+- The original image was captured with a professional camera
+- Then printed in a high-end magazine
+- With perfect focus and clarity throughout
+- No visible digital artifacts or noise
+- Ready for large-format printing
+
+EXECUTE NOW: Generate the enhanced 4K version of this image.`;
 
   // Detectar o mimeType original da imagem
   let mimeType = 'image/jpeg'; // fallback padrão

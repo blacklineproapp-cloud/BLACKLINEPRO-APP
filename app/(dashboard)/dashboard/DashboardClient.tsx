@@ -8,6 +8,7 @@ import { Plus, Clock, Upload, Zap, Printer, Crown, X, Download, Edit2, Trash2, M
 import { storage } from '@/lib/client-storage';
 import CourtesyBanner from '@/components/CourtesyBanner';
 import LegacyPaymentBanner from '@/components/LegacyPaymentBanner';
+import MigrationNoticeCard from '@/components/MigrationNoticeCard';
 import IAGenGallery from './HistoryTab';
 
 interface Project {
@@ -284,6 +285,9 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
           </div>
         )}
       </div>
+
+      {/* Migration Notice - Aviso sobre novo sistema de pagamentos */}
+      <MigrationNoticeCard />
 
       {/* Legacy Payment Banner - Aparece quando admin atribui plano legacy */}
       {userPlan === 'legacy' && !isPaid && (

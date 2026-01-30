@@ -1,0 +1,23 @@
+{
+  "generatedAt": "2026-01-28T12:40:44.822Z",
+  "summary": {
+    "totalSubscriptions": 4,
+    "activeSubscriptions": 0,
+    "mrr": 0,
+    "revenue30Days": 1325
+  },
+  "stats": {
+    "active": 0,
+    "trialing": 0,
+    "pastDue": 0,
+    "canceled": 0,
+    "unpaid": 0,
+    "incomplete": 4,
+    "other": 0
+  },
+  "mrrByPlan": {},
+  "mrrByPaymentMethod": {},
+  "usersByPlan": {},
+  "usersByPaymentMethod": {},
+  "subscriptions": []
+}

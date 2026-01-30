@@ -202,6 +202,29 @@ class Logger {
 export const logger = new Logger();
 
 /**
+ * Mascara email para uso em logs
+ * Exemplo: "usuario@email.com" -> "us***@email.com"
+ *
+ * @param email - Email a ser mascarado
+ * @returns Email mascarado ou string original se não for email válido
+ */
+export function maskEmail(email: string | null | undefined): string {
+  if (!email || typeof email !== 'string') return '[no-email]';
+
+  if (!email.includes('@')) return email;
+
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return '[invalid-email]';
+
+  // Mostrar apenas 2 primeiros caracteres da parte local
+  const maskedLocal = local.length > 2
+    ? `${local.substring(0, 2)}***`
+    : `${local}***`;
+
+  return `${maskedLocal}@${domain}`;
+}
+
+/**
  * Helper para logging de webhooks (alta frequência)
  */
 export const webhookLogger = {

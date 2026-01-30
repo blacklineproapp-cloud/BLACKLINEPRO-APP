@@ -4,7 +4,7 @@ import { Check, Zap, Crown, Sparkles, Package, Infinity } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import CheckoutModal from '@/components/CheckoutModal';
+import AsaasCheckoutModal from '@/components/AsaasCheckoutModal';
 import { BILLING_CYCLES, PLAN_PRICING, formatPrice, getMonthlyEquivalent } from '@/lib/billing/plans';
 import type { BillingCycle } from '@/lib/stripe/types';
 
@@ -291,7 +291,7 @@ export default function PricingPage() {
             </div>
             <div>
               <p className="text-white font-medium mb-1">Aceitam quais formas de pagamento?</p>
-              <p className="text-zinc-400">Cartão de crédito e boleto bancário (para planos anuais).</p>
+              <p className="text-zinc-400">PIX (instantâneo), Boleto Bancário e Cartão de Crédito.</p>
             </div>
             {selectedCycle !== 'monthly' && (
               <div>
@@ -308,7 +308,7 @@ export default function PricingPage() {
 
       {/* Checkout Modal */}
       {selectedPlan && (
-        <CheckoutModal
+        <AsaasCheckoutModal
           plan={selectedPlan}
           cycle={selectedCycle}
           isOpen={isModalOpen}
