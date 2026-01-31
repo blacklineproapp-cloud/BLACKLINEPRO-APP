@@ -18,6 +18,8 @@ interface UserData {
   subscription_expires_at: string | null;
   admin_courtesy: boolean;
   stripe_customer_id: string | null;
+  asaas_subscription_id: string | null;
+  asaas_customer_id: string | null;
   scheduled_to_cancel_at?: string | null;
 }
 
@@ -77,7 +79,14 @@ export default function AssinaturaPage() {
   const handleCancelSubscription = async (reason: string, feedback: string) => {
     setCancelLoading(true);
     try {
-      const res = await fetch('/api/billing/cancel', {
+      // Determinar qual gateway usar baseado nos dados do usuário
+      // Prioridade: Asaas (se tiver asaas_subscription_id) > Stripe
+      const isAsaasUser = !!userData?.asaas_subscription_id;
+      const cancelEndpoint = isAsaasUser ? '/api/asaas/cancel' : '/api/billing/cancel';
+
+      console.log(`[Cancelamento] Usando gateway: ${isAsaasUser ? 'Asaas' : 'Stripe'}`);
+
+      const res = await fetch(cancelEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason, feedback }),
@@ -91,7 +100,13 @@ export default function AssinaturaPage() {
       // Recarregar dados para atualizar UI
       await loadUserData();
       setCancelModalOpen(false);
-      alert('Assinatura cancelada com sucesso. Seu acesso continuará até o fim do período.');
+
+      // Mensagem diferente baseado no gateway
+      if (isAsaasUser) {
+        alert('Assinatura cancelada com sucesso.');
+      } else {
+        alert('Assinatura cancelada com sucesso. Seu acesso continuará até o fim do período.');
+      }
     } catch (error: any) {
       alert(error.message || 'Erro ao processar cancelamento');
     } finally {
@@ -150,9 +165,16 @@ export default function AssinaturaPage() {
   const isCourtesy = userData.admin_courtesy;
   const hasActiveSubscription = userData.is_paid && userData.subscription_status === 'active';
   const isScheduledToCancel = !!userData.scheduled_to_cancel_at;
-  
-  // Mostrar botão de gerenciar para qualquer usuário pago que não seja cortesia
-  const canManageSubscription = hasActiveSubscription && !isCourtesy;
+
+  // Detectar tipo de gateway de pagamento
+  const isAsaasUser = !!userData.asaas_subscription_id;
+  const isStripeUser = !!userData.stripe_customer_id && !isAsaasUser;
+
+  // Mostrar botão de gerenciar apenas para usuários Stripe (Asaas não tem portal externo)
+  const canManageStripePortal = hasActiveSubscription && !isCourtesy && isStripeUser;
+
+  // Permitir cancelamento para qualquer usuário pago (Stripe ou Asaas)
+  const canCancelSubscription = hasActiveSubscription && !isCourtesy;
 
   return (
     <div className="min-h-screen bg-black text-white p-4 lg:p-8">
@@ -285,7 +307,8 @@ export default function AssinaturaPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            {canManageSubscription && (
+            {/* Botão Gerenciar Pagamento - apenas para Stripe */}
+            {canManageStripePortal && (
               <button
                 onClick={handleManageSubscription}
                 disabled={portalLoading}
@@ -306,7 +329,20 @@ export default function AssinaturaPage() {
               </button>
             )}
 
-            {canManageSubscription && !isScheduledToCancel && (
+            {/* Info para usuários Asaas - não tem portal externo */}
+            {isAsaasUser && hasActiveSubscription && !isCourtesy && (
+              <div className="flex-1 px-6 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-center">
+                <p className="text-zinc-400 text-sm">
+                  💳 Pagamento via PIX/Boleto/Cartão
+                </p>
+                <p className="text-xs text-zinc-500 mt-1">
+                  Para alterar forma de pagamento, cancele e assine novamente
+                </p>
+              </div>
+            )}
+
+            {/* Botão Cancelar - funciona para Stripe e Asaas */}
+            {canCancelSubscription && !isScheduledToCancel && (
                <button
                 onClick={() => setCancelModalOpen(true)}
                 className="flex-[0.5] px-6 py-3 bg-zinc-800 hover:bg-red-900/40 hover:text-red-200 hover:border-red-900/50 text-zinc-400 border border-zinc-700 rounded-xl font-medium transition flex items-center justify-center gap-2"
@@ -330,8 +366,8 @@ export default function AssinaturaPage() {
 
         {/* Info Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Payment Method */}
-          {canManageSubscription && (
+          {/* Payment Method - Stripe */}
+          {canManageStripePortal && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center">
@@ -350,6 +386,24 @@ export default function AssinaturaPage() {
                 Abrir portal de pagamento
                 <ExternalLink size={14} />
               </button>
+            </div>
+          )}
+
+          {/* Payment Info - Asaas */}
+          {isAsaasUser && hasActiveSubscription && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-emerald-600/10 rounded-lg flex items-center justify-center border border-emerald-500/30">
+                  <CreditCard size={20} className="text-emerald-400" />
+                </div>
+                <h3 className="font-semibold">Pagamento via Asaas</h3>
+              </div>
+              <p className="text-sm text-zinc-400 mb-4">
+                Sua assinatura é gerenciada via PIX, Boleto ou Cartão através do Asaas.
+              </p>
+              <p className="text-xs text-zinc-500">
+                Para dúvidas sobre pagamentos, entre em contato com o suporte.
+              </p>
             </div>
           )}
 

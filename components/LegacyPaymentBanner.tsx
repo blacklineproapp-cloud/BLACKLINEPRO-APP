@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Gift, CreditCard, X } from 'lucide-react';
-import CheckoutModal from './CheckoutModal';
+import AsaasCheckoutModal from './AsaasCheckoutModal';
 
 interface LegacyPaymentBannerProps {
   userId: string;
@@ -39,9 +39,9 @@ export default function LegacyPaymentBanner({ userId, userEmail }: LegacyPayment
             <h3 className="text-white font-bold text-xl mb-2">
               🎁 Plano Legacy Atribuído!
             </h3>
-            
+
             <p className="text-zinc-300 text-sm mb-3">
-              Você foi selecionado para o <strong>plano especial Legacy</strong> - 
+              Você foi selecionado para o <strong>plano especial Legacy</strong> -
               apenas <strong className="text-amber-400">R$ 25/mês</strong> com acesso completo ao editor de stencils.
             </p>
 
@@ -65,14 +65,14 @@ export default function LegacyPaymentBanner({ userId, userEmail }: LegacyPayment
             </button>
 
             <p className="text-xs text-zinc-500 mt-3">
-              💳 Pagamento seguro via Stripe • Cancele quando quiser
+              💳 PIX, Boleto ou Cartão • Cancele quando quiser
             </p>
           </div>
         </div>
       </div>
 
-      {/* Checkout Modal */}
-      <CheckoutModal
+      {/* Asaas Checkout Modal - PIX, Boleto ou Cartão */}
+      <AsaasCheckoutModal
         plan="legacy"
         cycle="monthly"
         isOpen={showCheckout}

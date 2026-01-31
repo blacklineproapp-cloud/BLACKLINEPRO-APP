@@ -50,6 +50,8 @@ export async function GET() {
       subscription_expires_at: user.subscription_expires_at || null,
       admin_courtesy: user.admin_courtesy || false,
       stripe_customer_id: user.stripe_customer_id || null, // Necessário para portal e boletos
+      asaas_subscription_id: user.asaas_subscription_id || null, // Para cancelamento via Asaas
+      asaas_customer_id: user.asaas_customer_id || null, // Para identificar usuários Asaas
       scheduled_to_cancel_at: scheduledToCancelAt
     });
   } catch (error: any) {

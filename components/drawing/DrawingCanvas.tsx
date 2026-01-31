@@ -45,8 +45,32 @@ function smoothEasing(t: number): number {
 }
 
 /**
+ * Detecta se é um dispositivo touch (iPad, tablet, celular)
+ */
+function isTouchDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    'ontouchstart' in window ||
+    navigator.maxTouchPoints > 0 ||
+    /iPad|iPhone|iPod|Android/i.test(navigator.userAgent)
+  );
+}
+
+/**
+ * Detecta se é iOS (iPad/iPhone) para otimizações específicas
+ */
+function isIOSDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  return (
+    /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+}
+
+/**
  * Stroke Stabilizer - "Lazy Brush" effect
  * Suaviza tremores da mão mantendo precisão
+ * Otimizado para dispositivos touch com maior suavização
  */
 class StrokeStabilizer {
   private targetX: number = 0;
@@ -56,8 +80,9 @@ class StrokeStabilizer {
   private initialized: boolean = false;
 
   // Fator de suavização (0 = sem suavização, 1 = máxima suavização)
-  // 0.3-0.5 é ideal para desenho artístico
-  private smoothFactor: number = 0.35;
+  // Para touch devices: 0.45-0.55 é ideal
+  // Para mouse: 0.3-0.4 é ideal
+  private smoothFactor: number = isTouchDevice() ? 0.5 : 0.35;
 
   reset() {
     this.initialized = false;
@@ -100,6 +125,7 @@ export interface DrawingCanvasRef {
   getStrokes: () => Stroke[];
   setStrokes: (strokes: Stroke[]) => void;
   exportAsDataUrl: () => string;
+  exportStencilOnly: () => string; // Exporta apenas stencil + desenhos (sem imagem original)
   getCanvas: () => HTMLCanvasElement | null;
 }
 
@@ -198,19 +224,27 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
     const lastVelocityRef = useRef(0);
     const lastPointTimeRef = useRef(0);
 
+    // Detectar tipo de dispositivo uma vez
+    const isTouch = isTouchDevice();
+    const isIOS = isIOSDevice();
+
     // Opções do perfect-freehand otimizadas para qualidade Procreate
+    // Valores mais altos para touch devices para compensar imprecisão do dedo/stylus
     const getStrokeOptions = useCallback((isPreview = false) => {
       const baseSize = tool === 'eraser' ? brushSize * 3 : brushSize;
 
-      // Parâmetros estilo Procreate:
-      // - smoothing alto (0.7) para traços suaves
-      // - streamline alto (0.65) para linhas fluidas
-      // - thinning moderado (0.4) para variação natural de espessura
+      // Parâmetros estilo Procreate otimizados por dispositivo:
+      // - Touch/iPad: smoothing e streamline mais altos para compensar tremores
+      // - Mouse/Desktop: valores moderados para maior precisão
+      const smoothingValue = isTouch ? 0.85 : 0.7;
+      const streamlineValue = isTouch ? 0.8 : 0.65;
+      const thinningValue = tool === 'eraser' ? 0 : (isTouch ? 0.35 : 0.4);
+
       return {
         size: baseSize,
-        thinning: tool === 'eraser' ? 0 : 0.4,
-        smoothing: 0.7,    // Aumentado de 0.5 para suavidade Procreate
-        streamline: 0.65,  // Aumentado de 0.5 para fluidez
+        thinning: thinningValue,
+        smoothing: smoothingValue,    // Touch: 0.85, Desktop: 0.7
+        streamline: streamlineValue,  // Touch: 0.8, Desktop: 0.65
         easing: smoothEasing, // Easing suave ao invés de linear
         start: {
           cap: true,
@@ -225,7 +259,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         simulatePressure: false, // Vamos usar nossa própria simulação de pressão
         last: !isPreview,
       };
-    }, [brushSize, tool]);
+    }, [brushSize, tool, isTouch]);
 
     // Calcular escala quando o container muda de tamanho
     useEffect(() => {
@@ -651,9 +685,10 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         // Aplicar processamento completo estilo Procreate:
         // 1. Suavização de pressão
         // 2. Interpolação Catmull-Rom
+        // Para touch devices: mais interpolação e suavização para eliminar pixelização
         const processedPoints = processPointsForProcreateQuality(currentPoints, {
-          interpolationSegments: 2,
-          pressureSmoothing: 3,
+          interpolationSegments: isTouch ? 4 : 2, // Mais segmentos para touch = traços mais suaves
+          pressureSmoothing: isTouch ? 5 : 3,     // Mais suavização de pressão para touch
         });
 
         const inputPoints = processedPoints.map(p => [p.x, p.y, p.pressure]);
@@ -740,6 +775,60 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       return canvas.toDataURL('image/png');
     }, []);
 
+    /**
+     * Exporta apenas o stencil + desenhos do usuário (SEM a imagem original de referência)
+     * Isso é o que deve ser salvo/baixado
+     */
+    const exportStencilOnly = useCallback((): string => {
+      const canvas = canvasRef.current;
+      if (!canvas) return '';
+
+      // Criar canvas temporário para renderizar apenas stencil + desenhos
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = canvas.height;
+      const ctx = tempCanvas.getContext('2d', { alpha: true });
+      if (!ctx) return '';
+
+      // ===== CAMADA 1: Fundo branco =====
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+      // ===== CAMADA 2: Stencil (SEM a imagem original) =====
+      if (stencilImageRef.current) {
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.globalAlpha = stencilOpacity / 100;
+        ctx.drawImage(stencilImageRef.current, 0, 0, tempCanvas.width, tempCanvas.height);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      // Legacy: backgroundImage se não tiver camadas separadas
+      if (!originalImageRef.current && !stencilImageRef.current && bgImageRef.current) {
+        ctx.drawImage(bgImageRef.current, 0, 0, tempCanvas.width, tempCanvas.height);
+      }
+
+      // ===== CAMADA 3: Strokes do usuário =====
+      strokes.forEach((stroke) => {
+        if (!stroke.path) return;
+
+        const path = new Path2D(stroke.path);
+
+        if (stroke.tool === 'eraser') {
+          ctx.globalCompositeOperation = 'destination-out';
+        } else {
+          ctx.globalCompositeOperation = 'source-over';
+        }
+
+        ctx.fillStyle = stroke.tool === 'eraser' ? '#FFFFFF' : stroke.color;
+        ctx.fill(path);
+      });
+
+      ctx.globalCompositeOperation = 'source-over';
+
+      return tempCanvas.toDataURL('image/png');
+    }, [strokes, stencilOpacity]);
+
     // Expor métodos via ref
     useImperativeHandle(ref, () => ({
       undo,
@@ -752,8 +841,9 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         historyIndexRef.current = 1;
       },
       exportAsDataUrl,
+      exportStencilOnly, // Novo método para exportar apenas stencil + desenhos
       getCanvas: () => canvasRef.current,
-    }), [undo, redo, clear, strokes, exportAsDataUrl]);
+    }), [undo, redo, clear, strokes, exportAsDataUrl, exportStencilOnly]);
 
     // Atalhos de teclado
     useEffect(() => {

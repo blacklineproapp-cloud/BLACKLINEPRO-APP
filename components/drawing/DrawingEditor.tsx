@@ -118,7 +118,8 @@ export default function DrawingEditor({
   }, []);
 
   const handleDownload = useCallback(() => {
-    const dataUrl = canvasRef.current?.exportAsDataUrl();
+    // Usar exportStencilOnly para não incluir a imagem original de referência
+    const dataUrl = canvasRef.current?.exportStencilOnly();
     if (!dataUrl) return;
 
     const link = document.createElement('a');
@@ -130,7 +131,8 @@ export default function DrawingEditor({
   }, []);
 
   const handleSave = useCallback(() => {
-    const dataUrl = canvasRef.current?.exportAsDataUrl();
+    // Usar exportStencilOnly para não incluir a imagem original de referência
+    const dataUrl = canvasRef.current?.exportStencilOnly();
     const strokes = canvasRef.current?.getStrokes() || [];
     if (dataUrl) {
       onSave(dataUrl, strokes);
@@ -140,7 +142,8 @@ export default function DrawingEditor({
   const handleSendToAI = useCallback(async () => {
     if (!onSendToAI) return;
 
-    const dataUrl = canvasRef.current?.exportAsDataUrl();
+    // Usar exportStencilOnly para enviar apenas o stencil + desenhos
+    const dataUrl = canvasRef.current?.exportStencilOnly();
     if (!dataUrl) return;
 
     setIsProcessing(true);
