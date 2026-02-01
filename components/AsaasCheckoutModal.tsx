@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Loader2, Crown, Zap, Sparkles, LogIn, CreditCard as CreditCardIcon, QrCode, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useAuth, SignInButton } from '@clerk/nextjs';
+import { useAuth, useUser, SignInButton } from '@clerk/nextjs';
 import { PLAN_PRICING, BILLING_CYCLES, formatPrice, getMonthlyEquivalent } from '@/lib/billing/plans';
 import type { BillingCycle } from '@/lib/stripe/types';
 import type { CreditCardData, CreditCardHolderInfo } from '@/lib/asaas';
@@ -26,6 +26,10 @@ type PaymentMethod = 'pix' | 'boleto' | 'credit_card';
 export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, onClose }: AsaasCheckoutModalProps) {
   const router = useRouter();
   const { isSignedIn, isLoaded } = useAuth();
+  const { user } = useUser();
+
+  // Email do usuário logado para pré-preencher
+  const userEmail = user?.primaryEmailAddress?.emailAddress || '';
   
   // Estados
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
@@ -157,6 +161,10 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
     if (paymentMethod === 'credit_card') {
       if (!cardData || !holderInfo) return false;
       if (!cardData.number || !cardData.holderName || !cardData.expiryMonth || !cardData.expiryYear || !cardData.ccv) return false;
+      if (!holderInfo.email || !holderInfo.email.includes('@')) return false; // Email obrigatório para cartão
+      if (!holderInfo.cpfCnpj || holderInfo.cpfCnpj.replace(/\D/g, '').length < 11) return false; // CPF obrigatório
+      if (!holderInfo.postalCode || holderInfo.postalCode.replace(/\D/g, '').length < 8) return false; // CEP obrigatório (8 dígitos)
+      if (!holderInfo.phone || holderInfo.phone.replace(/\D/g, '').length < 10) return false; // Telefone obrigatório (mínimo 10 dígitos)
     }
     return true;
   };
@@ -349,6 +357,7 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                 <CreditCardForm
                   onDataChange={handleCardDataChange}
                   cpfCnpj={cpfCnpj}
+                  userEmail={userEmail}
                 />
               )}
 

@@ -14,29 +14,48 @@ export function generateStrokeId(): string {
 
 /**
  * Converte array de pontos do perfect-freehand para SVG path
- * Usa curvas Bezier quadráticas para suavidade máxima
+ * Usa curvas Bezier CÚBICAS para máxima suavidade (técnica Procreate)
+ *
+ * Curvas cúbicas (C) são mais suaves que quadráticas (Q) porque
+ * usam 2 pontos de controle ao invés de 1, permitindo transições
+ * mais naturais entre segmentos.
  */
 export function getSvgPathFromStroke(stroke: number[][], closed = true): string {
   if (!stroke.length) return '';
 
-  const max = stroke.length - 1;
+  if (stroke.length === 1) {
+    const [x, y] = stroke[0];
+    return `M ${x.toFixed(2)},${y.toFixed(2)} Z`;
+  }
 
-  const d = stroke.reduce(
-    (acc, point, i, arr) => {
-      if (i === max) return acc;
+  if (stroke.length === 2) {
+    const [[x0, y0], [x1, y1]] = stroke;
+    return `M ${x0.toFixed(2)},${y0.toFixed(2)} L ${x1.toFixed(2)},${y1.toFixed(2)} Z`;
+  }
 
-      const [x0, y0] = point;
-      const [x1, y1] = arr[i + 1];
+  // Usar curvas Bézier cúbicas para máxima suavidade
+  const d: string[] = [`M ${stroke[0][0].toFixed(2)},${stroke[0][1].toFixed(2)}`];
 
-      // Ponto médio para curva suave
-      const mx = (x0 + x1) / 2;
-      const my = (y0 + y1) / 2;
+  for (let i = 0; i < stroke.length - 1; i++) {
+    const p0 = stroke[Math.max(0, i - 1)];
+    const p1 = stroke[i];
+    const p2 = stroke[i + 1];
+    const p3 = stroke[Math.min(stroke.length - 1, i + 2)];
 
-      acc.push(`Q ${x0.toFixed(2)},${y0.toFixed(2)} ${mx.toFixed(2)},${my.toFixed(2)}`);
-      return acc;
-    },
-    [`M ${stroke[0][0].toFixed(2)},${stroke[0][1].toFixed(2)}`]
-  );
+    // Calcular pontos de controle para curva Bézier cúbica
+    // Usando tensão de 0.5 para curvas suaves mas responsivas
+    const tension = 0.5;
+
+    // Ponto de controle 1: baseado na tangente em p1
+    const cp1x = p1[0] + (p2[0] - p0[0]) * tension / 6;
+    const cp1y = p1[1] + (p2[1] - p0[1]) * tension / 6;
+
+    // Ponto de controle 2: baseado na tangente em p2
+    const cp2x = p2[0] - (p3[0] - p1[0]) * tension / 6;
+    const cp2y = p2[1] - (p3[1] - p1[1]) * tension / 6;
+
+    d.push(`C ${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`);
+  }
 
   if (closed) {
     d.push('Z');
@@ -189,10 +208,32 @@ export function predictNextPoint(points: Point[], predictionMs = 30): Point | nu
 /**
  * Interpola pontos usando Catmull-Rom spline para suavidade extra
  * Técnica usada pelo Procreate para traços ultra-suaves
+ *
+ * IMPORTANTE: Para eliminar o efeito "quadrado" em tablets:
+ * - Usar segments >= 4 para movimento normal
+ * - Usar segments >= 8 para resultado final
  */
-export function interpolatePoints(points: Point[], segments = 3): Point[] {
-  if (points.length < 4) return points;
+export function interpolatePoints(points: Point[], segments = 4): Point[] {
+  if (points.length < 2) return points;
 
+  // Para poucos pontos, duplicar extremos para permitir interpolação
+  if (points.length < 4) {
+    // Criar pontos fantasma nas extremidades para curvas suaves
+    const extended = [
+      points[0], // Duplicar primeiro ponto
+      ...points,
+      points[points.length - 1], // Duplicar último ponto
+    ];
+    return interpolatePointsInternal(extended, segments);
+  }
+
+  return interpolatePointsInternal(points, segments);
+}
+
+/**
+ * Implementação interna da interpolação Catmull-Rom
+ */
+function interpolatePointsInternal(points: Point[], segments: number): Point[] {
   const result: Point[] = [];
 
   for (let i = 0; i < points.length - 1; i++) {
@@ -201,8 +242,14 @@ export function interpolatePoints(points: Point[], segments = 3): Point[] {
     const p2 = points[Math.min(points.length - 1, i + 1)];
     const p3 = points[Math.min(points.length - 1, i + 2)];
 
-    for (let j = 0; j < segments; j++) {
-      const t = j / segments;
+    // Calcular distância entre p1 e p2 para ajustar número de segmentos
+    const distance = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+
+    // Mais segmentos para distâncias maiores (pontos mais espaçados = mais interpolação necessária)
+    const adaptiveSegments = Math.max(segments, Math.ceil(distance / 5));
+
+    for (let j = 0; j < adaptiveSegments; j++) {
+      const t = j / adaptiveSegments;
       const point = catmullRom(p0, p1, p2, p3, t);
       result.push(point);
     }

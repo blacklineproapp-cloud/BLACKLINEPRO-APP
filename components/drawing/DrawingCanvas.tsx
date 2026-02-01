@@ -80,9 +80,10 @@ class StrokeStabilizer {
   private initialized: boolean = false;
 
   // Fator de suavização (0 = sem suavização, 1 = máxima suavização)
-  // Para touch devices: 0.45-0.55 é ideal
-  // Para mouse: 0.3-0.4 é ideal
-  private smoothFactor: number = isTouchDevice() ? 0.5 : 0.35;
+  // Para iPad/iOS: 0.55-0.65 para curvas ultra-suaves
+  // Para outros touch: 0.45-0.55
+  // Para mouse: 0.3-0.4
+  private smoothFactor: number = isIOSDevice() ? 0.6 : (isTouchDevice() ? 0.5 : 0.35);
 
   reset() {
     this.initialized = false;
@@ -149,18 +150,44 @@ interface DrawingCanvasProps {
 
 /**
  * Converte outline do perfect-freehand para SVG path
+ * Usa curvas Bézier cúbicas para máxima suavidade (técnica Procreate)
  */
 function getSvgPathFromStroke(stroke: number[][]): string {
   if (!stroke.length) return '';
 
-  const d = stroke.reduce(
-    (acc, [x0, y0], i, arr) => {
-      const [x1, y1] = arr[(i + 1) % arr.length];
-      acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
-      return acc;
-    },
-    ['M', ...stroke[0], 'Q']
-  );
+  if (stroke.length === 1) {
+    const [x, y] = stroke[0];
+    return `M ${x.toFixed(2)},${y.toFixed(2)} Z`;
+  }
+
+  if (stroke.length === 2) {
+    const [[x0, y0], [x1, y1]] = stroke;
+    return `M ${x0.toFixed(2)},${y0.toFixed(2)} L ${x1.toFixed(2)},${y1.toFixed(2)} Z`;
+  }
+
+  // Usar curvas Bézier cúbicas para máxima suavidade
+  const d: string[] = [`M ${stroke[0][0].toFixed(2)},${stroke[0][1].toFixed(2)}`];
+
+  for (let i = 0; i < stroke.length - 1; i++) {
+    const p0 = stroke[Math.max(0, i - 1)];
+    const p1 = stroke[i];
+    const p2 = stroke[i + 1];
+    const p3 = stroke[Math.min(stroke.length - 1, i + 2)];
+
+    // Calcular pontos de controle para curva Bézier cúbica
+    // Tensão de 0.5 para curvas suaves mas responsivas
+    const tension = 0.5;
+
+    // Ponto de controle 1: baseado na tangente em p1
+    const cp1x = p1[0] + (p2[0] - p0[0]) * tension / 6;
+    const cp1y = p1[1] + (p2[1] - p0[1]) * tension / 6;
+
+    // Ponto de controle 2: baseado na tangente em p2
+    const cp2x = p2[0] - (p3[0] - p1[0]) * tension / 6;
+    const cp2y = p2[1] - (p3[1] - p1[1]) * tension / 6;
+
+    d.push(`C ${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`);
+  }
 
   d.push('Z');
   return d.join(' ');
@@ -229,37 +256,55 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
     const isIOS = isIOSDevice();
 
     // Opções do perfect-freehand otimizadas para qualidade Procreate
-    // Valores mais altos para touch devices para compensar imprecisão do dedo/stylus
+    // Valores MUITO mais altos para touch/iPad para eliminar traços "quadrados"
     const getStrokeOptions = useCallback((isPreview = false) => {
       const baseSize = tool === 'eraser' ? brushSize * 3 : brushSize;
 
       // Parâmetros estilo Procreate otimizados por dispositivo:
-      // - Touch/iPad: smoothing e streamline mais altos para compensar tremores
+      // - iOS (iPad): valores MÁXIMOS para curvas perfeitas
+      // - Touch genérico: valores altos
       // - Mouse/Desktop: valores moderados para maior precisão
-      const smoothingValue = isTouch ? 0.85 : 0.7;
-      const streamlineValue = isTouch ? 0.8 : 0.65;
-      const thinningValue = tool === 'eraser' ? 0 : (isTouch ? 0.35 : 0.4);
+      let smoothingValue: number;
+      let streamlineValue: number;
+      let thinningValue: number;
+
+      if (isIOS) {
+        // iPad/iPhone: configuração máxima para eliminar pixelização
+        smoothingValue = 0.95;   // Quase máximo
+        streamlineValue = 0.9;   // Muito alto
+        thinningValue = tool === 'eraser' ? 0 : 0.3;
+      } else if (isTouch) {
+        // Outros tablets/touch
+        smoothingValue = 0.88;
+        streamlineValue = 0.82;
+        thinningValue = tool === 'eraser' ? 0 : 0.35;
+      } else {
+        // Desktop/mouse
+        smoothingValue = 0.7;
+        streamlineValue = 0.65;
+        thinningValue = tool === 'eraser' ? 0 : 0.4;
+      }
 
       return {
         size: baseSize,
         thinning: thinningValue,
-        smoothing: smoothingValue,    // Touch: 0.85, Desktop: 0.7
-        streamline: streamlineValue,  // Touch: 0.8, Desktop: 0.65
-        easing: smoothEasing, // Easing suave ao invés de linear
+        smoothing: smoothingValue,
+        streamline: streamlineValue,
+        easing: smoothEasing,
         start: {
           cap: true,
-          taper: tool === 'eraser' ? 0 : baseSize * 2, // Tapering natural no início
+          taper: tool === 'eraser' ? 0 : baseSize * 2,
           easing: smoothEasing,
         },
         end: {
           cap: true,
-          taper: tool === 'eraser' ? 0 : (isPreview ? 0 : baseSize * 3), // Tapering maior no fim
+          taper: tool === 'eraser' ? 0 : (isPreview ? 0 : baseSize * 3),
           easing: smoothEasing,
         },
-        simulatePressure: false, // Vamos usar nossa própria simulação de pressão
+        simulatePressure: false,
         last: !isPreview,
       };
-    }, [brushSize, tool, isTouch]);
+    }, [brushSize, tool, isTouch, isIOS]);
 
     // Calcular escala quando o container muda de tamanho
     useEffect(() => {
@@ -431,8 +476,27 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         ctx.lineCap = 'round';
         ctx.stroke();
       } else if (currentPoints.length >= 2) {
-        // Para preview, não aplicamos interpolação pesada para manter responsividade
-        const inputPoints = currentPoints.map(p => [p.x, p.y, p.pressure]);
+        // IMPORTANTE: Aplicar interpolação Catmull-Rom DURANTE o preview para traços suaves
+        // Esta é a técnica que o Procreate usa para eliminar o efeito "quadrado/pixelado"
+        let pointsToRender = currentPoints;
+
+        // Aplicar interpolação assim que tivermos pontos suficientes
+        // Mínimo reduzido para 3 pontos para começar suavização mais cedo
+        if (currentPoints.length >= 3) {
+          // Interpolação em tempo real para dispositivos touch
+          // iPad/iOS: mais segmentos para curvas perfeitas
+          // Outros touch: segmentos moderados
+          // Desktop: menos processamento
+          const segments = isIOS ? 5 : (isTouch ? 4 : 2);
+          const smoothing = isIOS ? 5 : (isTouch ? 4 : 3);
+
+          pointsToRender = processPointsForProcreateQuality(currentPoints, {
+            interpolationSegments: segments,
+            pressureSmoothing: smoothing,
+          });
+        }
+
+        const inputPoints = pointsToRender.map(p => [p.x, p.y, p.pressure]);
         const options = getStrokeOptions(true); // isPreview = true (sem tapering final)
 
         const outlinePoints = getStroke(inputPoints, options);
@@ -453,7 +517,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
           ctx.globalCompositeOperation = 'source-over';
         }
       }
-    }, [strokes, currentPoints, brushColor, tool, stencilOpacity, getStrokeOptions, lineStart, lineEnd, brushSize]);
+    }, [strokes, currentPoints, brushColor, tool, stencilOpacity, getStrokeOptions, lineStart, lineEnd, brushSize, isTouch, isIOS]);
 
     // Re-renderizar quando strokes ou currentPoints mudam
     useEffect(() => {
@@ -683,12 +747,12 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       // Finalizar stroke se tiver pontos suficientes
       if (currentPoints.length >= 2) {
         // Aplicar processamento completo estilo Procreate:
-        // 1. Suavização de pressão
-        // 2. Interpolação Catmull-Rom
-        // Para touch devices: mais interpolação e suavização para eliminar pixelização
+        // 1. Suavização de pressão (elimina variações bruscas)
+        // 2. Interpolação Catmull-Rom (cria curvas suaves entre pontos)
+        // Para touch devices: MUITO mais interpolação para eliminar completamente a pixelização
         const processedPoints = processPointsForProcreateQuality(currentPoints, {
-          interpolationSegments: isTouch ? 4 : 2, // Mais segmentos para touch = traços mais suaves
-          pressureSmoothing: isTouch ? 5 : 3,     // Mais suavização de pressão para touch
+          interpolationSegments: isTouch ? 8 : 4, // AUMENTADO: 8 segmentos para touch = curvas ultra-suaves
+          pressureSmoothing: isTouch ? 7 : 5,     // AUMENTADO: mais suavização de pressão
         });
 
         const inputPoints = processedPoints.map(p => [p.x, p.y, p.pressure]);

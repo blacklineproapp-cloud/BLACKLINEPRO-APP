@@ -7,9 +7,10 @@ import type { CreditCardData, CreditCardHolderInfo } from '@/lib/asaas';
 interface CreditCardFormProps {
   onDataChange: (cardData: CreditCardData, holderInfo: CreditCardHolderInfo) => void;
   cpfCnpj: string;
+  userEmail?: string; // Email do usuário logado (opcional, pode preencher manualmente)
 }
 
-export default function CreditCardForm({ onDataChange, cpfCnpj }: CreditCardFormProps) {
+export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }: CreditCardFormProps) {
   const [cardNumber, setCardNumber] = useState('');
   const [holderName, setHolderName] = useState('');
   const [expiryMonth, setExpiryMonth] = useState('');
@@ -17,6 +18,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj }: CreditCardForm
   const [ccv, setCcv] = useState('');
   const [phone, setPhone] = useState('');
   const [postalCode, setPostalCode] = useState('');
+  const [email, setEmail] = useState(userEmail);
 
   // Detectar bandeira do cartão
   const detectCardBrand = (number: string): string => {
@@ -61,43 +63,49 @@ export default function CreditCardForm({ onDataChange, cpfCnpj }: CreditCardForm
   const handleCardNumberChange = (e: ChangeEvent<HTMLInputElement>) => {
     const masked = maskCardNumber(e.target.value);
     setCardNumber(masked);
-    updateParent(masked, holderName, expiryMonth, expiryYear, ccv, phone, postalCode);
+    updateParent(masked, holderName, expiryMonth, expiryYear, ccv, phone, postalCode, email);
   };
 
   const handleExpiryMonthChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').substring(0, 2);
     setExpiryMonth(value);
-    updateParent(cardNumber, holderName, value, expiryYear, ccv, phone, postalCode);
+    updateParent(cardNumber, holderName, value, expiryYear, ccv, phone, postalCode, email);
   };
 
   const handleExpiryYearChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').substring(0, 4);
     setExpiryYear(value);
-    updateParent(cardNumber, holderName, expiryMonth, value, ccv, phone, postalCode);
+    updateParent(cardNumber, holderName, expiryMonth, value, ccv, phone, postalCode, email);
   };
 
   const handleCcvChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '').substring(0, 4);
     setCcv(value);
-    updateParent(cardNumber, holderName, expiryMonth, expiryYear, value, phone, postalCode);
+    updateParent(cardNumber, holderName, expiryMonth, expiryYear, value, phone, postalCode, email);
   };
 
   const handlePhoneChange = (e: ChangeEvent<HTMLInputElement>) => {
     const masked = maskPhone(e.target.value);
     setPhone(masked);
-    updateParent(cardNumber, holderName, expiryMonth, expiryYear, ccv, masked, postalCode);
+    updateParent(cardNumber, holderName, expiryMonth, expiryYear, ccv, masked, postalCode, email);
   };
 
   const handlePostalCodeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const masked = maskPostalCode(e.target.value);
     setPostalCode(masked);
-    updateParent(cardNumber, holderName, expiryMonth, expiryYear, ccv, phone, masked);
+    updateParent(cardNumber, holderName, expiryMonth, expiryYear, ccv, phone, masked, email);
   };
 
   const handleHolderNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toUpperCase();
     setHolderName(value);
-    updateParent(cardNumber, value, expiryMonth, expiryYear, ccv, phone, postalCode);
+    updateParent(cardNumber, value, expiryMonth, expiryYear, ccv, phone, postalCode, email);
+  };
+
+  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toLowerCase();
+    setEmail(value);
+    updateParent(cardNumber, holderName, expiryMonth, expiryYear, ccv, phone, postalCode, value);
   };
 
   const updateParent = (
@@ -107,7 +115,8 @@ export default function CreditCardForm({ onDataChange, cpfCnpj }: CreditCardForm
     year: string,
     cvv: string,
     tel: string,
-    cep: string
+    cep: string,
+    holderEmail: string
   ) => {
     const cardData: CreditCardData = {
       holderName: name,
@@ -119,10 +128,10 @@ export default function CreditCardForm({ onDataChange, cpfCnpj }: CreditCardForm
 
     const holderInfo: CreditCardHolderInfo = {
       name,
-      email: '', // Será preenchido pelo modal
+      email: holderEmail, // Email do titular do cartão
       cpfCnpj: cpfCnpj.replace(/\D/g, ''),
       postalCode: cep.replace(/\D/g, ''),
-      addressNumber: '0', // Opcional
+      addressNumber: 'S/N', // S/N = Sem Número (padrão brasileiro quando não há número)
       phone: tel.replace(/\D/g, ''),
     };
 
@@ -165,6 +174,20 @@ export default function CreditCardForm({ onDataChange, cpfCnpj }: CreditCardForm
           value={holderName}
           onChange={handleHolderNameChange}
           placeholder="NOME COMO ESTÁ NO CARTÃO"
+          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+        />
+      </div>
+
+      {/* Email do Titular */}
+      <div>
+        <label className="block text-sm font-medium text-zinc-300 mb-2">
+          Email do Titular <span className="text-red-400">*</span>
+        </label>
+        <input
+          type="email"
+          value={email}
+          onChange={handleEmailChange}
+          placeholder="email@exemplo.com"
           className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
         />
       </div>
