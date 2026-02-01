@@ -240,38 +240,57 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
     // Stroke Stabilizer para suavização tipo Procreate
     const stabilizerRef = useRef(new StrokeStabilizer());
 
-    // Atualizar fator de estabilização quando prop muda
-    useEffect(() => {
-      // Converter de 0-100 para 0-0.6 (máximo recomendado para responsividade)
-      const factor = (stabilization / 100) * 0.6;
-      stabilizerRef.current.setSmoothing(factor);
-    }, [stabilization]);
-
     // Velocidade do último movimento (para dynamic thinning)
     const lastVelocityRef = useRef(0);
     const lastPointTimeRef = useRef(0);
 
-    // Detectar tipo de dispositivo uma vez
+    // Detectar tipo de dispositivo uma vez (para configuração inicial)
     const isTouch = isTouchDevice();
     const isIOS = isIOSDevice();
 
+    // Estado para detectar se está usando stylus (Apple Pencil)
+    // Isso é atualizado dinamicamente durante o desenho
+    const [isUsingStylus, setIsUsingStylus] = useState(false);
+
+    // Atualizar fator de estabilização quando prop ou tipo de input muda
+    useEffect(() => {
+      // Base: converter de 0-100 para 0-0.6
+      let factor = (stabilization / 100) * 0.6;
+
+      // Apple Pencil/Stylus: aumentar suavização em 30%
+      // Isso compensa a alta taxa de amostragem do Pencil
+      if (isUsingStylus) {
+        factor = Math.min(0.75, factor * 1.3);
+      }
+
+      stabilizerRef.current.setSmoothing(factor);
+    }, [stabilization, isUsingStylus]);
+
     // Opções do perfect-freehand otimizadas para qualidade Procreate
-    // Valores MUITO mais altos para touch/iPad para eliminar traços "quadrados"
+    // Valores MUITO mais altos para touch/iPad/Stylus para eliminar traços "quadrados"
     const getStrokeOptions = useCallback((isPreview = false) => {
       const baseSize = tool === 'eraser' ? brushSize * 3 : brushSize;
 
-      // Parâmetros estilo Procreate otimizados por dispositivo:
-      // - iOS (iPad): valores MÁXIMOS para curvas perfeitas
+      // Parâmetros estilo Procreate otimizados por tipo de input:
+      // - Apple Pencil/Stylus: valores MÁXIMOS (alta taxa de amostragem = precisa mais suavização)
+      // - iOS touch (dedo): valores muito altos
       // - Touch genérico: valores altos
       // - Mouse/Desktop: valores moderados para maior precisão
       let smoothingValue: number;
       let streamlineValue: number;
       let thinningValue: number;
 
-      if (isIOS) {
-        // iPad/iPhone: configuração máxima para eliminar pixelização
-        smoothingValue = 0.95;   // Quase máximo
-        streamlineValue = 0.9;   // Muito alto
+      if (isUsingStylus) {
+        // Apple Pencil/Stylus: MÁXIMA suavização
+        // A alta taxa de amostragem (240Hz) do Pencil cria muitos pontos
+        // que precisam de muita suavização para parecerem curvas naturais
+        smoothingValue = 0.99;   // Máximo
+        streamlineValue = 0.95;  // Máximo
+        thinningValue = tool === 'eraser' ? 0 : 0.25;
+      } else if (isIOS) {
+        // iPad/iPhone touch (dedo): configuração muito alta
+        smoothingValue = 0.95;
+        streamlineValue = 0.9;
         thinningValue = tool === 'eraser' ? 0 : 0.3;
       } else if (isTouch) {
         // Outros tablets/touch
@@ -304,7 +323,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         simulatePressure: false,
         last: !isPreview,
       };
-    }, [brushSize, tool, isTouch, isIOS]);
+    }, [brushSize, tool, isTouch, isIOS, isUsingStylus]);
 
     // Calcular escala quando o container muda de tamanho
     useEffect(() => {
@@ -483,12 +502,28 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         // Aplicar interpolação assim que tivermos pontos suficientes
         // Mínimo reduzido para 3 pontos para começar suavização mais cedo
         if (currentPoints.length >= 3) {
-          // Interpolação em tempo real para dispositivos touch
-          // iPad/iOS: mais segmentos para curvas perfeitas
-          // Outros touch: segmentos moderados
-          // Desktop: menos processamento
-          const segments = isIOS ? 5 : (isTouch ? 4 : 2);
-          const smoothing = isIOS ? 5 : (isTouch ? 4 : 3);
+          // Interpolação em tempo real
+          // Apple Pencil/Stylus: MÁXIMA suavização (240Hz = muitos pontos = precisa mais interpolação)
+          // iPad/iOS touch: alta suavização
+          // Outros touch: suavização moderada
+          // Desktop/mouse: menos processamento
+          let segments: number;
+          let smoothing: number;
+
+          if (isUsingStylus) {
+            // Apple Pencil precisa de MUITA suavização devido à alta taxa de amostragem
+            segments = 6;
+            smoothing = 6;
+          } else if (isIOS) {
+            segments = 5;
+            smoothing = 5;
+          } else if (isTouch) {
+            segments = 4;
+            smoothing = 4;
+          } else {
+            segments = 2;
+            smoothing = 3;
+          }
 
           pointsToRender = processPointsForProcreateQuality(currentPoints, {
             interpolationSegments: segments,
@@ -517,7 +552,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
           ctx.globalCompositeOperation = 'source-over';
         }
       }
-    }, [strokes, currentPoints, brushColor, tool, stencilOpacity, getStrokeOptions, lineStart, lineEnd, brushSize, isTouch, isIOS]);
+    }, [strokes, currentPoints, brushColor, tool, stencilOpacity, getStrokeOptions, lineStart, lineEnd, brushSize, isTouch, isIOS, isUsingStylus]);
 
     // Re-renderizar quando strokes ou currentPoints mudam
     useEffect(() => {
@@ -581,6 +616,11 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       e.preventDefault();
       e.stopPropagation();
 
+      // Detectar se está usando stylus (Apple Pencil, S-Pen, etc)
+      // pointerType: 'pen' = stylus, 'touch' = dedo, 'mouse' = mouse
+      const usingStylus = e.pointerType === 'pen';
+      setIsUsingStylus(usingStylus);
+
       // Capturar pointer para receber eventos mesmo fora do elemento
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
 
@@ -628,6 +668,11 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         const rect = canvas.getBoundingClientRect();
         const newPoints: Point[] = [];
 
+        // Para Apple Pencil: distância mínima entre pontos para evitar amontoamento
+        // A alta taxa de amostragem (240Hz) pode criar pontos muito próximos
+        // que resultam em traços "serrilhados" ou "quadrados"
+        const minDistance = isUsingStylus ? 2 : 1; // Pixels mínimos entre pontos
+
         coalescedEvents.forEach((evt: PointerEvent) => {
           // Para eventos coalesced, precisamos calcular offset manualmente
           const offsetX = evt.clientX - rect.left;
@@ -635,6 +680,22 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
 
           let x = offsetX * scaleRef.current.x;
           let y = offsetY * scaleRef.current.y;
+
+          // Verificar distância mínima do último ponto
+          const lastPoint = newPoints.length > 0
+            ? newPoints[newPoints.length - 1]
+            : currentPoints[currentPoints.length - 1];
+
+          if (lastPoint) {
+            const dx = x - lastPoint.x;
+            const dy = y - lastPoint.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Pular pontos muito próximos (especialmente para stylus)
+            if (distance < minDistance) {
+              return; // Skip this point
+            }
+          }
 
           // Aplicar stabilizer
           const stabilized = stabilizerRef.current.stabilize(x, y);
@@ -682,7 +743,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         const point = getCanvasPoint(e);
         setCurrentPoints(prev => [...prev, point]);
       }
-    }, [isDrawing, disabled, getCanvasPoint, currentPoints, tool]);
+    }, [isDrawing, disabled, getCanvasPoint, currentPoints, tool, isUsingStylus]);
 
     const handlePointerUp = useCallback((e: React.PointerEvent) => {
       if (!isDrawing) return;
@@ -749,10 +810,27 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         // Aplicar processamento completo estilo Procreate:
         // 1. Suavização de pressão (elimina variações bruscas)
         // 2. Interpolação Catmull-Rom (cria curvas suaves entre pontos)
-        // Para touch devices: MUITO mais interpolação para eliminar completamente a pixelização
+        // Apple Pencil/Stylus precisa de MÁXIMA interpolação devido à alta taxa de amostragem
+        let interpolationSegments: number;
+        let pressureSmoothing: number;
+
+        if (isUsingStylus) {
+          // Apple Pencil: máxima suavização
+          interpolationSegments = 12;  // Muitos segmentos para curvas perfeitas
+          pressureSmoothing = 9;       // Alta suavização de pressão
+        } else if (isIOS || isTouch) {
+          // Touch em geral
+          interpolationSegments = 8;
+          pressureSmoothing = 7;
+        } else {
+          // Desktop/mouse
+          interpolationSegments = 4;
+          pressureSmoothing = 5;
+        }
+
         const processedPoints = processPointsForProcreateQuality(currentPoints, {
-          interpolationSegments: isTouch ? 8 : 4, // AUMENTADO: 8 segmentos para touch = curvas ultra-suaves
-          pressureSmoothing: isTouch ? 7 : 5,     // AUMENTADO: mais suavização de pressão
+          interpolationSegments,
+          pressureSmoothing,
         });
 
         const inputPoints = processedPoints.map(p => [p.x, p.y, p.pressure]);
@@ -792,7 +870,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       stabilizerRef.current.reset();
       setIsDrawing(false);
       setCurrentPoints([]);
-    }, [isDrawing, currentPoints, strokes, tool, brushColor, brushSize, getStrokeOptions, onStrokeEnd, onStrokesChange, lineStart, lineEnd]);
+    }, [isDrawing, currentPoints, strokes, tool, brushColor, brushSize, getStrokeOptions, onStrokeEnd, onStrokesChange, lineStart, lineEnd, isUsingStylus, isIOS, isTouch]);
 
     const handlePointerLeave = useCallback((e: React.PointerEvent) => {
       if (isDrawing) {
