@@ -8,7 +8,7 @@ import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getOrganizationById, updateOrganization } from '@/lib/organizations';
 import { isOrganizationMember, isOrganizationOwner } from '@/lib/organizations/members';
-import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
+import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
 
 // =====================================================
 // GET /api/organizations/[id]

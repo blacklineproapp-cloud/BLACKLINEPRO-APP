@@ -14,7 +14,9 @@
 
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
+import crypto from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger, webhookLogger } from '@/lib/logger';
 import {
   AsaasCustomerService,
   AsaasSubscriptionService,
@@ -37,15 +39,20 @@ export async function POST(req: Request) {
     const webhookToken = process.env.ASAAS_WEBHOOK_TOKEN || ASAAS_CONFIG.webhookToken;
 
     if (!webhookToken) {
-      console.error('[Asaas Webhook] ASAAS_WEBHOOK_TOKEN não configurado');
+      logger.error('[Asaas Webhook] ASAAS_WEBHOOK_TOKEN não configurado');
       return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
     }
 
     const headersList = headers();
     const token = headersList.get('asaas-access-token');
 
-    if (!token || token !== webhookToken) {
-      console.error('[Asaas Webhook] Token inválido ou ausente');
+    // Usar comparação segura contra timing attacks
+    const isValidToken = token &&
+      token.length === webhookToken.length &&
+      crypto.timingSafeEqual(Buffer.from(token), Buffer.from(webhookToken));
+
+    if (!isValidToken) {
+      logger.error('[Asaas Webhook] Token inválido ou ausente');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -53,11 +60,11 @@ export async function POST(req: Request) {
     const payload: AsaasWebhookPayload = await req.json();
     const { event, payment, subscription } = payload;
 
-    console.log(`[Asaas Webhook] Evento recebido: ${event}`);
-
     // 3. Verificar idempotência
     // ID único sem timestamp para garantir idempotência real
     const eventId = `asaas_${event}_${payment?.id || subscription?.id}`;
+
+    webhookLogger.received(event, eventId);
 
     const { data: existingEvent } = await supabaseAdmin
       .from('webhook_events')
@@ -66,7 +73,7 @@ export async function POST(req: Request) {
       .single();
 
     if (existingEvent?.status === 'completed') {
-      console.log(`[Asaas Webhook] Evento já processado: ${eventId}`);
+      webhookLogger.duplicate(event, eventId);
       return NextResponse.json({ message: 'Event already processed' });
     }
 
@@ -193,11 +200,11 @@ export async function POST(req: Request) {
         })
         .eq('event_id', eventId);
 
-      console.log(`[Asaas Webhook] ✅ Evento processado: ${event}`);
+      webhookLogger.processed(event, eventId);
       return NextResponse.json({ message: 'OK' });
 
     } catch (processError: any) {
-      console.error(`[Asaas Webhook] ❌ Erro ao processar ${event}:`, processError);
+      webhookLogger.failed(event, eventId, processError);
 
       // Marcar como falha
       await supabaseAdmin
@@ -216,7 +223,7 @@ export async function POST(req: Request) {
     }
 
   } catch (error: any) {
-    console.error('[Asaas Webhook] Erro geral:', error);
+    logger.error('[Asaas Webhook] Erro geral', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

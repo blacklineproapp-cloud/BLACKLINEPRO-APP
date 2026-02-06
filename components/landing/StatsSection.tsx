@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Users, Image as ImageIcon, TrendingUp } from 'lucide-react';
 
 interface StatsData {
@@ -49,6 +50,8 @@ function AnimatedCounter({ end }: { end: number }) {
 }
 
 export default function StatsSection({ stats }: { stats: StatsData }) {
+  const t = useTranslations('landing.stats');
+  
   return (
     <section className="py-20 bg-zinc-950 border-y border-zinc-800">
       <div className="max-w-7xl mx-auto px-4">
@@ -61,7 +64,7 @@ export default function StatsSection({ stats }: { stats: StatsData }) {
             <div className="text-5xl font-bold text-white mb-2">
               <AnimatedCounter end={stats.totalUsers} />+
             </div>
-            <p className="text-zinc-400">Usuários Cadastrados</p>
+            <p className="text-zinc-400">{t('users')}</p>
           </div>
 
           {/* Card 2: Projetos */}
@@ -72,7 +75,7 @@ export default function StatsSection({ stats }: { stats: StatsData }) {
             <div className="text-5xl font-bold text-white mb-2">
               <AnimatedCounter end={stats.totalProjects} />+
             </div>
-            <p className="text-zinc-400">Stencils Criados</p>
+            <p className="text-zinc-400">{t('projects')}</p>
           </div>
 
           {/* Card 3: Conversão */}
@@ -83,7 +86,7 @@ export default function StatsSection({ stats }: { stats: StatsData }) {
             <div className="text-5xl font-bold text-white mb-2">
               <AnimatedCounter end={100} />%
             </div>
-            <p className="text-zinc-400">Taxa de Satisfação</p>
+            <p className="text-zinc-400">{t('satisfaction')}</p>
           </div>
         </div>
       </div>

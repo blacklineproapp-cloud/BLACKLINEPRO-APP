@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { X, Loader2, Crown, Zap, Sparkles, LogIn, CreditCard as CreditCardIcon, QrCode, FileText } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useAuth, useUser, SignInButton } from '@clerk/nextjs';
 import { PLAN_PRICING, BILLING_CYCLES, formatPrice, getMonthlyEquivalent } from '@/lib/billing/plans';
-import type { BillingCycle } from '@/lib/stripe/types';
+import type { BillingCycle } from '@/lib/billing/types';
 import type { CreditCardData, CreditCardHolderInfo } from '@/lib/asaas';
 
 // Componentes Asaas
@@ -24,7 +25,11 @@ interface AsaasCheckoutModalProps {
 type PaymentMethod = 'pix' | 'boleto' | 'credit_card';
 
 export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, onClose }: AsaasCheckoutModalProps) {
+  const t = useTranslations('checkout');
+  const tPricing = useTranslations('PricingPage');
   const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
   const { isSignedIn, isLoaded } = useAuth();
   const { user } = useUser();
 
@@ -47,34 +52,34 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
 
   const planDetails = {
     legacy: {
-      name: 'Legacy',
+      name: tPricing('plans.legacy.name'),
       icon: Sparkles,
       color: 'orange',
-      limit: '100 gerações/mês',
+      limit: tPricing('plans.legacy.limit', { count: 100 }),
     },
     starter: {
-      name: 'Starter',
+      name: tPricing('plans.starter.name'),
       icon: Zap,
       color: 'emerald',
-      limit: '95 gerações/mês',
+      limit: tPricing('plans.starter.limit', { count: 95 }),
     },
     pro: {
-      name: 'Pro',
+      name: tPricing('plans.pro.name'),
       icon: Crown,
       color: 'purple',
-      limit: '210 gerações/mês',
+      limit: tPricing('plans.pro.limit', { count: 210 }),
     },
     studio: {
-      name: 'Studio',
+      name: tPricing('plans.studio.name'),
       icon: Sparkles,
       color: 'amber',
-      limit: '680 gerações/mês',
+      limit: tPricing('plans.studio.limit', { count: 680 }),
     },
     enterprise: {
-      name: 'Enterprise',
+      name: tPricing('plans.enterprise.name'),
       icon: Sparkles,
       color: 'amber',
-      limit: '1.400 gerações/mês',
+      limit: tPricing('plans.enterprise.limit', { count: 1400 }),
     },
   };
 
@@ -145,7 +150,7 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
 
     } catch (err: any) {
       console.error('[Asaas Checkout] Erro:', err);
-      setError(err.message || 'Erro ao processar pagamento');
+      setError(err.message || t('error'));
     } finally {
       setIsLoading(false);
     }
@@ -207,10 +212,10 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
             <div>
               <h2 className="text-lg font-bold text-white">{details.name}</h2>
               <p className="text-xs text-zinc-400">
-                {formatPrice(monthlyEquivalent)}/mês
+                {formatPrice(monthlyEquivalent, locale)}/{tPricing('perMonth')}
                 {cycle !== 'monthly' && (
                   <span className="text-emerald-400 ml-1">
-                    ({cycleInfo.label}: {formatPrice(totalPrice)})
+                    ({tPricing(`cycles.${cycle}`)}: {formatPrice(totalPrice, locale)})
                   </span>
                 )}
                 {' • '}{details.limit}
@@ -233,9 +238,9 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
               <div className="w-16 h-16 bg-emerald-600/10 border border-emerald-500/30 rounded-full flex items-center justify-center mb-4">
                 <LogIn className="text-emerald-500" size={28} />
               </div>
-              <h3 className="text-white font-bold text-lg mb-2">Faça login para continuar</h3>
+              <h3 className="text-white font-bold text-lg mb-2">{t('loginRequired.title')}</h3>
               <p className="text-zinc-400 text-sm text-center mb-6 max-w-xs">
-                Para assinar o plano <strong className="text-white">{details.name}</strong>, você precisa criar uma conta ou fazer login.
+                {t('loginRequired.desc', { plan: details.name })}
               </p>
               <SignInButton mode="modal">
                 <button className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg ${
@@ -243,7 +248,7 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                   details.color === 'purple' ? 'bg-purple-600 hover:bg-purple-500' :
                   'bg-amber-600 hover:bg-amber-500'
                 }`}>
-                  Entrar ou Criar Conta
+                  {t('loginRequired.button')}
                 </button>
               </SignInButton>
             </div>
@@ -267,8 +272,8 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                   />
                 </svg>
               </div>
-              <p className="text-white font-bold text-lg mb-1">Plano Ativado!</p>
-              <p className="text-zinc-400 text-sm">Redirecionando...</p>
+               <p className="text-white font-bold text-lg mb-1">{t('success.title')}</p>
+              <p className="text-zinc-400 text-sm">{t('success.redirecting')}</p>
             </div>
           )}
 
@@ -278,7 +283,7 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
               {/* Seleção de Método */}
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-3">
-                  Método de Pagamento
+                  {t('paymentMethod.label')}
                 </label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -290,7 +295,7 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                     }`}
                   >
                     <QrCode className={paymentMethod === 'pix' ? 'text-emerald-500' : 'text-zinc-400'} size={24} />
-                    <p className={`text-xs mt-1 ${paymentMethod === 'pix' ? 'text-emerald-400' : 'text-zinc-400'}`}>PIX</p>
+                    <p className={`text-xs mt-1 ${paymentMethod === 'pix' ? 'text-emerald-400' : 'text-zinc-400'}`}>{t('paymentMethod.pix')}</p>
                   </button>
                   
                   <button
@@ -302,7 +307,7 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                     }`}
                   >
                     <FileText className={paymentMethod === 'boleto' ? 'text-amber-500' : 'text-zinc-400'} size={24} />
-                    <p className={`text-xs mt-1 ${paymentMethod === 'boleto' ? 'text-amber-400' : 'text-zinc-400'}`}>Boleto</p>
+                    <p className={`text-xs mt-1 ${paymentMethod === 'boleto' ? 'text-amber-400' : 'text-zinc-400'}`}>{t('paymentMethod.boleto')}</p>
                   </button>
                   
                   <button
@@ -314,7 +319,7 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                     }`}
                   >
                     <CreditCardIcon className={paymentMethod === 'credit_card' ? 'text-purple-500' : 'text-zinc-400'} size={24} />
-                    <p className={`text-xs mt-1 ${paymentMethod === 'credit_card' ? 'text-purple-400' : 'text-zinc-400'}`}>Cartão</p>
+                    <p className={`text-xs mt-1 ${paymentMethod === 'credit_card' ? 'text-purple-400' : 'text-zinc-400'}`}>{t('paymentMethod.card')}</p>
                   </button>
                 </div>
               </div>
@@ -329,7 +334,7 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
               {/* Telefone */}
               <div>
                 <label className="block text-sm font-medium text-zinc-300 mb-2">
-                  Celular <span className="text-zinc-500">(opcional)</span>
+                  {t('phone.label')} <span className="text-zinc-500">{t('phone.optional')}</span>
                 </label>
                 <input
                   type="tel"
@@ -343,12 +348,12 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                     }
                     setPhone(value);
                   }}
-                  placeholder="(11) 99999-9999"
+                  placeholder={t('phone.placeholder')}
                   className="w-full bg-zinc-800/50 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition-colors"
                   maxLength={15}
                 />
                 <p className="text-xs text-zinc-500 mt-1">
-                  Para receber notificações do pagamento
+                  {t('phone.desc')}
                 </p>
               </div>
 
@@ -385,10 +390,10 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="animate-spin" size={20} />
-                    Processando...
+                    {t('processing')}
                   </span>
                 ) : (
-                  `Pagar ${formatPrice(totalPrice)}`
+                  t('payAmount', { amount: formatPrice(totalPrice, locale) })
                 )}
               </button>
             </div>

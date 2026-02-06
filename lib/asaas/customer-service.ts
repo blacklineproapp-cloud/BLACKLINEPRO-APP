@@ -220,14 +220,28 @@ export class AsaasCustomerService {
 
   /**
    * Busca cliente do banco por asaas_customer_id
+   * Verifica primeiro na tabela asaas_customers (nova migração)
+   * Depois tenta customers (legado)
    */
   static async getDbCustomerByAsaasId(asaasCustomerId: string): Promise<any | null> {
-    const { data } = await supabaseAdmin
+    // 1. Tentar na tabela asaas_customers (nova migração)
+    const { data: asaasCustomer } = await supabaseAdmin
+      .from('asaas_customers')
+      .select('*')
+      .eq('asaas_customer_id', asaasCustomerId)
+      .single();
+
+    if (asaasCustomer) {
+      return asaasCustomer;
+    }
+
+    // 2. Fallback: tentar na tabela customers (legado)
+    const { data: legacyCustomer } = await supabaseAdmin
       .from('customers')
       .select('*')
       .eq('asaas_customer_id', asaasCustomerId)
       .single();
 
-    return data;
+    return legacyCustomer;
   }
 }

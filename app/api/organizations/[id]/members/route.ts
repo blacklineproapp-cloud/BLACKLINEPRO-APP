@@ -12,7 +12,7 @@ import {
   removeMember,
 } from '@/lib/organizations/members';
 import { getOrganizationById } from '@/lib/organizations';
-import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
+import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
 
 // =====================================================
 // GET /api/organizations/[id]/members

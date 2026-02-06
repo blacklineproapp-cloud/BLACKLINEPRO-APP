@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Info, AlertTriangle, CheckCircle2, XCircle, Zap } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface QualityIndicatorProps {
   imageBase64: string | null;
@@ -21,6 +22,7 @@ interface ImageInfo {
 export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOptimizeClick }: QualityIndicatorProps) {
   const [imageInfo, setImageInfo] = useState<ImageInfo | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const t = useTranslations('editor.quality');
 
   useEffect(() => {
     if (!imageBase64) {
@@ -47,13 +49,13 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
         quality = 'excellent';
       } else if (estimatedDpi >= 200) {
         quality = 'good';
-        warnings.push('DPI abaixo do ideal. Recomendado: 300 DPI');
+        warnings.push(t('warnings.belowIdeal'));
       } else if (estimatedDpi >= 150) {
         quality = 'acceptable';
-        warnings.push('DPI baixo. Pode ter perda de qualidade na impressão');
+        warnings.push(t('warnings.low'));
       } else {
         quality = 'poor';
-        warnings.push('DPI muito baixo! Qualidade insuficiente para impressão profissional');
+        warnings.push(t('warnings.veryLow'));
       }
 
       setImageInfo({
@@ -66,7 +68,7 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
     };
 
     img.src = imageBase64;
-  }, [imageBase64, widthCm, heightCm]);
+  }, [imageBase64, widthCm, heightCm, t]);
 
   if (!imageInfo) return null;
 
@@ -76,32 +78,32 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
       color: 'text-emerald-400',
       bg: 'bg-emerald-900/20',
       border: 'border-emerald-800',
-      label: 'Excelente',
-      description: 'Ideal para impressão profissional'
+      label: t('excellent.label'),
+      description: t('excellent.desc')
     },
     good: {
       icon: CheckCircle2,
       color: 'text-blue-400',
       bg: 'bg-blue-900/20',
       border: 'border-blue-800',
-      label: 'Boa',
-      description: 'Adequada para impressão'
+      label: t('good.label'),
+      description: t('good.desc')
     },
     acceptable: {
       icon: AlertTriangle,
       color: 'text-yellow-400',
       bg: 'bg-yellow-900/20',
       border: 'border-yellow-800',
-      label: 'Aceitável',
-      description: 'Qualidade mínima aceitável'
+      label: t('acceptable.label'),
+      description: t('acceptable.desc')
     },
     poor: {
       icon: XCircle,
       color: 'text-red-400',
       bg: 'bg-red-900/20',
       border: 'border-red-800',
-      label: 'Baixa',
-      description: 'Não recomendado para impressão'
+      label: t('poor.label'),
+      description: t('poor.desc')
     }
   };
 
@@ -117,7 +119,7 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
       >
         <div className="flex items-center gap-2">
           <Info size={12} className={config.color} />
-          <span className="text-white text-xs font-medium">Informações de Qualidade</span>
+          <span className="text-white text-xs font-medium">{t('title')}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className={`text-[10px] font-medium ${config.color}`}>
@@ -141,7 +143,7 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
           <div className="grid grid-cols-2 gap-2 mt-2">
             {/* Resolução */}
             <div className="bg-zinc-900/50 rounded p-1.5">
-              <p className="text-[9px] text-zinc-500 mb-0.5">Resolução</p>
+              <p className="text-[9px] text-zinc-500 mb-0.5">{t('resolution')}</p>
               <p className="text-white text-xs font-mono">
                 {imageInfo.widthPx} × {imageInfo.heightPx}px
               </p>
@@ -149,7 +151,7 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
 
             {/* DPI */}
             <div className="bg-zinc-900/50 rounded p-1.5">
-              <p className="text-[9px] text-zinc-500 mb-0.5">DPI Estimado</p>
+              <p className="text-[9px] text-zinc-500 mb-0.5">{t('estimatedDpi')}</p>
               <p className={`text-xs font-mono font-bold ${config.color}`}>
                 {imageInfo.estimatedDpi} DPI
               </p>
@@ -157,7 +159,7 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
 
             {/* Tamanho físico */}
             <div className="bg-zinc-900/50 rounded p-1.5">
-              <p className="text-[9px] text-zinc-500 mb-0.5">Tamanho Físico</p>
+              <p className="text-[9px] text-zinc-500 mb-0.5">{t('physicalSize')}</p>
               <p className="text-white text-xs font-mono">
                 {widthCm} × {heightCm} cm
               </p>
@@ -165,7 +167,7 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
 
             {/* Status */}
             <div className="bg-zinc-900/50 rounded p-1.5">
-              <p className="text-[9px] text-zinc-500 mb-0.5">Status</p>
+              <p className="text-[9px] text-zinc-500 mb-0.5">{t('status')}</p>
               <div className="flex items-center gap-1">
                 <Icon size={12} className={config.color} />
                 <p className={`text-xs font-medium ${config.color}`}>
@@ -188,7 +190,7 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
               className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors"
             >
               <Zap size={14} />
-              Otimizar Qualidade
+              {t('optimize')}
             </button>
           )}
 
@@ -221,7 +223,7 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
           {imageInfo.quality === 'poor' && (
             <div className="bg-red-900/20 border border-red-800 rounded p-2">
               <p className="text-[9px] text-red-300 leading-relaxed">
-                <strong>Recomendação:</strong> Aumente a resolução da imagem ou reduza o tamanho físico desejado para melhorar a qualidade de impressão.
+                <strong>{t('recommendation')}:</strong> {t('recommendationText')}
               </p>
             </div>
           )}

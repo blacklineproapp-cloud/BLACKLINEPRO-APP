@@ -1,28 +1,28 @@
 /**
  * Funções de compressão de imagem no cliente
  * Para evitar erro 413 (payload muito grande)
- * 
+ *
  * ⚠️ IMPORTANTE: Stencils DEVEM permanecer em PNG (lossless)
  * JPEG corrompe imagens preto/branco com detalhes finos!
- * 
- * 🔧 LIMITE VERCEL: 4.5MB body máximo
- * Usamos 2MB para ter margem para headers e metadados
+ *
+ * 🔧 LIMITE: Next.js/Vercel tem limite de 4.5MB mas alguns planos têm 1MB
+ * Usamos 900KB para ter margem segura para headers e metadados
  */
 
 /**
  * Comprime uma imagem base64 para um tamanho máximo
- * 
+ *
  * ⚠️ CORREÇÃO CRÍTICA: Usa PNG com redução de dimensões
  * Nunca converte para JPEG (causa corrupção de stencils!)
- * 
+ *
  * @param base64 - Imagem em base64 (data:image/...;base64,...)
- * @param maxSizeKB - Tamanho máximo em KB (padrão: 2000 = 2MB)
+ * @param maxSizeKB - Tamanho máximo em KB (padrão: 900 = 900KB)
  * @param depth - Profundidade de recursão (interno, não usar)
  * @returns Promise<string> - Imagem comprimida em base64 (sempre PNG)
  */
 export async function compressImage(
   base64: string,
-  maxSizeKB: number = 2000,
+  maxSizeKB: number = 900,
   depth: number = 0
 ): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -131,11 +131,11 @@ export async function compressImage(
 export async function compressIfNeeded(base64: string): Promise<string> {
   const sizeKB = Math.round((base64.length * 0.75) / 1024);
 
-  // 🔧 Limite de 2MB para ter margem com o limite Vercel de 4.5MB
+  // 🔧 Limite de 900KB para garantir que passa em qualquer plano
   // (precisa margem para headers, metadados e múltiplas imagens na request)
-  if (sizeKB > 2000) {
-    console.log('[Compress] Imagem muito grande (' + sizeKB + 'KB), comprimindo para < 2MB...');
-    return await compressImage(base64, 2000);
+  if (sizeKB > 900) {
+    console.log('[Compress] Imagem muito grande (' + sizeKB + 'KB), comprimindo para < 900KB...');
+    return await compressImage(base64, 900);
   }
 
   return base64;

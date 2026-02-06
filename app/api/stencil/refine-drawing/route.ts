@@ -2,8 +2,40 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import sharp from 'sharp';
+import { retryGeminiAPI } from '@/lib/retry';
+
+// App Router: usar runtime nodejs para ter mais memória/limite
+export const runtime = 'nodejs';
+export const maxDuration = 60; // 60 segundos para processar IA
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+
+// Modelo otimizado para refinamento de desenhos
+// Temperature baixa para manter fidelidade, mas permitir suavização
+const refineModel = genAI.getGenerativeModel({
+  model: 'gemini-2.5-flash-image',
+  generationConfig: {
+    temperature: 0.2,  // Baixa criatividade - apenas suavizar
+    topP: 0.3,         // Conservador
+    topK: 10,          // Poucas opções
+  },
+});
+
+/**
+ * Garante que a imagem final seja monocromática (preto e branco)
+ */
+async function enforceMonochrome(base64DataUri: string): Promise<string> {
+  const cleanBase64 = base64DataUri.replace(/^data:image\/[a-z]+;base64,/, '');
+  const buffer = Buffer.from(cleanBase64, 'base64');
+
+  const monoBuffer = await sharp(buffer)
+    .greyscale()
+    .png({ compressionLevel: 6 })
+    .toBuffer();
+
+  return `data:image/png;base64,${monoBuffer.toString('base64')}`;
+}
 
 export async function POST(req: Request) {
   try {
@@ -37,7 +69,7 @@ export async function POST(req: Request) {
       }, { status: 403 });
     }
 
-    const { image, style, prompt } = await req.json();
+    const { image } = await req.json();
 
     if (!image) {
       return NextResponse.json({ error: 'Imagem não fornecida' }, { status: 400 });
@@ -46,67 +78,77 @@ export async function POST(req: Request) {
     // Extrair base64 da imagem
     const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
 
-    // Configurar modelo Gemini (mesmo modelo usado no resto do projeto)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash-image',
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 8192,
-      },
-    });
+    // Prompt otimizado para suavizar traços pixelados/quadrados
+    const refinementPrompt = `🎯 MISSION: SMOOTH AND REFINE HAND-DRAWN STROKES ON STENCIL
 
-    // Prompt para refinamento de desenho
-    const refinementPrompt = `You are a professional tattoo stencil artist.
+You are receiving a tattoo stencil image with HAND-DRAWN additions by the user.
+The user's strokes may appear PIXELATED, JAGGED, or SQUARE-EDGED.
 
-The user has added hand-drawn lines to a stencil image. Your task is to:
-1. Keep ALL the original stencil lines intact
-2. Refine and improve the USER'S HAND-DRAWN additions to match the professional style of the stencil
-3. Make the hand-drawn lines cleaner, smoother, and more consistent with the overall design
-4. Maintain the black and white stencil aesthetic
-5. DO NOT add new elements - only refine what the user drew
+YOUR TASK:
+1. IDENTIFY all hand-drawn strokes (they look rougher/more pixelated than the original stencil)
+2. SMOOTH these strokes using professional vector-like curves
+3. MAINTAIN the exact path and position of each stroke
+4. KEEP the stroke thickness consistent
+5. PRESERVE the original stencil lines EXACTLY as they are
 
-Style preference: ${style || 'standard'}
-Additional instructions: ${prompt || 'Refine the hand-drawn additions to look professional'}
+TECHNICAL REQUIREMENTS:
+- Convert pixelated/jagged edges to SMOOTH CURVES
+- Apply anti-aliasing to all hand-drawn lines
+- Make strokes look like they were drawn with a professional vector tool
+- Bezier-curve smoothing on all rough edges
+- NO new elements - only smooth existing strokes
 
-Output a clean, professional stencil image that seamlessly integrates the user's additions with the original design.`;
+OUTPUT:
+- Black lines on white background
+- PNG format
+- Same dimensions as input
+- Professional, clean stencil ready for tattoo transfer
 
-    // Chamar Gemini com a imagem
-    const result = await model.generateContent([
-      refinementPrompt,
-      {
-        inlineData: {
-          mimeType: 'image/png',
-          data: base64Data,
+⚠️ CRITICAL: Do NOT redraw or reinterpret the image. ONLY smooth the rough/pixelated strokes.
+The goal is to make hand-drawn additions look as professional as the original stencil.
+
+PROCESS THE IMAGE NOW:`;
+
+    console.log('[Refine Drawing] Iniciando refinamento com Gemini...');
+
+    // Usar retry logic igual ao generateStencilFromImage
+    const refinedImage = await retryGeminiAPI(async () => {
+      const result = await refineModel.generateContent([
+        refinementPrompt,
+        {
+          inlineData: {
+            mimeType: 'image/png',
+            data: base64Data,
+          },
         },
-      },
-    ]);
+      ]);
 
-    const response = result.response;
-    const text = response.text();
+      const response = result.response;
+      const parts = response.candidates?.[0]?.content?.parts;
 
-    // Verificar se a resposta contém uma imagem
-    // Nota: Gemini 2.0 pode retornar imagens em alguns modos
-    // Por enquanto, retornamos a imagem original se não houver processamento de imagem disponível
+      if (parts) {
+        for (const part of parts) {
+          // @ts-ignore - Check for inline image data
+          if (part.inlineData) {
+            // @ts-ignore
+            const rawImage = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+            console.log('[Refine Drawing] ✅ Imagem refinada recebida do Gemini');
+            // Garantir saída monocromática
+            return await enforceMonochrome(rawImage);
+          }
+        }
+      }
 
-    // Como Gemini não processa imagens diretamente para output de imagem neste modo,
-    // vamos usar uma abordagem alternativa: aplicar filtros/ajustes localmente
-    // ou usar outro serviço de IA para processamento de imagem
+      // Se não retornou imagem, verificar se há texto de erro
+      const text = response.text?.() || '';
+      console.error('[Refine Drawing] Gemini não retornou imagem:', text.substring(0, 200));
+      throw new Error('Modelo não retornou imagem refinada');
+    }, 'Gemini Refine Drawing');
 
-    // Por enquanto, retornamos sucesso com a imagem original
-    // Em uma implementação futura, podemos integrar com:
-    // - Replicate (Stable Diffusion img2img)
-    // - OpenAI DALL-E
-    // - Outro serviço de processamento de imagem
-
-    console.log('[Refine Drawing] Resposta do Gemini:', text.substring(0, 200));
-
-    // Retornar a imagem original por enquanto (feature placeholder)
-    // TODO: Integrar com serviço de processamento de imagem real
     return NextResponse.json({
       success: true,
-      image: image, // Por enquanto retorna a mesma imagem
-      message: 'Desenho salvo! Refinamento com IA será implementado em breve.',
-      aiResponse: text.substring(0, 500),
+      image: refinedImage,
+      message: 'Desenho refinado com sucesso!',
     });
 
   } catch (error: any) {

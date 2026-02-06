@@ -5,7 +5,7 @@ import { removeBackground } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { checkToolsLimit, checkRemoveBackgroundLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
 import { BRL_COST } from '@/lib/billing/costs';
-import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
+import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
 

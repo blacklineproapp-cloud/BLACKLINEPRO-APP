@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import type { PlanType } from '@/lib/billing/plans';
-import type { BillingCycle } from '@/lib/stripe/types';
+import type { BillingCycle } from '@/lib/billing/types';
 
 type UpsellModalType = 'none' | 'blur_preview' | 'plan_comparison' | 'checkout_upsell';
 

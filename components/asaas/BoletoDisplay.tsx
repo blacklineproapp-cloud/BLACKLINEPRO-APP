@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ExternalLink, Copy, Check, Calendar } from 'lucide-react';
 
 interface BoletoDisplayProps {
@@ -18,6 +19,7 @@ export default function BoletoDisplay({
   value,
   barcode,
 }: BoletoDisplayProps) {
+  const t = useTranslations('asaas.boleto');
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -29,7 +31,7 @@ export default function BoletoDisplay({
   };
 
   const formatDueDate = (date: string) => {
-    return new Date(date).toLocaleDateString('pt-BR', {
+    return new Date(date).toLocaleDateString(undefined, {
       day: '2-digit',
       month: 'long',
       year: 'numeric',
@@ -49,9 +51,9 @@ export default function BoletoDisplay({
       <div className="bg-gradient-to-br from-amber-600/20 to-orange-600/20 border border-amber-500/30 rounded-xl p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-amber-400 text-sm mb-1">Valor do boleto</p>
+            <p className="text-amber-400 text-sm mb-1">{t('title')}</p>
             <p className="text-3xl font-bold text-white">
-              {new Intl.NumberFormat('pt-BR', {
+              {new Intl.NumberFormat(undefined, {
                 style: 'currency',
                 currency: 'BRL',
               }).format(value)}
@@ -65,13 +67,13 @@ export default function BoletoDisplay({
         <div className="flex items-center gap-2 text-amber-300">
           <Calendar size={16} />
           <span className="text-sm">
-            Vencimento: {formatDueDate(dueDate)}
+            {t('dueDate', { date: formatDueDate(dueDate) })}
           </span>
         </div>
         
         {daysUntilDue() > 0 && (
           <p className="text-amber-400/70 text-xs mt-2">
-            {daysUntilDue()} {daysUntilDue() === 1 ? 'dia' : 'dias'} para vencer
+            {t('daysUntilDue', { count: daysUntilDue() })}
           </p>
         )}
       </div>
@@ -85,7 +87,7 @@ export default function BoletoDisplay({
           className="flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-lg hover:shadow-amber-600/20"
         >
           <ExternalLink size={20} />
-          Abrir Boleto (PDF)
+          {t('openPdf')}
         </a>
 
         {barcode && (
@@ -100,12 +102,12 @@ export default function BoletoDisplay({
             {copied ? (
               <>
                 <Check size={20} />
-                Código Copiado!
+                {t('barcodeCopied')}
               </>
             ) : (
               <>
                 <Copy size={20} />
-                Copiar Código de Barras
+                {t('copyBarcode')}
               </>
             )}
           </button>
@@ -115,7 +117,7 @@ export default function BoletoDisplay({
       {/* Código de Barras */}
       {barcode && (
         <div className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-4">
-          <p className="text-zinc-400 text-xs mb-2">Código de Barras</p>
+          <p className="text-zinc-400 text-xs mb-2">{t('barcodeLabel')}</p>
           <code className="text-xs text-white bg-zinc-900 p-3 rounded-lg block overflow-x-auto">
             {barcode}
           </code>
@@ -125,21 +127,19 @@ export default function BoletoDisplay({
       {/* Instruções */}
       <div className="bg-amber-600/10 border border-amber-500/30 rounded-xl p-4">
         <h4 className="text-amber-400 font-semibold text-sm mb-2">
-          Como pagar o boleto
+          {t('instructionsTitle')}
         </h4>
         <ol className="text-zinc-300 text-xs space-y-1.5 list-decimal list-inside">
-          <li>Clique em "Abrir Boleto" para baixar o PDF</li>
-          <li>Pague no app do seu banco ou em casas lotéricas</li>
-          <li>Ou copie o código de barras e cole no app do banco</li>
-          <li>O pagamento pode levar até 3 dias úteis para compensar</li>
-          <li>Seu plano será ativado após a confirmação</li>
+          {(t.raw('instructions') as string[]).map((inst, i) => (
+            <li key={i}>{inst}</li>
+          ))}
         </ol>
       </div>
 
       {/* Aviso */}
       <div className="text-center">
         <p className="text-zinc-500 text-xs">
-          Após o pagamento, aguarde até 3 dias úteis para ativação
+          {t('waitAviso')}
         </p>
       </div>
     </div>

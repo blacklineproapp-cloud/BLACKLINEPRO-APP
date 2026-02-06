@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { usePWA } from '@/hooks/usePWA';
 import { X, Download, Share, Plus, Smartphone } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface InstallBannerProps {
   /** Delay em ms antes de mostrar o banner (default: 3000) */
@@ -11,6 +12,7 @@ interface InstallBannerProps {
 }
 
 export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
+  const t = useTranslations('installBanner');
   const { canInstall, isIOS, isStandalone, isDismissed, installApp, dismissBanner } = usePWA();
   const [isVisible, setIsVisible] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
@@ -64,13 +66,13 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
             <div className="flex items-center gap-2">
               <Smartphone className="w-4 h-4 text-white" />
               <span className="text-white text-sm font-medium">
-                Instale o App
+                {t('title')}
               </span>
             </div>
             <button
               onClick={handleDismiss}
               className="text-white/80 hover:text-white transition-colors"
-              aria-label="Fechar"
+              aria-label={t('closeLabel')}
             >
               <X className="w-4 h-4" />
             </button>
@@ -91,10 +93,10 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
 
               <div className="flex-1 min-w-0">
                 <h3 className="text-white font-semibold text-base">
-                  StencilFlow
+                  {t('appName')}
                 </h3>
                 <p className="text-zinc-400 text-sm mt-0.5 line-clamp-2">
-                  Acesse mais rápido direto da sua tela inicial
+                  {t('description')}
                 </p>
               </div>
             </div>
@@ -107,19 +109,19 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
               {isIOS ? (
                 <>
                   <Share className="w-5 h-5" />
-                  Como instalar
+                  {t('iosButton')}
                 </>
               ) : (
                 <>
                   <Download className="w-5 h-5" />
-                  Instalar App
+                  {t('installButton')}
                 </>
               )}
             </button>
 
             {/* Nota */}
             <p className="text-zinc-500 text-xs text-center mt-3">
-              Gratuito • Sem ocupar espaço • Funciona offline
+              {t('features')}
             </p>
           </div>
         </div>
@@ -132,7 +134,7 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-zinc-800">
               <h3 className="text-white font-semibold text-lg">
-                Instalar no iOS
+                {t('iosInstructions.title')}
               </h3>
               <button
                 onClick={() => setShowIOSInstructions(false)}
@@ -151,10 +153,10 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
                 </div>
                 <div>
                   <p className="text-white font-medium">
-                    Toque em <Share className="w-4 h-4 inline mx-1" /> Compartilhar
+                    {t('iosInstructions.step1Title')} <Share className="w-4 h-4 inline mx-1" />
                   </p>
                   <p className="text-zinc-400 text-sm mt-0.5">
-                    No Safari, toque no ícone de compartilhar na barra inferior
+                    {t('iosInstructions.step1Description')}
                   </p>
                 </div>
               </div>
@@ -166,10 +168,10 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
                 </div>
                 <div>
                   <p className="text-white font-medium">
-                    Toque em <Plus className="w-4 h-4 inline mx-1" /> Adicionar à Tela de Início
+                    {t('iosInstructions.step2Title')} <Plus className="w-4 h-4 inline mx-1" />
                   </p>
                   <p className="text-zinc-400 text-sm mt-0.5">
-                    Role para baixo no menu e selecione essa opção
+                    {t('iosInstructions.step2Description')}
                   </p>
                 </div>
               </div>
@@ -181,10 +183,10 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
                 </div>
                 <div>
                   <p className="text-white font-medium">
-                    Confirme tocando em Adicionar
+                    {t('iosInstructions.step3Title')}
                   </p>
                   <p className="text-zinc-400 text-sm mt-0.5">
-                    O app será instalado na sua tela inicial
+                    {t('iosInstructions.step3Description')}
                   </p>
                 </div>
               </div>
@@ -196,7 +198,7 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
                 onClick={() => setShowIOSInstructions(false)}
                 className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 px-4 rounded-xl transition-colors"
               >
-                Entendi
+                {t('iosInstructions.confirmButton')}
               </button>
             </div>
           </div>

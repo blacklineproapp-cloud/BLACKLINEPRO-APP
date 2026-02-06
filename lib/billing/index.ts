@@ -21,18 +21,17 @@ export type {
   PlanInfo
 } from './plans';
 
-// Plan Mapping
-export {
-  getPlanFromPriceId,
-  getPriceIdFromPlan,
-  isValidPriceId,
-  getAllPriceIds,
-  validatePriceConfig
-} from './stripe-plan-mapping';
-
+// Types
 export type {
-  PlanMapping
-} from './stripe-plan-mapping';
+  BillingCycle,
+  PlanType,
+  SubscriptionStatus,
+  PaymentStatus,
+  PaymentMethod,
+  PlanFeatures as BillingPlanFeatures,
+} from './types';
+
+export { PLAN_FEATURES } from './types';
 
 // Limits
 export {

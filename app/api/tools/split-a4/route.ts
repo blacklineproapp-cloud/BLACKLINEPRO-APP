@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { generateStencilFromImage } from '@/lib/gemini';
 import { checkToolsLimit, checkSplitA4Limit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
 import { BRL_COST } from '@/lib/billing/costs';
-import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
+import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
 import sharp from 'sharp';
 
 // =============================================================================

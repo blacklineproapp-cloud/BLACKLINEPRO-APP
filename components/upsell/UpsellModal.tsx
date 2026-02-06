@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, ArrowRight, Sparkles } from 'lucide-react';
 import { PLANS, formatPrice, getMonthlyEquivalent, type PlanType } from '@/lib/billing/plans';
-import type { BillingCycle } from '@/lib/stripe/types';
+import type { BillingCycle } from '@/lib/billing/types';
 import { PlanComparison } from './PlanComparisonCard';
 import BillingCycleSelector from './BillingCycleSelector';
 import UpgradeBadge from './UpgradeBadge';

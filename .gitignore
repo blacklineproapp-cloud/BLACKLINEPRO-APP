@@ -109,3 +109,47 @@ supabase/
 
 # Asaas local config (contém API keys)
 lib/asaas/config.local.ts
+
+# Migration reports and CSVs (dados sensíveis)
+*.csv
+*-analysis-*.csv
+*-results-*.csv
+migration-*.csv
+fix-*.csv
+billing-*.csv
+stripe-*.csv
+
+# Migration documentation (temporário)
+MIGRACAO-*.md
+CONFIRMACAO-*.md
+RELATORIO-*.md
+EMAIL_BATCH_GUIDE.md
+email-template-correction.md
+MIGRATION_GUIDE.md
+
+# SQL updates (temporário)
+update-*.sql
+atual.sql
+migrations/010_*.sql
+migrations/011_*.sql
+migrations/VALIDACAO_*.sql
+
+# Migration scripts (temporário)
+scripts/analyze-*.ts
+scripts/recreate-*.ts
+scripts/send-correction-email.ts
+scripts/run-migration.sh
+add_translations.py
+migrate-routes.ps1
+
+# JSON reports (temporário)
+stripe-*.json
+*-report.json
+
+# Test files
+test-*.bat
+
+# Backup files
+*.backup
+app/page.tsx.backup
+

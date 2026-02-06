@@ -7,7 +7,7 @@
  */
 
 import { supabaseAdmin } from '../supabase';
-import type { PlanType } from '../stripe/types';
+import type { PlanType } from '../billing/types';
 
 // ============================================================================
 // DEFINIÇÃO DE LIMITES

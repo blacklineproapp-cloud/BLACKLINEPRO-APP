@@ -1,0 +1,801 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "download": "Download",
+    "upload": "Upload",
+    "share": "Share",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "viewMore": "View more",
+    "viewLess": "View less",
+    "width": "Width",
+    "height": "Height",
+    "intensity": "Intensity",
+    "plan": "Plan",
+    "upgrade": "Upgrade",
+    "all": "All"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Stencil Flow Technology & Precision",
+      "title": "The Art of",
+      "titleHighlight": "Stencil.",
+      "subtitle": "Bring your ideas to life with the most advanced technology on the market. From fine lines to complex shading.",
+      "cta": {
+        "primary": "SIGN UP",
+        "secondary": "PRICING",
+        "dashboard": "GO TO DASHBOARD"
+      },
+      "features": {
+        "fidelity": {
+          "label": "Total Fidelity",
+          "sub": "Sharp Lines"
+        },
+        "technology": {
+          "label": "Stencil Flow",
+          "sub": "Proprietary Technology"
+        },
+        "ready": {
+          "label": "Ready for A4",
+          "sub": "Print instantly"
+        },
+        "original": "Original"
+      },
+      "socialProof": "+2,500 artists using today",
+      "tabs": {
+        "editor": {
+          "title": "Professional Editor",
+          "description": "Full control over every detail of your stencil."
+        },
+        "generator": {
+          "title": "StencilFlow Generator",
+          "description": "Create exclusive designs from your ideas."
+        },
+        "topographic": {
+          "title": "Topographic Mode",
+          "description": "3D relief mapping for complex closures"
+        },
+        "lines": {
+          "title": "Perfect Lines",
+          "description": "Clean and defined lines ready for stenciling"
+        }
+      }
+    },
+    "stats": {
+      "users": "Registered Users",
+      "projects": "Stencils Created",
+      "satisfaction": "Satisfaction Rate"
+    },
+    "features": {
+      "editor": {
+        "title": "Complete Stencil Editor",
+        "description": "Full control over intensity, size in centimeters, and visualization. Compare before/after, save unlimited projects, and download in high-quality PNG.",
+        "items": [
+          "Precise intensity control",
+          "Size adjustment in centimeters",
+          "Advanced adjustments (brightness, contrast, sharpness)",
+          "Before/after comparison",
+          "Unlimited project gallery",
+          "High-quality download"
+        ]
+      },
+      "generator": {
+        "title": "Create Tattoo Designs from Scratch",
+        "description": "Describe your idea in words and our advanced technology creates the design. Perfect for when the client has the idea but not the image.",
+        "items": [
+          "Advanced Stencil Flow technology",
+          "Smart descriptions",
+          "Multiple variations",
+          "High-quality output",
+          "From zero to design in seconds"
+        ]
+      },
+      "topographic": {
+        "title": "Topographic Mode",
+        "description": "Map volumes and curves with millimeter precision. Ideal for closures and complex body areas.",
+        "items": [
+          "Analyze region volumetry",
+          "Automatic contour lines",
+          "Perfect adaptation to anatomy",
+          "Simulated 3D visualization"
+        ]
+      },
+      "lines": {
+        "title": "Perfect Lines",
+        "description": "Transform any image into a decal with sharp, tattoo-ready lines. Forget carbon paper.",
+        "items": [
+          "Smart line extraction",
+          "Thickness and detail control",
+          "Automatic noise cleaning",
+          "Ready for thermal printing"
+        ]
+      },
+      "tools": {
+        "title": "Professional Tools for Professional Tattoo Artists",
+        "description": "Unlock premium tools that will speed up your work and impress your clients",
+        "colorMatch": {
+          "title": "Color Match",
+          "description": "Identifies colors and suggests compatible inks"
+        },
+        "splitA4": {
+          "title": "Split into A4",
+          "description": "Splits large designs into multiple sheets"
+        },
+        "enhance4k": {
+          "title": "Enhance 4K",
+          "description": "Smart enhancement while maintaining quality"
+        },
+        "removeBg": {
+          "title": "Remove Background",
+          "description": "Automatic background removal with advanced AI"
+        }
+      },
+      "organizations": {
+        "title": "Work as a Team with Organizations",
+        "description": "Create organizations for your studio, add team members, and share credits. Perfect for studios with multiple tattoo artists working together.",
+        "items": [
+          "Up to 5 members per organization",
+          "Credit sharing between members",
+          "Permission management (owner/member)",
+          "Centralized project history",
+          "Studio and Enterprise plans available"
+        ],
+        "example": {
+          "name": "Ink Masters Studio",
+          "members": "5 members",
+          "plan": "Studio Plan",
+          "credits": "shared credits"
+        }
+      },
+      "ui": {
+        "promptLabel": "User Input",
+        "promptExample": "Realistic Johnny Bravo surfing",
+        "before": "Before",
+        "after": "After",
+        "original": "Original",
+        "topographic": "Topographic",
+        "lines": "Lines"
+      }
+    },
+    "comparison": {
+      "title": "Why StencilFlow?",
+      "subtitle": "Compare and see the difference",
+      "feature": "Feature",
+      "full": "Complete",
+      "basic": "Basic",
+      "limited": "Limited",
+      "priceStarting": "From $10",
+      "updateInfo": "Data updated in December 2024. Prices may vary.",
+      "features": {
+        "editor": "Stencil Editor",
+        "designGen": "Professional Design Generation",
+        "topographic": "Topographic Mode",
+        "lines": "Perfect Lines Mode",
+        "size": "Size Adjustment (cm)",
+        "colorMatch": "Ink Color Match",
+        "splitA4": "Split into A4",
+        "enhance4k": "Enhance 4K",
+        "price": "Monthly Price",
+        "free": "Free Plan"
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Simple, fast, and professional",
+      "step1": {
+        "title": "Upload",
+        "description": "Upload your image (photo, drawing, or reference)"
+      },
+      "step2": {
+        "title": "Stencil Flow Processes",
+        "description": "Our technology converts it into a perfect stencil in seconds"
+      },
+      "step3": {
+        "title": "Download",
+        "description": "Download PNG ready to print and tattoo"
+      }
+    },
+    "pricing": {
+      "title": "Choose Your Plan",
+      "subtitle": "Fair prices for all tattoo artists",
+      "cta": "View Plans",
+      "mostPopular": "MOST POPULAR",
+      "features": {
+        "starter": ["Complete Stencil Editor", "Topographic Mode", "Perfect Lines Mode", "Full expense control"],
+        "pro": ["Everything in Starter", "Professional design generation", "Color Match + 4K Enhancement", "Split A4"],
+        "studio": ["Everything in Pro", "Up to 680 generations/month", "Priority support", "Ideal for studios"],
+        "enterprise": ["Everything in Studio", "Up to 1,400 generations/month", "24/7 dedicated support", "Guaranteed SLA 99.9%"]
+      }
+    },
+    "finalCta": {
+      "title": "Ready to Revolutionize Your Stencils?",
+      "subtitle": "Join",
+      "subtitleEnd": "tattoo artists already using StencilFlow",
+      "cta": "Get Started Now",
+      "dashboard": "Go to Dashboard",
+      "thousands": "thousands of",
+      "checks": {
+        "payAsYouGo": "Pay only for what you use",
+        "noExpiry": "Credits never expire",
+        "fullControl": "Full control of expenses"
+      }
+    },
+    "footer": {
+      "description": "The most advanced platform for creating professional tattoo stencils.",
+      "product": "Product",
+      "features": "Features",
+      "pricing": "Pricing",
+      "legal": "Legal",
+      "terms": "Terms of Use",
+      "privacy": "Privacy Policy",
+      "support": "Support",
+      "contact": "Contact",
+      "rights": "All rights reserved.",
+      "dashboard": "Dashboard",
+      "security": "Secure payment via Stripe"
+    }
+  },
+  "dashboard": {
+    "nav": {
+      "home": "Home",
+      "editor": "Editor",
+      "generator": "IA Gen",
+      "tools": "Tools",
+      "support": "Support",
+      "subscription": "Subscription",
+      "boletos": "Boletos",
+      "upgrade": "Upgrade",
+      "logout": "Log Out",
+      "settings": "Settings",
+      "user": "User",
+      "myBoletos": "My Boletos",
+      "mySubscription": "My Subscription"
+    },
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "headerSubtitle": "Manage your projects and history",
+    "tabs": {
+      "projects": "Projects",
+      "history": "IA Gen Gallery"
+    },
+    "usage": {
+      "current": "Monthly Usage",
+      "limit": "Monthly Limit",
+      "unlimited": "Unlimited",
+      "reset": "Resets on {date}",
+      "low": "Low usage",
+      "medium": "Moderate usage",
+      "high": "High usage",
+      "noRestrictions": "No restrictions"
+    },
+    "upgrade": {
+      "title": "Unlock Full Potential",
+      "subtitle": "Generate unlimited stencils for $10/month",
+      "cta": "See Plans"
+    },
+    "workflow": {
+      "title": "Workflow",
+      "step1": {
+        "title": "1. Upload Image",
+        "desc": "Upload photo, drawing, or reference."
+      },
+      "step2": {
+        "title": "2. High Fidelity AI",
+        "desc": "Our AI captures 100% of the details."
+      },
+      "step3": {
+        "title": "3. Download & Print",
+        "desc": "Ready for thermal printing."
+      }
+    },
+    "gallery": {
+      "title": "Recent Gallery",
+      "search": "Search project...",
+      "empty": "No projects yet",
+      "emptyDescription": "Create your first stencil!",
+      "noResults": "No projects found",
+      "noResultsDescription": "Try another search or clear filters",
+      "clearFilters": "Clear filters",
+      "createNow": "Create Now",
+      "newStencil": "New Stencil",
+      "clickToEnlarge": "Click to enlarge",
+      "original": "Original",
+      "stencil": "Stencil",
+      "iaTitle": "IA Gen Gallery",
+      "iaSearch": "Search by prompt...",
+      "iaEmpty": "No images generated yet",
+      "iaEmptyDescription": "Use IA Gen to create your first art!",
+      "goToIAGen": "Go to IA Gen",
+      "noIAResults": "No images found",
+      "noDescription": "No description"
+    },
+    "actions": {
+      "deleteConfirm": "Are you sure you want to delete this project?",
+      "deleteConfirmIA": "Are you sure you want to delete this image?",
+      "deleteError": "Error deleting project",
+      "loadFailed": "Connection failed. Check your internet and try again."
+    },
+    "error": {
+      "unavailable": "⚠️ Service temporarily unavailable",
+      "slowness": "We are experiencing server slowness. Please wait a few seconds and reload the page.",
+      "tryAgain": "Try again",
+      "goHome": "Back to start",
+      "support": "If the problem persists, contact support."
+    }
+  },
+  "PricingPage": {
+    "title": "Subscription Plans",
+    "subtitle": "Choose the ideal plan for you. Cancel anytime.",
+    "back": "Back",
+    "howItWorks": {
+      "title": "How It Works",
+      "desc": "Subscribe and use StencilFlow throughout your chosen period. Each plan includes a monthly generation limit.",
+      "recurrent": "Recurring subscription - Automatic renewal",
+      "cancelAnytime": "Cancel anytime - No penalties or fees",
+      "limitsRenew": "Limits renew every month - Even on annual plans",
+      "immediateAccess": "Immediate access after payment - Start using now",
+      "savePercent": "Save {percent}% by paying {cycle}"
+    },
+    "cycles": {
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "semiannual": "Semiannual",
+      "yearly": "Yearly",
+      "bestOffer": "Best Offer!",
+      "save": "Save {percent}%"
+    },
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "description": "Ideal to start",
+        "limit": "{count} generations/month"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "For professional tattoo artists",
+        "limit": "{count} generations/month"
+      },
+      "studio": {
+        "name": "Studio",
+        "description": "For studios and professional use",
+        "limit": "{count} generations/month"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "Truly unlimited use",
+        "limit": "{count} generations/month"
+      }
+    },
+    "popular": "MOST POPULAR",
+    "perMonth": "/month",
+    "billingPeriod": "Billing {period}: {price}",
+    "savings": "✓ Save {price}/month ({percent}% off)",
+    "subscribe": "Subscribe {name}",
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "q1": "Can I change my plan later?",
+      "a1": "Yes! You can upgrade or downgrade at any time.",
+      "q2": "How does cancellation work?",
+      "a2": "You can cancel whenever you want. You will retain access until the end of the paid period.",
+      "q3": "What payment methods are accepted?",
+      "a3": "PIX (instant), Bank Slip, and Credit Card.",
+      "q4": "How does plan renewal work?",
+      "a4": "Automatic renewal every {months} months. You will receive an email 7 days before renewal."
+    }
+  },
+  "checkout": {
+    "title": "Checkout",
+    "loginRequired": {
+      "title": "Login to continue",
+      "desc": "To subscribe to the {plan} plan, you need to create an account or login.",
+      "button": "Enter or Create Account"
+    },
+    "success": {
+      "title": "Plan Activated!",
+      "redirecting": "Redirecting..."
+    },
+    "paymentMethod": {
+      "label": "Payment Method",
+      "pix": "PIX",
+      "boleto": "Bank Slip",
+      "card": "Card"
+    },
+    "phone": {
+      "label": "Cell Phone",
+      "optional": "(optional)",
+      "placeholder": "(11) 99999-9999",
+      "desc": "To receive payment notifications"
+    },
+    "processing": "Processing...",
+    "payAmount": "Pay {amount}",
+    "error": "Error processing payment"
+  },
+  "asaas": {
+    "pix": {
+      "title": "Pay with PIX",
+      "value": "Value to pay",
+      "copyCode": "PIX Copy and Paste Code",
+      "copied": "Code copied!",
+      "instructionsTitle": "How to pay with PIX",
+      "instructions": [
+        "Open your bank app",
+        "Choose to pay with PIX QR Code or Copy and Paste",
+        "Scan the QR Code or paste the code above",
+        "Confirm the payment",
+        "Done! Your plan will be automatically activated"
+      ],
+      "expiresAt": "QR Code valid until {date}"
+    },
+    "boleto": {
+      "title": "Bank slip value",
+      "dueDate": "Due date: {date}",
+      "daysUntilDue": "{count, plural, =1 {# day} other {# days}} until due",
+      "openPdf": "Open Bank Slip (PDF)",
+      "copyBarcode": "Copy Barcode",
+      "barcodeCopied": "Code Copied!",
+      "barcodeLabel": "Barcode",
+      "instructionsTitle": "How to pay the bank slip",
+      "instructions": [
+        "Click 'Open Bank Slip' to download the PDF",
+        "Pay in your bank app or at lottery shops",
+        "Or copy the barcode and paste it into the bank app",
+        "Payment can take up to 3 business days to clear",
+        "Your plan will be activated after confirmation"
+      ],
+      "waitAviso": "After payment, wait up to 3 business days for activation"
+    },
+    "creditCard": {
+      "number": "Card Number",
+      "holderName": "Cardholder Name",
+      "holderNamePlaceholder": "NAME AS IT APPEARS ON THE CARD",
+      "email": "Cardholder Email",
+      "month": "Month",
+      "year": "Year",
+      "cvv": "CVV",
+      "phone": "Phone Number",
+      "cep": "Postal Code",
+      "brand": "Card Brand",
+      "securityAviso": "Your data is encrypted and processed securely by Asaas. We do not store your card information."
+    },
+    "cpfCnpj": {
+      "label": "Tax ID (CPF/CNPJ)",
+      "invalidCpf": "Invalid CPF",
+      "invalidCnpj": "Invalid CNPJ",
+      "cpfDesc": "Holder's CPF",
+      "cnpjDesc": "Company's CNPJ"
+    }
+  },
+  "editor": {
+    "title": "Stencil Editor",
+    "upload": {
+      "button": "Upload Image",
+      "hint": "Drag or click to upload"
+    },
+    "controls": {
+      "title": "Stencil Adjustments",
+      "size": "Size (cm)",
+      "intensity": "Intensity",
+      "style": "Style",
+      "generate": "Generate Stencil",
+      "regenerate": "Regenerate",
+      "reset": "Reset Adjustments",
+      "undo": "Undo",
+      "redo": "Redo",
+      "adjustments": "Advanced Adjustments",
+      "modes": "Mode",
+      "extraInstructions": "Extra instructions...",
+      "generateAnime": "Generate (Illustration)",
+      "generateStandard": "Generate Stencil",
+      "presets": {
+        "A4": "A4",
+        "A3": "A3",
+        "Portrait": "Portrait",
+        "Square": "Square"
+      },
+      "essential": "Essential Adjustments",
+      "dark": "Dark",
+      "light": "Light",
+      "contrast": "Contrast",
+      "soft": "Soft",
+      "strong": "Strong",
+      "threshold": "Black/White",
+      "moreBlack": "More black",
+      "moreWhite": "More white",
+      "gamma": "Gamma (Midtones)",
+      "sharpen": "Sharpen",
+      "amount": "Intensity",
+      "transformations": "Transformations",
+      "rotation": "Rotation",
+      "flipH": "Flip H",
+      "flipV": "Flip V",
+      "invert": "Invert",
+      "lineColor": "Line Color",
+      "custom": "Custom:",
+      "sensitivity": "Sensitivity",
+      "moreColor": "More color",
+      "lessColor": "Less color",
+      "colorHint": "💡 Color is only applied to outlines. The white background remains intact.",
+      "resetTooltip": "Reset all adjustments",
+      "colors": {
+        "black": "Black",
+        "darkBlue": "Dark Blue",
+        "navy": "Navy",
+        "blue": "Blue",
+        "purple": "Purple",
+        "red": "Red",
+        "green": "Green",
+        "orange": "Orange",
+        "violet": "Violet",
+        "cyan": "Cyan",
+        "brown": "Brown",
+        "graphite": "Graphite"
+      }
+    },
+    "comparison": {
+      "horizontal": "Horizontal",
+      "blend": "Blend",
+      "holdSpace": "Hold SPACE to compare",
+      "horizontalTooltip": "Horizontal wipe (←→)",
+      "blendTooltip": "Adjustable blend"
+    },
+    "actions": {
+      "download": "Download",
+      "save": "Save Project",
+      "saveName": "Project name",
+      "stencil": "Stencil",
+      "saveShort": "Save",
+      "saving": "Saving...",
+      "copy": "Copy",
+      "drawing": "Drawing Mode",
+      "new": "New Image",
+      "create": "Create Stencil",
+      "generate": "Generate"
+    },
+    "styles": {
+      "standard": "Lines",
+      "perfect_lines": "Topographic",
+      "anime": "Illustration",
+      "standardDesc": "✏️ Photos → Lines",
+      "perfectLinesDesc": "🗺️ Maximum detail",
+      "animeDesc": "🎨 Anime, Illustrations, Maori"
+    },
+    "messages": {
+      "generating": "Generating your stencil...",
+      "applyingAdjustments": "Applying adjustments...",
+      "saveSuccess": "Project saved successfully!",
+      "saveError": "Error saving project",
+      "downloadStarted": "Download started!",
+      "copied": "Copied to clipboard!",
+      "limitReached": "Generation limit reached. Subscribe to continue!",
+      "generateError": "Error generating stencil.",
+      "downloadWithoutAdjustments": "Warning: Downloading without adjustments",
+      "drawingSaved": "Drawing saved with {count} strokes!"
+    },
+    "quality": {
+      "title": "Quality Information",
+      "resolution": "Resolution",
+      "estimatedDpi": "Estimated DPI",
+      "physicalSize": "Physical Size",
+      "status": "Status",
+      "optimize": "Optimize Quality",
+      "recommendation": "Recommendation",
+      "recommendationText": "Increase image resolution or reduce the desired physical size to improve print quality.",
+      "excellent": {
+        "label": "Excellent",
+        "desc": "Ideal for professional printing"
+      },
+      "good": {
+        "label": "Good",
+        "desc": "Suitable for printing"
+      },
+      "acceptable": {
+        "label": "Acceptable",
+        "desc": "Minimum acceptable quality"
+      },
+      "poor": {
+        "label": "Poor",
+        "desc": "Not recommended for printing"
+      },
+      "warnings": {
+        "belowIdeal": "DPI below ideal. Recommended: 300 DPI",
+        "low": "Low DPI. May have loss of quality in printing",
+        "veryLow": "Very low DPI! Insufficient quality for professional printing"
+      }
+    },
+    "resize": {
+      "title": "Optimize Quality / Resize",
+      "currentInfo": "Current Information",
+      "newSize": "New Size",
+      "suggestOptimal": "Suggest Optimal Size",
+      "width": "Width (cm)",
+      "height": "Height (cm)",
+      "maintainAspect": "Maintain Aspect Ratio",
+      "outputDpi": "Output DPI",
+      "dpiOptions": {
+        "min": "150 DPI (Minimum)",
+        "good": "200 DPI (Good)",
+        "professional": "300 DPI (Professional) ⭐",
+        "ultra": "600 DPI (Ultra)"
+      },
+      "preview": "Result Preview",
+      "newResolution": "New Resolution",
+      "finalDpi": "Final DPI",
+      "algorithm": "Algorithm",
+      "apply": "Apply Resize",
+      "upscaleWarning": "⚠️ Upscale may not add real details, only increases pixels",
+      "downscaleSuccess": "✓ Downscale will keep all quality while reducing file size"
+    }
+  },
+  "generator": {
+    "title": "AI Gen - Idea Generator",
+    "emptyState": "Your art will appear here",
+    "hint": "Describe your idea in the panel",
+    "prompt": {
+      "label": "Describe your Idea",
+      "placeholder": "Ex: Mexican skull with roses...",
+      "history": "History"
+    },
+    "reference": {
+      "add": "Reference image (optional)",
+      "added": "Reference image added"
+    },
+    "styles": {
+      "label": "Style (optional)",
+      "applied": "style applied",
+      "blackwork": "Blackwork",
+      "fineline": "Fine Line",
+      "neo_traditional": "Neo Trad",
+      "realism": "Realism",
+      "dotwork": "Dotwork",
+      "old_school": "Old School"
+    },
+    "bodyRegion": {
+      "label": "Body Region",
+      "free": { "name": "Free", "hint": "No format restriction" },
+      "arm": { "name": "Arm", "hint": "Elongated, vertical design" },
+      "chest": { "name": "Chest", "hint": "Broad and centered design" },
+      "back": { "name": "Back", "hint": "Large, detailed canvas" },
+      "leg": { "name": "Leg", "hint": "Long, follows the curve" },
+      "ribs": { "name": "Ribs", "hint": "Elongated vertical" }
+    },
+    "negative": {
+      "label": "Avoid (optional)",
+      "placeholder": "Ex: colors, background, text..."
+    },
+    "size": {
+      "label": "Size (High Quality)",
+      "A4": "21×29.7cm @ 300 DPI (professional print)",
+      "A3": "29.7×42cm @ 300 DPI (professional print)",
+      "1K": "1024×1024px",
+      "2K": "2048×2048px",
+      "4K": "4096×4096px",
+      "highQuality": "A4/A3 are for professional printing (300 DPI)"
+    },
+    "cta": "Generate Design",
+    "success": {
+      "title": "Art generated!",
+      "description": "Art generated! Use the buttons in the header to download or create a stencil.",
+      "createStencil": "Create Stencil",
+      "download": "Download PNG",
+      "another": "Generate another idea",
+      "newGeneration": "New Generation"
+    },
+    "errors": {
+      "imageTooLarge": "Image too large. Maximum 20MB.",
+      "requiresSubscription": "This feature requires a paid plan.",
+      "generateFailed": "Failed to generate image."
+    }
+  },
+  "tools": {
+    "title": "Studio Tools",
+    "subtitle": "Advanced AI features for image and color treatment.",
+    "locked": {
+      "title": "Premium Tools",
+      "subtitle": "Unlock advanced tools for your stencils",
+      "cta": "View Plans and Pricing",
+      "priceFrom": "Starting at $10/month"
+    },
+    "modes": {
+      "enhance": {
+        "name": "Enhance",
+        "subtitle": "4K Upscale",
+        "description": "4K upscale and restoration"
+      },
+      "colorMatch": {
+        "name": "Color Match",
+        "subtitle": "Ink palette",
+        "description": "Ink palette analysis"
+      },
+      "splitA4": {
+        "name": "Split A4",
+        "subtitle": "Multiple sheets",
+        "description": "Large tattoos on multiple sheets"
+      },
+      "removeBg": {
+        "name": "Remove Background",
+        "subtitle": "AI Remove BG",
+        "description": "AI Remove BG"
+      }
+    },
+    "upload": {
+      "source": "Image Source",
+      "uploadBtn": "Upload",
+      "galleryBtn": "Gallery",
+      "clickToUpload": "Click to upload",
+      "clickToUploadImage": "Click to upload image",
+      "fileTypes": "JPG or PNG",
+      "emptyGallery": "Empty gallery",
+      "originalImage": "Original Image",
+      "previous": "Prev.",
+      "next": "Next",
+      "of": "of"
+    },
+    "messages": {
+      "enhanceSuccess": "Image enhanced successfully!",
+      "colorMatchSuccess": "Colors analyzed successfully!",
+      "splitSuccess": "Image split into {count} parts!",
+      "removeBgSuccess": "Background removed successfully!",
+      "processingError": "Processing error. Please try again.",
+      "galleryLoadError": "Error loading image from gallery"
+    },
+    "inkBrands": {
+      "generic": "Generic (No specific brand)"
+    }
+  },
+  "migrationNotice": {
+    "title": "We've updated our payment system!",
+    "subtitle": "More options and security for you",
+    "closeLabel": "Close notice",
+    "paymentMethods": {
+      "pix": {"name": "PIX", "description": "Instant"},
+      "boleto": {"name": "Boleto", "description": "Up to 3 days"},
+      "card": {"name": "Card", "description": "Recurring"}
+    },
+    "recurrence": {
+      "title": "How recurring payments work:",
+      "item1": "The charge will be generated on your first payment date",
+      "item2": "You'll have up to {days} days to make the payment",
+      "item2Days": "7",
+      "item3": "After payment, automatic recurrence is activated",
+      "item4": "Your information and history have been preserved"
+    },
+    "footer": "Questions? Contact support."
+  },
+  "installBanner": {
+    "title": "Install App",
+    "closeLabel": "Close",
+    "appName": "StencilFlow",
+    "description": "Access faster directly from your home screen",
+    "installButton": "Install App",
+    "iosButton": "How to install",
+    "features": "Free • No storage needed • Works offline",
+    "iosInstructions": {
+      "title": "Install on iOS",
+      "step1Title": "Tap Share",
+      "step1Description": "In Safari, tap the share icon in the bottom bar",
+      "step2Title": "Tap Add to Home Screen",
+      "step2Description": "Scroll down in the menu and select this option",
+      "step3Title": "Confirm by tapping Add",
+      "step3Description": "The app will be installed on your home screen",
+      "confirmButton": "Got it"
+    }
+  },
+  "metadata": {
+    "title": "StencilFlow - Professional Tattoo Stencil Editor",
+    "description": "Transform any image into a professional tattoo stencil with StencilFlow Technology. Complete editor, topographic mode, perfect lines, and premium tools. Free to start."
+  }
+}

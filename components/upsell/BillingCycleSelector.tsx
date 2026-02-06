@@ -8,7 +8,7 @@ import {
   getMonthlyEquivalent,
   type PlanType,
 } from '@/lib/billing/plans';
-import type { BillingCycle } from '@/lib/stripe/types';
+import type { BillingCycle } from '@/lib/billing/types';
 import UpgradeBadge from './UpgradeBadge';
 
 interface BillingCycleSelectorProps {

@@ -1,0 +1,697 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "download": "Descargar",
+    "upload": "Subir",
+    "share": "Compartir",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "viewMore": "Ver más",
+    "viewLess": "Ver menos",
+    "width": "Anchura",
+    "height": "Altura",
+    "intensity": "Intensidad",
+    "plan": "Plan",
+    "upgrade": "Mejorar",
+    "all": "Todos"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Tecnología Stencil Flow y Precisión",
+      "title": "El Arte del",
+      "titleHighlight": "Estarcido.",
+      "subtitle": "Da vida a tus ideas con la tecnología más avanzada del mercado. Desde líneas finas hasta sombreados complejos.",
+      "cta": {
+        "primary": "REGISTRARSE",
+        "secondary": "PRECIOS",
+        "dashboard": "IR AL PANEL"
+      },
+      "features": {
+        "fidelity": {
+          "label": "Fidelidad Total",
+          "sub": "Líneas Nítidas"
+        },
+        "technology": {
+          "label": "Stencil Flow",
+          "sub": "Tecnología Propia"
+        },
+        "ready": {
+          "label": "Listo para A4",
+          "sub": "Imprime al instante"
+        }
+      },
+      "socialProof": "+2.500 artistas usando hoy",
+      "tabs": {
+        "editor": {
+          "title": "Editor Profesional",
+          "description": "Control total sobre cada detalle de tu stencil."
+        },
+        "generator": {
+          "title": "Generador StencilFlow",
+          "description": "Crea diseños exclusivos a partir de tus ideas."
+        },
+        "topographic": {
+          "title": "Modo Topográfico",
+          "description": "Mapeo de relieve 3D para cierres complejos"
+        },
+        "lines": {
+          "title": "Líneas Perfectas",
+          "description": "Trazos limpios e definidos listos para calcar"
+        }
+      }
+    },
+    "stats": {
+      "users": "Usuarios Registrados",
+      "projects": "Stencils Creados",
+      "satisfaction": "Tasa de Satisfacción"
+    },
+    "features": {
+      "editor": {
+        "title": "Editor Completo de Estarcido",
+        "description": "Control total sobre intensidad, tamaño en centímetros y visualización. Compara antes/después, guarda proyectos ilimitados y descarga en PNG de alta calidad.",
+        "items": [
+          "Control de intensidad preciso",
+          "Ajuste de tamaño en centímetros",
+          "Ajustes avanzados (brillo, contraste, nitidez)",
+          "Comparación antes/después",
+          "Galería de proyectos ilimitados",
+          "Descarga de alta calidad"
+        ]
+      },
+      "generator": {
+        "title": "Crea Diseños de Tatuajes desde Cero",
+        "description": "Describe tu idea en palabras y nuestra tecnología avanzada crea el diseño. Perfecto para cuando el cliente tiene la idea pero no la imagen.",
+        "items": [
+          "Tecnología Stencil Flow avanzada",
+          "Descripciones inteligentes",
+          "Múltiples variaciones",
+          "Alta calidad de salida",
+          "De cero al diseño en segundos"
+        ]
+      },
+      "topographic": {
+        "title": "Modo Topográfico",
+        "description": "Mapea volúmenes y curvas con precisión milimétrica. Ideal para cierres y áreas complejas del cuerpo.",
+        "items": [
+          "Analiza la volumetría de la región",
+          "Curvas de nivel automáticas",
+          "Adaptación perfecta a la anatomía",
+          "Visualización 3D simulada"
+        ]
+      },
+      "lines": {
+        "title": "Líneas Perfectas",
+        "description": "Transforma cualquier imagen en un calcomanía con líneas nítidas y listas para tatuar. Olvídate del papel carbón.",
+        "items": [
+          "Extracción inteligente de líneas",
+          "Control de grosor y detalle",
+          "Limpieza automática de ruido",
+          "Listo para impresión térmica"
+        ]
+      },
+      "tools": {
+        "title": "Herramientas Profesionales para Tatuadores Profesionales",
+        "description": "Desbloquea herramientas premium que acelerarán tu trabajo e impresionarán a tus clientes",
+        "colorMatch": {
+          "title": "Coincidencia de Color",
+          "description": "Identifica colores y sugiere tintas compatibles"
+        },
+        "splitA4": {
+          "title": "Dividir en A4",
+          "description": "Divide diseños grandes en múltiples hojas"
+        },
+        "enhance4k": {
+          "title": "Mejorar 4K",
+          "description": "Mejora inteligente manteniendo la calidad"
+        },
+        "removeBg": {
+          "title": "Eliminar Fondo",
+          "description": "Eliminación automática de fondo con IA avanzada"
+        }
+      },
+      "organizations": {
+        "title": "Trabaja en Equipo con Organizaciones",
+        "description": "Crea organizaciones para tu estudio, añade miembros del equipo y comparte créditos. Perfecto para estudios con múltiples tatuadores trabajando juntos.",
+        "items": [
+          "Hasta 5 miembros por organización",
+          "Compartir créditos entre miembros",
+          "Gestión de permisos (propietario/miembro)",
+          "Historial centralizado de proyectos",
+          "Planes Studio y Enterprise disponibles"
+        ],
+        "example": {
+          "name": "Estudio Ink Masters",
+          "members": "5 miembros",
+          "plan": "Plan Studio",
+          "credits": "créditos compartidos"
+        }
+      },
+      "ui": {
+        "promptLabel": "Input del Usuario",
+        "promptExample": "Johnny bravo realista surfeando",
+        "before": "Antes",
+        "after": "Después",
+        "original": "Original",
+        "topographic": "Topográfico",
+        "lines": "Líneas"
+      }
+    },
+    "comparison": {
+      "title": "¿Por qué StencilFlow?",
+      "subtitle": "Compara y ve la diferencia",
+      "feature": "Recurso",
+      "full": "Completo",
+      "basic": "Básico",
+      "limited": "Limitado",
+      "priceStarting": "Desde $10",
+      "updateInfo": "Datos actualizados en diciembre de 2024. Los precios pueden variar.",
+      "features": {
+        "editor": "Editor de Stencil",
+        "designGen": "Generación de Diseños profesional",
+        "topographic": "Modo Topográfico",
+        "lines": "Modo Líneas Perfectas",
+        "size": "Ajuste de Tamaño (cm)",
+        "colorMatch": "Color Match de Tintas",
+        "splitA4": "Dividir en A4",
+        "enhance4k": "Mejorar 4K",
+        "price": "Precio Mensual",
+        "free": "Plan Gratis"
+      }
+    },
+    "howItWorks": {
+      "title": "Cómo Funciona",
+      "subtitle": "Simple, rápido y profesional",
+      "step1": {
+        "title": "Upload",
+        "description": "Sube tu imagen (foto, dibujo o referencia)"
+      },
+      "step2": {
+        "title": "Stencil Flow Procesa",
+        "description": "Nuestra tecnología convierte en stencil perfecto en segundos"
+      },
+      "step3": {
+        "title": "Download",
+        "description": "Descarga PNG listo para imprimir y tatuar"
+      }
+    },
+    "pricing": {
+      "title": "Elige Tu Plan",
+      "subtitle": "Precios justos para todos los tatuadores",
+      "cta": "Ver Planes",
+      "mostPopular": "MÁS POPULAR",
+      "features": {
+        "starter": ["Editor de Stencil completo", "Modo Topográfico", "Modo Líneas Perfectas", "Control total de gastos"],
+        "pro": ["Todo de Starter", "Generación de diseños profesional", "Color Match + Mejora 4K", "Dividir A4"],
+        "studio": ["Todo de Pro", "Hasta 680 generaciones/mes", "Soporte prioritario", "Ideal para estudios"],
+        "enterprise": ["Todo de Studio", "Hasta 1.400 generaciones/mes", "Soporte dedicado 24/7", "SLA garantizado 99.9%"]
+      }
+    },
+    "finalCta": {
+      "title": "¿Listo para Revolucionar tus Estarcidos?",
+      "subtitle": "Únete a",
+      "subtitleEnd": "tatuadores que ya usan StencilFlow",
+      "cta": "Comenzar Ahora",
+      "dashboard": "Ir al Panel",
+      "thousands": "miles de",
+      "checks": {
+        "payAsYouGo": "Paga solo por lo que uses",
+        "noExpiry": "Los créditos nunca caducan",
+        "fullControl": "Control total de gastos"
+      }
+    },
+    "footer": {
+      "description": "La plataforma más avanzada para la creación de stencils de tatuaje profesionales.",
+      "product": "Producto",
+      "features": "Recursos",
+      "pricing": "Precios",
+      "legal": "Legal",
+      "terms": "Términos de Uso",
+      "privacy": "Política de Privacidad",
+      "support": "Soporte",
+      "contact": "Contacto",
+      "rights": "Todos los derechos reservados.",
+      "dashboard": "Dashboard",
+      "security": "Pago seguro vía Stripe"
+    }
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Bienvenido de nuevo",
+    "headerSubtitle": "Gestiona tus proyectos e historial",
+    "tabs": {
+      "projects": "Proyectos",
+      "history": "Galería IA Gen"
+    },
+    "usage": {
+      "current": "Uso Mensal",
+      "limit": "Límite Mensual",
+      "unlimited": "Ilimitado",
+      "reset": "Se reinicia el {date}",
+      "low": "Uso bajo",
+      "medium": "Uso moderado",
+      "high": "Uso alto",
+      "noRestrictions": "Sin restricciones"
+    },
+    "upgrade": {
+      "title": "Desbloquea Todo el Potencial",
+      "subtitle": "Genera estarcidos ilimitados por $10/mes",
+      "cta": "Ver Planes"
+    },
+    "workflow": {
+      "title": "Flujo de Trabajo",
+      "step1": {
+        "title": "1. Sube la Imagen",
+        "desc": "Sube una foto, dibujo o referencia."
+      },
+      "step2": {
+        "title": "2. IA de Alta Fidelidade",
+        "desc": "Nuestra IA captura el 100% de los detalles."
+      },
+      "step3": {
+        "title": "3. Descarga e Imprime",
+        "desc": "Listo para impresión térmica."
+      }
+    },
+    "gallery": {
+      "title": "Galería Reciente",
+      "search": "Buscar proyecto...",
+      "empty": "Aún no hay proyectos",
+      "emptyDescription": "¡Crea tu primer estarcido!",
+      "noResults": "No se encontraron proyectos",
+      "noResultsDescription": "Prueba otra búsqueda o limpia los filtros",
+      "clearFilters": "Limpiar filtros",
+      "createNow": "Crear Ahora",
+      "newStencil": "Nuevo Estarcido",
+      "clickToEnlarge": "Clic para ampliar",
+      "original": "Original",
+      "stencil": "Estarcido",
+      "iaTitle": "Galería IA Gen",
+      "iaSearch": "Buscar por prompt...",
+      "iaEmpty": "Aún no hay imágenes generadas",
+      "iaEmptyDescription": "¡Usa IA Gen para crear tu primera arte!",
+      "goToIAGen": "Ir a IA Gen",
+      "noIAResults": "No se encontraron imágenes",
+      "noDescription": "Sin descripción"
+    },
+    "actions": {
+      "deleteConfirm": "¿Estás seguro de que quieres eliminar este proyecto?",
+      "deleteConfirmIA": "¿Estás seguro de que quieres eliminar esta imagen?",
+      "deleteError": "Error al eliminar el proyecto",
+      "loadFailed": "Error de conexión. Comprueba tu internet e inténtalo de nuevo."
+    },
+    "error": {
+      "unavailable": "⚠️ Servicio temporalmente no disponible",
+      "slowness": "Estamos experimentando lentitud en los servidores. Por favor, espera unos segundos y recarga la página.",
+      "tryAgain": "Intentar de nuevo",
+      "goHome": "Volver al inicio",
+      "support": "Si el problema persiste, contacta con el soporte."
+    },
+    "nav": {
+      "editor": "Editor",
+      "generator": "IA Gen",
+      "tools": "Herramientas",
+      "myBoletos": "Mis Boletos",
+      "mySubscription": "Mi Suscripción",
+      "support": "Soporte",
+      "user": "Usuario",
+      "settings": "Configuración",
+      "upgrade": "Mejorar",
+      "logout": "Cerrar Sesión"
+    }
+  },
+  "PricingPage": {
+    "title": "Planes de Suscripción",
+    "subtitle": "Elige el plan ideal para ti. Cancela cuando quieras.",
+    "back": "Volver",
+    "howItWorks": {
+      "title": "Cómo Funciona",
+      "desc": "Suscríbete y usa StencilFlow durante todo el período elegido. Cada plan incluye un límite mensual de generaciones.",
+      "recurrent": "Suscripción recurrente - Renovación automática",
+      "cancelAnytime": "Cancela en cualquier momento - Sin multas ni cargos",
+      "limitsRenew": "Los límites se renuevan cada mes - Incluso en planes anuales",
+      "immediateAccess": "Acceso inmediato después del pago - Empieza a usarlo ahora",
+      "savePercent": "Ahorra un {percent}% pagando {cycle}"
+    },
+    "cycles": {
+      "monthly": "Mensual",
+      "quarterly": "Trimestral",
+      "semiannual": "Semestral",
+      "yearly": "Anual",
+      "bestOffer": "¡Mejor Oferta!",
+      "save": "Ahorra {percent}%"
+    },
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "description": "Ideal para empezar",
+        "limit": "{count} generaciones/mes"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Para tatuadores profesionales",
+        "limit": "{count} generaciones/mes"
+      },
+      "studio": {
+        "name": "Studio",
+        "description": "Para estudios y uso profesional",
+        "limit": "{count} generaciones/mes"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "Uso verdaderamente ilimitado",
+        "limit": "{count} generaciones/mes"
+      }
+    },
+    "popular": "MÁS POPULAR",
+    "perMonth": "/mes",
+    "billingPeriod": "Cobro {period}: {price}",
+    "savings": "✓ Ahorra {price}/mes ({percent}% de descuento)",
+    "subscribe": "Suscribirse {name}",
+    "faq": {
+      "title": "Preguntas Frecuentes",
+      "q1": "¿Puedo cambiar de plan más adelante?",
+      "a1": "¡Sí! Puedes subir o bajar de nivel en cualquier momento.",
+      "q2": "¿Cómo funciona la cancelación?",
+      "a2": "Puedes cancelar cuando quieras. Seguirás teniendo acceso hasta el final del periodo pagado.",
+      "q3": "¿Qué métodos de pago se aceptan?",
+      "a3": "PIX (instantáneo), Boleto Bancario y Tarjeta de Crédito.",
+      "q4": "¿Cómo funciona la renovación del plan?",
+      "a4": "Renovación automática cada {months} meses. Recibirás un correo 7 días antes de la renovación."
+    }
+  },
+  "checkout": {
+    "title": "Pago",
+    "loginRequired": {
+      "title": "Inicia sesión para continuar",
+      "desc": "Para suscribirte al plan {plan}, necesitas crear una cuenta o iniciar sesión.",
+      "button": "Entrar o Crear Cuenta"
+    },
+    "success": {
+      "title": "¡Plan Activado!",
+      "redirecting": "Redireccionando..."
+    },
+    "paymentMethod": {
+      "label": "Método de Pago",
+      "pix": "PIX",
+      "boleto": "Boleto",
+      "card": "Tarjeta"
+    },
+    "phone": {
+      "label": "Celular",
+      "optional": "(opcional)",
+      "placeholder": "(11) 99999-9999",
+      "desc": "Para recibir notificaciones del pago"
+    },
+    "processing": "Procesando...",
+    "payAmount": "Pagar {amount}",
+    "error": "Error al procesar el pago"
+  },
+  "asaas": {
+    "pix": {
+      "title": "Pagar con PIX",
+      "value": "Valor a pagar",
+      "copyCode": "Código PIX Copiar y Pegar",
+      "copied": "¡Código copiado!",
+      "instructionsTitle": "Cómo pagar con PIX",
+      "instructions": [
+        "Abre la app de tu banco",
+        "Elige pagar con código QR PIX o Copiar y Pegar",
+        "Escanea el código QR o pega el código anterior",
+        "Confirma el pago",
+        "¡Listo! Tu plan se activará automáticamente"
+      ],
+      "expiresAt": "Código QR válido hasta el {date}"
+    },
+    "boleto": {
+      "title": "Valor del boleto",
+      "dueDate": "Vencimiento: {date}",
+      "daysUntilDue": "{count, plural, =1 {# día} other {# días}} para el vencimiento",
+      "openPdf": "Abrir Boleto (PDF)",
+      "copyBarcode": "Copiar Código de Barras",
+      "barcodeCopied": "¡Código Copiado!",
+      "barcodeLabel": "Código de Barras",
+      "instructionsTitle": "Cómo pagar el boleto",
+      "instructions": [
+        "Haz clic en 'Abrir Boleto' para descargar el PDF",
+        "Paga en la app de tu banco o en administraciones de lotería",
+        "O copia el código de barras y pégalo en la app del banco",
+        "El pago puede tardar hasta 3 días hábiles en compensarse",
+        "Tu plan se activará tras la confirmación"
+      ],
+      "waitAviso": "Tras el pago, espera hasta 3 días hábiles para la activación"
+    },
+    "creditCard": {
+      "number": "Número de la Tarjeta",
+      "holderName": "Nombre en la Tarjeta",
+      "holderNamePlaceholder": "NOMBRE TAL COMO APARECE EN LA TARJETA",
+      "email": "Correo del Titular",
+      "month": "Mes",
+      "year": "Año",
+      "cvv": "CVV",
+      "phone": "Teléfono",
+      "cep": "Código Postal",
+      "brand": "Marca",
+      "securityAviso": "Tus datos se cifran y procesan de forma segura por Asaas. No almacenamos la información de tu tarjeta."
+    },
+    "cpfCnpj": {
+      "label": "ID Fiscal (CPF/CNPJ)",
+      "invalidCpf": "CPF inválido",
+      "invalidCnpj": "CNPJ inválido",
+      "cpfDesc": "CPF del titular",
+      "cnpjDesc": "CNPJ de la empresa"
+    }
+  },
+  "editor": {
+    "title": "Editor de Estarcido",
+    "upload": {
+      "button": "Cargar Imagen",
+      "hint": "Arrastre o haga clic para cargar"
+    },
+    "controls": {
+      "title": "Ajustes de Estarcido",
+      "size": "Tamaño (cm)",
+      "intensity": "Intensidad",
+      "style": "Estilo",
+      "generate": "Generar Estarcido",
+      "regenerate": "Regenerar",
+      "reset": "Resetear Ajustes",
+      "undo": "Deshacer",
+      "redo": "Rehacer",
+      "adjustments": "Ajustes Avanzados",
+      "modes": "Modo",
+      "extraInstructions": "Instrucciones extra...",
+      "generateAnime": "Generar (Ilustración)",
+      "generateStandard": "Generar Estarcido",
+      "presets": {
+        "A4": "A4",
+        "A3": "A3",
+        "Portrait": "Retrato",
+        "Square": "Cuadrado"
+      }
+    },
+    "comparison": {
+      "horizontal": "Horizontal",
+      "blend": "Mezcla",
+      "holdSpace": "Mantenga ESPACIO para comparar"
+    },
+    "actions": {
+      "download": "Descargar",
+      "save": "Guardar Proyecto",
+      "saveShort": "Guardar",
+      "saving": "Guardando...",
+      "copy": "Copiar",
+      "drawing": "Modo Dibujo",
+      "new": "Nueva Imagen",
+      "create": "Crear Estarcido",
+      "generate": "Generar"
+    },
+    "styles": {
+      "standard": "Líneas",
+      "perfect_lines": "Topográfico",
+      "anime": "Ilustración",
+      "standardDesc": "✏️ Fotos → Líneas",
+      "perfectLinesDesc": "🗺️ Máximo detalle",
+      "animeDesc": "🎨 Anime, Ilustraciones, Maori"
+    },
+    "messages": {
+      "generating": "Generando su estarcido...",
+      "applyingAdjustments": "Aplicando ajustes...",
+      "saveSuccess": "¡Proyecto guardado con éxito!",
+      "saveError": "Error al guardar el proyecto",
+      "downloadStarted": "¡Descarga iniciada!",
+      "copied": "¡Copiado al portapapeles!"
+    }
+  },
+  "generator": {
+    "title": "IA Gen - Generador de Ideas",
+    "emptyState": "Tu arte aparecerá aquí",
+    "hint": "Describe tu idea en el panel",
+    "prompt": {
+      "label": "Describe tu Idea",
+      "placeholder": "Ej: Calavera mexicana con rosas...",
+      "history": "Historial"
+    },
+    "reference": {
+      "add": "Imagen de referencia (opcional)",
+      "added": "Imagen de referencia añadida"
+    },
+    "styles": {
+      "label": "Estilo (opcional)",
+      "applied": "estilo aplicado",
+      "blackwork": "Blackwork",
+      "fineline": "Fine Line",
+      "neo_traditional": "Neo Trad",
+      "realism": "Realismo",
+      "dotwork": "Dotwork",
+      "old_school": "Old School"
+    },
+    "bodyRegion": {
+      "label": "Región del Cuerpo",
+      "free": { "name": "Libre", "hint": "Sin restricción de formato" },
+      "arm": { "name": "Brazo", "hint": "Alargado, diseño vertical" },
+      "chest": { "name": "Pecho", "hint": "Diseño amplio y centrado" },
+      "back": { "name": "Espalda", "hint": "Lienzo grande, detallado" },
+      "leg": { "name": "Pierna", "hint": "Largo, sigue la curva" },
+      "ribs": { "name": "Costilla", "hint": "Vertical alargado" }
+    },
+    "negative": {
+      "label": "Evitar (opcional)",
+      "placeholder": "Ej: colores, fondo, texto..."
+    },
+    "size": {
+      "label": "Tamaño (Alta Qualidad)",
+      "A4": "21×29.7cm @ 300 DPI (impresión profesional)",
+      "A3": "29.7×42cm @ 300 DPI (impresión profesional)",
+      "1K": "1024×1024px",
+      "2K": "2048×2048px",
+      "4K": "4096×4096px",
+      "highQuality": "A4/A3 son para impresión profesional (300 DPI)"
+    },
+    "cta": "Generar Diseño",
+    "success": {
+      "title": "¡Arte generado!",
+      "description": "¡Arte generado! Usa los botones en la cabecera para descargar o crear estarcido.",
+      "createStencil": "Crear Estarcido",
+      "download": "Descargar PNG",
+      "another": "Generar otra idea",
+      "newGeneration": "Nueva Generación"
+    },
+    "errors": {
+      "imageTooLarge": "Imagen demasiado grande. Máximo 20MB.",
+      "requiresSubscription": "Esta función requiere un plan de pago.",
+      "generateFailed": "Error al generar imagen."
+    }
+  },
+  "tools": {
+    "title": "Herramientas de Estudio",
+    "subtitle": "Recursos avanzados de IA para tratamiento de imagen y color.",
+    "locked": {
+      "title": "Herramientas Premium",
+      "subtitle": "Desbloquea herramientas avanzadas para tus estarcidos",
+      "cta": "Ver Planes y Precios",
+      "priceFrom": "Desde $10/mes"
+    },
+    "modes": {
+      "enhance": {
+        "name": "Mejorar",
+        "subtitle": "Upscale 4K",
+        "description": "Upscale y restauración 4K"
+      },
+      "colorMatch": {
+        "name": "Color Match",
+        "subtitle": "Paleta tintas",
+        "description": "Análisis de paleta de tintas"
+      },
+      "splitA4": {
+        "name": "Dividir A4",
+        "subtitle": "Múltiples hojas",
+        "description": "Tatuajes grandes en múltiples hojas"
+      },
+      "removeBg": {
+        "name": "Quitar Fondo",
+        "subtitle": "IA Quitar Fondo",
+        "description": "IA Quitar Fondo"
+      }
+    },
+    "upload": {
+      "source": "Fuente de Imagen",
+      "uploadBtn": "Subir",
+      "galleryBtn": "Galería",
+      "clickToUpload": "Clic para subir",
+      "clickToUploadImage": "Clic para subir imagen",
+      "fileTypes": "JPG o PNG",
+      "emptyGallery": "Galería vacía",
+      "originalImage": "Imagen Original",
+      "previous": "Ant.",
+      "next": "Sig.",
+      "of": "de"
+    },
+    "messages": {
+      "enhanceSuccess": "¡Imagen mejorada con éxito!",
+      "colorMatchSuccess": "¡Colores analizados con éxito!",
+      "splitSuccess": "¡Imagen dividida en {count} partes!",
+      "removeBgSuccess": "¡Fondo eliminado con éxito!",
+      "processingError": "Error en el procesamiento. Inténtalo de nuevo.",
+      "galleryLoadError": "Error al cargar imagen de la galería"
+    },
+    "inkBrands": {
+      "generic": "Genérico (Sin marca específica)"
+    }
+  },
+  "migrationNotice": {
+    "title": "¡Actualizamos nuestro sistema de pagos!",
+    "subtitle": "Más opciones y seguridad para ti",
+    "closeLabel": "Cerrar aviso",
+    "paymentMethods": {
+      "pix": {"name": "PIX", "description": "Instantáneo"},
+      "boleto": {"name": "Boleto", "description": "Hasta 3 días"},
+      "card": {"name": "Tarjeta", "description": "Recurrente"}
+    },
+    "recurrence": {
+      "title": "Cómo funciona la recurrencia:",
+      "item1": "El cargo se generará en la fecha de tu primer pago",
+      "item2": "Tendrás hasta {days} días para realizar el pago",
+      "item2Days": "7",
+      "item3": "Después del pago, la recurrencia automática se activa",
+      "item4": "Tu información e historial se han mantenido"
+    },
+    "footer": "¿Dudas? Contacta con soporte."
+  },
+  "installBanner": {
+    "title": "Instalar App",
+    "closeLabel": "Cerrar",
+    "appName": "StencilFlow",
+    "description": "Accede más rápido desde tu pantalla de inicio",
+    "installButton": "Instalar App",
+    "iosButton": "Cómo instalar",
+    "features": "Gratis • Sin ocupar espacio • Funciona sin conexión",
+    "iosInstructions": {
+      "title": "Instalar en iOS",
+      "step1Title": "Toca Compartir",
+      "step1Description": "En Safari, toca el ícono de compartir en la barra inferior",
+      "step2Title": "Toca Añadir a pantalla de inicio",
+      "step2Description": "Desplázate hacia abajo en el menú y selecciona esta opción",
+      "step3Title": "Confirma tocando Añadir",
+      "step3Description": "La app se instalará en tu pantalla de inicio",
+      "confirmButton": "Entendido"
+    }
+  },
+  "metadata": {
+    "title": "StencilFlow - Editor Profesional de Estarcidos de Tatuajes",
+    "description": "Transforma cualquier imagen en estarcido de tatuaje profesional con la Tecnología StencilFlow. Editor completo, modo topográfico, líneas perfectas y herramientas premium. Gratis para comenzar."
+  }
+}

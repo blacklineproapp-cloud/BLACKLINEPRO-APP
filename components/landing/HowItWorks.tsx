@@ -1,25 +1,28 @@
+import { useTranslations } from 'next-intl';
 import { Upload, Sparkles, Download } from 'lucide-react';
 
 export default function HowItWorks() {
+  const t = useTranslations('landing.howItWorks');
+  
   const steps = [
     {
       number: 1,
-      title: 'Upload',
-      description: 'Envie sua imagem (foto, desenho ou referência)',
+      title: t('step1.title'),
+      description: t('step1.description'),
       icon: Upload,
       color: 'emerald'
     },
     {
       number: 2,
-      title: 'Stencil Flow Processa',
-      description: 'Nossa tecnologia converte em stencil perfeito em segundos',
+      title: t('step2.title'),
+      description: t('step2.description'),
       icon: Sparkles,
       color: 'purple'
     },
     {
       number: 3,
-      title: 'Download',
-      description: 'Baixe PNG pronto para imprimir e tatuar',
+      title: t('step3.title'),
+      description: t('step3.description'),
       icon: Download,
       color: 'blue'
     }
@@ -51,10 +54,10 @@ export default function HowItWorks() {
       <div className="max-w-5xl mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-            Como Funciona
+            {t('title')}
           </h2>
           <p className="text-lg text-zinc-400">
-            Simples, rápido e profissional
+            {t('subtitle')}
           </p>
         </div>
 

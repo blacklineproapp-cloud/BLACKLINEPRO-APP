@@ -7,7 +7,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getUserOrganizations, createOrganization } from '@/lib/organizations';
-import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
+import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
 
 // =====================================================
 // GET /api/organizations

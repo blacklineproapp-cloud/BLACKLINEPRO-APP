@@ -5,87 +5,6 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-04-10',
-});
-
-// Cache simples em memória para emails pagantes do Stripe
-let stripePaidEmailsCache: {
-  emails: Set<string>;
-  timestamp: number;
-} | null = null;
-
-const CACHE_TTL = 30 * 1000; // 30 segundos (reduzido para ver mudanças mais rápido)
-
-async function getStripePaidEmails(): Promise<Set<string>> {
-  // Verificar cache
-  if (stripePaidEmailsCache && (Date.now() - stripePaidEmailsCache.timestamp) < CACHE_TTL) {
-    console.log('[Admin Metrics] 📦 Usando cache de emails Stripe');
-    return stripePaidEmailsCache.emails;
-  }
-
-  console.log('[Admin Metrics] 🔍 Buscando pagamentos do Stripe (cache expirado)...');
-
-  // Buscar do Stripe
-  let charges: Stripe.Charge[] = [];
-  let hasMore = true;
-  let startingAfter: string | undefined;
-
-  while (hasMore) {
-    const response = await stripe.charges.list({
-      limit: 100,
-      starting_after: startingAfter,
-      expand: ['data.customer'],
-    });
-
-    charges = [...charges, ...response.data];
-    hasMore = response.has_more;
-    if (response.data.length > 0) {
-      startingAfter = response.data[response.data.length - 1].id;
-    }
-  }
-
-  const successfulCharges = charges.filter(c => c.status === 'succeeded' && c.paid);
-
-  // Coletar emails
-  const paidEmailsSet = new Set<string>();
-
-  for (const charge of successfulCharges) {
-    let email = charge.billing_details?.email || charge.receipt_email || '';
-
-    if (!email && charge.customer) {
-      const customerId = typeof charge.customer === 'string' ? charge.customer : charge.customer.id;
-      try {
-        const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
-        if (!customer.deleted && customer.email) {
-          email = customer.email;
-        }
-      } catch (e: any) {
-        console.error('[Admin Metrics] Erro ao buscar customer do Stripe:', {
-          customerId,
-          error: e.message
-        });
-        // Continuar processamento mesmo com erro
-      }
-    }
-
-    if (email) {
-      paidEmailsSet.add(email.toLowerCase().trim());
-    }
-  }
-
-  // Atualizar cache
-  stripePaidEmailsCache = {
-    emails: paidEmailsSet,
-    timestamp: Date.now()
-  };
-
-  console.log('[Admin Metrics] 💳 Emails que pagaram via Stripe:', paidEmailsSet.size);
-
-  return paidEmailsSet;
-}
 
 export async function GET(req: Request) {
   try {
@@ -102,20 +21,11 @@ export async function GET(req: Request) {
       .eq('clerk_id', userId)
       .single();
 
-    // Log para debug
-    console.log('[Admin Check]', { 
-      clerkId: userId, 
-      userEmail: user?.email, 
-      error: userError?.message 
-    });
-
     const userIsAdmin = await isAdmin(userId);
-    
+
     if (!userIsAdmin) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
-
-    console.log('[Admin Check] ACESSO PERMITIDO para:', user?.email);
 
     // =========================================================================
     // MÉTRICAS GERAIS
@@ -139,7 +49,7 @@ export async function GET(req: Request) {
       .select('*', { count: 'exact', head: true })
       .gte('last_active_at', sevenDaysAgo);
 
-    // Usuários online (últimos 5 minutos baseado em last_active_at)
+    // Usuários online (últimos 5 minutos)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const { count: onlineUsersCount } = await supabaseAdmin
       .from('users')
@@ -159,7 +69,7 @@ export async function GET(req: Request) {
     const { data: planStats } = await supabaseAdmin
       .from('users')
       .select('plan')
-      .in('plan', ['free', 'starter', 'pro', 'studio', 'enterprise']);
+      .in('plan', ['free', 'starter', 'pro', 'studio', 'enterprise', 'legacy']);
 
     const planCounts = {
       free: 0,
@@ -167,6 +77,7 @@ export async function GET(req: Request) {
       pro: 0,
       studio: 0,
       enterprise: 0,
+      legacy: 0,
     };
 
     planStats?.forEach(u => {
@@ -176,117 +87,140 @@ export async function GET(req: Request) {
     });
 
     // =========================================================================
-    // RECEITA (APENAS PAGAMENTOS REAIS DO STRIPE)
+    // RECEITA CONSOLIDADA (STRIPE + ASAAS)
     // =========================================================================
 
-    // Buscar emails que pagaram via Stripe (fonte da verdade)
-    const stripePayingEmails = await getStripePaidEmails();
+    // 1. Receita Histórica do Stripe (Valor confirmado no resumo de migração)
+    const stripeHistoricalRevenue = 7025.00;
 
-    // Receita total - APENAS de emails que pagaram via Stripe
+    // 2. Receita Asaas (Distinguir Real vs Teste se possível)
+    // Se o environment for sandbox, a receita do banco é considerada teste.
+    // Para maior precisão, o ideal seria um campo 'is_test' na tabela payments.
+    const isSandbox = process.env.ASAAS_ENVIRONMENT === 'sandbox';
+
     const { data: allPayments } = await supabaseAdmin
       .from('payments')
-      .select('amount, user_id')
-      .eq('status', 'succeeded');
+      .select('amount, status, metadata')
+      .in('status', ['succeeded', 'paid']);
 
-    // Filtrar apenas pagamentos de usuários que realmente pagaram no Stripe
-    const { data: payingUsers } = await supabaseAdmin
-      .from('users')
-      .select('id, email')
-      .in('id', allPayments?.map(p => p.user_id) || []);
-
-    const userEmailMap = new Map(payingUsers?.map(u => [u.id, u.email.toLowerCase()]) || []);
+    const asaasRevenue = allPayments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0;
     
-    const realPayments = allPayments?.filter(p => {
-      const email = userEmailMap.get(p.user_id);
-      return email && stripePayingEmails.has(email);
-    }) || [];
+    // Separamos a receita Asaas entre 'Real' e 'Teste'
+    // Se estivermos em sandbox, toda receita de payments é teste.
+    // Se estivermos em produção, toda receita é real.
+    const asaasRealRevenue = isSandbox ? 0 : asaasRevenue;
+    const asaasTestRevenue = isSandbox ? asaasRevenue : 0;
 
-    const totalRevenue = realPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const totalRevenue = stripeHistoricalRevenue + asaasRealRevenue;
 
-    // Receita deste mês - APENAS de emails que pagaram via Stripe
+    // Receita deste mês (Apenas Asaas Real)
     const firstDayOfMonth = new Date();
     firstDayOfMonth.setDate(1);
     firstDayOfMonth.setHours(0, 0, 0, 0);
 
     const { data: monthPayments } = await supabaseAdmin
       .from('payments')
-      .select('amount, user_id')
-      .eq('status', 'succeeded')
+      .select('amount')
+      .in('status', ['succeeded', 'paid'])
       .gte('created_at', firstDayOfMonth.toISOString());
 
-    const realMonthPayments = monthPayments?.filter(p => {
-      const email = userEmailMap.get(p.user_id);
-      return email && stripePayingEmails.has(email);
-    }) || [];
-
-    const monthRevenue = realMonthPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const monthRevenue = isSandbox ? 0 : (monthPayments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0);
 
     // =========================================================================
-    // DETALHAMENTO DE PAGANTES (STRIPE API = FONTE DA VERDADE)
+    // KPIS DA MIGRAÇÃO (STRIPE -> ASAAS)
     // =========================================================================
 
-    // Buscar emails que pagaram via Stripe (com cache)
-    const paidEmailsSet = await getStripePaidEmails();
+    // Total na fila de migração
+    const { count: totalMigrationQueue } = await supabaseAdmin
+      .from('migration_queue')
+      .select('*', { count: 'exact', head: true });
 
-    // 2. Buscar TODOS os usuários com is_paid = true no banco
+    // Já migraram (Forneceram CPF e criaram assinatura)
+    const { count: migratedCount } = await supabaseAdmin
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('migration_status', 'migrated');
+
+    // Pendentes de CPF (apenas usuários na fila de migração)
+    const { count: pendingCpfCount } = await supabaseAdmin
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('requires_cpf', true)
+      .eq('migration_status', 'pending'); // Apenas usuários em migração
+
+    // Usuários ativos do Stripe (que ainda não migraram mas têm acesso)
+    const { count: stripeActiveWaiters } = await supabaseAdmin
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('migration_status', 'pending')
+      .eq('is_paid', true);
+
+    // =========================================================================
+    // DETALHAMENTO DE PAGANTES
+    // =========================================================================
+
+    // Buscar TODOS os usuários com is_paid = true
     const { data: allPaidUsers } = await supabaseAdmin
       .from('users')
-      .select('id, email, name, plan, subscription_id, subscription_status, created_at, admin_courtesy, grace_period_until, auto_bill_after_grace, admin_courtesy_granted_at, admin_courtesy_granted_by')
+      .select('id, email, name, plan, subscription_status, created_at, admin_courtesy, grace_period_until, asaas_subscription_id, migration_status, is_paid')
       .eq('is_paid', true)
       .order('email');
 
-    console.log('[Admin Metrics] 📊 Total is_paid=true no banco:', allPaidUsers?.length || 0);
-
-    // 3. Separar: Stripe vs Cortesia vs Grace Period
-    const stripeCustomers: any[] = [];
+    // Separar: Asaas Subscribers vs Cortesia vs Grace Period
+    const asaasCustomers: any[] = [];
     const courtesyUsers: any[] = [];
     const gracePeriodUsers: any[] = [];
+    const stripeMigratedActive: any[] = [];
 
-    for (const user of allPaidUsers || []) {
-      const emailLower = user.email?.toLowerCase().trim() || '';
-
-      // Se pagou via Stripe (fonte da verdade!)
-      if (paidEmailsSet.has(emailLower)) {
-        stripeCustomers.push(user);
+    for (const u of allPaidUsers || []) {
+      // Se é um usuário recém-migrado que ainda não caiu na rotina Asaas
+      if (u.migration_status === 'pending' && u.is_paid) {
+        stripeMigratedActive.push(u);
       }
-      // Se tiver subscription_id ativo e for PRO/STUDIO/ENTERPRISE
-      else if (user.subscription_id?.startsWith('sub_') && ['active', 'trialing'].includes(user.subscription_status || '')) {
-          stripeCustomers.push(user); // Considera Stripe Customer mesmo se o email não bateu no cache exato agora
+      // Se tem assinatura Asaas
+      else if (u.asaas_subscription_id && ['active', 'trialing'].includes(u.subscription_status || '')) {
+        asaasCustomers.push(u);
       }
-      // Se não pagou via Stripe, pode ser cortesia ou grace period
+      // Se tem grace period
+      else if (u.grace_period_until) {
+        gracePeriodUsers.push(u);
+      }
+      // Se é cortesia
+      else if (u.admin_courtesy) {
+        courtesyUsers.push(u);
+      }
       else {
-        // Tem grace period?
-        if (user.grace_period_until && user.auto_bill_after_grace) {
-          gracePeriodUsers.push(user);
-        }
-        // Senão, é cortesia (migração ou admin)
-        else {
-            // Verificar se é BOLETO MANUAL (admin_courtesy = true mas na verdade é boleto antigo)
-            // Lógica: Se admin_courtesy for true, conta como cortesia. 
-            // Se for false, mas tiver is_paid=true e sem stripe match, algo está estranho (provavelmente legado ou erro).
-            // Vamos logar como 'unknown_paid' se não for cortesia explícita.
-            
-            if (user.admin_courtesy === true) {
-                courtesyUsers.push(user);
-            } else {
-                // Caso raro: is_paid=true, sem Stripe, sem Grace Period, sem Courtesy Flag.
-                // Pode ser assinante antigo legado? Vamos agrupar em 'Outros/Manual' ou jogar pra cortesia?
-                // O usuário reclamou de 29 vs 9. 
-                // Se 29 apareciam, é porque caíam no 'else' final.
-                // Vamos ser mais rigorosos: Só é cortesia se admin_courtesy === true.
-                console.log(`[Metrics Audit] Usuário is_paid=true mas sem Categoria Clara: ${user.email}`);
-            }
-        }
+        asaasCustomers.push(u);
       }
     }
 
-    // Filtrar grace period para quem vai receber link dia 10/01
-    const usersToReceiveLink = gracePeriodUsers.filter(u => {
-      if (!u.grace_period_until) return false;
-      const graceDate = new Date(u.grace_period_until);
-      const jan10 = new Date('2025-01-10T23:59:59Z');
-      return graceDate <= jan10;
-    });
+    // =========================================================================
+    // MÉTRICAS DE RECORRÊNCIA E RENOVAÇÃO (ASAAS)
+    // =========================================================================
+    
+    // Buscar MRR da API do Asaas (fonte de verdade)
+    const { AsaasService } = await import('@/lib/asaas-service');
+    const asaasMetrics = await AsaasService.getFinancialMetrics();
+    const mrr = asaasMetrics.mrr; // MRR real da API Asaas
+    
+    console.log(`[Metrics] MRR da API Asaas: R$ ${mrr.toFixed(2)}`);
+
+    // Usuários que precisam renovar nos próximos 7 dias
+    const next7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    
+    // 1. Pela fila de migração (que ainda não criaram assinatura mas estão ativos)
+    const { data: renewalMigration } = await supabaseAdmin
+      .from('migration_queue')
+      .select('email, current_plan, next_due_date, status')
+      .eq('status', 'pending')
+      .lte('next_due_date', next7Days);
+
+    // 2. Por assinaturas existentes que vencem logo
+    const { data: upcomingInvoices } = await supabaseAdmin
+      .from('subscriptions')
+      .select('current_period_end, asaas_subscription_id, customer_id')
+      .eq('status', 'active')
+      .lte('current_period_end', next7Days);
 
     // =========================================================================
     // USO DE IA
@@ -343,7 +277,7 @@ export async function GET(req: Request) {
     });
 
     // =========================================================================
-    // CUSTOS DE IA (DIÁRIO, SEMANAL, MENSAL, ANUAL)
+    // CUSTOS DE IA
     // =========================================================================
 
     // Hoje
@@ -382,24 +316,24 @@ export async function GET(req: Request) {
 
     const yearCost = yearCosts?.reduce((sum, item) => sum + (Number(item.cost) || 0), 0) || 0;
 
-    // Total de todos os tempos
+    // Total
     const { data: allCosts } = await supabaseAdmin
       .from('ai_usage')
       .select('cost');
 
     const totalCost = allCosts?.reduce((sum, item) => sum + (Number(item.cost) || 0), 0) || 0;
-
-    // =========================================================================
-    // DEBUG: Validação de categorias
-    // =========================================================================
-    console.log('[Admin Metrics] ✅ Payment Categories (Stripe API as source of truth):');
-    console.log('  Total is_paid=true:', allPaidUsers?.length || 0);
-    console.log('  Stripe Customers (real payments):', stripeCustomers.length);
-    console.log('  Courtesy (migration):', courtesyUsers.length);
-    console.log('  Grace Period (all):', gracePeriodUsers.length);
-    console.log('  Grace Period (to receive link Jan 10):', usersToReceiveLink.length);
-    console.log('  SUM:', stripeCustomers.length + courtesyUsers.length + gracePeriodUsers.length);
-    console.log('  ✅ Math check:', (stripeCustomers.length + courtesyUsers.length + gracePeriodUsers.length) === (allPaidUsers?.length || 0) ? 'OK' : 'ERROR');
+    
+    // Debug: Log AI costs para investigar valores impossíveis
+    console.log(`[AI Costs Debug] Hoje: $${todayCost.toFixed(2)} (${todayCosts?.length || 0} registros)`);
+    console.log(`[AI Costs Debug] Semana: $${weekCost.toFixed(2)} (${weekCosts?.length || 0} registros)`);
+    console.log(`[AI Costs Debug] Mês: $${monthCost.toFixed(2)} (${monthCosts?.length || 0} registros)`);
+    console.log(`[AI Costs Debug] Ano: $${yearCost.toFixed(2)} (${yearCosts?.length || 0} registros)`);
+    console.log(`[AI Costs Debug] Total: $${totalCost.toFixed(2)} (${allCosts?.length || 0} registros)`);
+    
+    // Validação: Se hoje > total, há dados corrompidos
+    if (todayCost > totalCost) {
+      console.error(`[AI Costs] ERRO: Custo de hoje ($${todayCost}) > Total ($${totalCost})!`);
+    }
 
     // =========================================================================
     // RESPONSE
@@ -417,18 +351,42 @@ export async function GET(req: Request) {
       revenue: {
         total: totalRevenue,
         thisMonth: monthRevenue,
+        stripeHistorical: stripeHistoricalRevenue,
+        asaasReal: asaasRealRevenue,
+        asaasTest: asaasTestRevenue,
+        isSandbox,
+      },
+      migration: {
+        total: totalMigrationQueue || 0,
+        migrated: migratedCount || 0,
+        pendingCpf: pendingCpfCount || 0,
+        pendingAsaas: stripeActiveWaiters || 0, // Usuários pagos mas ainda não no Asaas
+        funnel: {
+          total: totalMigrationQueue || 0,
+          activeOnStripe: (migratedCount || 0) + (stripeActiveWaiters || 0),
+          completed: migratedCount || 0,
+        }
       },
       paymentDetails: {
-        stripeCustomers: {
-          count: stripeCustomers.length,
-          users: stripeCustomers.map(u => ({
+        asaasCustomers: {
+          count: asaasCustomers.length,
+          users: asaasCustomers.map(u => ({
             id: u.id,
             email: u.email,
             name: u.name,
             plan: u.plan,
-            subscription_id: u.subscription_id,
+            asaas_subscription_id: u.asaas_subscription_id,
             subscription_status: u.subscription_status,
             created_at: u.created_at
+          })),
+        },
+        stripeMigrated: {
+          count: stripeMigratedActive.length,
+          users: stripeMigratedActive.map(u => ({
+            id: u.id,
+            email: u.email,
+            name: u.name,
+            plan: u.plan,
           })),
         },
         courtesyUsers: {
@@ -438,22 +396,26 @@ export async function GET(req: Request) {
             email: u.email,
             name: u.name,
             plan: u.plan,
-            admin_courtesy_granted_at: u.admin_courtesy_granted_at,
-            admin_courtesy_granted_by: u.admin_courtesy_granted_by
           })),
         },
         gracePeriod: {
           total: gracePeriodUsers.length,
-          toReceiveLinkJan10: usersToReceiveLink.length,
-          users: usersToReceiveLink.map(u => ({
+          users: gracePeriodUsers.map(u => ({
             id: u.id,
             email: u.email,
             name: u.name,
             plan: u.plan,
             grace_period_until: u.grace_period_until,
-            created_at: u.created_at
           })),
         },
+        recurrence: {
+          mrr,
+          pendingCpf: pendingCpfCount || 0,
+          upcomingRenewals: [
+            ...(renewalMigration || []).map(m => ({ email: m.email, plan: m.current_plan, date: m.next_due_date, type: 'migration' })),
+            ...(upcomingInvoices || []).map(s => ({ id: s.asaas_subscription_id, date: s.current_period_end, type: 'subscription' }))
+          ]
+        }
       },
       aiUsage: {
         totalRequests: totalAIRequests || 0,
@@ -482,5 +444,4 @@ export async function GET(req: Request) {
   }
 }
 
-// Timeout maior porque faz chamadas ao Stripe API
 export const maxDuration = 60;

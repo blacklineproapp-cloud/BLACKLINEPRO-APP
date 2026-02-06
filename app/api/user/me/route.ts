@@ -18,6 +18,10 @@ export async function GET() {
 
     // Usar getOrCreateUser para garantir que o usuário existe
     const user = await getOrCreateUser(userId);
+    
+    // Atualizar timestamp de atividade (não bloqueante)
+    const { updateUserActivity } = await import('@/lib/auth');
+    updateUserActivity(userId).catch(console.error);
 
     if (!user) {
       console.error('[User API] Usuário não encontrado após getOrCreateUser');

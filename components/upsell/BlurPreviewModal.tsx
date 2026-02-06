@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { X, Sparkles, ArrowRight, Lock, Unlock, Eye, EyeOff, Check, Zap, TrendingUp } from 'lucide-react';
 import { PLANS, formatPrice, getMonthlyEquivalent, PLAN_PRICING, type PlanType } from '@/lib/billing/plans';
 import { PLAN_LIMITS } from '@/lib/billing/limits';
-import type { BillingCycle } from '@/lib/stripe/types';
+import type { BillingCycle } from '@/lib/billing/types';
 import UpgradeBadge from './UpgradeBadge';
 
 interface BlurPreviewModalProps {

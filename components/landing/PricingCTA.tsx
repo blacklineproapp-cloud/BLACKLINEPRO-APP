@@ -1,7 +1,10 @@
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/lib/navigation';
 import { Zap, Crown, Sparkles, Infinity, Package } from 'lucide-react';
 
 export default function PricingCTA() {
+  const t = useTranslations('landing.pricing');
+  
   const plans = [
     {
       name: 'Starter',
@@ -10,12 +13,7 @@ export default function PricingCTA() {
       limit: '95 gerações/mês',
       icon: Zap,
       color: 'emerald',
-      features: [
-        'Editor de Stencil completo',
-        'Modo Topográfico',
-        'Modo Linhas Perfeitas',
-        'Controle total de gastos'
-      ]
+      features: t.raw('features.starter')
     },
     {
       name: 'Pro',
@@ -25,12 +23,7 @@ export default function PricingCTA() {
       icon: Crown,
       color: 'purple',
       popular: true,
-      features: [
-        'Tudo do Starter',
-        'Geração de designs profissional',
-        'Color Match + Aprimoramento 4K',
-        'Dividir A4'
-      ]
+      features: t.raw('features.pro')
     },
     {
       name: 'Studio',
@@ -39,12 +32,7 @@ export default function PricingCTA() {
       limit: '680 gerações/mês',
       icon: Sparkles,
       color: 'amber',
-      features: [
-        'Tudo do Pro',
-        'Até 680 gerações/mês',
-        'Suporte prioritário',
-        'Ideal para estúdios'
-      ]
+      features: t.raw('features.studio')
     },
     {
       name: 'Enterprise',
@@ -53,12 +41,7 @@ export default function PricingCTA() {
       limit: '1.400 gerações/mês',
       icon: Package,
       color: 'blue',
-      features: [
-        'Tudo do Studio',
-        'Até 1.400 gerações/mês',
-        'Suporte dedicado 24/7',
-        'SLA garantido 99.9%'
-      ]
+      features: t.raw('features.enterprise')
     }
   ];
 
@@ -90,10 +73,10 @@ export default function PricingCTA() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-            Escolha seu Plano
+            {t('title')}
           </h2>
           <p className="text-lg text-zinc-400">
-            Assinatura mensal. Cancele quando quiser.
+            {t('subtitle')}
           </p>
         </div>
 
@@ -111,7 +94,7 @@ export default function PricingCTA() {
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-emerald-500 text-white px-4 py-1 rounded-full text-xs font-bold">
-                    MAIS POPULAR
+                    {t('mostPopular')}
                   </div>
                 )}
 
@@ -138,7 +121,7 @@ export default function PricingCTA() {
                 </div>
 
                 <ul className="space-y-3 mb-6">
-                  {plan.features.map((feature, index) => (
+                  {plan.features.map((feature: string, index: number) => (
                     <li key={index} className="flex items-start gap-2 text-sm">
                       <span className="text-emerald-500 mt-0.5">✓</span>
                       <span className="text-zinc-300">{feature}</span>
@@ -155,7 +138,7 @@ export default function PricingCTA() {
             href="/pricing"
             className="inline-flex items-center gap-2 text-emerald-500 hover:text-emerald-400 font-semibold transition-colors"
           >
-            Ver Todos os Planos e Detalhes
+            {t('cta')}
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>

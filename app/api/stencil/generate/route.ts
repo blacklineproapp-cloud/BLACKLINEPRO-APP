@@ -1,11 +1,11 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
-import { generateStencilFromImage } from '@/lib/gemini';
+import { generateStencilWithCost } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { rateLimit } from '@/lib/ratelimit';
 import { checkEditorLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
-import { BRL_COST } from '@/lib/billing/costs';
+import { calculateCostWithFallback, type OperationType } from '@/lib/billing/costs';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
 import { applyPreviewProtection } from '@/lib/stencil-preview';
@@ -135,25 +135,29 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
   });
 
   // Gerar stencil no modo selecionado pelo usuário
-  const stencilImage = await generateStencilFromImage(image, promptDetails, selectedStyle);
+  const { image: stencilImage, usageMetadata } = await generateStencilWithCost(image, promptDetails, selectedStyle);
 
-  // ✅ REGISTRAR USO após geração bem-sucedida
-  // Mapear estilo para tipo de operação para custo correto
-  const operationCost = selectedStyle === 'anime' 
-    ? BRL_COST.anime 
+  // 💰 CALCULAR CUSTO REAL baseado em tokens usados
+  // Mapear estilo para tipo de operação
+  const operationType: OperationType = selectedStyle === 'anime' 
+    ? 'anime' 
     : selectedStyle === 'perfect_lines' 
-      ? BRL_COST.topographic 
-      : BRL_COST.lines;
-
+      ? 'topographic' 
+      : 'lines';
+  
+  const realCostUSD = calculateCostWithFallback(operationType, usageMetadata);
+  
+  // ✅ REGISTRAR USO após geração bem-sucedida com custo REAL
   await recordUsage({
     userId: userUuid,
     type: 'editor_generation',
     operationType: 'generate_stencil',
-    cost: operationCost,
+    cost: realCostUSD,  // 💰 Custo real em USD da API Gemini
     metadata: {
       style: selectedStyle,
       operation: 'generate_stencil',
-      is_admin: isAdmin
+      is_admin: isAdmin,
+      tokens: usageMetadata  // Guardar tokens para auditoria
     }
   });
 

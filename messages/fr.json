@@ -1,0 +1,697 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "download": "Télécharger",
+    "upload": "Téléverser",
+    "share": "Partager",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "viewMore": "Voir plus",
+    "viewLess": "Voir moins",
+    "width": "Largeur",
+    "height": "Hauteur",
+    "intensity": "Intensité",
+    "plan": "Plan",
+    "upgrade": "Améliorer",
+    "all": "Tous"
+  },
+  "landing": {
+    "hero": {
+      "badge": "Technologie Stencil Flow et Précision",
+      "title": "L'Art du",
+      "titleHighlight": "Pochoir.",
+      "subtitle": "Donnez vie à vos idées avec la technologie la plus avancée du marché. Des lignes fines aux ombrages complexes.",
+      "cta": {
+        "primary": "S'INSCRIRE",
+        "secondary": "TARIFS",
+        "dashboard": "ALLER AU TABLEAU DE BORD"
+      },
+      "features": {
+        "fidelity": {
+          "label": "Fidélité Totale",
+          "sub": "Lignes Nettes"
+        },
+        "technology": {
+          "label": "Stencil Flow",
+          "sub": "Technologie Propriétaire"
+        },
+        "ready": {
+          "label": "Prêt pour A4",
+          "sub": "Imprimez instantanément"
+        }
+      },
+      "socialProof": "+2.500 artistes utilisant aujourd'hui",
+      "tabs": {
+        "editor": {
+          "title": "Éditeur Professionnel",
+          "description": "Contrôle total sur chaque détail de votre stencil."
+        },
+        "generator": {
+          "title": "Générateur StencilFlow",
+          "description": "Créez des designs exclusifs à partir de vos idées."
+        },
+        "topographic": {
+          "title": "Mode Topographique",
+          "description": "Cartographie de relief 3D pour les zones complexes"
+        },
+        "lines": {
+          "title": "Lignes Parfaites",
+          "description": "Traits propres et définis prêts pour le calque"
+        }
+      }
+    },
+    "stats": {
+      "users": "Utilisateurs Inscrits",
+      "projects": "Stencils Créés",
+      "satisfaction": "Taux de Satisfaction"
+    },
+    "features": {
+      "editor": {
+        "title": "Éditeur de Pochoir Complet",
+        "description": "Contrôle total sur l'intensité, la taille en centimètres et la visualisation. Comparez avant/après, enregistrez des projets illimités et téléchargez en PNG haute qualité.",
+        "items": [
+          "Contrôle d'intensité précis",
+          "Ajustement de la taille en centimètres",
+          "Ajustements avancés (luminosité, contraste, netteté)",
+          "Comparaison avant/après",
+          "Galerie de projets illimitée",
+          "Téléchargement haute qualité"
+        ]
+      },
+      "generator": {
+        "title": "Créez des Designs de Tatouage à Partir de Zéro",
+        "description": "Décrivez votre idée en mots et notre technologie avancée crée le design. Parfait quand le client a l'idée mais pas l'image.",
+        "items": [
+          "Technologie Stencil Flow avancée",
+          "Descriptions intelligentes",
+          "Plusieurs variations",
+          "Sortie de haute qualité",
+          "De zéro au design en secondes"
+        ]
+      },
+      "topographic": {
+        "title": "Mode Topographique",
+        "description": "Cartographiez les volumes et les courbes avec une précision millimétrique. Idéal pour les fermetures et les zones corporelles complexes.",
+        "items": [
+          "Analysez la volumétrie de la région",
+          "Courbes de niveau automatiques",
+          "Adaptation parfaite à l'anatomie",
+          "Visualisation 3D simulée"
+        ]
+      },
+      "lines": {
+        "title": "Lignes Parfaites",
+        "description": "Transformez n'importe quelle image en décalcomanie avec des lignes nettes et prêtes à tatouer. Oubliez le papier carbone.",
+        "items": [
+          "Extraction intelligente des lignes",
+          "Contrôle de l'épaisseur et des détails",
+          "Nettoyage automatique du bruit",
+          "Prêt pour l'impression thermique"
+        ]
+      },
+      "tools": {
+        "title": "Outils Professionnels pour Tatoueurs Professionnels",
+        "description": "Débloquez des outils premium qui accéléreront votre travail et impressionneront vos clients",
+        "colorMatch": {
+          "title": "Correspondance des Couleurs",
+          "description": "Identifie les couleurs et suggère des encres compatibles"
+        },
+        "splitA4": {
+          "title": "Diviser en A4",
+          "description": "Divise les grands designs en plusieurs feuilles"
+        },
+        "enhance4k": {
+          "title": "Améliorer 4K",
+          "description": "Amélioration intelligente tout en maintenant la qualité"
+        },
+        "removeBg": {
+          "title": "Supprimer l'Arrière-plan",
+          "description": "Suppression automatique de l'arrière-plan avec IA avancée"
+        }
+      },
+      "organizations": {
+        "title": "Travaillez en Équipe avec les Organisations",
+        "description": "Créez des organisations pour votre studio, ajoutez des membres de l'équipe et partagez des crédits. Parfait pour les studios avec plusieurs tatoueurs travaillant ensemble.",
+        "items": [
+          "Jusqu'à 5 membres par organisation",
+          "Partage de crédits entre membres",
+          "Gestion des permissions (propriétaire/membre)",
+          "Historique centralisé des projets",
+          "Plans Studio et Enterprise disponibles"
+        ],
+        "example": {
+          "name": "Studio Ink Masters",
+          "members": "5 membres",
+          "plan": "Plan Studio",
+          "credits": "crédits partagés"
+        }
+      },
+      "ui": {
+        "promptLabel": "Entrée de l'utilisateur",
+        "promptExample": "Johnny Bravo réaliste surfant",
+        "before": "Avant",
+        "after": "Après",
+        "original": "Original",
+        "topographic": "Topographique",
+        "lines": "Lignes"
+      }
+    },
+    "comparison": {
+      "title": "Pourquoi StencilFlow ?",
+      "subtitle": "Comparez et voyez la différence",
+      "feature": "Fonctionnalité",
+      "full": "Complet",
+      "basic": "Basique",
+      "limited": "Limité",
+      "priceStarting": "À partir de 10 €",
+      "updateInfo": "Données mises à jour en décembre 2024. Les prix peuvent varier.",
+      "features": {
+        "editor": "Éditeur de Stencil",
+        "designGen": "Génération de Designs professionnelle",
+        "topographic": "Mode Topographique",
+        "lines": "Mode Lignes Parfaites",
+        "size": "Ajustement de la taille (cm)",
+        "colorMatch": "Color Match d'encres",
+        "splitA4": "Diviser en A4",
+        "enhance4k": "Améliorer 4K",
+        "price": "Prix Mensuel",
+        "free": "Plan Gratuit"
+      }
+    },
+    "howItWorks": {
+      "title": "Comment ça marche",
+      "subtitle": "Simple, rapide et professionnel",
+      "step1": {
+        "title": "Upload",
+        "description": "Envoyez votre image (photo, dessin ou référence)"
+      },
+      "step2": {
+        "title": "Stencil Flow Traite",
+        "description": "Notre technologie convertit en stencil parfait en quelques secondes"
+      },
+      "step3": {
+        "title": "Download",
+        "description": "Téléchargez le PNG prêt à imprimer et à tatouer"
+      }
+    },
+    "pricing": {
+      "title": "Choisissez Votre Plan",
+      "subtitle": "Prix justes pour tous les tatoueurs",
+      "cta": "Voir les Plans",
+      "mostPopular": "LE PLUS POPULAIRE",
+      "features": {
+        "starter": ["Éditeur de Stencil complet", "Mode Topographique", "Mode Lignes Parfaites", "Contrôle total des dépenses"],
+        "pro": ["Tout du plan Starter", "Génération de designs professionnelle", "Color Match + Amélioration 4K", "Division A4"],
+        "studio": ["Tout du plan Pro", "Jusqu'à 680 générations/mois", "Support prioritaire", "Idéal pour les studios"],
+        "enterprise": ["Tout du plan Studio", "Jusqu'à 1 400 générations/mois", "Support dédié 24/7", "SLA garanti 99,9%"]
+      }
+    },
+    "finalCta": {
+      "title": "Prêt à révolutionner vos stencils ?",
+      "subtitle": "Rejoignez",
+      "subtitleEnd": "tatoueurs qui utilisent déjà StencilFlow",
+      "cta": "Commencer maintenant",
+      "dashboard": "Aller au tableau de bord",
+      "thousands": "des milliers de",
+      "checks": {
+        "payAsYouGo": "Payez seulement ce que vous utilisez",
+        "noExpiry": "Les crédits n'expirent jamais",
+        "fullControl": "Contrôle total des dépenses"
+      }
+    },
+    "footer": {
+      "description": "La plateforme la plus avancée pour la création de stencils de tatouage professionnels.",
+      "product": "Produit",
+      "features": "Fonctionnalités",
+      "pricing": "Tarifs",
+      "legal": "Légal",
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "support": "Support",
+      "contact": "Contact",
+      "rights": "Tous droits réservés.",
+      "dashboard": "Tableau de bord",
+      "security": "Paiement sécurisé via Stripe"
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de Bord",
+    "welcome": "Bon retour",
+    "headerSubtitle": "Gérez vos projets et historique",
+    "tabs": {
+      "projects": "Projets",
+      "history": "Galerie IA Gen"
+    },
+    "usage": {
+      "current": "Utilisation Mensuelle",
+      "limit": "Limite Mensuelle",
+      "unlimited": "Illimitée",
+      "reset": "Se réinitialise le {date}",
+      "low": "Faible utilisation",
+      "medium": "Utilisation modérée",
+      "high": "Utilisation élevée",
+      "noRestrictions": "Aucune restriction"
+    },
+    "upgrade": {
+      "title": "Débloquez Tout le Potentiel",
+      "subtitle": "Générez des pochoirs illimités pour 10€/mois",
+      "cta": "Voir les Plans"
+    },
+    "workflow": {
+      "title": "Flux de Travail",
+      "step1": {
+        "title": "1. Chargez l'Image",
+        "desc": "Téléchargez uma photo, un dessin ou une référence."
+      },
+      "step2": {
+        "title": "2. IA Haute Fidélité",
+        "desc": "Notre IA capture 100% des détails."
+      },
+      "step3": {
+        "title": "3. Téléchargez et Imprimez",
+        "desc": "Prêt pour l'impression thermique."
+      }
+    },
+    "gallery": {
+      "title": "Galerie Récente",
+      "search": "Rechercher un projet...",
+      "empty": "Aucun projet pour l'instant",
+      "emptyDescription": "Créez votre premier pochoir !",
+      "noResults": "Aucun projet trouvé",
+      "noResultsDescription": "Essayez une autre recherche ou effacez les filtres",
+      "clearFilters": "Effacer les filtres",
+      "createNow": "Créer Maintenant",
+      "newStencil": "Nouveau Pochoir",
+      "clickToEnlarge": "Cliquez pour agrandir",
+      "original": "Original",
+      "stencil": "Pochoir",
+      "iaTitle": "Galerie IA Gen",
+      "iaSearch": "Rechercher par prompt...",
+      "iaEmpty": "Aucune image générée encore",
+      "iaEmptyDescription": "Utilisez IA Gen pour créer votre premier art !",
+      "goToIAGen": "Aller à IA Gen",
+      "noIAResults": "Aucune image trouvée",
+      "noDescription": "Sans description"
+    },
+    "actions": {
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce projet ?",
+      "deleteConfirmIA": "Êtes-vous sûr de vouloir supprimer cette image ?",
+      "deleteError": "Erreur lors de la suppression du projet",
+      "loadFailed": "Échec de la connexion. Vérifiez votre internet et réessayez."
+    },
+    "error": {
+      "unavailable": "⚠️ Service temporairement indisponible",
+      "slowness": "Nous rencontrons des lenteurs sur les serveurs. Veuillez patienter quelques secondes et recharger la page.",
+      "tryAgain": "Réessayer",
+      "goHome": "Retour à l'accueil",
+      "support": "Si le problème persiste, contactez le support."
+    },
+    "nav": {
+      "editor": "Éditeur",
+      "generator": "IA Gen",
+      "tools": "Outils",
+      "myBoletos": "Mes Boletos",
+      "mySubscription": "Mon Abonnement",
+      "support": "Support",
+      "user": "Utilisateur",
+      "settings": "Paramètres",
+      "upgrade": "Améliorer",
+      "logout": "Déconnexion"
+    }
+  },
+  "PricingPage": {
+    "title": "Plans d'Abonnement",
+    "subtitle": "Choisissez le plan idéal pour vous. Annulez quand vous voulez.",
+    "back": "Retour",
+    "howItWorks": {
+      "title": "Comment Ça Marche",
+      "desc": "Abonnez-vous et utilisez StencilFlow pendant toute la période choisie. Chaque plan inclut une limite mensuelle de générations.",
+      "recurrent": "Abonnement récurrent - Renouvellement automatique",
+      "cancelAnytime": "Annulez à tout moment - Sans frais ni pénalités",
+      "limitsRenew": "Les limites se renouvellent chaque mois - Même sur les plans annuels",
+      "immediateAccess": "Accès immédiat après paiement - Commencez à utiliser maintenant",
+      "savePercent": "Économisez {percent}% en payant {cycle}"
+    },
+    "cycles": {
+      "monthly": "Mensuel",
+      "quarterly": "Trimestriel",
+      "semiannual": "Semestriel",
+      "yearly": "Annuel",
+      "bestOffer": "Meilleure Offre !",
+      "save": "Économisez {percent}%"
+    },
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "description": "Idéal pour commencer",
+        "limit": "{count} générations/mois"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Pour les tatoueurs professionnels",
+        "limit": "{count} générations/mois"
+      },
+      "studio": {
+        "name": "Studio",
+        "description": "Pour les studios et l'usage professionnel",
+        "limit": "{count} générations/mois"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "Utilisation vraiment illimitée",
+        "limit": "{count} générations/mois"
+      }
+    },
+    "popular": "LE PLUS POPULAIRE",
+    "perMonth": "/mois",
+    "billingPeriod": "Facturation {period} : {price}",
+    "savings": "✓ Économisez {price}/mois ({percent}% de réduction)",
+    "subscribe": "S'abonner à {name}",
+    "faq": {
+      "title": "Foire Aux Questions",
+      "q1": "Puis-je changer de plan plus tard ?",
+      "a1": "Oui ! Vous pouvez passer au niveau supérieur ou inférieur à tout moment.",
+      "q2": "Comment fonctionne l'annulation ?",
+      "a2": "Vous pouvez annuler quand vous le souhaitez. Vous conserverez l'accès jusqu'à la fin de la période payée.",
+      "q3": "Quels modes de paiement sont acceptés ?",
+      "a3": "PIX (instantané), Virement Bancaire et Carte de Crédito.",
+      "q4": "Comment fonctionne le renouvellement du plan ?",
+      "a4": "Renouvellement automatique tous les {months} mois. Vous recevrez un e-mail 7 jours avant le renouvellement."
+    }
+  },
+  "checkout": {
+    "title": "Paiement",
+    "loginRequired": {
+      "title": "Connectez-vous pour continuer",
+      "desc": "Pour vous abonner au plan {plan}, vous devez créer un compte ou vous connecter.",
+      "button": "Se Connecter ou Créer un Compte"
+    },
+    "success": {
+      "title": "Plan Activé !",
+      "redirecting": "Redirection..."
+    },
+    "paymentMethod": {
+      "label": "Mode de Paiement",
+      "pix": "PIX",
+      "boleto": "Boleto",
+      "card": "Carte"
+    },
+    "phone": {
+      "label": "Téléphone",
+      "optional": "(optionnel)",
+      "placeholder": "(11) 99999-9999",
+      "desc": "Pour recevoir des notifications de paiement"
+    },
+    "processing": "Traitement...",
+    "payAmount": "Payer {amount}",
+    "error": "Erreur lors du traitement du paiement"
+  },
+  "asaas": {
+    "pix": {
+      "title": "Payer par PIX",
+      "value": "Montant à payer",
+      "copyCode": "Code PIX Copier-Coller",
+      "copied": "Code copié !",
+      "instructionsTitle": "Comment payer par PIX",
+      "instructions": [
+        "Ouvrez l'application de votre banque",
+        "Choisissez de payer par PIX QR Code ou Copier-Coller",
+        "Scannez le QR Code ou collez le code ci-dessus",
+        "Confirmez le paiement",
+        "Terminé ! Votre plan sera activé automatiquement"
+      ],
+      "expiresAt": "QR Code valide jusqu'au {date}"
+    },
+    "boleto": {
+      "title": "Montant du boleto",
+      "dueDate": "Échéance : {date}",
+      "daysUntilDue": "{count, plural, =1 {# jour} other {# jours}} avant échéance",
+      "openPdf": "Ouvrir le Boleto (PDF)",
+      "copyBarcode": "Copier le Code-barres",
+      "barcodeCopied": "Code Copié !",
+      "barcodeLabel": "Code-barres",
+      "instructionsTitle": "Comment payer le boleto",
+      "instructions": [
+        "Cliquez sur 'Ouvrir le Boleto' pour télécharger le PDF",
+        "Payez dans l'application de votre banque ou dans un point de vente",
+        "Ou copiez le code-barres et collez-le dans l'application de votre banque",
+        "Le paiement peut prendre jusqu'à 3 jours ouvrables pour être compensé",
+        "Votre plan sera activé après confirmation"
+      ],
+      "waitAviso": "Après le paiement, attendez jusqu'à 3 jours ouvrables pour l'activation"
+    },
+    "creditCard": {
+      "number": "Numéro de Carte",
+      "holderName": "Nom sur la Carte",
+      "holderNamePlaceholder": "NOM TEL QU'IL APPARAÎT SUR LA CARTE",
+      "email": "Email du Titulaire",
+      "month": "Mois",
+      "year": "An",
+      "cvv": "CVV",
+      "phone": "Téléphone",
+      "cep": "Code Postal",
+      "brand": "Réseau",
+      "securityAviso": "Vos données sont cryptées et traitées en toute sécurité par Asaas. Nous ne stockons pas vos informations de carte."
+    },
+    "cpfCnpj": {
+      "label": "ID Fiscal (CPF/CNPJ)",
+      "invalidCpf": "CPF invalide",
+      "invalidCnpj": "CNPJ invalide",
+      "cpfDesc": "CPF du titulaire",
+      "cnpjDesc": "CNPJ de l'entreprise"
+    }
+  },
+  "editor": {
+    "title": "Éditeur de Pochoir",
+    "upload": {
+      "button": "Télécharger l'image",
+      "hint": "Faites glisser ou cliquez para télécharger"
+    },
+    "controls": {
+      "title": "Réglages du Pochoir",
+      "size": "Taille (cm)",
+      "intensity": "Intensité",
+      "style": "Style",
+      "generate": "Générer le Pochoir",
+      "regenerate": "Régénérer",
+      "reset": "Réinitialiser",
+      "undo": "Annuler",
+      "redo": "Rétablir",
+      "adjustments": "Réglages Avancés",
+      "modes": "Mode",
+      "extraInstructions": "Instructions supplémentaires...",
+      "generateAnime": "Générer (Illustration)",
+      "generateStandard": "Générer le Pochoir",
+      "presets": {
+        "A4": "A4",
+        "A3": "A3",
+        "Portrait": "Portrait",
+        "Square": "Carré"
+      }
+    },
+    "comparison": {
+      "horizontal": "Horizontal",
+      "blend": "Mélange",
+      "holdSpace": "Maintenez ESPACE pour comparer"
+    },
+    "actions": {
+      "download": "Télécharger",
+      "save": "Enregistrer Projet",
+      "saveShort": "Enregistrer",
+      "saving": "Enregistrement...",
+      "copy": "Copier",
+      "drawing": "Mode Dessin",
+      "new": "Nouvelle Image",
+      "create": "Créer Pochoir",
+      "generate": "Générer"
+    },
+    "styles": {
+      "standard": "Lignes",
+      "perfect_lines": "Topographique",
+      "anime": "Illustration",
+      "standardDesc": "✏️ Photos → Lignes",
+      "perfectLinesDesc": "🗺️ Maximum de détails",
+      "animeDesc": "🎨 Anime, Illustrations, Maori"
+    },
+    "messages": {
+      "generating": "Génération de votre pochoir...",
+      "applyingAdjustments": "Application des réglages...",
+      "saveSuccess": "Projet enregistré avec succès !",
+      "saveError": "Erreur lors de l'enregistrement",
+      "downloadStarted": "Téléchargement démarré !",
+      "copied": "Copié dans le presse-papiers !"
+    }
+  },
+  "generator": {
+    "title": "IA Gen - Générateur d'Idées",
+    "emptyState": "Votre art apparaîtra ici",
+    "hint": "Décrivez votre idée dans le panneau",
+    "prompt": {
+      "label": "Décrivez votre Idée",
+      "placeholder": "Ex : Crâne mexicain avec des roses...",
+      "history": "Historique"
+    },
+    "reference": {
+      "add": "Image de référence (optionnel)",
+      "added": "Image de référence ajoutée"
+    },
+    "styles": {
+      "label": "Style (optionnel)",
+      "applied": "style appliqué",
+      "blackwork": "Blackwork",
+      "fineline": "Fine Line",
+      "neo_traditional": "Neo Trad",
+      "realism": "Réalisme",
+      "dotwork": "Dotwork",
+      "old_school": "Old School"
+    },
+    "bodyRegion": {
+      "label": "Région du Corps",
+      "free": { "name": "Libre", "hint": "Sans restriction de format" },
+      "arm": { "name": "Bras", "hint": "Allongé, design vertical" },
+      "chest": { "name": "Poitrine", "hint": "Design large et centré" },
+      "back": { "name": "Dos", "hint": "Grand canevas, détaillé" },
+      "leg": { "name": "Jambe", "hint": "Long, suit la courbe" },
+      "ribs": { "name": "Côte", "hint": "Vertical allongé" }
+    },
+    "negative": {
+      "label": "Éviter (optionnel)",
+      "placeholder": "Ex : couleurs, fond, texte..."
+    },
+    "size": {
+      "label": "Taille (Haute Qualité)",
+      "A4": "21×29.7cm @ 300 DPI (impression professionnelle)",
+      "A3": "29.7×42cm @ 300 DPI (impression professionnelle)",
+      "1K": "1024×1024px",
+      "2K": "2048×2048px",
+      "4K": "4096×4096px",
+      "highQuality": "A4/A3 sont pour l'impression professionnelle (300 DPI)"
+    },
+    "cta": "Générer Design",
+    "success": {
+      "title": "Art généré !",
+      "description": "Art généré ! Utilisez les boutons dans l'en-tête pour télécharger ou créer un pochoir.",
+      "createStencil": "Créer Pochoir",
+      "download": "Télécharger PNG",
+      "another": "Générer une autre idée",
+      "newGeneration": "Nouvelle Génération"
+    },
+    "errors": {
+      "imageTooLarge": "Image trop volumineuse. Maximum 20 Mo.",
+      "requiresSubscription": "Cette fonctionnalité nécessite un plan payant.",
+      "generateFailed": "Échec de la génération de l'image."
+    }
+  },
+  "tools": {
+    "title": "Outils de Studio",
+    "subtitle": "Fonctionnalités IA avancées pour le traitement d'image et de couleur.",
+    "locked": {
+      "title": "Outils Premium",
+      "subtitle": "Débloquez des outils avancés pour vos pochoirs",
+      "cta": "Voir les Plans et Tarifs",
+      "priceFrom": "À partir de 10$/mois"
+    },
+    "modes": {
+      "enhance": {
+        "name": "Améliorer",
+        "subtitle": "Upscale 4K",
+        "description": "Upscale et restauration 4K"
+      },
+      "colorMatch": {
+        "name": "Color Match",
+        "subtitle": "Palette encres",
+        "description": "Analyse de palette d'encres"
+      },
+      "splitA4": {
+        "name": "Diviser A4",
+        "subtitle": "Plusieurs feuilles",
+        "description": "Grands tatouages sur plusieurs feuilles"
+      },
+      "removeBg": {
+        "name": "Supprimer Fond",
+        "subtitle": "IA Supprimer Fond",
+        "description": "IA Supprimer Fond"
+      }
+    },
+    "upload": {
+      "source": "Source de l'Image",
+      "uploadBtn": "Télécharger",
+      "galleryBtn": "Galerie",
+      "clickToUpload": "Cliquez pour télécharger",
+      "clickToUploadImage": "Cliquez pour télécharger l'image",
+      "fileTypes": "JPG ou PNG",
+      "emptyGallery": "Galerie vide",
+      "originalImage": "Image Originale",
+      "previous": "Préc.",
+      "next": "Suiv.",
+      "of": "de"
+    },
+    "messages": {
+      "enhanceSuccess": "Image améliorée avec succès!",
+      "colorMatchSuccess": "Couleurs analysées avec succès!",
+      "splitSuccess": "Image divisée en {count} parties!",
+      "removeBgSuccess": "Fond supprimé avec succès!",
+      "processingError": "Erreur de traitement. Veuillez réessayer.",
+      "galleryLoadError": "Erreur lors du chargement de l'image de la galerie"
+    },
+    "inkBrands": {
+      "generic": "Générique (Aucune marque spécifique)"
+    }
+  },
+  "migrationNotice": {
+    "title": "Nous avons mis à jour notre système de paiement !",
+    "subtitle": "Plus d'options et de sécurité pour vous",
+    "closeLabel": "Fermer l'avis",
+    "paymentMethods": {
+      "pix": {"name": "PIX", "description": "Instantané"},
+      "boleto": {"name": "Boleto", "description": "Jusqu'à 3 jours"},
+      "card": {"name": "Carte", "description": "Récurrent"}
+    },
+    "recurrence": {
+      "title": "Comment fonctionne la récurrence :",
+      "item1": "Le prélèvement sera généré à la date de votre premier paiement",
+      "item2": "Vous aurez jusqu'à {days} jours pour effectuer le paiement",
+      "item2Days": "7",
+      "item3": "Après le paiement, la récurrence automatique est activée",
+      "item4": "Vos informations et historique ont été conservés"
+    },
+    "footer": "Des questions ? Contactez le support."
+  },
+  "installBanner": {
+    "title": "Installer l'App",
+    "closeLabel": "Fermer",
+    "appName": "StencilFlow",
+    "description": "Accédez plus rapidement depuis votre écran d'accueil",
+    "installButton": "Installer l'App",
+    "iosButton": "Comment installer",
+    "features": "Gratuit • Aucun espace requis • Fonctionne hors ligne",
+    "iosInstructions": {
+      "title": "Installer sur iOS",
+      "step1Title": "Appuyez sur Partager",
+      "step1Description": "Dans Safari, appuyez sur l'icône de partage dans la barre inférieure",
+      "step2Title": "Appuyez sur Ajouter à l'écran d'accueil",
+      "step2Description": "Faites défiler vers le bas dans le menu et sélectionnez cette option",
+      "step3Title": "Confirmez en appuyant sur Ajouter",
+      "step3Description": "L'app sera installée sur votre écran d'accueil",
+      "confirmButton": "Compris"
+    }
+  },
+  "metadata": {
+    "title": "StencilFlow - Éditeur Professionnel de Pochoirs de Tatouage",
+    "description": "Transformez n'importe quelle image en pochoir de tatouage professionnel avec la Technologie StencilFlow. Éditeur complet, mode topographique, lignes parfaites et outils premium. Gratuit pour commencer."
+  }
+}

@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { X, CreditCard, QrCode, FileText, Info } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface MigrationNoticeCardProps {
   userName?: string;
 }
 
 export default function MigrationNoticeCard({ userName }: MigrationNoticeCardProps) {
+  const t = useTranslations('migrationNotice');
   const [isVisible, setIsVisible] = useState(true);
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -37,7 +39,7 @@ export default function MigrationNoticeCard({ userName }: MigrationNoticeCardPro
       <button
         onClick={handleDismiss}
         className="absolute top-3 right-3 text-zinc-400 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg"
-        aria-label="Fechar aviso"
+        aria-label={t('closeLabel')}
       >
         <X size={18} />
       </button>
@@ -51,10 +53,10 @@ export default function MigrationNoticeCard({ userName }: MigrationNoticeCardPro
           </div>
           <div>
             <h3 className="text-white font-bold text-lg">
-              Atualizamos nosso sistema de pagamentos!
+              {t('title')}
             </h3>
             <p className="text-zinc-400 text-sm mt-0.5">
-              Mais opções e segurança para você
+              {t('subtitle')}
             </p>
           </div>
         </div>
@@ -63,18 +65,18 @@ export default function MigrationNoticeCard({ userName }: MigrationNoticeCardPro
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
             <QrCode className="text-emerald-400 mx-auto mb-1.5" size={24} />
-            <p className="text-white text-sm font-medium">PIX</p>
-            <p className="text-emerald-400 text-xs">Instantâneo</p>
+            <p className="text-white text-sm font-medium">{t('paymentMethods.pix.name')}</p>
+            <p className="text-emerald-400 text-xs">{t('paymentMethods.pix.description')}</p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
             <FileText className="text-amber-400 mx-auto mb-1.5" size={24} />
-            <p className="text-white text-sm font-medium">Boleto</p>
-            <p className="text-amber-400 text-xs">Até 3 dias</p>
+            <p className="text-white text-sm font-medium">{t('paymentMethods.boleto.name')}</p>
+            <p className="text-amber-400 text-xs">{t('paymentMethods.boleto.description')}</p>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
             <CreditCard className="text-purple-400 mx-auto mb-1.5" size={24} />
-            <p className="text-white text-sm font-medium">Cartão</p>
-            <p className="text-purple-400 text-xs">Recorrente</p>
+            <p className="text-white text-sm font-medium">{t('paymentMethods.card.name')}</p>
+            <p className="text-purple-400 text-xs">{t('paymentMethods.card.description')}</p>
           </div>
         </div>
 
@@ -82,31 +84,33 @@ export default function MigrationNoticeCard({ userName }: MigrationNoticeCardPro
         <div className="bg-black/20 border border-white/10 rounded-xl p-4">
           <h4 className="text-white font-semibold text-sm mb-2 flex items-center gap-2">
             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
-            Como funciona a recorrência:
+            {t('recurrence.title')}
           </h4>
           <ul className="text-zinc-300 text-sm space-y-1.5">
             <li className="flex items-start gap-2">
               <span className="text-emerald-400 mt-0.5">•</span>
-              <span>A cobrança será gerada na data do seu primeiro pagamento</span>
+              <span>{t('recurrence.item1')}</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-400 mt-0.5">•</span>
-              <span>Você terá até <strong className="text-white">7 dias</strong> para realizar o pagamento</span>
+              <span>{t.rich('recurrence.item2', { 
+                days: (chunks) => <strong className="text-white">{t('recurrence.item2Days')}</strong> 
+              })}</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-400 mt-0.5">•</span>
-              <span>Após o pagamento, a recorrência automática é ativada</span>
+              <span>{t('recurrence.item3')}</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-400 mt-0.5">•</span>
-              <span>Suas informações e histórico foram mantidos</span>
+              <span>{t('recurrence.item4')}</span>
             </li>
           </ul>
         </div>
 
         {/* Footer */}
         <p className="text-zinc-500 text-xs mt-3 text-center">
-          Dúvidas? Entre em contato pelo suporte.
+          {t('footer')}
         </p>
       </div>
     </div>

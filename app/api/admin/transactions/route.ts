@@ -36,11 +36,14 @@ export async function GET(req: Request) {
       `, { count: 'exact' });
 
     if (queryTerm) {
+      // Sanitizar e limitar input para prevenir SQL injection
+      const sanitizedTerm = queryTerm.slice(0, 100).replace(/[%_\\]/g, '\\$&');
+
       // Tentar encontrar usuário por email ou nome
       const { data: users } = await supabaseAdmin
           .from('users')
           .select('id')
-          .or(`email.ilike.%${queryTerm}%,name.ilike.%${queryTerm}%`)
+          .or(`email.ilike.%${sanitizedTerm}%,name.ilike.%${sanitizedTerm}%`)
           .limit(20);
 
       // Se achou usuários, busca pagamentos deles OU busca por ID de pagamento/assinatura direto
@@ -49,17 +52,21 @@ export async function GET(req: Request) {
           // Complex OR logic: (user_id IN users) OR (stripe_id matches)
           // PostgREST doesn't support mixing IN and OR easily for different fields in one string syntax.
           // Estratégia: Se parecem ser usuários, foca neles. Se não, tenta ID.
-          // Como OR é difícil aqui, vamos assumir: se achou users por nome, mostra os deles. 
-          // Se o termo parece um ID (começa com sub_ ou pi_ ou ch_), ignora users.
-          
-          if (queryTerm.startsWith('sub_') || queryTerm.startsWith('pi_') || queryTerm.startsWith('ch_')) {
-             query = query.or(`stripe_payment_id.eq.${queryTerm},stripe_subscription_id.eq.${queryTerm}`);
+          // Como OR é difícil aqui, vamos assumir: se achou users por nome, mostra os deles.
+          // Se o termo parece um ID (começa com sub_ ou pi_ ou ch_ ou pay_), ignora users.
+
+          if (/^(sub_|pi_|ch_|pay_)/.test(queryTerm)) {
+             // IDs são seguros pois começam com prefixo conhecido - usar valor original
+             query = query.or(`stripe_payment_id.eq.${queryTerm},stripe_subscription_id.eq.${queryTerm},asaas_payment_id.eq.${queryTerm}`);
           } else {
              query = query.in('user_id', ids);
           }
       } else {
-          // Não achou users, tenta match exato de ID
-          query = query.or(`stripe_payment_id.eq.${queryTerm},stripe_subscription_id.eq.${queryTerm}`);
+          // Não achou users, tenta match exato de ID (validar formato primeiro)
+          if (/^(sub_|pi_|ch_|pay_)/.test(queryTerm)) {
+            query = query.or(`stripe_payment_id.eq.${queryTerm},stripe_subscription_id.eq.${queryTerm},asaas_payment_id.eq.${queryTerm}`);
+          }
+          // Se não é um ID válido e não achou users, não filtra (evita injection)
       }
     }
 

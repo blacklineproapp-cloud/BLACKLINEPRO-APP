@@ -1,13 +1,13 @@
-import { ClerkProvider } from '@clerk/nextjs';
-import { ptBR } from '@clerk/localizations';
-import Script from 'next/script';
 import './globals.css';
+import Script from 'next/script';
 import type { Metadata, Viewport } from 'next';
-import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
-import CookieConsent from '@/components/CookieConsent';
 
 export const metadata: Metadata = {
-  title: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
+  metadataBase: new URL('https://www.stencilflow.com.br'),
+  title: {
+    default: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
+    template: '%s | StencilFlow'
+  },
   description: 'Transforme qualquer imagem em stencil de tatuagem profissional com a Tecnologia StencilFlow. Editor completo, modo topográfico, linhas perfeitas e ferramentas premium. Grátis para começar.',
   applicationName: 'StencilFlow',
   authors: [{ name: 'StencilFlow' }],
@@ -56,9 +56,16 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
-  metadataBase: new URL('https://www.stencilflow.com.br'),
   alternates: {
     canonical: 'https://www.stencilflow.com.br',
+    languages: {
+      'pt-BR': 'https://www.stencilflow.com.br',
+      'en': 'https://www.stencilflow.com.br/en',
+      'es': 'https://www.stencilflow.com.br/es',
+      'fr': 'https://www.stencilflow.com.br/fr',
+      'it': 'https://www.stencilflow.com.br/it',
+      'ja': 'https://www.stencilflow.com.br/ja',
+    }
   },
   openGraph: {
     type: 'website',
@@ -110,111 +117,27 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider
-      localization={ptBR as any}
-      appearance={{
-        baseTheme: undefined,
-        variables: {
-          colorPrimary: '#10b981',
-          colorBackground: '#18181b',
-          colorText: '#ffffff',
-          colorTextSecondary: '#a1a1aa',
-          colorInputBackground: '#27272a',
-          colorInputText: '#ffffff',
-          borderRadius: '0.75rem',
-        },
-        elements: {
-          rootBox: 'w-full',
-          card: 'bg-zinc-900 border border-zinc-700 shadow-2xl shadow-black/50',
-          headerTitle: 'text-white font-bold',
-          headerSubtitle: 'text-zinc-400',
-          socialButtonsBlockButton: 'bg-zinc-800 border-zinc-700 text-white hover:bg-zinc-700 transition-colors',
-          socialButtonsBlockButtonText: 'text-white font-medium',
-          dividerLine: 'bg-zinc-700',
-          dividerText: 'text-zinc-500',
-          formFieldLabel: 'text-zinc-300 font-medium',
-          formFieldInput: 'bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-emerald-500 focus:ring-emerald-500',
-          formButtonPrimary: 'bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-lg transition-all',
-          footerActionLink: 'text-emerald-400 hover:text-emerald-300 font-medium',
-          footerActionText: 'text-zinc-400',
-          identityPreviewText: 'text-white',
-          identityPreviewEditButton: 'text-emerald-400 hover:text-emerald-300',
-          formFieldInputShowPasswordButton: 'text-zinc-400 hover:text-white',
-          alertText: 'text-zinc-300',
-          formResendCodeLink: 'text-emerald-400 hover:text-emerald-300',
-          otpCodeFieldInput: 'bg-zinc-800 border-zinc-700 text-white',
-          userButtonPopoverCard: 'bg-zinc-900 border border-zinc-700',
-          userButtonPopoverActionButton: 'text-white hover:bg-zinc-800',
-          userButtonPopoverActionButtonText: 'text-white',
-          userButtonPopoverFooter: 'hidden',
-          userPreviewMainIdentifier: 'text-white',
-          userPreviewSecondaryIdentifier: 'text-zinc-400',
-        },
-      }}
-    >
-      <html lang="pt-BR">
-        <head>
-          {/* JSON-LD para Logo da Organização no Google Search */}
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                '@context': 'https://schema.org',
-                '@type': 'Organization',
-                name: 'StencilFlow',
-                url: 'https://www.stencilflow.com.br',
-                logo: 'https://www.stencilflow.com.br/icon-512x512.png',
-                description: 'Editor profissional de stencils de tatuagem com tecnologia avançada',
-                contactPoint: {
-                  '@type': 'ContactPoint',
-                  contactType: 'customer support',
-                  availableLanguage: ['Portuguese'],
-                },
-              }),
-            }}
-          />
-          {/* JSON-LD para WebSite */}
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify({
-                '@context': 'https://schema.org',
-                '@type': 'WebSite',
-                name: 'StencilFlow',
-                url: 'https://www.stencilflow.com.br',
-                description: 'Editor profissional de stencils de tatuagem',
-                inLanguage: 'pt-BR',
-              }),
-            }}
-          />
-        </head>
-        <body>
-          {/* Meta Pixel (Facebook Pixel) para Anúncios */}
-          <Script
-            id="meta-pixel"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `
-                !function(f,b,e,v,n,t,s)
-                {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-                n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-                if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-                n.queue=[];t=b.createElement(e);t.async=!0;
-                t.src=v;s=b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t,s)}(window, document,'script',
-                'https://connect.facebook.net/en_US/fbevents.js');
-                fbq('init', '925034426528491');
-                fbq('track', 'PageView');
-              `,
-            }}
-          />
-          {/* Removido noscript img para evitar preload warning */}
-
-          {children}
-          <ServiceWorkerRegister />
-          <CookieConsent />
-        </body>
-      </html>
-    </ClerkProvider>
+    <>
+      {/* Meta Pixel (Facebook Pixel) para Anúncios */}
+      <Script
+        id="meta-pixel"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+            !function(f,b,e,v,n,t,s)
+            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+            n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t,s)}(window, document,'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '925034426528491');
+            fbq('track', 'PageView');
+          `,
+        }}
+      />
+      {children}
+    </>
   );
 }

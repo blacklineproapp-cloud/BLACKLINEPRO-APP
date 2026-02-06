@@ -9,7 +9,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { createInvite, getOrganizationInvites, cancelInvite } from '@/lib/organizations/invites';
 import { isOrganizationOwner } from '@/lib/organizations/members';
 import { getOrganizationById } from '@/lib/organizations';
-import { apiLimiter, getRateLimitIdentifier } from '@/lib/rate-limit';
+import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
 
 // =====================================================
 // GET /api/organizations/[id]/invite

@@ -8,7 +8,7 @@
  * - Modelo: Assinatura mensal recorrente
  */
 
-import type { BillingCycle } from '../stripe/types';
+import type { BillingCycle } from '../billing/types';
 
 // Tipos de plano
 export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
@@ -387,10 +387,10 @@ export function getStripePriceIds(plan: PlanType): StripePriceIds {
 /**
  * Formata preço para exibição
  */
-export function formatPrice(value: number): string {
-  return new Intl.NumberFormat('pt-BR', {
+export function formatPrice(value: number, locale: string = 'pt-BR'): string {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'BRL'
+    currency: locale === 'pt-BR' ? 'BRL' : 'USD' // Asaas is usually BRL, but for other locales we might show USD equivalent or just keep BRL
   }).format(value);
 }
 

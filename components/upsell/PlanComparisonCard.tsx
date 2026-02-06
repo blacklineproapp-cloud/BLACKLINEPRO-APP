@@ -9,7 +9,7 @@ import {
   type PlanType,
 } from '@/lib/billing/plans';
 import { PLAN_LIMITS } from '@/lib/billing/limits';
-import type { BillingCycle } from '@/lib/stripe/types';
+import type { BillingCycle } from '@/lib/billing/types';
 import UpgradeBadge from './UpgradeBadge';
 
 interface PlanComparisonCardProps {

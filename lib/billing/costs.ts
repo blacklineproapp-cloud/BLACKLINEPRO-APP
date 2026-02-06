@@ -54,3 +54,68 @@ export const BRL_COST: Record<OperationType, number> = {
   remove_bg: 0.1,
   split_a4: 0.05,
 };
+
+// ============================================================================
+// CÁLCULO DE CUSTO REAL (GEMINI API)
+// ============================================================================
+
+/**
+ * Preços reais do Gemini 2.5 Flash (Janeiro 2026)
+ * Fonte: https://ai.google.dev/gemini-api/docs/pricing
+ */
+export const GEMINI_PRICING = {
+  INPUT_TOKEN: 0.00001875,   // $0.00001875 por token de input
+  OUTPUT_TOKEN: 0.000075,    // $0.000075 por token de output
+};
+
+/**
+ * Calcula custo real baseado em tokens usados pela API Gemini
+ * 
+ * @param usageMetadata - Metadata retornado pela API Gemini
+ * @returns Custo real em USD
+ */
+export function calculateGeminiCost(usageMetadata?: {
+  promptTokenCount?: number;
+  candidatesTokenCount?: number;
+  totalTokenCount?: number;
+}): number {
+  if (!usageMetadata) {
+    console.warn('[Cost] usageMetadata não fornecido, retornando 0');
+    return 0;
+  }
+
+  const inputTokens = usageMetadata.promptTokenCount || 0;
+  const outputTokens = usageMetadata.candidatesTokenCount || 0;
+  
+  const inputCost = inputTokens * GEMINI_PRICING.INPUT_TOKEN;
+  const outputCost = outputTokens * GEMINI_PRICING.OUTPUT_TOKEN;
+  
+  const totalCost = inputCost + outputCost;
+  
+  console.log(`[Cost] 💰 Tokens: ${inputTokens} in + ${outputTokens} out = $${totalCost.toFixed(6)} USD`);
+  
+  return totalCost;
+}
+
+/**
+ * Calcula custo com fallback para estimativa hardcoded
+ * Útil quando usageMetadata não está disponível
+ */
+export function calculateCostWithFallback(
+  operationType: OperationType,
+  usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number }
+): number {
+  if (usageMetadata && (usageMetadata.promptTokenCount || usageMetadata.candidatesTokenCount)) {
+    const realCost = calculateGeminiCost(usageMetadata);
+    const estimatedCost = USD_COST[operationType];
+    
+    console.log(`[Cost] Estimado: $${estimatedCost} | Real: $${realCost.toFixed(6)}`);
+    
+    return realCost;
+  }
+  
+  // Fallback para estimativa hardcoded
+  console.warn(`[Cost] ⚠️ usageMetadata indisponível, usando estimativa: $${USD_COST[operationType]}`);
+  return USD_COST[operationType];
+}
+

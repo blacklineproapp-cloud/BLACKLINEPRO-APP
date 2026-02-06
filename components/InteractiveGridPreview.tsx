@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback, memo } from 'react';
 import { Move, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
 interface InteractiveGridPreviewProps {
@@ -23,7 +23,7 @@ const CANVAS_HEIGHT = 400;
 const DPI = 100; // Preview
 const CM_TO_PX = DPI / 2.54;
 
-export default function InteractiveGridPreview({
+function InteractiveGridPreview({
   imageUrl,
   tattooWidthCm,
   tattooHeightCm,
@@ -275,27 +275,27 @@ export default function InteractiveGridPreview({
   const handleMouseUp = () => setIsDragging(false);
 
   // ==========================================================================
-  // ZOOM CONTROLS
+  // ZOOM CONTROLS (memoized)
   // ==========================================================================
 
-  const handleZoomIn = () => {
+  const handleZoomIn = useCallback(() => {
     setZoom(prevZoom => Math.min(prevZoom + 0.25, 3)); // Max 300%
-  };
+  }, []);
 
-  const handleZoomOut = () => {
+  const handleZoomOut = useCallback(() => {
     setZoom(prevZoom => Math.max(prevZoom - 0.25, 0.5)); // Min 50%
-  };
+  }, []);
 
-  const handleZoomReset = () => {
+  const handleZoomReset = useCallback(() => {
     setZoom(1);
-  };
+  }, []);
 
   // Wheel event para zoom com scroll (aplicado apenas na imagem)
-  const handleWheel = (e: React.WheelEvent) => {
+  const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     setZoom(prevZoom => Math.min(Math.max(prevZoom + delta, 0.5), 3));
-  };
+  }, []);
 
   return (
     <div className="space-y-2">
@@ -402,3 +402,6 @@ export default function InteractiveGridPreview({
     </div>
   );
 }
+
+// Memoizado para evitar re-renders quando props não mudam
+export default memo(InteractiveGridPreview);

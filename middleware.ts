@@ -1,17 +1,24 @@
 import { clerkMiddleware, createRouteMatcher, clerkClient } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
+import createMiddleware from 'next-intl/middleware';
+import { routing } from './i18n/routing';
 import { ADMIN_EMAILS } from "./lib/admin-config";
 import { maskEmail } from "./lib/logger";
 
+// Criar middleware next-intl
+const handleI18nRouting = createMiddleware(routing);
+
 const isPublicRoute = createRouteMatcher([
   '/',
-  '/pricing',
-  '/pricing/(.*)',
+  '/:locale',
+  '/pricing(.*)',
+  '/:locale/pricing(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
+  '/:locale/sign-in(.*)',
+  '/:locale/sign-up(.*)',
   '/api/stats',
   '/api/webhooks/clerk',
-  '/api/webhooks/stripe',
   '/api/webhooks/asaas',
   '/manifest.json',
 ]);
@@ -19,10 +26,23 @@ const isPublicRoute = createRouteMatcher([
 // Rotas que requerem permissão de admin
 const isAdminRoute = createRouteMatcher([
   '/admin(.*)',
+  '/:locale/admin(.*)',
   '/api/admin/(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
+  // Detectar se é uma rota de API
+  const isApiRequest = request.nextUrl.pathname.startsWith('/api');
+
+  // Executar middleware next-intl apenas para rotas que NÃO são de API
+  // Isso evita que o next-intl intercepte APIs e retorne 404 ou redirects
+  const response = isApiRequest ? NextResponse.next() : handleI18nRouting(request);
+  
+  // Se next-intl retornou redirect (307/308) em uma página, retornar imediatamente
+  if (!isApiRequest && (response.status === 307 || response.status === 308)) {
+    return response;
+  }
+
   // ========================================
   // 🔒 PROTEÇÃO CSRF - Validar Origin/Referer
   // ========================================
@@ -86,35 +106,31 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Verificar rotas de admin PRIMEIRO
   if (isAdminRoute(request)) {
-    const { userId, sessionClaims } = auth();
+    const { userId } = auth();
     
     // Não autenticado = bloquear
     if (!userId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+      if (isApiRequest) {
+        return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+      }
+      return NextResponse.redirect(new URL('/sign-in', request.url));
     }
 
     // Buscar dados completos do usuário via Clerk API
-    let userEmail: string | undefined;
-    let role: string | undefined;
-    
-    try {
-      const user = await clerkClient.users.getUser(userId);
-      userEmail = user.emailAddresses[0]?.emailAddress;
-      role = user.publicMetadata?.role as string | undefined;
-    } catch (error) {
-      console.error('[Middleware] Erro ao buscar usuário:', error);
-    }
+    const user = await clerkClient.users.getUser(userId);
+    const userEmail = user.emailAddresses[0]?.emailAddress;
+    const role = user.publicMetadata?.role as string | undefined;
 
     const isAdminRole = role === 'admin' || role === 'superadmin';
-    const isAdminEmail = userEmail && ADMIN_EMAILS.some(
-      e => e.toLowerCase() === userEmail!.toLowerCase()
+    const isEmailAdmin = userEmail && ADMIN_EMAILS.some(
+      e => e.toLowerCase() === userEmail.toLowerCase()
     );
 
-    if (!isAdminRole && !isAdminEmail) {
+    if (!isAdminRole && !isEmailAdmin) {
       console.log('[Middleware] ⛔ Acesso admin negado:', { userId, email: maskEmail(userEmail), role });
       
       // API retorna JSON, páginas fazem redirect
-      if (request.nextUrl.pathname.startsWith('/api/')) {
+      if (isApiRequest) {
         return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
       }
       return NextResponse.redirect(new URL('/dashboard', request.url));
@@ -127,12 +143,21 @@ export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     auth().protect();
   }
+
+  // Retornar response do next-intl
+  return response;
 });
 
 export const config = {
   matcher: [
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    '/(api|trpc)(.*)',
+    // Incluir todas as rotas exceto:
+    // - Next.js internals (_next, _vercel)
+    // - Arquivos estáticos (.*\\..*) 
+    // - Webhooks (já têm validação própria)
+    '/((?!_next|_vercel|.*\\..*|api/webhooks).*)',
+    
+    // Sempre rodar em rotas de API (exceto webhooks)
+    '/api/((?!webhooks).*)'
   ],
 };
 

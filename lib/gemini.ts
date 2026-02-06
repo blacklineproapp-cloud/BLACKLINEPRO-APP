@@ -64,6 +64,44 @@ async function enforceMonochrome(base64DataUri: string): Promise<string> {
   return `data:image/png;base64,${monoBuffer.toString('base64')}`;
 }
 
+/**
+ * Garante que as dimensões da imagem de saída correspondam exatamente às dimensões da entrada
+ * Se as dimensões não coincidirem, redimensiona a saída para corresponder à entrada
+ */
+async function ensureDimensionsMatch(
+  outputImage: string,
+  targetWidth: number,
+  targetHeight: number
+): Promise<string> {
+  const cleanBase64 = outputImage.replace(/^data:image\/\w+;base64,/, '');
+  const buffer = Buffer.from(cleanBase64, 'base64');
+
+  const metadata = await sharp(buffer).metadata();
+
+  // Verificar se as dimensões já estão corretas
+  if (metadata.width === targetWidth && metadata.height === targetHeight) {
+    console.log(`[Dimension Check] ✅ Output dimensions match: ${targetWidth}x${targetHeight}`);
+    return outputImage;
+  }
+
+  // Dimensões não coincidem - redimensionar
+  console.warn(
+    `[Dimension Fix] ⚠️ Output ${metadata.width}x${metadata.height}, ` +
+    `expected ${targetWidth}x${targetHeight}. Resizing...`
+  );
+
+  const resized = await sharp(buffer)
+    .resize(targetWidth, targetHeight, {
+      fit: 'fill',        // Força dimensões exatas (pode distorcer se aspect ratio diferente)
+      kernel: 'lanczos3'  // Melhor qualidade para lineart
+    })
+    .png({ compressionLevel: 6 })
+    .toBuffer();
+
+  console.log(`[Dimension Fix] ✅ Resized to ${targetWidth}x${targetHeight}`);
+  return `data:image/png;base64,${resized.toString('base64')}`;
+}
+
 const apiKey = process.env.GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
 
@@ -145,6 +183,26 @@ export async function generateStencilFromImage(
   promptDetails: string = '',
   style: 'standard' | 'perfect_lines' | 'anime' = 'standard'
 ): Promise<string> {
+  const result = await generateStencilWithCost(base64Image, promptDetails, style);
+  return result.image;
+}
+
+/**
+ * Versão com tracking de custo - retorna imagem + usageMetadata
+ * Use esta função nas APIs para capturar custo real
+ */
+export async function generateStencilWithCost(
+  base64Image: string,
+  promptDetails: string = '',
+  style: 'standard' | 'perfect_lines' | 'anime' = 'standard'
+): Promise<{
+  image: string;
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    totalTokenCount?: number;
+  };
+}> {
   // Seleção de prompt baseado no estilo
   // standard = LINHAS (para fotos)
   // perfect_lines = TOPOGRÁFICO (7 níveis)
@@ -159,13 +217,55 @@ export async function generateStencilFromImage(
       systemInstruction = ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED;
       model = animeModel;
       modeInfo = 'ANIME/ILUSTRAÇÃO (temp: 0, topP: 0.1, topK: 5) - LIMPAR E PRESERVAR LINHAS';
-      traceInstruction = 'EXTRACT clean lineart from this image. If it is an illustration, PRESERVE existing contour lines and REMOVE fills. If it is a photo, CONVERT it to anime-style lineart (bold outlines, no shading). Output: black lines on white background only. NO solid fills. PNG format.';
+      traceInstruction = `🎯 INTELLIGENT DETECTION - Apply focus ONLY when needed:
+
+IF this is a SCREENSHOT (Instagram, Pinterest, social media):
+→ Extract ONLY the artwork/design shown
+→ IGNORE all UI elements (buttons, icons, text, usernames, etc.)
+
+IF this is a WATERMARKED image or has PHONE UI:
+→ Extract ONLY the main content
+→ IGNORE watermarks, timestamps, phone interface
+
+IF this is a TATTOO ON SKIN:
+→ Extract ONLY the tattoo design
+→ IGNORE the body part
+
+IF this is a NORMAL PHOTO/ARTWORK (no UI, no watermarks):
+→ Process EVERYTHING in the image
+→ PRESERVE background details, scenery, all elements
+→ Do NOT ignore anything - capture the complete scene
+
+EXTRACT clean lineart:
+- If it is an illustration: PRESERVE existing contour lines and REMOVE fills
+- If it is a photo: CONVERT it to anime-style lineart (bold outlines, no shading)
+
+Output: black lines on white background only. NO solid fills. PNG format.`;
       break;
     case 'perfect_lines':
       systemInstruction = TOPOGRAPHIC_INSTRUCTION_OPTIMIZED;
       model = topographicModel;
       modeInfo = 'TOPOGRÁFICO V7.0 (temp: 0.4, topP: 0.4, topK: 20) - INTERPRETAÇÃO TOPOGRÁFICA';
-      traceInstruction = `⛔ CRITICAL: DO NOT OUTPUT A PHOTO. OUTPUT ONLY LINES. ⛔
+      traceInstruction = `🎯 INTELLIGENT DETECTION - Apply focus ONLY when needed:
+
+IF this is a SCREENSHOT (Instagram, Pinterest, social media):
+→ Extract ONLY the artwork/design shown
+→ IGNORE all UI elements (buttons, icons, text, usernames, etc.)
+
+IF this is a WATERMARKED image or has PHONE UI:
+→ Extract ONLY the main content
+→ IGNORE watermarks, timestamps, phone interface
+
+IF this is a TATTOO ON SKIN:
+→ Extract ONLY the tattoo design
+→ IGNORE the body part
+
+IF this is a NORMAL PHOTO/ARTWORK (no UI, no watermarks):
+→ Process EVERYTHING in the image
+→ PRESERVE background details, scenery, all elements
+→ Map the COMPLETE scene with all depth levels
+
+⛔ CRITICAL: DO NOT OUTPUT A PHOTO. OUTPUT ONLY LINES. ⛔
 
 You MUST generate a TOPOGRAPHIC LINE MAP stencil. The output CANNOT look like the input photo.
 
@@ -195,8 +295,39 @@ OUTPUT: Black line stencil. Contours + hatching + textures. PNG format.`;
     default:
       systemInstruction = PERFECT_LINES_INSTRUCTION_OPTIMIZED;
       model = linesModel;
-      modeInfo = 'LINHAS DETALHADAS (temp: 0, topP: 0.15, topK: 10) - TODOS DETALHES, LINHAS LIMPAS';
-      traceInstruction = 'TRACE this exact image into a line stencil. Do NOT redraw. Apply a geometric line transformation to the EXACT pixels. Every contour MUST overlay perfectly with the original.';
+      modeInfo = 'LINHAS V2.0 (temp: 0, topP: 0.15, topK: 10) - TODOS DETALHES + CONTORNOS DE SOMBRAS';
+      traceInstruction = `🎯 INTELLIGENT DETECTION - Apply focus ONLY when needed:
+
+IF this is a SCREENSHOT (Instagram, Pinterest, social media):
+→ Extract ONLY the artwork/design shown
+→ IGNORE all UI elements (buttons, icons, text, usernames, etc.)
+
+IF this is a WATERMARKED image or has PHONE UI:
+→ Extract ONLY the main content
+→ IGNORE watermarks, timestamps, phone interface
+
+IF this is a TATTOO ON SKIN:
+→ Extract ONLY the tattoo design
+→ IGNORE the body part
+
+IF this is a NORMAL PHOTO/ARTWORK (no UI, no watermarks):
+→ Process EVERYTHING in the image
+→ PRESERVE background details, scenery, all elements
+→ Trace the COMPLETE scene with all details
+
+TRACE into a complete line stencil:
+
+1. STRUCTURAL EDGES: All physical edges with medium lines (0.4-0.8pt)
+2. SHADOW BOUNDARIES: Trace WHERE shadows BEGIN and END with thinner lines (0.2-0.4pt)
+3. TONAL TRANSITIONS: Each change in tone gets a boundary contour line
+
+CRITICAL: 
+- Shadows are captured as BOUNDARY LINES, not filled with hatching
+- Draw a thin line where each shadow begins. Multiple lines for gradual shadows
+- Do NOT redraw or reimagine. Apply a geometric line transformation to the EXACT pixels
+- Every structural contour AND every shadow boundary MUST be traced
+
+OUTPUT: Black contour lines on white. Both structure AND shadow boundaries.`;
       break;
   }
   
@@ -225,6 +356,20 @@ OUTPUT: Black line stencil. Contours + hatching + textures. PNG format.`;
   } else {
     // Já é base64, apenas limpar o prefixo data URI se existir
     cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, '');
+  }
+
+  // Capturar dimensões originais antes do processamento
+  let originalWidth: number;
+  let originalHeight: number;
+  try {
+    const originalBuffer = Buffer.from(cleanBase64, 'base64');
+    const originalMeta = await sharp(originalBuffer).metadata();
+    originalWidth = originalMeta.width!;
+    originalHeight = originalMeta.height!;
+    console.log(`[Gemini] Dimensões originais: ${originalWidth}x${originalHeight}`);
+  } catch (error) {
+    console.error('[Gemini] Erro ao capturar dimensões:', error);
+    throw new Error('Falha ao processar dimensões da imagem');
   }
 
   // Pré-processar imagem: sharpening + contraste para melhorar detecção de bordas
@@ -267,7 +412,24 @@ OUTPUT: Black line stencil. Contours + hatching + textures. PNG format.`;
             const rawImage = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
             // 🎯 FORÇAR MONOCROMÁTICO: Remove qualquer cor que o Gemini tenha gerado
             console.log('[Gemini] Aplicando enforceMonochrome para garantir saída B&W');
-            return await enforceMonochrome(rawImage);
+            const monochromeImage = await enforceMonochrome(rawImage);
+            
+            // 📐 VERIFICAR E CORRIGIR DIMENSÕES: Garante que saída = entrada
+            console.log('[Gemini] Verificando dimensões da saída...');
+            const finalImage = await ensureDimensionsMatch(
+              monochromeImage,
+              originalWidth,
+              originalHeight
+            );
+            
+            // 💰 CAPTURAR CUSTO REAL: usageMetadata da API Gemini
+            const usageMetadata = response.usageMetadata;
+            console.log('[Gemini] 💰 usageMetadata:', JSON.stringify(usageMetadata));
+            
+            return {
+              image: finalImage,
+              usageMetadata
+            };
           }
         }
       }

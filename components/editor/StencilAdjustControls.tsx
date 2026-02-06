@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useCallback } from 'react';
 import {
   Sliders,
   RotateCw,
@@ -9,7 +9,26 @@ import {
   Sparkles,
   RefreshCw
 } from 'lucide-react';
-import { AdjustControls, DEFAULT_ADJUST_CONTROLS } from '@/lib/stencil-types';
+import { AdjustControls } from '@/lib/stencil-types';
+
+// Constante estática fora do componente para evitar recriação
+import { useTranslations } from 'next-intl';
+
+// Constante estática fora do componente para evitar recriação
+const COLOR_PRESETS = [
+  { color: '#000000', key: 'black' },
+  { color: '#1a1a2e', key: 'darkBlue' },
+  { color: '#16213e', key: 'navy' },
+  { color: '#0f3460', key: 'blue' },
+  { color: '#533483', key: 'purple' },
+  { color: '#e94560', key: 'red' },
+  { color: '#1e5128', key: 'green' },
+  { color: '#ff6b35', key: 'orange' },
+  { color: '#6c5ce7', key: 'violet' },
+  { color: '#00b4d8', key: 'cyan' },
+  { color: '#8b4513', key: 'brown' },
+  { color: '#2d3436', key: 'graphite' },
+] as const;
 
 interface StencilAdjustControlsProps {
   controls: AdjustControls;
@@ -18,21 +37,25 @@ interface StencilAdjustControlsProps {
   isProcessing?: boolean;
 }
 
-export default function StencilAdjustControls({
+function StencilAdjustControls({
   controls,
   onChange,
   onReset,
   isProcessing = false
 }: StencilAdjustControlsProps) {
+  const t = useTranslations('editor.controls');
+  const tMsg = useTranslations('editor.messages');
+
+  // Hook DEVE vir antes de qualquer return condicional
+  const handleChange = useCallback((key: keyof AdjustControls, value: number | boolean | string) => {
+    if (!controls) return;
+    onChange({ ...controls, [key]: value });
+  }, [controls, onChange]);
+
   // Proteção contra controls undefined
   if (!controls) {
-    console.error('[StencilAdjustControls] Controls is undefined!');
     return null;
   }
-
-  const handleChange = (key: keyof AdjustControls, value: number | boolean | string) => {
-    onChange({ ...controls, [key]: value });
-  };
 
   return (
     <div className="space-y-1.5 lg:space-y-3">
@@ -40,15 +63,15 @@ export default function StencilAdjustControls({
       <div className="flex items-center justify-between">
         <h3 className="text-white font-semibold text-sm flex items-center gap-2">
           <Sliders size={16} className="text-emerald-500" />
-          Ajustes
+          {t('title')}
         </h3>
         <button
           onClick={onReset}
           disabled={isProcessing}
           className="text-xs text-zinc-400 hover:text-emerald-400 flex items-center gap-1 disabled:opacity-50"
-          title="Resetar todos os ajustes"
+          title={t('resetTooltip')}
         >
-          <RefreshCw size={12} /> Resetar
+          <RefreshCw size={12} /> {t('reset')}
         </button>
       </div>
 
@@ -56,13 +79,13 @@ export default function StencilAdjustControls({
       <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-1.5 lg:p-3 space-y-1.5 lg:space-y-3">
         <div className="flex items-center gap-2 mb-1">
           <Sliders size={13} className="text-purple-400" />
-          <span className="text-white font-medium text-[11px] lg:text-xs">Ajustes Essenciais</span>
+          <span className="text-white font-medium text-[11px] lg:text-xs">{t('essential')}</span>
         </div>
 
         {/* Intensidade (Brightness) */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <label className="text-[10px] lg:text-[11px] text-zinc-400">Intensidade</label>
+            <label className="text-[10px] lg:text-[11px] text-zinc-400">{t('intensity')}</label>
             <span className="text-[10px] lg:text-[11px] text-emerald-400 font-mono">
               {controls.brightness > 0 ? '+' : ''}{controls.brightness}
             </span>
@@ -77,15 +100,15 @@ export default function StencilAdjustControls({
             className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
           />
           <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-600 mt-0.5">
-            <span>Escuro</span>
-            <span>Claro</span>
+            <span>{t('dark')}</span>
+            <span>{t('light')}</span>
           </div>
         </div>
 
         {/* Contraste */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <label className="text-[10px] lg:text-[11px] text-zinc-400">Contraste</label>
+            <label className="text-[10px] lg:text-[11px] text-zinc-400">{t('contrast')}</label>
             <span className="text-[10px] lg:text-[11px] text-emerald-400 font-mono">
               {controls.contrast > 0 ? '+' : ''}{controls.contrast}
             </span>
@@ -100,15 +123,15 @@ export default function StencilAdjustControls({
             className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
           />
           <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-600 mt-0.5">
-            <span>Suave</span>
-            <span>Forte</span>
+            <span>{t('soft')}</span>
+            <span>{t('strong')}</span>
           </div>
         </div>
 
         {/* Preto/Branco (Threshold) */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <label className="text-[10px] lg:text-[11px] text-zinc-400">Preto/Branco</label>
+            <label className="text-[10px] lg:text-[11px] text-zinc-400">{t('threshold')}</label>
             <span className="text-[10px] lg:text-[11px] text-emerald-400 font-mono">
               {controls.threshold}
             </span>
@@ -123,15 +146,15 @@ export default function StencilAdjustControls({
             className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
           />
           <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-600 mt-0.5">
-            <span>Mais preto</span>
-            <span>Mais branco</span>
+            <span>{t('moreBlack')}</span>
+            <span>{t('moreWhite')}</span>
           </div>
         </div>
 
         {/* Gamma (Meios-tons) */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <label className="text-[10px] lg:text-[11px] text-zinc-400">Gamma (Meios-tons)</label>
+            <label className="text-[10px] lg:text-[11px] text-zinc-400">{t('gamma')}</label>
             <span className="text-[10px] lg:text-[11px] text-emerald-400 font-mono">
               {controls.gamma.toFixed(2)}
             </span>
@@ -147,15 +170,15 @@ export default function StencilAdjustControls({
             className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
           />
           <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-600 mt-0.5">
-            <span>Escuro</span>
-            <span>Claro</span>
+            <span>{t('dark')}</span>
+            <span>{t('light')}</span>
           </div>
         </div>
 
         {/* Nitidez */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="text-[10px] lg:text-[11px] text-zinc-400">Nitidez</label>
+            <label className="text-[10px] lg:text-[11px] text-zinc-400">{t('sharpen')}</label>
             <button
               onClick={() => handleChange('sharpen', !controls.sharpen)}
               disabled={isProcessing}
@@ -174,7 +197,7 @@ export default function StencilAdjustControls({
           {controls.sharpen && (
             <div className="animate-in fade-in slide-in-from-top-1 duration-200">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-[9px] lg:text-[10px] text-zinc-500">Intensidade</span>
+                <span className="text-[9px] lg:text-[10px] text-zinc-500">{t('amount')}</span>
                 <span className="text-[9px] lg:text-[10px] text-emerald-400 font-mono">
                   {controls.sharpenAmount.toFixed(1)}
                 </span>
@@ -198,13 +221,13 @@ export default function StencilAdjustControls({
       <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-1.5 lg:p-3 space-y-1.5 lg:space-y-3">
         <div className="flex items-center gap-2 mb-1">
           <RotateCw size={13} className="text-blue-400" />
-          <span className="text-white font-medium text-[11px] lg:text-xs">Transformações</span>
+          <span className="text-white font-medium text-[11px] lg:text-xs">{t('transformations')}</span>
         </div>
 
         {/* Rotação */}
         <div>
           <div className="flex justify-between items-center mb-1">
-            <label className="text-[10px] lg:text-[11px] text-zinc-400">Rotação</label>
+            <label className="text-[10px] lg:text-[11px] text-zinc-400">{t('rotation')}</label>
             <span className="text-[10px] lg:text-[11px] text-blue-400 font-mono">
               {controls.rotation}°
             </span>
@@ -232,7 +255,7 @@ export default function StencilAdjustControls({
             }`}
           >
             <FlipHorizontal2 size={14} className="mb-0.5 lg:mb-1" />
-            Espelhar H
+            {t('flipH')}
           </button>
           <button
             onClick={() => handleChange('flipVertical', !controls.flipVertical)}
@@ -244,7 +267,7 @@ export default function StencilAdjustControls({
             }`}
           >
             <FlipVertical2 size={14} className="mb-0.5 lg:mb-1" />
-            Espelhar V
+            {t('flipV')}
           </button>
           <button
             onClick={() => handleChange('invert', !controls.invert)}
@@ -256,7 +279,7 @@ export default function StencilAdjustControls({
             }`}
           >
             <Sparkles size={14} className="mb-0.5 lg:mb-1" />
-            Inverter
+            {t('invert')}
           </button>
         </div>
       </div>
@@ -265,30 +288,17 @@ export default function StencilAdjustControls({
       <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-1.5 lg:p-3 space-y-1.5 lg:space-y-3">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-3 h-3 rounded-full border border-zinc-600" style={{ backgroundColor: controls.lineColor || '#000000' }} />
-          <span className="text-white font-medium text-[11px] lg:text-xs">Cor do Contorno</span>
+          <span className="text-white font-medium text-[11px] lg:text-xs">{t('lineColor')}</span>
         </div>
 
         {/* Cores pré-definidas */}
         <div className="grid grid-cols-6 gap-1.5">
-          {[
-            { color: '#000000', name: 'Preto' },
-            { color: '#1a1a2e', name: 'Azul Escuro' },
-            { color: '#16213e', name: 'Navy' },
-            { color: '#0f3460', name: 'Azul' },
-            { color: '#533483', name: 'Roxo' },
-            { color: '#e94560', name: 'Vermelho' },
-            { color: '#1e5128', name: 'Verde' },
-            { color: '#ff6b35', name: 'Laranja' },
-            { color: '#6c5ce7', name: 'Violeta' },
-            { color: '#00b4d8', name: 'Ciano' },
-            { color: '#8b4513', name: 'Marrom' },
-            { color: '#2d3436', name: 'Grafite' },
-          ].map((preset) => (
+          {COLOR_PRESETS.map((preset) => (
             <button
               key={preset.color}
               onClick={() => handleChange('lineColor', preset.color)}
               disabled={isProcessing}
-              title={preset.name}
+              title={t(`colors.${preset.key}`)}
               className={`w-full aspect-square rounded-md border-2 transition-all disabled:opacity-50 ${
                 controls.lineColor === preset.color
                   ? 'border-emerald-500 ring-2 ring-emerald-500/30 scale-110'
@@ -301,7 +311,7 @@ export default function StencilAdjustControls({
 
         {/* Cor personalizada */}
         <div className="flex items-center gap-2">
-          <label className="text-[10px] text-zinc-400">Personalizada:</label>
+          <label className="text-[10px] text-zinc-400">{t('custom')}</label>
           <input
             type="color"
             value={controls.lineColor || '#000000'}
@@ -316,7 +326,7 @@ export default function StencilAdjustControls({
         {controls.lineColor && controls.lineColor !== '#000000' && (
           <div className="animate-in fade-in slide-in-from-top-1 duration-200">
             <div className="flex justify-between items-center mb-1">
-              <label className="text-[10px] text-zinc-400">Sensibilidade</label>
+              <label className="text-[10px] text-zinc-400">{t('sensitivity')}</label>
               <span className="text-[10px] text-emerald-400 font-mono">
                 {controls.colorThreshold || 250}
               </span>
@@ -331,14 +341,14 @@ export default function StencilAdjustControls({
               className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
             />
             <div className="flex justify-between text-[8px] text-zinc-600 mt-0.5">
-              <span>Mais cor</span>
-              <span>Menos cor</span>
+              <span>{t('moreColor')}</span>
+              <span>{t('lessColor')}</span>
             </div>
           </div>
         )}
 
         <p className="text-[9px] text-zinc-600 leading-tight">
-          💡 A cor é aplicada apenas nos contornos. O fundo branco permanece intacto.
+          {t('colorHint')}
         </p>
       </div>
 
@@ -347,10 +357,13 @@ export default function StencilAdjustControls({
         <div className="bg-emerald-900/20 border border-emerald-800 rounded-lg p-2.5">
           <div className="text-[11px] text-emerald-300 text-center flex items-center justify-center gap-2">
             <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-            Processando ajustes...
+            {tMsg('applyingAdjustments')}
           </div>
         </div>
       )}
     </div>
   );
 }
+
+// Memoizado para evitar re-renders desnecessários quando parent atualiza
+export default memo(StencilAdjustControls);

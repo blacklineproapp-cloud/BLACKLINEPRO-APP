@@ -79,3 +79,54 @@ export async function rateLimit(
     return { success: true, limit, remaining: 1, reset: 0 };
   }
 }
+
+/**
+ * API Rate Limiter - Objeto com método limit() para compatibilidade
+ */
+export const apiLimiter = {
+  /**
+   * Verifica rate limit para um identificador
+   * @param identifier Identificador único (ex: 'user:123' ou 'ip:1.2.3.4')
+   * @param limit Limite de requisições (default: 60)
+   * @param windowSeconds Janela de tempo em segundos (default: 60)
+   */
+  limit: async (
+    identifier: string,
+    limit: number = 60,
+    windowSeconds: number = 60
+  ): Promise<RateLimitResult> => {
+    return rateLimit(identifier, limit, windowSeconds);
+  }
+};
+
+/**
+ * Obtém identificador único para rate limiting
+ * Aceita userId diretamente ou extrai do Request
+ */
+export async function getRateLimitIdentifier(
+  userIdOrReq: string | Request | null | undefined,
+  userId?: string | null
+): Promise<string> {
+  // Se recebeu uma string diretamente, usa como userId
+  if (typeof userIdOrReq === 'string') {
+    return `user:${userIdOrReq}`;
+  }
+
+  // Se recebeu userId no segundo parâmetro
+  if (userId) {
+    return `user:${userId}`;
+  }
+
+  // Se recebeu Request, tenta extrair IP
+  if (userIdOrReq && typeof userIdOrReq === 'object') {
+    const req = userIdOrReq as Request;
+    const forwarded = req.headers.get('x-forwarded-for');
+    const realIp = req.headers.get('x-real-ip');
+    const cfConnectingIp = req.headers.get('cf-connecting-ip');
+
+    const ip = cfConnectingIp || realIp || forwarded?.split(',')[0]?.trim() || 'unknown';
+    return `ip:${ip}`;
+  }
+
+  return 'unknown';
+}

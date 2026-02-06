@@ -49,7 +49,9 @@ export async function GET(req: Request) {
       .order('created_at', { ascending: false });
 
     if (search) {
-      query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%`);
+      // Sanitizar input para prevenir SQL injection
+      const sanitizedSearch = search.slice(0, 100).replace(/[%_\\]/g, '\\$&');
+      query = query.or(`email.ilike.%${sanitizedSearch}%,name.ilike.%${sanitizedSearch}%`);
     }
 
     if (plan && plan !== 'all') {

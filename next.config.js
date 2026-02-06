@@ -1,15 +1,14 @@
 const { withSentryConfig } = require('@sentry/nextjs');
+const createNextIntlPlugin = require('next-intl/plugin');
+
+// Criar plugin next-intl com caminho para request config
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // ⚡ OTIMIZAÇÕES DE PERFORMANCE
   compress: true, // Compressão gzip automática
   poweredByHeader: false, // Remover header desnecessário
-
-  // Desabilitar ESLint durante build (problema de circular structure)
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 
   // Experimental features para performance
   experimental: {
@@ -146,19 +145,20 @@ const nextConfig = {
   },
 };
 
-// Sentry configuration - DESABILITADO para evitar erro 403 no build
-// O Sentry ainda funciona para capturar erros, só não faz upload de source maps
+// Sentry configuration - Habilitado para source maps em produção
 const sentryWebpackPluginOptions = {
   silent: true,
-  // Upload desabilitado completamente
   sourcemaps: {
-    disable: true, // Desabilita upload de source maps
+    disable: false, // ✅ Habilitado para stack traces legíveis
   },
   release: {
-    create: false, // Não criar release automaticamente
-    finalize: false,
+    create: true,
+    finalize: true,
   },
 };
 
-// Build sem Sentry plugin para evitar erro 403
-module.exports = nextConfig;
+// Build com next-intl + Sentry plugins
+module.exports = withSentryConfig(
+  withNextIntl(nextConfig),
+  sentryWebpackPluginOptions
+);

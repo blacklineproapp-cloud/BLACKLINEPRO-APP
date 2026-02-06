@@ -1,14 +1,14 @@
 import { Webhook } from 'svix';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { maskEmail } from '@/lib/logger';
+import { logger, maskEmail, webhookLogger } from '@/lib/logger';
 
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    console.error('[Webhook Clerk] ❌ CLERK_WEBHOOK_SECRET não configurado');
+    logger.error('[Webhook Clerk] CLERK_WEBHOOK_SECRET não configurado');
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
   const svix_signature = req.headers.get('svix-signature');
 
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    console.error('[Webhook Clerk] ❌ Headers Svix ausentes');
+    logger.error('[Webhook Clerk] Headers Svix ausentes');
     return new NextResponse('Headers ausentes', { status: 400 });
   }
 
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       'svix-signature': svix_signature,
     });
   } catch (err) {
-    console.error('[Webhook Clerk] ❌ Verificação de assinatura falhou');
+    logger.error('[Webhook Clerk] Verificação de assinatura falhou', err);
     return new NextResponse('Assinatura inválida', { status: 400 });
   }
 
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   const { type, data } = evt;
   const eventId = svix_id; // Usar svix_id como identificador único do evento
 
-  console.log(`[Webhook Clerk] 📨 Evento recebido: ${type} (ID: ${eventId})`);
+  webhookLogger.received(type, eventId);
 
   // ============================================================================
   // 🔒 IDEMPOTÊNCIA: Verificar se evento já foi processado
@@ -60,12 +60,12 @@ export async function POST(req: Request) {
       .single();
 
     if (existingEvent) {
-      console.log(`[Webhook Clerk] ⏭️ Evento já processado: ${eventId} (status: ${existingEvent.status})`);
+      webhookLogger.duplicate(type, eventId);
       return new NextResponse('OK - Already processed', { status: 200 });
     }
   } catch (error) {
     // Erro ao verificar = continuar (fail-open para não bloquear webhooks legítimos)
-    console.warn('[Webhook Clerk] ⚠️ Erro ao verificar idempotência:', error);
+    logger.warn('[Webhook Clerk] Erro ao verificar idempotência', { error });
   }
 
   // ============================================================================
@@ -83,10 +83,10 @@ export async function POST(req: Request) {
   } catch (error: any) {
     // Se erro for de duplicação (23505 = unique constraint), evento já sendo processado
     if (error.code === '23505') {
-      console.log(`[Webhook Clerk] ⏭️ Evento já em processamento: ${eventId}`);
+      logger.info('[Webhook Clerk] Evento já em processamento', { eventId });
       return new NextResponse('OK - Already processing', { status: 200 });
     }
-    console.error('[Webhook Clerk] ❌ Erro ao registrar evento:', error);
+    logger.error('[Webhook Clerk] Erro ao registrar evento', error);
     // Continuar processamento mesmo se falhar registro
   }
 
@@ -110,24 +110,24 @@ export async function POST(req: Request) {
       case 'session.created':
       case 'session.ended':
       case 'session.removed':
-        console.log(`[Webhook Clerk] ℹ️ Sessão ignorada: ${type}`);
+        logger.debug('[Webhook Clerk] Sessão ignorada', { type });
         await markEventAsCompleted(eventId, 'Evento de sessão ignorado');
         return new NextResponse('OK', { status: 200 });
 
       default:
-        console.log(`[Webhook Clerk] ⚠️ Evento não tratado: ${type}`);
+        logger.warn('[Webhook Clerk] Evento não tratado', { type });
         await markEventAsCompleted(eventId, 'Tipo de evento não implementado');
         return new NextResponse('OK', { status: 200 });
     }
 
     // Marcar como completado
     await markEventAsCompleted(eventId);
-    console.log(`[Webhook Clerk] ✅ Evento processado com sucesso: ${type} (${eventId})`);
+    webhookLogger.processed(type, eventId);
 
     return new NextResponse('OK', { status: 200 });
 
   } catch (error: any) {
-    console.error(`[Webhook Clerk] ❌ Erro ao processar evento ${type}:`, error);
+    webhookLogger.failed(type, eventId, error);
 
     // Marcar como failed
     await markEventAsFailed(eventId, error.message);
@@ -155,7 +155,7 @@ async function markEventAsCompleted(eventId: string, message?: string): Promise<
       })
       .eq('event_id', eventId);
   } catch (error) {
-    console.error('[Webhook Clerk] ⚠️ Erro ao marcar evento como completado:', error);
+    logger.warn('[Webhook Clerk] Erro ao marcar evento como completado', { error });
   }
 }
 
@@ -173,7 +173,7 @@ async function markEventAsFailed(eventId: string, errorMessage: string): Promise
       })
       .eq('event_id', eventId);
   } catch (error) {
-    console.error('[Webhook Clerk] ⚠️ Erro ao marcar evento como falhado:', error);
+    logger.warn('[Webhook Clerk] Erro ao marcar evento como falhado', { error });
   }
 }
 
@@ -184,7 +184,7 @@ function validateAndNormalizeClerkData(data: any): { email: string; name: string
   // Validar email
   const email = data.email_addresses?.[0]?.email_address;
   if (!email || typeof email !== 'string') {
-    console.error('[Webhook Clerk] ❌ Email ausente ou inválido no payload do evento');
+    logger.error('[Webhook Clerk] Email ausente ou inválido no payload');
     return null;
   }
 
@@ -214,7 +214,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
   }
 
   const { email, name } = validated;
-  console.log(`[Webhook Clerk] 👤 user.created: ${maskEmail(email)} (clerk_id: ${data.id})`);
+  logger.info('[Webhook Clerk] user.created', { email: maskEmail(email), clerk_id: data.id });
 
 
 
@@ -227,7 +227,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
 
   // Se encontrou múltiplos usuários com mesmo email = PROBLEMA!
   if (existingUsers && existingUsers.length > 1) {
-    console.error('[Webhook Clerk] ⚠️ ALERTA: Múltiplos usuários encontrados para clerk_id:', data.id, 'count:', existingUsers.length);
+    logger.warn('[Webhook Clerk] Múltiplos usuários encontrados', { clerk_id: data.id, count: existingUsers.length });
     // Usar o mais antigo como base
     existingUsers.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   }
@@ -235,7 +235,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
   const existing = existingUsers?.[0];
 
   if (existing) {
-    console.log(`[Webhook Clerk] 🔄 Usuário já existe (${maskEmail(existing.email)}), atualizando dados...`);
+    logger.info('[Webhook Clerk] Usuário já existe, atualizando', { email: maskEmail(existing.email) });
 
     // Atualizar dados do usuário existente
     const { error: updateError } = await supabaseAdmin
@@ -253,12 +253,12 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
       throw new Error(`Erro ao atualizar usuário existente: ${updateError.message}`);
     }
 
-    console.log(`[Webhook Clerk] ✅ Usuário atualizado: ${maskEmail(email)}`);
+    logger.success('[Webhook Clerk] Usuário atualizado', { email: maskEmail(email) });
     return;
   }
 
   // Inserir apenas se NÃO existir
-  console.log(`[Webhook Clerk] ➕ Criando novo usuário: ${maskEmail(email)}`);
+  logger.info('[Webhook Clerk] Criando novo usuário', { email: maskEmail(email) });
 
   const { error, data: newUser } = await supabaseAdmin
     .from('users')
@@ -281,7 +281,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
   if (error) {
     // Verificar se é erro de duplicação (UNIQUE constraint)
     if (error.code === '23505') {
-      console.warn('[Webhook Clerk] ⚠️ Constraint violation ao criar usuário, tentando atualizar...');
+      logger.warn('[Webhook Clerk] Constraint violation, tentando atualizar');
 
       // Tentar buscar e atualizar o usuário existente
       const { data: duplicateUser } = await supabaseAdmin
@@ -300,7 +300,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
           })
           .eq('id', duplicateUser.id);
 
-        console.log(`[Webhook Clerk] ✅ Usuário duplicado atualizado: ${maskEmail(email)}`);
+        logger.success('[Webhook Clerk] Usuário duplicado atualizado', { email: maskEmail(email) });
         return;
       }
 
@@ -310,7 +310,7 @@ async function handleUserCreated(data: any, req: Request, eventId: string): Prom
     throw new Error(`Erro ao criar usuário: ${error.message}`);
   }
 
-  console.log(`[Webhook Clerk] ✅ Novo usuário criado: ${maskEmail(email)} (ID: ${newUser?.id})`);
+  logger.success('[Webhook Clerk] Novo usuário criado', { email: maskEmail(email), userId: newUser?.id });
 }
 
 /**
@@ -324,7 +324,7 @@ async function handleUserUpdated(data: any, eventId: string): Promise<void> {
   }
 
   const { email, name } = validated;
-  console.log(`[Webhook Clerk] 🔄 user.updated: ${maskEmail(email)} (clerk_id: ${data.id})`);
+  logger.info('[Webhook Clerk] user.updated', { email: maskEmail(email), clerk_id: data.id });
 
   const { error } = await supabaseAdmin
     .from('users')
@@ -340,14 +340,14 @@ async function handleUserUpdated(data: any, eventId: string): Promise<void> {
     throw new Error(`Erro ao atualizar usuário: ${error.message}`);
   }
 
-  console.log(`[Webhook Clerk] ✅ Usuário atualizado com sucesso: ${maskEmail(email)}`);
+  logger.success('[Webhook Clerk] Usuário atualizado', { email: maskEmail(email) });
 }
 
 /**
  * Handler: Usuário deletado
  */
 async function handleUserDeleted(data: any, eventId: string): Promise<void> {
-  console.log(`[Webhook Clerk] 🗑️ user.deleted: clerk_id ${data.id}`);
+  logger.info('[Webhook Clerk] user.deleted', { clerk_id: data.id });
 
   const { error } = await supabaseAdmin
     .from('users')
@@ -358,7 +358,7 @@ async function handleUserDeleted(data: any, eventId: string): Promise<void> {
     throw new Error(`Erro ao deletar usuário: ${error.message}`);
   }
 
-  console.log(`[Webhook Clerk] ✅ Usuário deletado com sucesso: ${data.id}`);
+  logger.success('[Webhook Clerk] Usuário deletado', { clerk_id: data.id });
 }
 
 // ⚠️ NÃO usar Edge Runtime para webhooks!

@@ -6,7 +6,7 @@
  */
 
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { X, Maximize2, Minimize2, RotateCcw, Info } from 'lucide-react';
+import { X, Maximize2, Minimize2, Info } from 'lucide-react';
 import DrawingCanvas, { DrawingCanvasRef } from './DrawingCanvas';
 import DrawingToolbar from './DrawingToolbar';
 import type { DrawingTool, Stroke } from '@/lib/drawing/types';
@@ -18,7 +18,6 @@ interface DrawingEditorProps {
   height: number;
   onClose: () => void;
   onSave: (imageDataUrl: string, strokes: Stroke[]) => void;
-  onSendToAI?: (imageDataUrl: string) => Promise<string>;
   className?: string;
 }
 
@@ -29,7 +28,6 @@ export default function DrawingEditor({
   height,
   onClose,
   onSave,
-  onSendToAI,
   className = '',
 }: DrawingEditorProps) {
   const canvasRef = useRef<DrawingCanvasRef>(null);
@@ -49,7 +47,6 @@ export default function DrawingEditor({
 
   // Estado de UI
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [showTips, setShowTips] = useState(true);
 
   // Dimensões do canvas são as dimensões reais da imagem
@@ -138,26 +135,6 @@ export default function DrawingEditor({
       onSave(dataUrl, strokes);
     }
   }, [onSave]);
-
-  const handleSendToAI = useCallback(async () => {
-    if (!onSendToAI) return;
-
-    // Usar exportStencilOnly para enviar apenas o stencil + desenhos
-    const dataUrl = canvasRef.current?.exportStencilOnly();
-    if (!dataUrl) return;
-
-    setIsProcessing(true);
-    try {
-      const refinedImage = await onSendToAI(dataUrl);
-      // O callback deve lidar com o resultado
-      // Podemos recarregar a imagem refinada no canvas se necessário
-    } catch (error) {
-      console.error('Erro ao processar com IA:', error);
-      alert('Erro ao processar com IA. Tente novamente.');
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [onSendToAI]);
 
   // Atalhos de teclado
   useEffect(() => {
@@ -285,8 +262,6 @@ export default function DrawingEditor({
               onRedo={handleRedo}
               onClear={handleClear}
               onDownload={handleDownload}
-              onSendToAI={onSendToAI ? handleSendToAI : undefined}
-              isProcessing={isProcessing}
             />
           </div>
 
@@ -310,18 +285,7 @@ export default function DrawingEditor({
                 brushSize={brushSize}
                 brushColor={brushColor}
                 onStrokesChange={handleStrokesChange}
-                disabled={isProcessing}
               />
-
-              {/* Processing overlay */}
-              {isProcessing && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <div className="bg-zinc-900 border border-zinc-700 rounded-xl px-6 py-4 flex items-center gap-3">
-                    <div className="w-5 h-5 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
-                    <span className="text-white font-medium">Processando com IA...</span>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -343,8 +307,6 @@ export default function DrawingEditor({
             onRedo={handleRedo}
             onClear={handleClear}
             onDownload={handleDownload}
-            onSendToAI={onSendToAI ? handleSendToAI : undefined}
-            isProcessing={isProcessing}
             compact
           />
         </div>

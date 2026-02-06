@@ -5,6 +5,10 @@ import { uploadImage, uploadImageWithThumbnail, ensureBucketExists } from '@/lib
 import { v4 as uuidv4 } from 'uuid';
 import { getOrSetCache, invalidateCache } from '@/lib/cache';
 
+// App Router: usar runtime nodejs para suportar uploads maiores
+export const runtime = 'nodejs';
+export const maxDuration = 30; // 30 segundos para upload de imagens
+
 // GET - Listar projetos do usuário
 export async function GET() {
   try {

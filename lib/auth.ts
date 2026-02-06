@@ -4,45 +4,64 @@ import { getOrSetCache, invalidateCache } from './cache';
 import { checkAndRevertExpiredCourtesy } from './courtesy-service';
 import { maskEmail } from './logger';
 
+/**
+ * Atualiza o timestamp de última atividade do usuário
+ */
+export async function updateUserActivity(userId: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({ last_active_at: new Date().toISOString() })
+      .eq('clerk_id', userId);
+
+    if (error) throw error;
+  } catch (err) {
+    console.error('[Auth] Erro ao atualizar atividade do usuário:', err);
+  }
+}
+
 // Função auxiliar para retry com backoff exponencial
+// 🚨 OTIMIZADO: Menos tentativas para falhar rápido e não travar UX
 async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 1000
+  maxRetries: number = 2, // Reduzido de 3 para 2
+  baseDelay: number = 500 // Reduzido de 1000 para 500
 ): Promise<T> {
   let lastError: any;
-  
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn();
     } catch (error: any) {
       lastError = error;
-      
+
       // Verificar se é um erro de rede/timeout/521
-      const isNetworkError = 
+      const isNetworkError =
         error.message?.includes('fetch') ||
         error.message?.includes('timeout') ||
+        error.message?.includes('TimeoutError') ||
+        error.message?.includes('aborted') ||
         error.message?.includes('521') ||
         error.message?.includes('ECONNREFUSED') ||
         error.message?.includes('ETIMEDOUT');
-      
+
       // Se não for erro de rede, não retry
       if (!isNetworkError) {
         throw error;
       }
-      
+
       // Se for a última tentativa, não esperar
       if (attempt === maxRetries - 1) {
         break;
       }
-      
-      // Backoff exponencial: 1s, 2s, 4s
+
+      // Backoff rápido: 500ms, 1s
       const delay = baseDelay * Math.pow(2, attempt);
       console.log(`⚠️ Tentativa ${attempt + 1}/${maxRetries} falhou. Tentando novamente em ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
-  
+
   throw lastError;
 }
 

@@ -1,0 +1,697 @@
+{
+  "common": {
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "save": "保存",
+    "delete": "削除",
+    "edit": "編集",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "search": "検索",
+    "filter": "フィルター",
+    "sort": "並び替え",
+    "download": "ダウンロード",
+    "upload": "アップロード",
+    "share": "共有",
+    "copy": "コピー",
+    "copied": "コピーしました！",
+    "viewMore": "もっと見る",
+    "viewLess": "少なく表示",
+    "width": "幅",
+    "height": "高さ",
+    "intensity": "強度",
+    "plan": "プラン",
+    "upgrade": "アップグレード",
+    "all": "すべて"
+  },
+  "landing": {
+    "hero": {
+      "badge": "ステンシルフロー技術と精度",
+      "title": "ステンシルの",
+      "titleHighlight": "アート。",
+      "subtitle": "市場で最も先進的な技術であなたのアイデアに命を吹き込みます。細い線から複雑なシェーディングまで。",
+      "cta": {
+        "primary": "登録",
+        "secondary": "料金",
+        "dashboard": "ダッシュボードへ"
+      },
+      "features": {
+        "fidelity": {
+          "label": "完全な忠実度",
+          "sub": "鮮明なライン"
+        },
+        "technology": {
+          "label": "ステンシルフロー",
+          "sub": "独自技術"
+        },
+        "ready": {
+          "label": "A4対応",
+          "sub": "即座に印刷"
+        }
+      },
+      "socialProof": "現在2,500人以上のアーティストが利用中",
+      "tabs": {
+        "editor": {
+          "title": "プロフェッショナルエディター",
+          "description": "ステシルのあらゆる細部を完全にコントロール。"
+        },
+        "generator": {
+          "title": "StencilFlow ジェネレーター",
+          "description": "あなたのアイデアから独自のデザインを作成。"
+        },
+        "topographic": {
+          "title": "トポグラフィックモード",
+          "description": "複雑な部位のための3Dリリーフマッピング"
+        },
+        "lines": {
+          "title": "パーフェクトライン",
+          "description": "転写準備が整ったクリーンで定義されたライン"
+        }
+      }
+    },
+    "stats": {
+      "users": "登録ユーザー",
+      "projects": "作成されたステンシル",
+      "satisfaction": "満足度"
+    },
+    "features": {
+      "editor": {
+        "title": "完全なステンシルエディター",
+        "description": "強度、センチメートル単位のサイズ、視覚化を完全にコントロール。ビフォー/アフターを比較し、無制限のプロジェクトを保存し、高品質のPNGでダウンロード。",
+        "items": [
+          "正確な強度制御",
+          "センチメートル単位のサイズ調整",
+          "高度な調整（明るさ、コントラスト、シャープネス）",
+          "ビフォー/アフター比較",
+          "無制限のプロジェクトギャラリー",
+          "高品質ダウンロード"
+        ]
+      },
+      "generator": {
+        "title": "ゼロからタトゥーデザインを作成",
+        "description": "言葉でアイデアを説明すると、当社の高度な技術がデザインを作成します。クライアントがアイデアを持っているが画像がない場合に最適。",
+        "items": [
+          "高度なステンシルフロー技術",
+          "スマートな説明",
+          "複数のバリエーション",
+          "高品質な出力",
+          "ゼロから数秒でデザイン"
+        ]
+      },
+      "topographic": {
+        "title": "トポグラフィックモード",
+        "description": "ミリメートル精度でボリュームとカーブをマッピング。クロージャーや複雑な体の部位に最適。",
+        "items": [
+          "領域の体積測定を分析",
+          "自動等高線",
+          "解剖学への完璧な適応",
+          "シミュレートされた3D視覚化"
+        ]
+      },
+      "lines": {
+        "title": "完璧なライン",
+        "description": "任意の画像を鮮明でタトゥー対応のラインのデカールに変換。カーボン紙を忘れてください。",
+        "items": [
+          "スマートなライン抽出",
+          "厚さと詳細の制御",
+          "自動ノイズクリーニング",
+          "サーマルプリント対応"
+        ]
+      },
+      "tools": {
+        "title": "プロのタトゥーアーティストのためのプロフェッショナルツール",
+        "description": "作業を加速し、クライアントを感動させるプレミアムツールをアンロック",
+        "colorMatch": {
+          "title": "カラーマッチ",
+          "description": "色を識別し、互換性のあるインクを提案"
+        },
+        "splitA4": {
+          "title": "A4に分割",
+          "description": "大きなデザインを複数のシートに分割"
+        },
+        "enhance4k": {
+          "title": "4K強化",
+          "description": "品質を維持しながらスマートに強化"
+        },
+        "removeBg": {
+          "title": "背景を削除",
+          "description": "高度なAIによる自動背景削除"
+        }
+      },
+      "organizations": {
+        "title": "組織でチームワーク",
+        "description": "スタジオの組織を作成し、チームメンバーを追加し、クレジットを共有します。複数のタトゥーアーティストが一緒に働くスタジオに最適。",
+        "items": [
+          "組織あたり最大5人のメンバー",
+          "メンバー間のクレジット共有",
+          "権限管理（オーナー/メンバー）",
+          "一元化されたプロジェクト履歴",
+          "スタジオおよびエンタープライズプラン利用可能"
+        ],
+        "example": {
+          "name": "インクマスターズ スタジオ",
+          "members": "5名",
+          "plan": "スタジオプラン",
+          "credits": "共有クレジット"
+        }
+      },
+      "ui": {
+        "promptLabel": "ユーザー入力",
+        "promptExample": "リアルなジョニー・ブラボーがサーフィンをしている",
+        "before": "前",
+        "after": "後",
+        "original": "オリジナル",
+        "topographic": "トポグラフィック",
+        "lines": "ライン"
+      }
+    },
+    "comparison": {
+      "title": "なぜ StencilFlow なのか？",
+      "subtitle": "比較して違いを実感してください",
+      "feature": "機能",
+      "full": "完全",
+      "basic": "基本",
+      "limited": "限定的",
+      "priceStarting": "月額 R$ 50 〜",
+      "updateInfo": "2024年12月更新データ。価格は変動する場合があります。",
+      "features": {
+        "editor": "ステンシルエディター",
+        "designGen": "プロフェッショナルデザイン生成",
+        "topographic": "トポグラフィックモード",
+        "lines": "パーフェクトラインモード",
+        "size": "サイズ調整 (cm)",
+        "colorMatch": "インクカラーマッチ",
+        "splitA4": "A4分割",
+        "enhance4k": "4Kエンハンス",
+        "price": "月額料金",
+        "free": "無料プラン"
+      }
+    },
+    "howItWorks": {
+      "title": "仕組み",
+      "subtitle": "シンプル、スピーディー、プロフェッショナル",
+      "step1": {
+        "title": "アップロード",
+        "description": "画像（写真、デッサン、参考資料）をアップロード"
+      },
+      "step2": {
+        "title": "AIが処理",
+        "description": "数秒で完璧なステンシルに変換します"
+      },
+      "step3": {
+        "title": "ダウンロード",
+        "description": "印刷可能なPNGをダウンロードしてタトゥーを開始"
+      }
+    },
+    "pricing": {
+      "title": "プランを選択",
+      "subtitle": "すべての彫師に最適な価格設定",
+      "cta": "プランを見る",
+      "mostPopular": "最も人気",
+      "features": {
+        "starter": ["フルステンシルエディター", "トポグラフィックモード", "パーフェクトラインモード", "費用管理"],
+        "pro": ["Starterの全機能", "プロフェッショナルデザイン生成", "カラーマッチ + 4Kエンハンス", "A4分割"],
+        "studio": ["Proの全機能", "月最大680件の生成", "優先サポート", "スタジオに最適"],
+        "enterprise": ["Studioの全機能", "月最大1,400件の生成", "24/7専用サポート", "SLA 99.9% 保証"]
+      }
+    },
+    "finalCta": {
+      "title": "ステンシル体験を革新する準備はできましたか？",
+      "subtitle": "すでに",
+      "subtitleEnd": "人の彫師が StencilFlow を使用しています",
+      "cta": "今すぐ始める",
+      "dashboard": "ダッシュボードへ",
+      "thousands": "数千人の",
+      "checks": {
+        "payAsYouGo": "使った分だけお支払い",
+        "noExpiry": "クレジットに有効期限なし",
+        "fullControl": "完全な費用管理"
+      }
+    },
+    "footer": {
+      "description": "プロフェッショナルなタトゥーステンシル作成のための最も先進的なプラットフォーム。",
+      "product": "製品",
+      "features": "機能",
+      "pricing": "料金",
+      "legal": "法的情報",
+      "terms": "利用規約",
+      "privacy": "プライバシーポリシー",
+      "support": "サポート",
+      "contact": "お問い合わせ",
+      "rights": "All rights reserved.",
+      "dashboard": "ダッシュボード",
+      "security": "Stripeによる安全な決済"
+    }
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "welcome": "おかえりなさい",
+    "headerSubtitle": "プロジェクトと履歴を管理する",
+    "tabs": {
+      "projects": "プロジェクト",
+      "history": "AI生成ギャラリー"
+    },
+    "usage": {
+      "current": "今月の使用量",
+      "limit": "今月の制限",
+      "unlimited": "無制限",
+      "reset": "{date} にリセットされます",
+      "low": "使用量：低",
+      "medium": "使用量：中",
+      "high": "使用量：高",
+      "noRestrictions": "制限なし"
+    },
+    "upgrade": {
+      "title": "すべての機能を解放",
+      "subtitle": "月額 ¥1,500 で無制限にステンシルを作成",
+      "cta": "プランを見る"
+    },
+    "workflow": {
+      "title": "ワークフロー",
+      "step1": {
+        "title": "1. 画像をアップロード",
+        "desc": "写真、イラスト、またはリファレンスをアップロード。"
+      },
+      "step2": {
+        "title": "2. 高精度AI",
+        "desc": "AIがディテールを100%キャプチャします。"
+      },
+      "step3": {
+        "title": "3. ダウンロードして印刷",
+        "desc": "サーマルプリントの準備完了。"
+      }
+    },
+    "gallery": {
+      "title": "最近のギャラリー",
+      "search": "プロジェクトを検索...",
+      "empty": "プロジェクトがまだありません",
+      "emptyDescription": "最初のステンシルを作成しましょう！",
+      "noResults": "プロジェクトが見つかりませんでした",
+      "noResultsDescription": "別の検索ワードを試すか、フィルターをクリアしてください",
+      "clearFilters": "フィルターをクリア",
+      "createNow": "今すぐ作成",
+      "newStencil": "新しいステンシル",
+      "clickToEnlarge": "クリックして拡大",
+      "original": "オリジナル",
+      "stencil": "ステンシル",
+      "iaTitle": "AI生成ギャラリー",
+      "iaSearch": "プロンプトで検索...",
+      "iaEmpty": "まだ生成された画像がありません",
+      "iaEmptyDescription": "AI生成を使って最初の作品を作りましょう！",
+      "goToIAGen": "AI生成へ",
+      "noIAResults": "画像が見つかりませんでした",
+      "noDescription": "説明なし"
+    },
+    "actions": {
+      "deleteConfirm": "このプロジェクトを削除してもよろしいですか？",
+      "deleteConfirmIA": "この画像を削除してもよろしいですか？",
+      "deleteError": "プロジェクトの削除中にエラーが発生しました",
+      "loadFailed": "接続に失敗しました。インターネット接続を確認して、もう一度お試しください。"
+    },
+    "error": {
+      "unavailable": "⚠️ サービスは一時的に利用できません",
+      "slowness": "サーバーが混み合っています。数秒待ってからページを再読み込みしてください。",
+      "tryAgain": "もう一度試す",
+      "goHome": "ホームに戻る",
+      "support": "問題が解決しない場合は、サポートにお問い合わせください。"
+    },
+    "nav": {
+      "editor": "エディター",
+      "generator": "AI生成",
+      "tools": "ツール",
+      "myBoletos": "マイボレト",
+      "mySubscription": "マイサブスクリプション",
+      "support": "サポート",
+      "user": "ユーザー",
+      "settings": "設定",
+      "upgrade": "アップグレード",
+      "logout": "ログアウト"
+    }
+  },
+  "PricingPage": {
+    "title": "サブスクリプションプラン",
+    "subtitle": "あなたにぴったりのプランをお選びください。いつでもキャンセル可能です。",
+    "back": "戻る",
+    "howItWorks": {
+      "title": "使い方",
+      "desc": "選択した期間中、ステンシルフローをご利用いただけます。各プランには月間の生成制限が含まれています。",
+      "recurrent": "定期購読 - 自動更新",
+      "cancelAnytime": "いつでもキャンセル可能 - 解約金や手数料なし",
+      "limitsRenew": "制限は毎月更新されます - 年間プランでも同様です",
+      "immediateAccess": "支払い後すぐにアクセス可能 - 今すぐ始めましょう",
+      "savePercent": "{cycle}払いで {percent}% お得"
+    },
+    "cycles": {
+      "monthly": "月払い",
+      "quarterly": "3ヶ月払い",
+      "semiannual": "半年払い",
+      "yearly": "年払い",
+      "bestOffer": "一番人気！",
+      "save": "{percent}% お得"
+    },
+    "plans": {
+      "starter": {
+        "name": "Starter",
+        "description": "初心者に最適",
+        "limit": "月間 {count} 回生成可能"
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "プロのタトゥーアーティスト向け",
+        "limit": "月間 {count} 回生成可能"
+      },
+      "studio": {
+        "name": "Studio",
+        "description": "スタジオやプロフェッショナルな使用向け",
+        "limit": "月間 {count} 回生成可能"
+      },
+      "enterprise": {
+        "name": "Enterprise",
+        "description": "実質無制限の使用",
+        "limit": "月間 {count} 回生成可能"
+      }
+    },
+    "popular": "一番人気",
+    "perMonth": "/月",
+    "billingPeriod": "{period}請求: {price}",
+    "savings": "✓ 月々 {price} お得 ({percent}% オフ)",
+    "subscribe": "{name} に登録する",
+    "faq": {
+      "title": "よくある質問",
+      "q1": "後でプランを変更できますか？",
+      "a1": "はい！いつでもアップグレードやダウングレードが可能です。",
+      "q2": "キャンセルはどうすればいいですか？",
+      "a2": "いつでもキャンセル可能です。支払い済みの期間が終了するまでアクセスを維持できます。",
+      "q3": "どのような支払い方法がありますか？",
+      "a3": "PIX（即時決済）、銀行振込、クレジットカードに対応しています。",
+      "q4": "プランの更新はどのように行われますか？",
+      "a4": "{months}ヶ月ごとに自動更新されます。更新の7日前にメールでお知らせします。"
+    }
+  },
+  "checkout": {
+    "title": "チェックアウト",
+    "loginRequired": {
+      "title": "続行するにはログインしてください",
+      "desc": "{plan} プランに登録するには、アカウントを作成するかログインする必要があります。",
+      "button": "ログインまたはアカウント作成"
+    },
+    "success": {
+      "title": "プランが有効になりました！",
+      "redirecting": "リダイレクト中..."
+    },
+    "paymentMethod": {
+      "label": "お支払い方法",
+      "pix": "PIX",
+      "boleto": "銀行振込",
+      "card": "カード"
+    },
+    "phone": {
+      "label": "携帯電話",
+      "optional": "（任意）",
+      "placeholder": "(11) 99999-9999",
+      "desc": "支払い通知を受け取るため"
+    },
+    "processing": "処理中...",
+    "payAmount": "{amount} を支払う",
+    "error": "お支払い処理中にエラーが発生しました"
+  },
+  "asaas": {
+    "pix": {
+      "title": "PIXで支払う",
+      "value": "お支払い金額",
+      "copyCode": "PIXコピー＆ペーストコード",
+      "copied": "コードをコピーしました！",
+      "instructionsTitle": "PIXでのお支払い方法",
+      "instructions": [
+        "銀行アプリを開きます",
+        "PIX QRコードまたはコピー＆ペーストでの支払いを選択します",
+        "QRコードをスキャンするか、上記のコードを貼り付けます",
+        "支払いを確認します",
+        "完了です！プランは自動的に有効になります"
+      ],
+      "expiresAt": "QRコードの有効期限: {date}"
+    },
+    "boleto": {
+      "title": "振込金額",
+      "dueDate": "お支払い期限: {date}",
+      "daysUntilDue": "期限まであと {count} 日",
+      "openPdf": "PDFを開く",
+      "copyBarcode": "バーコードをコピー",
+      "barcodeCopied": "コードをコピーしました！",
+      "barcodeLabel": "バーコード",
+      "instructionsTitle": "お支払い方法",
+      "instructions": [
+        "「PDFを開く」をクリックしてダウンロードします",
+        "銀行アプリまたは宝くじ販売店などで支払います",
+        "または、バーコードをコピーして銀行アプリに貼り付けます",
+        "支払いの反映には最大3営業日かかる場合があります",
+        "確認後、プランが有効になります"
+      ],
+      "waitAviso": "お支払い後、有効化まで最大3営業日お待ちください"
+    },
+    "creditCard": {
+      "number": "カード番号",
+      "holderName": "カード名義",
+      "holderNamePlaceholder": "カード記載通りの氏名（半角大文字）",
+      "email": "名義人のメールアドレス",
+      "month": "月",
+      "year": "年",
+      "cvv": "CVV",
+      "phone": "電話番号",
+      "cep": "郵便番号",
+      "brand": "ブランド",
+      "securityAviso": "お客様のデータは暗号化され、Asaasによって安全に処理されます。当サイトでカード情報を保存することはありません。"
+    },
+    "cpfCnpj": {
+      "label": "納税者番号 (CPF/CNPJ)",
+      "invalidCpf": "CPFが無効です",
+      "invalidCnpj": "CNPJが無効です",
+      "cpfDesc": "名義人のCPF",
+      "cnpjDesc": "企業のCNPJ"
+    }
+  },
+  "editor": {
+    "title": "ステンシルエディター",
+    "upload": {
+      "button": "画像をアップロード",
+      "hint": "ドラッグまたはクリックしてアップロード"
+    },
+    "controls": {
+      "title": "ステンシル調整",
+      "size": "サイズ (cm)",
+      "intensity": "強度",
+      "style": "スタイル",
+      "generate": "ステンシルを生成",
+      "regenerate": "再生成",
+      "reset": "調整をリセット",
+      "undo": "元に戻す",
+      "redo": "やり直し",
+      "adjustments": "高度な調整",
+      "modes": "モード",
+      "extraInstructions": "追加の指示...",
+      "generateAnime": "生成 (イラスト)",
+      "generateStandard": "ステンシルを生成",
+      "presets": {
+        "A4": "A4",
+        "A3": "A3",
+        "Portrait": "ポートレート",
+        "Square": "正方形"
+      }
+    },
+    "comparison": {
+      "horizontal": "横方向",
+      "blend": "ブレンド",
+      "holdSpace": "スペースキーで比較"
+    },
+    "actions": {
+      "download": "ダウンロード",
+      "save": "プロジェクトを保存",
+      "saveShort": "保存",
+      "saving": "保存中...",
+      "copy": "コピー",
+      "drawing": "描画モード",
+      "new": "新しい画像",
+      "create": "ステンシルを作成",
+      "generate": "生成"
+    },
+    "styles": {
+      "standard": "ライン",
+      "perfect_lines": "トポグラフィック",
+      "anime": "イラスト",
+      "standardDesc": "✏️ 写真 → ライン",
+      "perfectLinesDesc": "🗺️ 最大の詳細",
+      "animeDesc": "🎨 アニメ、イラスト、マオリ"
+    },
+    "messages": {
+      "generating": "ステンシルを生成中...",
+      "applyingAdjustments": "調整を適用中...",
+      "saveSuccess": "プロジェクトを保存しました！",
+      "saveError": "保存中にエラーが発生しました",
+      "downloadStarted": "ダウンロードを開始しました！",
+      "copied": "クリップボードにコピーしました！"
+    }
+  },
+  "generator": {
+    "title": "IA Gen - アイデアジェネレーター",
+    "emptyState": "ここにアートが表示されます",
+    "hint": "パネルにアイデアを記述してください",
+    "prompt": {
+      "label": "アイデアを記述",
+      "placeholder": "例：薔薇とメキシカンスカル...",
+      "history": "履歴"
+    },
+    "reference": {
+      "add": "参考画像（オプション）",
+      "added": "参考画像を追加しました"
+    },
+    "styles": {
+      "label": "スタイル（オプション）",
+      "applied": "スタイル適用済み",
+      "blackwork": "ブラックワーク",
+      "fineline": "ファインライン",
+      "neo_traditional": "ネオトラディショナル",
+      "realism": "リアリズム",
+      "dotwork": "ドットワーク",
+      "old_school": "オールドスクール"
+    },
+    "bodyRegion": {
+      "label": "部位",
+      "free": { "name": "自由", "hint": "形式の制限なし" },
+      "arm": { "name": "腕", "hint": "細長い垂直デザイン" },
+      "chest": { "name": "胸", "hint": "幅広く中央に配置" },
+      "back": { "name": "背中", "hint": "大きなキャンバス、詳細" },
+      "leg": { "name": "足", "hint": "長く、曲線に沿う" },
+      "ribs": { "name": "脇腹", "hint": "垂直に細長い" }
+    },
+    "negative": {
+      "label": "除外事項（オプション）",
+      "placeholder": "例：色、背景、テキスト..."
+    },
+    "size": {
+      "label": "サイズ（高品質）",
+      "A4": "21×29.7cm @ 300 DPI (プロ印刷用)",
+      "A3": "29.7×42cm @ 300 DPI (プロ印刷用)",
+      "1K": "1024×1024px",
+      "2K": "2048×2048px",
+      "4K": "4096×4096px",
+      "highQuality": "A4/A3はプロの印刷用です (300 DPI)"
+    },
+    "cta": "デザインを生成",
+    "success": {
+      "title": "アートが生成されました！",
+      "description": "アートが生成されました！ヘッダーのボタンを使用してダウンロードまたはステンシル作成を行ってください。",
+      "createStencil": "ステンシルを作成",
+      "download": "PNGをダウンロード",
+      "another": "別のアイデアを生成",
+      "newGeneration": "新規生成"
+    },
+    "errors": {
+      "imageTooLarge": "画像が大きすぎます。最大20MB。",
+      "requiresSubscription": "この機能には有料プランが必要です。",
+      "generateFailed": "画像の生成に失敗しました。"
+    }
+  },
+  "tools": {
+    "title": "スタジオツール",
+    "subtitle": "画像と色の処理のための高度なAI機能。",
+    "locked": {
+      "title": "プレミアムツール",
+      "subtitle": "ステンシル用の高度なツールをアンロック",
+      "cta": "プランと価格を見る",
+      "priceFrom": "$10/月から"
+    },
+    "modes": {
+      "enhance": {
+        "name": "強化",
+        "subtitle": "4Kアップスケール",
+        "description": "4Kアップスケールと復元"
+      },
+      "colorMatch": {
+        "name": "カラーマッチ",
+        "subtitle": "インクパレット",
+        "description": "インクパレット分析"
+      },
+      "splitA4": {
+        "name": "A4分割",
+        "subtitle": "複数シート",
+        "description": "複数シートに大きなタトゥー"
+      },
+      "removeBg": {
+        "name": "背景削除",
+        "subtitle": "AI背景削除",
+        "description": "AI背景削除"
+      }
+    },
+    "upload": {
+      "source": "画像ソース",
+      "uploadBtn": "アップロード",
+      "galleryBtn": "ギャラリー",
+      "clickToUpload": "クリックしてアップロード",
+      "clickToUploadImage": "クリックして画像をアップロード",
+      "fileTypes": "JPGまたはPNG",
+      "emptyGallery": "空のギャラリー",
+      "originalImage": "元の画像",
+      "previous": "前",
+      "next": "次",
+      "of": "/"
+    },
+    "messages": {
+      "enhanceSuccess": "画像が正常に強化されました！",
+      "colorMatchSuccess": "色が正常に分析されました！",
+      "splitSuccess": "画像が{count}個のパーツに分割されました！",
+      "removeBgSuccess": "背景が正常に削除されました！",
+      "processingError": "処理エラー。もう一度お試しください。",
+      "galleryLoadError": "ギャラリーから画像を読み込む際にエラーが発生しました"
+    },
+    "inkBrands": {
+      "generic": "汎用（特定のブランドなし）"
+    }
+  },
+  "migrationNotice": {
+    "title": "決済システムを更新しました！",
+    "subtitle": "より多くのオプションとセキュリティを提供",
+    "closeLabel": "通知を閉じる",
+    "paymentMethods": {
+      "pix": {"name": "PIX", "description": "即時"},
+      "boleto": {"name": "Boleto", "description": "最大3日"},
+      "card": {"name": "カード", "description": "定期"}
+    },
+    "recurrence": {
+      "title": "定期支払いの仕組み：",
+      "item1": "最初の支払い日に請求が生成されます",
+      "item2": "支払いまで{days}日間の猶予があります",
+      "item2Days": "7",
+      "item3": "支払い後、自動定期支払いが有効になります",
+      "item4": "お客様の情報と履歴は保持されています"
+    },
+    "footer": "ご質問がありますか？サポートにお問い合わせください。"
+  },
+  "installBanner": {
+    "title": "アプリをインストール",
+    "closeLabel": "閉じる",
+    "appName": "StencilFlow",
+    "description": "ホーム画面から素早くアクセス",
+    "installButton": "アプリをインストール",
+    "iosButton": "インストール方法",
+    "features": "無料 • ストレージ不要 • オフラインで動作",
+    "iosInstructions": {
+      "title": "iOSにインストール",
+      "step1Title": "共有をタップ",
+      "step1Description": "Safariで、下部バーの共有アイコンをタップ",
+      "step2Title": "ホーム画面に追加をタップ",
+      "step2Description": "メニューを下にスクロールしてこのオプションを選択",
+      "step3Title": "追加をタップして確認",
+      "step3Description": "アプリがホーム画面にインストールされます",
+      "confirmButton": "了解"
+    }
+  },
+  "metadata": {
+    "title": "ステンシルフロー - プロフェッショナルタトゥーステンシルエディター",
+    "description": "ステンシルフロー技術で任意の画像をプロフェッショナルなタトゥーステンシルに変換。完全なエディター、トポグラフィックモード、完璧なライン、プレミアムツール。無料で始められます。"
+  }
+}

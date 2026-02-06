@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, ChangeEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { CreditCard, AlertCircle } from 'lucide-react';
 import type { CreditCardData, CreditCardHolderInfo } from '@/lib/asaas';
 
@@ -11,6 +12,7 @@ interface CreditCardFormProps {
 }
 
 export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }: CreditCardFormProps) {
+  const t = useTranslations('asaas.creditCard');
   const [cardNumber, setCardNumber] = useState('');
   const [holderName, setHolderName] = useState('');
   const [expiryMonth, setExpiryMonth] = useState('');
@@ -145,7 +147,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
       {/* Número do Cartão */}
       <div>
         <label className="block text-sm font-medium text-zinc-300 mb-2">
-          Número do Cartão <span className="text-red-400">*</span>
+          {t('number')} <span className="text-red-400">*</span>
         </label>
         <div className="relative">
           <input
@@ -160,20 +162,20 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
           </div>
         </div>
         {cardBrand && cardNumber.length > 4 && (
-          <p className="text-xs text-zinc-400 mt-1">Bandeira: {cardBrand}</p>
+          <p className="text-xs text-zinc-400 mt-1">{t('brand')}: {cardBrand}</p>
         )}
       </div>
 
       {/* Nome do Titular */}
       <div>
         <label className="block text-sm font-medium text-zinc-300 mb-2">
-          Nome no Cartão <span className="text-red-400">*</span>
+          {t('holderName')} <span className="text-red-400">*</span>
         </label>
         <input
           type="text"
           value={holderName}
           onChange={handleHolderNameChange}
-          placeholder="NOME COMO ESTÁ NO CARTÃO"
+          placeholder={t('holderNamePlaceholder')}
           className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
         />
       </div>
@@ -181,7 +183,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
       {/* Email do Titular */}
       <div>
         <label className="block text-sm font-medium text-zinc-300 mb-2">
-          Email do Titular <span className="text-red-400">*</span>
+          {t('email')} <span className="text-red-400">*</span>
         </label>
         <input
           type="email"
@@ -196,7 +198,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label className="block text-sm font-medium text-zinc-300 mb-2">
-            Mês <span className="text-red-400">*</span>
+            {t('month')} <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
@@ -209,7 +211,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
         </div>
         <div>
           <label className="block text-sm font-medium text-zinc-300 mb-2">
-            Ano <span className="text-red-400">*</span>
+            {t('year')} <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
@@ -222,7 +224,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
         </div>
         <div>
           <label className="block text-sm font-medium text-zinc-300 mb-2">
-            CVV <span className="text-red-400">*</span>
+            {t('cvv')} <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
@@ -238,7 +240,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
       {/* Telefone */}
       <div>
         <label className="block text-sm font-medium text-zinc-300 mb-2">
-          Telefone <span className="text-red-400">*</span>
+          {t('phone')} <span className="text-red-400">*</span>
         </label>
         <input
           type="text"
@@ -252,7 +254,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
       {/* CEP */}
       <div>
         <label className="block text-sm font-medium text-zinc-300 mb-2">
-          CEP <span className="text-red-400">*</span>
+          {t('cep')} <span className="text-red-400">*</span>
         </label>
         <input
           type="text"
@@ -268,8 +270,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
         <p className="text-purple-300 text-xs flex items-start gap-2">
           <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
           <span>
-            Seus dados são criptografados e processados com segurança pelo Asaas.
-            Não armazenamos informações do seu cartão.
+            {t('securityAviso')}
           </span>
         </p>
       </div>

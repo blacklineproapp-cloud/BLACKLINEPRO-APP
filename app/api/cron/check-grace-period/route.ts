@@ -18,11 +18,18 @@ export const maxDuration = 60; // 60 segundos max
 
 export async function GET(req: Request) {
   try {
-    // Validar secret (proteção básica)
+    // Validar secret (OBRIGATÓRIO - não permite bypass)
     const { searchParams } = new URL(req.url);
     const secret = searchParams.get('secret');
+    const cronSecret = process.env.CRON_SECRET;
 
-    if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
+    // Se CRON_SECRET não estiver configurado, bloquear acesso (fail-secure)
+    if (!cronSecret) {
+      console.error('[Cron] CRON_SECRET não configurado - acesso bloqueado');
+      return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
+    }
+
+    if (secret !== cronSecret) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

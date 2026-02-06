@@ -24,7 +24,7 @@ export const supabaseAdmin = createClient(
       fetch: (url, options = {}) => {
         return fetch(url, {
           ...options,
-          signal: AbortSignal.timeout(30000) // 30 segundos de timeout (aumentado para instância sobrecarregada)
+          signal: AbortSignal.timeout(8000) // 8 segundos - falhar rápido para dar feedback ao usuário
         });
       }
     }
@@ -40,7 +40,7 @@ export const supabase = createClient(
       fetch: (url, options = {}) => {
         return fetch(url, {
           ...options,
-          signal: AbortSignal.timeout(30000) // 30 segundos de timeout (aumentado para instância sobrecarregada)
+          signal: AbortSignal.timeout(8000) // 8 segundos - falhar rápido para dar feedback ao usuário
         });
       }
     }

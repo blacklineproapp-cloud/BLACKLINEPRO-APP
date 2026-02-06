@@ -1,15 +1,19 @@
+import { useTranslations } from 'next-intl';
+
 export default function ComparisonTable() {
+  const t = useTranslations('landing.comparison');
+  
   const features = [
-    { name: 'Editor de Stencil', stencilflow: 'Completo', ghostline: 'Básico', tattooStencilPro: 'Limitado' },
-    { name: 'Geração de Designs profissional', stencilflow: 'Tecnologia Stencil Flow', ghostline: false, tattooStencilPro: false },
-    { name: 'Modo Topográfico', stencilflow: true, ghostline: false, tattooStencilPro: true },
-    { name: 'Modo Linhas Perfeitas', stencilflow: true, ghostline: true, tattooStencilPro: false },
-    { name: 'Ajuste de Tamanho (cm)', stencilflow: true, ghostline: false, tattooStencilPro: true },
-    { name: 'Color Match de Tintas', stencilflow: true, ghostline: false, tattooStencilPro: false },
-    { name: 'Dividir em A4', stencilflow: true, ghostline: false, tattooStencilPro: false },
-    { name: 'Aprimorar 4K', stencilflow: true, ghostline: false, tattooStencilPro: false },
-    { name: 'Preço Mensal', stencilflow: 'A partir de R$ 50', ghostline: 'R$ 97+', tattooStencilPro: 'R$ 145+' },
-    { name: 'Plano Grátis', stencilflow: false, ghostline: false, tattooStencilPro: false },
+    { name: t('features.editor'), stencilflow: t('full'), ghostline: t('basic'), tattooStencilPro: t('limited') },
+    { name: t('features.designGen'), stencilflow: 'Stencil Flow Tech', ghostline: false, tattooStencilPro: false },
+    { name: t('features.topographic'), stencilflow: true, ghostline: false, tattooStencilPro: true },
+    { name: t('features.lines'), stencilflow: true, ghostline: true, tattooStencilPro: false },
+    { name: t('features.size'), stencilflow: true, ghostline: false, tattooStencilPro: true },
+    { name: t('features.colorMatch'), stencilflow: true, ghostline: false, tattooStencilPro: false },
+    { name: t('features.splitA4'), stencilflow: true, ghostline: false, tattooStencilPro: false },
+    { name: t('features.enhance4k'), stencilflow: true, ghostline: false, tattooStencilPro: false },
+    { name: t('features.price'), stencilflow: t('priceStarting'), ghostline: 'R$ 97+', tattooStencilPro: 'R$ 145+' },
+    { name: t('features.free'), stencilflow: false, ghostline: false, tattooStencilPro: false },
   ];
 
   const renderCell = (value: boolean | string) => {
@@ -28,10 +32,10 @@ export default function ComparisonTable() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-            Por que escolher StencilFlow?
+            {t('title')}
           </h2>
           <p className="text-lg text-zinc-400">
-            Compare com as principais ferramentas do mercado
+            {t('subtitle')}
           </p>
         </div>
 
@@ -39,7 +43,7 @@ export default function ComparisonTable() {
           <table className="w-full border border-zinc-800 rounded-xl overflow-hidden">
             <thead>
               <tr className="bg-zinc-900">
-                <th className="text-left p-4 text-zinc-400 font-medium">Feature</th>
+                <th className="text-left p-4 text-zinc-400 font-medium">{t('feature')}</th>
                 <th className="p-4 text-emerald-500 font-bold bg-emerald-950/20">StencilFlow</th>
                 <th className="p-4 text-zinc-400 font-medium">Ghostline</th>
                 <th className="p-4 text-zinc-400 font-medium">Tattoo Stencil Pro</th>
@@ -65,7 +69,7 @@ export default function ComparisonTable() {
 
         <div className="mt-8 text-center">
           <p className="text-sm text-zinc-500">
-            Dados atualizados em dezembro de 2024. Preços podem variar.
+            {t('updateInfo')}
           </p>
         </div>
       </div>

@@ -1,10 +1,12 @@
 'use client';
 
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/lib/navigation';
 import Image from 'next/image';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const t = useTranslations('landing.footer');
 
   return (
     <footer className="bg-black border-t border-zinc-800">
@@ -24,8 +26,7 @@ export default function Footer() {
               <span className="text-2xl font-bold text-white">StencilFlow</span>
             </Link>
             <p className="text-zinc-400 text-sm leading-relaxed max-w-md">
-              Transforme qualquer imagem em stencil profissional para tatuagem com Stencil Flow. 
-              A ferramenta definitiva para tatuadores profissionais.
+              {t('description')}
             </p>
             
             {/* Redes Sociais */}
@@ -57,21 +58,21 @@ export default function Footer() {
 
           {/* Links Rápidos */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Produto</h3>
+            <h3 className="text-white font-semibold mb-4">{t('product')}</h3>
             <ul className="space-y-3">
               <li>
                 <Link href="/pricing" className="text-zinc-400 hover:text-emerald-400 transition-colors text-sm">
-                  Preços
+                  {t('pricing')}
                 </Link>
               </li>
               <li>
                 <Link href="/dashboard" className="text-zinc-400 hover:text-emerald-400 transition-colors text-sm">
-                  Dashboard
+                  {t('dashboard')}
                 </Link>
               </li>
               <li>
                 <Link href="/suporte" className="text-zinc-400 hover:text-emerald-400 transition-colors text-sm">
-                  Suporte
+                  {t('support')}
                 </Link>
               </li>
             </ul>
@@ -79,21 +80,21 @@ export default function Footer() {
 
           {/* Legal */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Legal</h3>
+            <h3 className="text-white font-semibold mb-4">{t('legal')}</h3>
             <ul className="space-y-3">
               <li>
                 <Link href="/termos" className="text-zinc-400 hover:text-emerald-400 transition-colors text-sm">
-                  Termos de Uso
+                  {t('terms')}
                 </Link>
               </li>
               <li>
                 <Link href="/privacidade" className="text-zinc-400 hover:text-emerald-400 transition-colors text-sm">
-                  Política de Privacidade
+                  {t('privacy')}
                 </Link>
               </li>
               <li>
                 <a href="mailto:contato@stencilflow.com.br" className="text-zinc-400 hover:text-emerald-400 transition-colors text-sm">
-                  Contato
+                  {t('contact')}
                 </a>
               </li>
             </ul>
@@ -105,7 +106,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             {/* Copyright */}
             <p className="text-zinc-500 text-sm">
-              © {currentYear} StencilFlow. Todos os direitos reservados.
+              © {currentYear} StencilFlow. {t('rights')}
             </p>
             
             {/* Badge de Segurança */}
@@ -113,7 +114,7 @@ export default function Footer() {
               <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span>Pagamento seguro via Stripe</span>
+              <span>{t('security')}</span>
             </div>
           </div>
         </div>

@@ -14,14 +14,12 @@ import {
   Redo2,
   Trash2,
   Download,
-  Sparkles,
   ChevronDown,
   ChevronUp,
   Circle,
   Layers,
 } from 'lucide-react';
 import type { DrawingTool } from '@/lib/drawing/types';
-import { BRUSH_PRESETS } from '@/lib/drawing/types';
 
 interface DrawingToolbarProps {
   tool: DrawingTool;
@@ -38,8 +36,6 @@ interface DrawingToolbarProps {
   onRedo: () => void;
   onClear: () => void;
   onDownload: () => void;
-  onSendToAI?: () => void;
-  isProcessing?: boolean;
   className?: string;
   compact?: boolean;
 }
@@ -59,8 +55,6 @@ export default function DrawingToolbar({
   onRedo,
   onClear,
   onDownload,
-  onSendToAI,
-  isProcessing = false,
   className = '',
   compact = false,
 }: DrawingToolbarProps) {
@@ -328,7 +322,7 @@ export default function DrawingToolbar({
         <div className="flex items-center gap-1">
           <button
             onClick={onUndo}
-            disabled={!canUndo || isProcessing}
+            disabled={!canUndo}
             className="p-2.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             title="Desfazer (Ctrl+Z)"
           >
@@ -337,7 +331,7 @@ export default function DrawingToolbar({
 
           <button
             onClick={onRedo}
-            disabled={!canRedo || isProcessing}
+            disabled={!canRedo}
             className="p-2.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             title="Refazer (Ctrl+Y)"
           >
@@ -346,8 +340,7 @@ export default function DrawingToolbar({
 
           <button
             onClick={onClear}
-            disabled={isProcessing}
-            className="p-2.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-red-900/50 hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="p-2.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-red-900/50 hover:text-red-400 transition-all"
             title="Limpar tudo"
           >
             <Trash2 size={18} />
@@ -361,33 +354,12 @@ export default function DrawingToolbar({
           {/* Baixar */}
           <button
             onClick={onDownload}
-            disabled={isProcessing}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-medium transition-all"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-all"
           >
             <Download size={16} />
             <span className="text-sm">Baixar</span>
           </button>
 
-          {/* Enviar para IA */}
-          {onSendToAI && (
-            <button
-              onClick={onSendToAI}
-              disabled={isProcessing}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white rounded-lg font-medium transition-all"
-            >
-              {isProcessing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span className="text-sm">Processando...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles size={16} />
-                  <span className="text-sm">Finalizar com IA</span>
-                </>
-              )}
-            </button>
-          )}
         </div>
       </div>
 

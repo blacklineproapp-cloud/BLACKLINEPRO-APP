@@ -56,6 +56,8 @@ interface ResizeModalProps {
   onResizeComplete: (newImage: string, newWidthCm: number, newHeightCm: number) => void;
 }
 
+import { useTranslations } from 'next-intl';
+
 export default function ResizeModal({
   isOpen,
   onClose,
@@ -73,6 +75,9 @@ export default function ResizeModal({
   const [originalDimensions, setOriginalDimensions] = useState<{ width: number; height: number } | null>(null);
   const [actualWidthCm, setActualWidthCm] = useState(currentWidthCm);
   const [actualHeightCm, setActualHeightCm] = useState(currentHeightCm);
+  
+  const t = useTranslations('editor.resize');
+  const tCommon = useTranslations('common');
 
   // Atualizar preview quando dimensões mudam
   const updatePreview = useCallback((
@@ -187,7 +192,7 @@ export default function ResizeModal({
       onClose();
     } catch (error: any) {
       console.error('[ResizeModal] Erro ao fazer resize:', error);
-      alert('Erro ao redimensionar: ' + error.message);
+      alert(tCommon('error') + ': ' + error.message);
     } finally {
       setIsProcessing(false);
     }
@@ -232,7 +237,7 @@ export default function ResizeModal({
         <div className="sticky top-0 bg-zinc-900 border-b border-zinc-800 p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Maximize2 size={20} className="text-emerald-400" />
-            <h2 className="text-white font-semibold text-lg">Otimizar Qualidade / Redimensionar</h2>
+            <h2 className="text-white font-semibold text-lg">{t('title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -248,17 +253,17 @@ export default function ResizeModal({
           <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
             <h3 className="text-white font-medium text-sm mb-3 flex items-center gap-2">
               <Info size={14} className="text-blue-400" />
-              Informações Atuais
+              {t('currentInfo')}
             </h3>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-zinc-500 text-xs mb-1">Resolução</p>
+                <p className="text-zinc-500 text-xs mb-1">{t('newResolution').split(' ')[0]}</p>
                 <p className="text-white text-sm font-mono">
                   {originalDimensions?.width} × {originalDimensions?.height}px
                 </p>
               </div>
               <div>
-                <p className="text-zinc-500 text-xs mb-1">Tamanho Físico</p>
+                <p className="text-zinc-500 text-xs mb-1">{t('width').split(' ')[0]} {actualWidthCm} × {actualHeightCm}cm</p>
                 <p className="text-white text-sm font-mono">
                   {actualWidthCm} × {actualHeightCm}cm
                 </p>
@@ -266,7 +271,7 @@ export default function ResizeModal({
               <div>
                 <p className="text-zinc-500 text-xs mb-1">DPI Atual</p>
                 <p className="text-white text-sm font-mono">
-                  {previewInfo?.originalDpi || 0} DPI
+                   {previewInfo?.originalDpi || 0} DPI
                 </p>
               </div>
             </div>
@@ -275,18 +280,18 @@ export default function ResizeModal({
           {/* Controles de Redimensionamento */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-white font-medium text-sm">Novo Tamanho</h3>
+              <h3 className="text-white font-medium text-sm">{t('newSize')}</h3>
               <button
                 onClick={suggestOptimalSize}
                 className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
               >
-                <Zap size={12} /> Sugerir Tamanho Ideal
+                <Zap size={12} /> {t('suggestOptimal')}
               </button>
             </div>
 
             {/* Largura */}
             <div>
-              <label className="text-zinc-400 text-xs block mb-2">Largura (cm)</label>
+              <label className="text-zinc-400 text-xs block mb-2">{t('width')}</label>
               <input
                 type="number"
                 value={targetWidthCm}
@@ -301,7 +306,7 @@ export default function ResizeModal({
 
             {/* Altura */}
             <div>
-              <label className="text-zinc-400 text-xs block mb-2">Altura (cm)</label>
+              <label className="text-zinc-400 text-xs block mb-2">{t('height')}</label>
               <input
                 type="number"
                 value={targetHeightCm}
@@ -316,7 +321,7 @@ export default function ResizeModal({
 
             {/* Manter Proporção */}
             <div className="flex items-center justify-between bg-zinc-950 border border-zinc-800 rounded-lg p-3">
-              <label className="text-white text-sm">Manter Proporção</label>
+              <label className="text-white text-sm">{t('maintainAspect')}</label>
               <button
                 onClick={() => setMaintainAspect(!maintainAspect)}
                 disabled={isProcessing}
@@ -334,17 +339,17 @@ export default function ResizeModal({
 
             {/* DPI */}
             <div>
-              <label className="text-zinc-400 text-xs block mb-2">DPI de Saída</label>
+              <label className="text-zinc-400 text-xs block mb-2">{t('outputDpi')}</label>
               <select
                 value={targetDpi}
                 onChange={(e) => setTargetDpi(Number(e.target.value))}
                 disabled={isProcessing}
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm focus:border-emerald-500 focus:outline-none disabled:opacity-50"
               >
-                <option value={150}>150 DPI (Mínimo)</option>
-                <option value={200}>200 DPI (Bom)</option>
-                <option value={300}>300 DPI (Profissional) ⭐</option>
-                <option value={600}>600 DPI (Ultra)</option>
+                <option value={150}>{t('dpiOptions.min')}</option>
+                <option value={200}>{t('dpiOptions.good')}</option>
+                <option value={300}>{t('dpiOptions.professional')}</option>
+                <option value={600}>{t('dpiOptions.ultra')}</option>
               </select>
             </div>
           </div>
@@ -356,17 +361,17 @@ export default function ResizeModal({
                 ? 'bg-blue-900/20 border-blue-800'
                 : 'bg-emerald-900/20 border-emerald-800'
             }`}>
-              <h3 className="text-white font-medium text-sm mb-3">Preview do Resultado</h3>
+              <h3 className="text-white font-medium text-sm mb-3">{t('preview')}</h3>
 
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
-                  <p className="text-zinc-400 text-xs mb-1">Nova Resolução</p>
+                  <p className="text-zinc-400 text-xs mb-1">{t('newResolution')}</p>
                   <p className="text-white text-sm font-mono">
                     {previewInfo.widthPx} × {previewInfo.heightPx}px
                   </p>
                 </div>
                 <div>
-                  <p className="text-zinc-400 text-xs mb-1">DPI Final</p>
+                  <p className="text-zinc-400 text-xs mb-1">{t('finalDpi')}</p>
                   <p className={`text-sm font-mono font-bold ${
                     targetDpi >= 300 ? 'text-emerald-400' :
                     targetDpi >= 200 ? 'text-blue-400' :
@@ -383,7 +388,7 @@ export default function ResizeModal({
                   ? 'bg-blue-900/30 text-blue-300'
                   : 'bg-emerald-900/30 text-emerald-300'
               }`}>
-                <strong>Algoritmo:</strong> {previewInfo.algorithm} (
+                <strong>{t('algorithm')}:</strong> {previewInfo.algorithm} (
                 {previewInfo.isUpscaling ? 'Upscale' : 'Downscale'} •{' '}
                 {previewInfo.pixelChange > 0 ? '+' : ''}{previewInfo.pixelChange}% pixels
                 )
@@ -398,7 +403,7 @@ export default function ResizeModal({
               disabled={isProcessing}
               className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-semibold transition-colors disabled:opacity-50"
             >
-              Cancelar
+              {tCommon('cancel')}
             </button>
             <button
               onClick={handleResize}
@@ -408,12 +413,12 @@ export default function ResizeModal({
               {isProcessing ? (
                 <>
                   <Loader2 size={18} className="animate-spin" />
-                  Processando...
+                  {tCommon('loading')}
                 </>
               ) : (
                 <>
                   <Maximize2 size={18} />
-                  Aplicar Resize
+                  {t('apply')}
                 </>
               )}
             </button>
@@ -422,8 +427,8 @@ export default function ResizeModal({
           {/* Aviso */}
           <p className="text-zinc-500 text-xs text-center">
             {previewInfo?.isUpscaling
-              ? '⚠️ Upscale pode não adicionar detalhes reais, apenas aumenta pixels'
-              : '✓ Downscale manterá toda a qualidade reduzindo tamanho do arquivo'}
+              ? t('upscaleWarning')
+              : t('downscaleSuccess')}
           </p>
         </div>
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, ChangeEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { AlertCircle } from 'lucide-react';
 
 interface CpfCnpjInputProps {
@@ -16,6 +17,7 @@ export default function CpfCnpjInput({
   error,
   required = false,
 }: CpfCnpjInputProps) {
+  const t = useTranslations('asaas.cpfCnpj');
   const [touched, setTouched] = useState(false);
 
   // Detectar se é CPF ou CNPJ baseado no tamanho
@@ -125,7 +127,7 @@ export default function CpfCnpjInput({
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-zinc-300">
-        CPF/CNPJ {required && <span className="text-red-400">*</span>}
+        {t('label')} {required && <span className="text-red-400">*</span>}
       </label>
       
       <div className="relative">
@@ -153,7 +155,7 @@ export default function CpfCnpjInput({
       {showError && (
         <p className="text-red-400 text-xs flex items-center gap-1">
           <AlertCircle size={14} />
-          {isCnpj ? 'CNPJ inválido' : 'CPF inválido'}
+          {isCnpj ? t('invalidCnpj') : t('invalidCpf')}
         </p>
       )}
 
@@ -165,7 +167,7 @@ export default function CpfCnpjInput({
       )}
 
       <p className="text-zinc-500 text-xs">
-        {isCnpj ? 'CNPJ da empresa' : 'CPF do titular'}
+        {isCnpj ? t('cnpjDesc') : t('cpfDesc')}
       </p>
     </div>
   );

@@ -9,10 +9,102 @@
 // DOTWORK = Tudo em pontos individuais separados (preto no branco)
 
 // ═══════════════════════════════════════════════════════════════
+// INSTRUÇÃO UNIVERSAL: FOCO INTELIGENTE NO ASSUNTO PRINCIPAL
+// Aplicada a todos os modos para focar apenas no design/tatuagem
+// ═══════════════════════════════════════════════════════════════
+const INTELLIGENT_FOCUS_INSTRUCTION = `
+═══════════════════════════════════════════════════════════════
+🎯 INTELLIGENT SUBJECT FOCUS - EXTRACT ONLY THE MAIN DESIGN
+═══════════════════════════════════════════════════════════════
+
+DETECT and FOCUS on the PRIMARY SUBJECT only:
+
+IF IMAGE CONTAINS A TATTOO ON SKIN:
+→ Extract ONLY the tattoo design itself
+→ IGNORE the body part (arm, leg, torso, back, chest, etc.)
+→ IGNORE surrounding skin, veins, body hair, skin texture
+→ IGNORE background (walls, furniture, people, etc.)
+→ Think: "What would this tattoo look like on transfer paper?"
+→ Output: Clean tattoo design isolated from body
+
+IF IMAGE IS A SCREENSHOT (Instagram, Pinterest, social media):
+→ Extract ONLY the artwork/design visible in the post
+→ IGNORE all UI elements:
+  ❌ Navigation bars, buttons, icons, menus
+  ❌ Like/comment/share buttons
+  ❌ Usernames, captions, hashtags, descriptions
+  ❌ Follower counts, timestamps, dates
+  ❌ App interface elements, borders, frames
+→ Focus on the DESIGN CONTENT only
+
+IF IMAGE HAS A REFERENCE PHOTO WITH BACKGROUND:
+→ Extract ONLY the main subject/design
+→ IGNORE decorative frames or borders around the image
+→ IGNORE background scenery, walls, objects
+→ IGNORE secondary objects not part of the main design
+
+EXAMPLES:
+✅ CORRECT: Photo of rose tattoo on arm → Output: Rose design only
+❌ WRONG: Photo of rose tattoo on arm → Output: Rose + arm + skin
+
+✅ CORRECT: Instagram post of dragon design → Output: Dragon design only
+❌ WRONG: Instagram post → Output: Dragon + UI + username + buttons
+
+✅ CORRECT: Reference photo of lion → Output: Lion design only
+❌ WRONG: Reference photo → Output: Lion + background + frame
+
+VERIFICATION:
+□ Is the output a CLEAN, ISOLATED design?
+□ Did I exclude body parts, UI elements, backgrounds?
+□ Would this work as a standalone stencil for tattoo transfer?
+`;
+
+// ═══════════════════════════════════════════════════════════════
+// INSTRUÇÃO UNIVERSAL: PRESERVAÇÃO ESTRITA DE DIMENSÕES
+// Garante que a saída tenha exatamente o mesmo tamanho da entrada
+// ═══════════════════════════════════════════════════════════════
+const DIMENSION_PRESERVATION_INSTRUCTION = `
+═══════════════════════════════════════════════════════════════
+📐 DIMENSION PRESERVATION - ABSOLUTE REQUIREMENT
+═══════════════════════════════════════════════════════════════
+
+OUTPUT DIMENSIONS MUST EXACTLY MATCH INPUT DIMENSIONS:
+
+RULE: If input is WxH pixels → output MUST be WxH pixels
+
+EXAMPLES:
+→ Input: 1024x768 → Output: MUST be 1024x768
+→ Input: 2048x2048 → Output: MUST be 2048x2048
+→ Input: 500x800 → Output: MUST be 500x800
+→ Input: 1920x1080 → Output: MUST be 1920x1080
+
+DO NOT:
+❌ Crop or trim the output
+❌ Add padding, margins, or borders
+❌ Resize or scale to different dimensions
+❌ Change aspect ratio
+❌ "Optimize" or "adjust" dimensions for aesthetics
+
+EVEN IF:
+- The subject is small in the frame → Keep full frame size
+- There's empty space around the subject → Preserve it
+- The composition seems off-center → Keep original dimensions
+
+VERIFICATION:
+□ Output width = Input width? (MUST be YES)
+□ Output height = Input height? (MUST be YES)
+□ Aspect ratio unchanged? (MUST be YES)
+`;
+
+// ═══════════════════════════════════════════════════════════════
 // TOPOGRÁFICO V7.0 - MAPEAMENTO TOPOGRÁFICO ULTRA-DETALHADO
 // O mais detalhado do mercado: TODOS elementos, TODAS texturas, TODA profundidade
 // ═══════════════════════════════════════════════════════════════
 export const TOPOGRAPHIC_INSTRUCTION_OPTIMIZED = `YOU ARE THE WORLD'S MOST DETAILED TOPOGRAPHIC STENCIL GENERATOR
+
+${INTELLIGENT_FOCUS_INSTRUCTION}
+
+${DIMENSION_PRESERVATION_INSTRUCTION}
 
 ═══════════════════════════════════════════════════════════════
 🚨 ABSOLUTE RULE: COMPLETE COVERAGE - ZERO OMISSIONS 🚨
@@ -328,8 +420,13 @@ PNG format. Ready for thermal tattoo printer.
 The tattoo artist uses this to understand WHERE, HOW DEEP, and WHAT TEXTURE to shade.`;
 
 
-// LINHAS - Versão SIMPLIFICADA para evitar alucinações
+// LINHAS V2.0 - CAPTURA COMPLETA com contornos de sombras
+// Agora contorna TUDO: estruturas físicas + bordas de sombras
 export const PERFECT_LINES_INSTRUCTION_OPTIMIZED = `
+${INTELLIGENT_FOCUS_INSTRUCTION}
+
+${DIMENSION_PRESERVATION_INSTRUCTION}
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🚫🚫🚫 ABSOLUTE RULE #1 - READ THIS FIRST 🚫🚫🚫
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -349,21 +446,37 @@ Source: Eye + eyelashes (no eyebrow visible)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-ROLE: Edge Tracer
-FUNCTION: Trace visible edges as black lines on white. Nothing more.
+ROLE: Complete Edge & Shadow Boundary Tracer
+FUNCTION: Trace ALL visible edges AND shadow boundaries as black lines on white.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 CORE MISSION: CAPTURE EVERYTHING WITH LINES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You must capture EVERY detail of the image using ONLY contour lines:
+✅ Physical structures (edges, textures, features)
+✅ Shadow BOUNDARIES (where light meets shadow - trace the EDGE, not fill)
+✅ Tonal transitions (trace the boundary LINE between different tones)
+✅ All visible details without exception
+
+THE KEY DIFFERENCE:
+❌ DO NOT fill shadows with hatching or parallel lines
+✅ DO trace the BOUNDARY/EDGE where shadows begin and end
+❌ DO NOT use line density to show darkness
+✅ DO use THINNER lines for shadow boundaries vs structural edges
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 GEOMETRIC PRESERVATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - TRACE edges exactly where they exist in the source
-- Every line in output must correspond to a visible edge in source
+- Every line in output must correspond to a visible edge OR shadow boundary in source
 - Do NOT shift, resize, or reposition anything
 - If a contour is crooked in source, it stays crooked in output
 
 VERIFICATION:
 □ Did I add ANYTHING not in source? (MUST be NO)
-□ Does every output line match a source edge? (MUST be YES)
+□ Does every output line match a source edge or shadow boundary? (MUST be YES)
 
 ═══════════════════════════════════════════════════════════════
 CRITICAL RULE: You are CONVERTING the image to lines, NOT CREATING a new image!
@@ -402,26 +515,46 @@ ABSOLUTE PROHIBITIONS - FIDELITY IS MANDATORY:
 
 FOR EYES AND FACES: Copy EXACTLY - pupil, iris, reflections in exact position/size. Preserve natural asymmetries. If left eye is slightly different from right, KEEP IT THAT WAY.
 
-CRITICAL PHILOSOPHY:
-✅ CAPTURE: All structural elements (edges, textures, wrinkles, pores, strands, features)
-✅ DRAW: Fine, well-defined lines for every detail boundary
-✅ INTELLIGENT FILTERING: Distinguish structural details FROM tonal shadows
-❌ IGNORE: Shadows, depth shading, tonal gradients, volume hatching
-❌ NEVER: Use line density or hatching to indicate darkness/light
+═══════════════════════════════════════════════════════════════
+🆕 SHADOW BOUNDARY MAPPING - CRITICAL NEW RULE
+═══════════════════════════════════════════════════════════════
 
-CRITICAL RULES:
-❌ NEVER use parallel lines for shading (hatching)
-❌ NEVER use line density to show shadows
-❌ NEVER fill areas with tonal patterns
-✅ Draw lines ONLY where physical structures exist
-✅ Map every structural detail with fine, clean lines
+SHADOWS MUST BE CAPTURED AS CONTOUR LINES (not fills):
 
-OUTPUT: 100% MONOCHROME - Dense network of fine black contour lines on white. NO SHADING. ZERO COLORS.
+1. SHADOW EDGES (where shadow begins/ends):
+   → Trace the BOUNDARY LINE of every shadow
+   → Use THINNER lines (0.2-0.4pt) for shadow boundaries
+   → This includes: cast shadows, core shadows, ambient occlusion
+
+2. TONAL TRANSITION BOUNDARIES:
+   → Where light meets mid-tone: trace a fine line (0.2-0.3pt)
+   → Where mid-tone meets shadow: trace a fine line (0.3-0.4pt)
+   → Where shadow meets deep shadow: trace a fine line (0.2-0.3pt)
+
+3. HOW TO REPRESENT SHADOWS:
+   ✅ CORRECT: Single contour line marking where shadow BEGINS
+   ✅ CORRECT: Multiple contour lines for gradual shadow transitions (like topographic elevation)
+   ❌ WRONG: Hatching or parallel lines to FILL the shadow area
+   ❌ WRONG: Increasing line density in dark areas
+
+4. EXAMPLE - Face shadow under nose:
+   ✅ CORRECT: Draw ONE line tracing the shadow boundary shape
+   ✅ CORRECT: If shadow is gradual, draw 2-3 concentric boundary lines
+   ❌ WRONG: Fill the shadow area with hatching lines
+
+5. SHADOW LINE HIERARCHY:
+   → Strong shadow edge (hard shadow): 0.3-0.4pt line
+   → Soft shadow transition: 0.2-0.3pt line
+   → Subtle tonal change: 0.2pt line
+   → Multiple lines for gradual shadows (spaced 1-2mm apart)
 
 ═══════════════════════════════════════════════════════════════
-INTELLIGENT DETAIL DETECTION
+COMPLETE DETAIL CAPTURE - NOTHING IGNORED
 ═══════════════════════════════════════════════════════════════
-WHAT TO CAPTURE (Structural Details):
+
+WHAT TO CAPTURE (ALL of these):
+
+STRUCTURAL DETAILS (medium-thick lines 0.4-0.8pt):
 ✅ Physical edges and boundaries
 ✅ Texture patterns (skin, fabric, hair)
 ✅ Wrinkles, creases, folds
@@ -430,27 +563,31 @@ WHAT TO CAPTURE (Structural Details):
 ✅ Feature details (eyes, nose, mouth)
 ✅ Surface variations and marks
 
-WHAT TO IGNORE (Tonal Information):
-❌ Shadows (cast shadows, core shadows)
-❌ Highlights and light reflections
-❌ Tonal gradients and transitions
-❌ Volume indication through darkness
-❌ Depth cues through shading
+SHADOW & TONAL BOUNDARIES (thin lines 0.2-0.4pt):
+✅ Shadow edges - where shadows BEGIN and END
+✅ Highlight boundaries - where bright areas are defined
+✅ Tonal gradients - trace boundary lines (NOT fill with hatching)
+✅ Volume contours - where 3D form creates shadow
+✅ Depth cues - contour lines showing depth changes
 
-INTELLIGENCE RULE: If it's a PHYSICAL STRUCTURE → draw it. If it's LIGHT/SHADOW → ignore it.
+INTELLIGENCE RULE:
+- PHYSICAL STRUCTURE → Draw with 0.4-0.8pt line
+- SHADOW/TONAL BOUNDARY → Draw with 0.2-0.4pt thinner line
+- NEVER FILL with hatching - only trace boundaries
 
 ═══════════════════════════════════════════════════════════════
-LINE HIERARCHY (Fine & Well-Defined)
+LINE HIERARCHY (Complete System)
 ═══════════════════════════════════════════════════════════════
 MAIN CONTOURS: 0.6-0.8pt - External silhouettes, major boundaries
 FEATURE CONTOURS: 0.4-0.6pt - Eyes, nose, mouth, ears, major elements
 DETAIL LINES: 0.3-0.5pt - Wrinkles, creases, texture boundaries
-MICRO-DETAILS: 0.3-0.4pt - Pores, fine textures, hair strands
+SHADOW BOUNDARIES: 0.2-0.4pt - Where shadows begin/end (THINNER)
+MICRO-DETAILS: 0.2-0.3pt - Pores, fine textures, subtle shadows
 
-GOAL: Maximum detail density through fine, well-defined structural lines.
+GOAL: Complete detail capture with line weight hierarchy showing both structure AND shadow boundaries.
 
 ═══════════════════════════════════════════════════════════════
-EYES (Complete Structural Mapping)
+EYES (Complete Mapping Including Shadows)
 ═══════════════════════════════════════════════════════════════
 PUPIL:
 → Outer boundary circle (0.5-0.6pt)
@@ -463,39 +600,43 @@ IRIS:
   - Inner ring boundary
   - Outer ring boundary
   - Crypts and furrows as edge lines
-→ NOT radial hatching for tone
-→ Draw the STRUCTURE, not the darkness
+→ Shadow boundary in iris (0.2-0.3pt) - where darker areas begin
 
 REFLECTION:
 → Outline the reflection shape (0.3pt)
 → Mark boundary between reflection and iris
-→ NO highlight rendering
+→ Boundary line around highlight area (0.2pt)
 
 SCLERA:
 → Map visible veins as line structures (0.3pt)
 → Corner detail lines (0.4pt)
-→ NO tonal shading
+→ Shadow boundary where eye socket shadow falls (0.2-0.3pt)
 
 EYELIDS:
 → Upper/lower lid edges (0.5-0.7pt)
 → Crease lines (0.3-0.4pt)
 → Skin texture on lid surface
-→ NO shadow fills below eye
+→ SHADOW BOUNDARY below upper lid (0.2-0.3pt) - trace where shadow begins
 
 LASHES:
 → Individual lash edges (0.3-0.4pt)
 → 15-25 per eye showing natural structure
 → Curved, following natural direction
-→ NOT dense fills
+→ Shadow cast by lashes - trace boundary line (0.2pt)
 
 EYEBROW:
 → Overall shape boundary (0.5pt)
 → Individual hair strands (0.3-0.4pt)
 → 30-50 hairs showing direction flow
-→ Density shown by strand count, NOT shading
+→ Shadow below brow bone - trace boundary (0.2-0.3pt)
+
+EYE SOCKET SHADOWS:
+→ Trace boundary where orbital shadow begins (0.2-0.3pt)
+→ Multiple contour lines if shadow is gradual
+→ Under-eye shadow boundary (0.2pt)
 
 ═══════════════════════════════════════════════════════════════
-HAIR (Complete Strand Mapping)
+HAIR (Complete Including Light/Dark Boundaries)
 ═══════════════════════════════════════════════════════════════
 APPROACH:
 → Outline overall hair mass (0.6-0.8pt)
@@ -503,22 +644,23 @@ APPROACH:
 → Show directional flow through strand lines
 → Capture every visible separation and overlap
 
+SHADOW MAPPING IN HAIR:
+→ Trace BOUNDARY where hair goes from light to dark (0.2-0.3pt)
+→ Multiple boundary lines for gradual transitions
+→ Each shadow zone gets a contour line around it
+→ NOT hatching to fill - ONLY boundary lines
+
 STRAND DETAIL:
-→ Each visible strand = edge line
+→ Each visible strand = edge line (0.3-0.5pt)
 → Strand overlaps = boundary lines
 → Strand separations = gap definition
 → Flow changes = directional lines
+→ Dark strand groups = boundary line around the group (0.2-0.3pt)
 
-CRITICAL - NO SHADOW RENDERING:
-→ DO NOT darken areas with more lines
-→ DO NOT use hatching for hair depth
-→ DO NOT indicate volume through density
-→ ONLY draw actual strand structures
-
-RESULT: Dense network of strand lines showing hair structure, NOT darkness.
+RESULT: Dense network of strand lines + shadow boundary lines showing both hair structure AND where light/dark areas are.
 
 ═══════════════════════════════════════════════════════════════
-FACE & SKIN (Complete Structural Detail)
+FACE & SKIN (Complete With Shadow Boundaries)
 ═══════════════════════════════════════════════════════════════
 MAJOR FEATURES:
 → Face outline/jaw (0.6-0.8pt)
@@ -527,12 +669,20 @@ MAJOR FEATURES:
 → Ears: outer shape, internal structures (0.4-0.6pt)
 → Neck: outline and major creases (0.5-0.7pt)
 
+SHADOW BOUNDARY MAPPING (NEW):
+→ Under-nose shadow: trace boundary line (0.2-0.3pt)
+→ Cheek shadow: trace boundary where shadow begins (0.2-0.3pt)
+→ Jaw shadow: trace boundary line (0.2-0.3pt)
+→ Neck shadow: trace boundary lines (0.2-0.3pt)
+→ Temple shadows: trace boundary (0.2pt)
+→ Under-lip shadow: trace boundary (0.2-0.3pt)
+
 WRINKLES & CREASES (All Captured):
 → Every wrinkle = edge line (0.3-0.4pt)
 → Forehead lines, crow's feet, smile lines
 → Nasolabial folds, marionette lines
 → Neck creases, under-eye lines
-→ Draw the CREASE EDGE, not the shadow
+→ Shadow IN wrinkle = boundary line (0.2pt)
 
 SKIN TEXTURE:
 → Visible pores = tiny dots (0.3pt)
@@ -540,43 +690,44 @@ SKIN TEXTURE:
 → Freckles, marks, blemishes = outline shapes
 → Surface irregularities as edge lines
 
-CRITICAL - NO VOLUME SHADING:
-→ DO NOT map "where light meets shadow"
-→ DO NOT draw tonal transitions
-→ DO NOT indicate cheekbone depth with lines
-→ ONLY draw actual physical structures
+VOLUME/FORM INDICATION:
+→ Cheekbone shadow boundary (0.2-0.3pt)
+→ Forehead curvature shadow lines (0.2pt)
+→ Chin shadow boundary (0.2-0.3pt)
+→ Use multiple fine lines for gradual curves (like topographic elevation)
 
 ═══════════════════════════════════════════════════════════════
-TEXTURE MAPPING (All Physical Patterns)
+TEXTURE MAPPING (All Physical Patterns + Shadows)
 ═══════════════════════════════════════════════════════════════
 SKIN PORES:
 → Each visible pore = boundary circle (0.3pt)
-→ NOT stippling for tone
+→ Shadow around pore = tiny boundary (0.2pt)
 → Actual pore locations only
 
 FABRIC/CLOTHING:
 → Weave pattern boundaries
-→ Fold edges (physical creases)
+→ Fold edges (physical creases) (0.4-0.5pt)
 → Seam lines
 → Texture transitions
-→ NO shadow fills in folds
+→ Shadow IN folds = boundary lines (0.2-0.3pt)
+→ Highlight boundaries on fabric (0.2pt)
 
 OTHER TEXTURES:
-→ Jewelry: structural details, engravings
-→ Accessories: patterns, edges
-→ Background elements: actual structures only
+→ Jewelry: structural details, engravings + reflection boundaries
+→ Accessories: patterns, edges + shadow boundaries
+→ Background elements: structures + shadow boundaries
 
 ═══════════════════════════════════════════════════════════════
 TECHNICAL CONSTRAINTS
 ═══════════════════════════════════════════════════════════════
-- Line weights: 0.3-0.8pt (hierarchy only, NOT for tone)
+- Line weights: 0.2-0.8pt (hierarchy for structure vs shadow)
 - ZERO hatching (parallel lines for shading)
 - ZERO cross-hatching
 - ZERO stippling for tonal effect
-- ZERO line density variation for shadows
 - ZERO filled areas
+- Shadow = BOUNDARY LINES only (0.2-0.4pt), not fills
 - PNG pure black #000000 lines on pure white #FFFFFF
-- Ultra-detailed structural network
+- Ultra-detailed network including shadow boundaries
 - Optimized for thermal printer 200-300 DPI
 
 ═══════════════════════════════════════════════════════════════
@@ -584,35 +735,37 @@ QUALITY VERIFICATION
 ═══════════════════════════════════════════════════════════════
 MUST HAVE:
 □ ALL structural details captured (wrinkles, pores, strands, textures)?
+□ ALL shadow BOUNDARIES traced with thin lines?
 □ Individual features (hairs, wrinkles, pores) shown as edges?
 □ Dense network of fine, well-defined lines?
-□ Every physical element mapped?
-□ ZERO hatching or shading?
-□ ZERO tonal rendering?
+□ Every physical element AND shadow boundary mapped?
+□ ZERO hatching or fill shading?
+□ Shadow areas defined by boundary LINES only?
 □ Anatomy/proportions 100% exact?
 
 MUST NOT HAVE:
 □ NO parallel lines for shading
 □ NO cross-hatching
 □ NO stippling for tone
-□ NO line density for shadows
-□ NO volume indication through hatching
-□ NO shadow mapping
-□ NO highlight rendering
+□ NO line density variation inside shadow areas
+□ NO filled shadow areas
+□ Shadow represented ONLY by boundary contours
 
 INTELLIGENCE TEST:
-- Wrinkle edge → ✅ DRAW (physical structure)
-- Shadow in wrinkle → ❌ IGNORE (tonal information)
-- Hair strand → ✅ DRAW (physical structure)
-- Dark area in hair → ❌ IGNORE (shadow)
-- Pore → ✅ DRAW (physical structure)
-- Cheek shadow → ❌ IGNORE (tonal gradient)
+- Wrinkle edge → ✅ DRAW (0.3-0.4pt - physical structure)
+- Shadow boundary in wrinkle → ✅ DRAW (0.2pt - thin shadow line)
+- Hair strand → ✅ DRAW (0.3-0.5pt - physical structure)
+- Boundary where hair gets darker → ✅ DRAW (0.2-0.3pt - shadow boundary)
+- Pore → ✅ DRAW (0.3pt - physical structure)
+- Cheek shadow boundary → ✅ DRAW (0.2-0.3pt - where shadow begins)
+- FILL shadow area with lines → ❌ NEVER (only trace boundary)
 
-GOAL: Ultra-detailed structural map capturing EVERY physical detail.
-Like a technical blueprint showing WHERE every element exists, NOT how dark/light it is.
-The tattoo artist sees EXACTLY where every detail is located, with fine, well-defined lines.
+GOAL: Ultra-detailed map capturing EVERY physical detail AND every shadow/tonal boundary.
+Like a technical blueprint showing WHERE structures exist AND WHERE shadows fall.
+Shadows shown as CONTOUR BOUNDARIES, not filled areas.
+The tattoo artist sees EXACTLY where every detail is AND where every shadow begins/ends.
 
-OUTPUT: Generate ONLY the comprehensive structural contour map. No text. PNG black lines on white.`;
+OUTPUT: Generate ONLY the comprehensive contour map including shadow boundaries. No text. PNG black lines on white.`;
 
 // SIMPLIFY - Converte topográfico detalhado em linhas simples (Pipeline 2-etapas)
 export const SIMPLIFY_TOPOGRAPHIC_TO_LINES = `ROLE: Topographic-to-Lines Simplifier
@@ -694,6 +847,10 @@ OUTPUT: Generate ONLY the simplified line stencil. No text. PNG black on white.`
 // Se input é foto: CONVERTE para lineart estilo anime (contornos limpos)
 // CRÍTICO: NENHUM preenchimento sólido - APENAS contornos e traçados
 export const ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED = `ROLE: Lineart Stencil Cleaner for Tattoo (Maori, Tribal, Blackwork, Anime)
+
+${INTELLIGENT_FOCUS_INSTRUCTION}
+
+${DIMENSION_PRESERVATION_INSTRUCTION}
 
 🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨🚨
 ⛔ CRITICAL RULES - TATTOO THERMAL STENCIL ⛔

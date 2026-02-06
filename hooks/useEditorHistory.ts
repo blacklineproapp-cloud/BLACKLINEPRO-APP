@@ -65,13 +65,6 @@ export function useEditorHistory(initialImage?: string, initialControls?: Adjust
         newStates.shift();
       }
 
-      console.log('[History] Estado adicionado:', {
-        totalStates: newStates.length,
-        currentIndex: newStates.length - 1,
-        canUndo: newStates.length > 1,
-        canRedo: false
-      });
-
       return {
         ...prev,
         states: newStates,
@@ -86,20 +79,11 @@ export function useEditorHistory(initialImage?: string, initialControls?: Adjust
 
     setHistory((prev) => {
       if (prev.currentIndex <= 0) {
-        console.log('[History] Undo ignorado: já no primeiro estado');
         return prev; // Já no primeiro estado
       }
 
       const newIndex = prev.currentIndex - 1;
       previousState = prev.states[newIndex];
-
-      console.log('[History] Undo:', {
-        from: prev.currentIndex,
-        to: newIndex,
-        totalStates: prev.states.length,
-        canUndo: newIndex > 0,
-        canRedo: true
-      });
 
       return {
         ...prev,
@@ -116,20 +100,11 @@ export function useEditorHistory(initialImage?: string, initialControls?: Adjust
 
     setHistory((prev) => {
       if (prev.currentIndex >= prev.states.length - 1) {
-        console.log('[History] Redo ignorado: já no último estado');
         return prev; // Já no último estado
       }
 
       const newIndex = prev.currentIndex + 1;
       nextState = prev.states[newIndex];
-
-      console.log('[History] Redo:', {
-        from: prev.currentIndex,
-        to: newIndex,
-        totalStates: prev.states.length,
-        canUndo: true,
-        canRedo: newIndex < prev.states.length - 1
-      });
 
       return {
         ...prev,
