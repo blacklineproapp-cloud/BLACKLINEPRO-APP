@@ -61,9 +61,9 @@ export async function POST(req: Request) {
     const limitCheck = await checkEditorLimit(userData.id);
 
     if (!limitCheck.allowed) {
-      const message = isFreePlan
+      const message = limitCheck.warningMessage || (isFreePlan
         ? 'Você já usou seus previews gratuitos! Assine para desbloquear stencils em alta qualidade.'
-        : getLimitMessage('editor_generation', limitCheck.limit, limitCheck.resetDate);
+        : getLimitMessage('editor_generation', limitCheck.limit, limitCheck.resetDate));
 
       return NextResponse.json(
         {

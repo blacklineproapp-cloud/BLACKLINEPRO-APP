@@ -290,8 +290,11 @@ export class AsaasPaymentService {
     customerId: string;
     payment: AsaasPayment;
     plan?: string;
+    customerSource?: 'asaas_customers' | 'customers';
   }): Promise<void> {
-    const { userId, customerId, payment, plan } = params;
+    const { userId, customerId, payment, plan, customerSource } = params;
+
+    console.log(`[AsaasPayment] 🔍 Preparando para salvar: asaas_id=${payment.id}, user=${userId}, customer=${customerId}, source=${customerSource}`);
 
     // Mapear status do Asaas para nosso sistema
     const statusMap: Record<string, string> = {
@@ -311,16 +314,18 @@ export class AsaasPaymentService {
       'AWAITING_RISK_ANALYSIS': 'pending',
     };
 
-    const paymentData = {
+    const paymentData: any = {
       user_id: userId,
-      customer_id: customerId,
+      // CRITICO: Só passamos customer_id se tivermos CERTEZA que ele pertence à tabela customers (legado)
+      // Se for nulo ou de asaas_customers, ignoramos para evitar erro de FK constraint
+      customer_id: customerSource === 'customers' ? customerId : null,
       asaas_payment_id: payment.id,
       asaas_subscription_id: payment.subscription || null,
-      stripe_payment_id: `asaas_${payment.id}`, // Placeholder para satisfazer NOT NULL constraint
+      stripe_payment_id: `asaas_${payment.id}`, 
       amount: payment.value,
       currency: 'BRL',
       status: statusMap[payment.status] || 'pending',
-      payment_method: payment.billingType.toLowerCase(),
+      payment_method: payment.billingType?.toLowerCase() || 'pix',
       description: payment.description || `Pagamento ${payment.billingType}`,
       plan_type: plan,
       invoice_url: payment.invoiceUrl || payment.bankSlipUrl,
@@ -330,24 +335,25 @@ export class AsaasPaymentService {
         due_date: payment.dueDate,
         payment_date: payment.paymentDate,
         pix_qr_code_id: payment.pixQrCodeId,
+        customer_source: customerSource,
+        saved_at: new Date().toISOString()
       },
     };
 
-    console.log('[AsaasPayment] Tentando salvar:', paymentData);
+    console.log('[AsaasPayment] 🚀 Payload final para o Supabase:', JSON.stringify(paymentData, null, 2));
 
     const { data, error } = await supabaseAdmin.from('payments').upsert(paymentData, {
       onConflict: 'asaas_payment_id',
     }).select();
 
     if (error) {
-      console.error('[AsaasPayment] ❌ ERRO ao salvar:', error);
+      console.error('[AsaasPayment] ❌ ERRO de constraint ou banco:', error);
+      console.error('[AsaasPayment] Detalhes do erro:', JSON.stringify(error, null, 2));
       throw error;
     }
 
     if (data && data.length > 0) {
-      console.log(`[AsaasPayment] ✅ Pagamento salvo no banco: ${payment.id}`);
-    } else {
-      console.error('[AsaasPayment] ⚠️ Upsert retornou vazio (possível falha silenciosa)');
+      console.log(`[AsaasPayment] ✅ Sucesso! Pagamento ${payment.id} salvo ID=${data[0].id}`);
     }
   }
 

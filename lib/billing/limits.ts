@@ -168,11 +168,23 @@ async function checkLimit(
     // 1. Buscar plano e flags do usuário
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('plan, admin_courtesy, admin_courtesy_expires_at, is_paid')
+      .select('plan, admin_courtesy, admin_courtesy_expires_at, is_paid, is_blocked, blocked_reason')
       .eq('id', userId)
       .single();
 
     const plan = (user?.plan || 'free') as PlanType;
+
+    // 🆕 BLOQUEIO GLOBAL
+    if (user?.is_blocked === true) {
+      console.warn(`[Limits] 🚫 Usuário ${userId} bloqueado. Motivo: ${user.blocked_reason}`);
+      return {
+        allowed: false,
+        remaining: 0,
+        limit: 0,
+        usagePercentage: 100,
+        warningMessage: 'Sua conta está limitada devido a pendências de pagamento ou análise de segurança. Por favor, regularize sua situação no painel financeiro.'
+      };
+    }
 
     // 🛡️ CORREÇÃO: Verificar cortesia APENAS pelo campo admin_courtesy_expires_at
     // Usuários de boleto e pagamentos manuais NÃO devem ser bloqueados

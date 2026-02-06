@@ -2,7 +2,7 @@
  * Cron Job: Verificar Grace Period
  *
  * Roda diariamente para:
- * 1. Bloquear usuários que passaram do grace period (3 dias)
+ * 1. Bloquear usuários que passaram do grace period (1 dia)
  * 2. Enviar lembretes para usuários em grace period
  *
  * Configurar no Vercel Cron ou chamar via cron externo:
@@ -63,7 +63,7 @@ export async function GET(req: Request) {
         try {
           await supabaseAdmin.from('users').update({
             is_blocked: true,
-            blocked_reason: 'Pagamento não regularizado após grace period de 3 dias',
+            blocked_reason: 'Pagamento não regularizado após grace period de 1 dia',
             blocked_at: now.toISOString(),
             subscription_status: 'blocked',
           }).eq('id', user.id);

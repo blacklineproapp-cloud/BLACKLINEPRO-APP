@@ -301,13 +301,17 @@ export class AsaasSubscriptionService {
     customerId: string;
     subscription: AsaasSubscription;
     plan: string;
+    customerSource?: 'asaas_customers' | 'customers';
   }): Promise<void> {
-    const { userId, customerId, subscription, plan } = params;
+    const { userId, customerId, subscription, plan, customerSource } = params;
 
     // 1. Salvar na tabela subscriptions
+    // Se for da tabela asaas_customers, não passamos customer_id (UUID legado)
+    // para evitar erro FK constraint.
     await supabaseAdmin.from('subscriptions').upsert({
-      customer_id: customerId,
+      customer_id: customerSource === 'customers' ? customerId : null,
       asaas_subscription_id: subscription.id,
+      asaas_customer_id: subscription.customer, // Salvar o ID textual do Asaas também
       status: subscription.status.toLowerCase(),
       current_period_start: subscription.dateCreated,
       current_period_end: subscription.nextDueDate,
@@ -316,6 +320,7 @@ export class AsaasSubscriptionService {
         cycle: subscription.cycle,
         billingType: subscription.billingType,
         value: subscription.value,
+        customer_source: customerSource,
       },
       updated_at: new Date().toISOString(),
     }, {

@@ -223,7 +223,7 @@ export class AsaasCustomerService {
    * Verifica primeiro na tabela asaas_customers (nova migração)
    * Depois tenta customers (legado)
    */
-  static async getDbCustomerByAsaasId(asaasCustomerId: string): Promise<any | null> {
+  static async getDbCustomerByAsaasId(asaasCustomerId: string): Promise<{ data: any, source: 'asaas_customers' | 'customers' } | null> {
     // 1. Tentar na tabela asaas_customers (nova migração)
     const { data: asaasCustomer } = await supabaseAdmin
       .from('asaas_customers')
@@ -232,7 +232,7 @@ export class AsaasCustomerService {
       .single();
 
     if (asaasCustomer) {
-      return asaasCustomer;
+      return { data: asaasCustomer, source: 'asaas_customers' };
     }
 
     // 2. Fallback: tentar na tabela customers (legado)
@@ -242,6 +242,10 @@ export class AsaasCustomerService {
       .eq('asaas_customer_id', asaasCustomerId)
       .single();
 
-    return legacyCustomer;
+    if (legacyCustomer) {
+      return { data: legacyCustomer, source: 'customers' };
+    }
+
+    return null;
   }
 }
