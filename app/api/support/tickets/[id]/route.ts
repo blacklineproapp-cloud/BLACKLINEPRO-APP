@@ -4,7 +4,7 @@ import { getOrCreateUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -22,7 +22,8 @@ export async function GET(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    const ticketId = params.id;
+    const { id } = await params;
+    const ticketId = id;
 
     // Buscar ticket (verificando que pertence ao usuário)
     const { data: ticket, error: ticketError } = await supabaseAdmin
@@ -72,7 +73,8 @@ export async function POST(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    const ticketId = params.id;
+    const { id } = await params;
+    const ticketId = id;
     const body = await req.json();
     const { message } = body;
 
@@ -152,7 +154,8 @@ export async function PATCH(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    const ticketId = params.id;
+    const { id } = await params;
+    const ticketId = id;
     const body = await req.json();
     const { action } = body;
 

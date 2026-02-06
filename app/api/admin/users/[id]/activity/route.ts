@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -20,11 +20,13 @@ export async function GET(
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
+    const { id } = await params;
+
     // Buscar últimas 50 atividades do usuário
     const { data: activities, error } = await supabaseAdmin
       .from('ai_usage')
       .select('*')
-      .eq('user_id', params.id)
+      .eq('user_id', id)
       .order('created_at', { ascending: false })
       .limit(50);
 

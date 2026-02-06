@@ -20,7 +20,7 @@ import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
 // =====================================================
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId: clerkId } = await auth();
@@ -29,7 +29,8 @@ export async function GET(
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    const organizationId = params.id;
+    const { id } = await params;
+    const organizationId = id;
 
     // Buscar user_id
     const { data: user } = await supabaseAdmin
@@ -79,7 +80,7 @@ export async function GET(
 // =====================================================
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId: clerkId } = await auth();
@@ -116,7 +117,8 @@ export async function DELETE(
       }
     }
 
-    const organizationId = params.id;
+    const { id } = await params;
+    const organizationId = id;
     const { searchParams } = new URL(req.url);
     const memberIdToRemove = searchParams.get('userId');
 

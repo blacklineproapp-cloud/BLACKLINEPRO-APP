@@ -27,7 +27,10 @@
     "intensity": "Intensité",
     "plan": "Plan",
     "upgrade": "Améliorer",
-    "all": "Tous"
+    "all": "Tous",
+    "new": "Nouveau",
+    "rename": "Renommer",
+    "of": "de"
   },
   "landing": {
     "hero": {
@@ -664,7 +667,7 @@
     "recurrence": {
       "title": "Comment fonctionne la récurrence :",
       "item1": "Le prélèvement sera généré à la date de votre premier paiement",
-      "item2": "Vous aurez jusqu'à {days} jours pour effectuer le paiement",
+      "item2": "Vous aurez jusqu'à <days>7</days> jours pour effectuer le paiement",
       "item2Days": "7",
       "item3": "Après le paiement, la récurrence automatique est activée",
       "item4": "Vos informations et historique ont été conservés"

@@ -10,10 +10,12 @@ const nextConfig = {
   compress: true, // Compressão gzip automática
   poweredByHeader: false, // Remover header desnecessário
 
+  // External packages for server components
+  serverExternalPackages: ['bullmq'], // BullMQ tem dependências dinâmicas
+
   // Experimental features para performance
   experimental: {
     optimizePackageImports: ['lucide-react'], // Tree-shaking agressivo
-    serverComponentsExternalPackages: ['bullmq'], // BullMQ tem dependências dinâmicas
   },
 
   images: {

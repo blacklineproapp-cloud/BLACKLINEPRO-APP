@@ -27,7 +27,10 @@
     "intensity": "Intensity",
     "plan": "Plan",
     "upgrade": "Upgrade",
-    "all": "All"
+    "all": "All",
+    "new": "New",
+    "rename": "Rename",
+    "of": "of"
   },
   "landing": {
     "hero": {
@@ -768,7 +771,7 @@
     "recurrence": {
       "title": "How recurring payments work:",
       "item1": "The charge will be generated on your first payment date",
-      "item2": "You'll have up to {days} days to make the payment",
+      "item2": "You'll have up to <days>7</days> days to make the payment",
       "item2Days": "7",
       "item3": "After payment, automatic recurrence is activated",
       "item4": "Your information and history have been preserved"

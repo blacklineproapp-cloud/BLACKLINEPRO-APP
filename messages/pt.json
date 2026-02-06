@@ -27,7 +27,10 @@
     "intensity": "Intensidade",
     "plan": "Plano",
     "upgrade": "Fazer Upgrade",
-    "all": "Todos"
+    "all": "Todos",
+    "new": "Novo",
+    "rename": "Renomear",
+    "of": "de"
   },
   "landing": {
     "hero": {
@@ -777,7 +780,7 @@
     "recurrence": {
       "title": "Como funciona a recorrência:",
       "item1": "A cobrança será gerada na data do seu primeiro pagamento",
-      "item2": "Você terá até {days} dias para realizar o pagamento",
+      "item2": "Você terá até <days>7</days> dias para realizar o pagamento",
       "item2Days": "7",
       "item3": "Após o pagamento, a recorrência automática é ativada",
       "item4": "Suas informações e histórico foram mantidos"

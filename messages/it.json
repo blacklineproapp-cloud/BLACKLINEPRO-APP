@@ -27,7 +27,10 @@
     "intensity": "Intensità",
     "plan": "Piano",
     "upgrade": "Fai l'Upgrade",
-    "all": "Tutti"
+    "all": "Tutti",
+    "new": "Nuovo",
+    "rename": "Rinomina",
+    "of": "di"
   },
   "landing": {
     "hero": {
@@ -664,7 +667,7 @@
     "recurrence": {
       "title": "Come funziona la ricorrenza:",
       "item1": "L'addebito verrà generato alla data del tuo primo pagamento",
-      "item2": "Avrai fino a {days} giorni per effettuare il pagamento",
+      "item2": "Avrai fino a <days>7</days> giorni per effettuare il pagamento",
       "item2Days": "7",
       "item3": "Dopo il pagamento, la ricorrenza automatica viene attivata",
       "item4": "Le tue informazioni e la cronologia sono state mantenute"

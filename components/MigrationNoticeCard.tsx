@@ -93,9 +93,9 @@ export default function MigrationNoticeCard({ userName }: MigrationNoticeCardPro
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-400 mt-0.5">•</span>
-              <span>{t.rich('recurrence.item2', { 
+              {t.rich('recurrence.item2', { 
                 days: (chunks) => <strong className="text-white">{t('recurrence.item2Days')}</strong> 
-              })}</span>
+              })}
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-400 mt-0.5">•</span>

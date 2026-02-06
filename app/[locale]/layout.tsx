@@ -18,14 +18,15 @@ const clerkLocalizations = {
 } as const;
 
 type Props = {
-  children: ReactNode;
-  params: { locale: string }; // Next.js 14: params é objeto síncrono
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 };
 
 export default async function LocaleLayout({
   children,
-  params: { locale }
+  params,
 }: Props) {
+  const { locale } = await params;
   // Validar locale
   const locales = ['pt', 'en', 'es', 'fr', 'it', 'ja'];
   if (!locales.includes(locale)) {

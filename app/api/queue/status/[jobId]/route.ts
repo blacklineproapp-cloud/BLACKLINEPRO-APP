@@ -7,8 +7,8 @@ import { getJobStatus } from '@/lib/queue';
  * GET /api/queue/status/[jobId]?queue=stencil-generation
  */
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { jobId: string } }
+  req: Request,
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -17,8 +17,8 @@ export async function GET(
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    const { jobId } = params;
-    const searchParams = request.nextUrl.searchParams;
+    const { jobId } = await params;
+    const searchParams = new URL(req.url).searchParams;
     const queueName = searchParams.get('queue') as any;
 
     if (!queueName) {

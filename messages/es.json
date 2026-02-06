@@ -27,7 +27,10 @@
     "intensity": "Intensidad",
     "plan": "Plan",
     "upgrade": "Mejorar",
-    "all": "Todos"
+    "all": "Todos",
+    "new": "Nuevo",
+    "rename": "Renombrar",
+    "of": "de"
   },
   "landing": {
     "hero": {
@@ -664,7 +667,7 @@
     "recurrence": {
       "title": "Cómo funciona la recurrencia:",
       "item1": "El cargo se generará en la fecha de tu primer pago",
-      "item2": "Tendrás hasta {days} días para realizar el pago",
+      "item2": "Tendrás hasta <days>7</days> días para realizar el pago",
       "item2Days": "7",
       "item3": "Después del pago, la recurrencia automática se activa",
       "item4": "Tu información e historial se han mantenido"

@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
     }
 
-    const headersList = headers();
+    const headersList = await headers();
     const token = headersList.get('asaas-access-token');
 
     // Usar comparação segura contra timing attacks

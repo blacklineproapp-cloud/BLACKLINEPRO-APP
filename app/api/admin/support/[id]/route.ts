@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { invalidateCache } from '@/lib/cache';
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -18,7 +18,8 @@ export async function GET(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
     }
 
-    const ticketId = params.id;
+    const { id } = await params;
+    const ticketId = id;
 
     // Buscar ticket
     const { data: ticket, error: ticketError } = await supabaseAdmin
@@ -109,7 +110,8 @@ export async function POST(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: 'Admin não encontrado' }, { status: 404 });
     }
 
-    const ticketId = params.id;
+    const { id } = await params;
+    const ticketId = id;
     const body = await req.json();
     const { message, action, actionData } = body;
 
@@ -197,7 +199,8 @@ export async function PATCH(req: Request, { params }: RouteParams) {
     }
 
     const admin = await getOrCreateUser(userId);
-    const ticketId = params.id;
+    const { id } = await params;
+    const ticketId = id;
     const body = await req.json();
     const { status, priority, resolved } = body;
 

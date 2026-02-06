@@ -15,10 +15,10 @@ import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
 // =====================================================
 export async function GET(
   req: Request,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const token = params.token;
+    const { token } = await params;
 
     // Buscar convite
     const invite = await getInviteByToken(token);
@@ -81,7 +81,7 @@ export async function GET(
 // =====================================================
 export async function POST(
   req: Request,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
     const { userId: clerkId } = await auth();
@@ -93,7 +93,7 @@ export async function POST(
     // 🛡️ RATE LIMITING: Desabilitado (controlado via database)
     // Rate limiting removido após migração para Railway Redis
 
-    const token = params.token;
+    const { token } = await params;
 
     // Buscar convite para validar email
     const invite = await getInviteByToken(token);
