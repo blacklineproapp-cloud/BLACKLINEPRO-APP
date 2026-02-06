@@ -1,6 +1,5 @@
 const { withSentryConfig } = require('@sentry/nextjs');
 const createNextIntlPlugin = require('next-intl/plugin');
-const path = require('path');
 
 // Criar plugin next-intl com caminho para request config
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
@@ -10,7 +9,6 @@ const nextConfig = {
   // ⚡ OTIMIZAÇÕES DE PERFORMANCE
   compress: true, // Compressão gzip automática
   poweredByHeader: false, // Remover header desnecessário
-  outputFileTracingRoot: path.join(__dirname, '../../'),
 
   // External packages for server components
   serverExternalPackages: ['bullmq'], // BullMQ tem dependências dinâmicas
