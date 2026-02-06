@@ -1,6 +1,7 @@
+import * as Sentry from '@sentry/nextjs';
+
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
-    const Sentry = await import('@sentry/nextjs');
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
       environment: process.env.NODE_ENV || 'development',
@@ -23,12 +24,11 @@ export async function register() {
         }
         return event;
       },
-      debug: false, // Desabilita logs verbosos em todos os ambientes
+      debug: false,
     });
   }
 
   if (process.env.NEXT_RUNTIME === 'edge') {
-    const Sentry = await import('@sentry/nextjs');
     Sentry.init({
       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
       environment: process.env.NODE_ENV || 'development',
@@ -49,3 +49,5 @@ export async function register() {
     });
   }
 }
+
+export const onRequestError = Sentry.captureRequestError;

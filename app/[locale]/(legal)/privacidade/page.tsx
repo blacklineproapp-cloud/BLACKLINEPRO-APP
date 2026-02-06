@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Link } from '@/i18n/routing';
 
 export const metadata: Metadata = {
   title: 'Política de Privacidade - StencilFlow',
@@ -148,7 +149,7 @@ export default function PrivacidadePage() {
           </ul>
           <p className="mt-4">
             Você pode gerenciar cookies nas configurações do seu navegador. 
-            Consulte nossa <a href="/cookies" className="text-emerald-400 hover:underline">Política de Cookies</a> para mais detalhes.
+            Consulte nossa <Link href="/cookies" className="text-emerald-400 hover:underline">Política de Cookies</Link> para mais detalhes.
           </p>
         </section>
 

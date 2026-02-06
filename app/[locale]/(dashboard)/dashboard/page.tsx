@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getOrCreateUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getTranslations } from 'next-intl/server';
+import { Link } from '@/i18n/routing';
 import DashboardClient from './DashboardClient';
 
 export default async function DashboardPage() {
@@ -23,18 +24,18 @@ export default async function DashboardPage() {
           {tDashboard('error.slowness')}
         </p>
         <div className="flex justify-center gap-4 mt-6">
-          <a
+          <Link
             href="/dashboard"
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
           >
             {tDashboard('error.tryAgain')}
-          </a>
-          <a
+          </Link>
+          <Link
             href="/"
             className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
           >
             {tDashboard('error.goHome')}
-          </a>
+          </Link>
         </div>
         <p className="text-gray-500 text-xs mt-4">
           {tDashboard('error.support')}

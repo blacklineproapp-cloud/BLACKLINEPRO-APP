@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useState, Suspense } from 'react';
+import { Link } from '@/i18n/routing';
 
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
@@ -57,12 +58,12 @@ function UnsubscribeContent() {
               >
                 Confirmar Cancelamento
               </button>
-              <a
+              <Link
                 href="/"
-                className="block w-full bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-3 px-6 rounded-lg transition"
+                className="block w-full bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-3 px-6 rounded-lg transition text-center"
               >
                 Voltar ao Site
-              </a>
+              </Link>
             </div>
           </>
         )}
@@ -88,12 +89,12 @@ function UnsubscribeContent() {
             <p className="text-xs text-zinc-500 mt-6">
               Você ainda receberá emails transacionais importantes (confirmações de pagamento, etc).
             </p>
-            <a
+            <Link
               href="/"
               className="mt-6 inline-block text-emerald-400 hover:text-emerald-300 text-sm font-medium"
             >
               Voltar ao Site →
-            </a>
+            </Link>
           </div>
         )}
         

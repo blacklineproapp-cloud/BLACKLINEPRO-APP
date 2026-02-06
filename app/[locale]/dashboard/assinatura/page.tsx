@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -203,7 +204,7 @@ export default function AssinaturaPage() {
               className="w-full"
               size="lg"
             >
-              <a href="/pricing">Ver Planos e Preços</a>
+              <Link href="/pricing">Ver Planos e Preços</Link>
             </Button>
           </CardContent>
         </Card>

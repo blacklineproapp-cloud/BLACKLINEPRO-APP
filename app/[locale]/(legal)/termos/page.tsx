@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Link } from '@/i18n/routing';
 
 export const metadata: Metadata = {
   title: 'Termos de Uso - StencilFlow',
@@ -150,7 +151,7 @@ export default function TermosPage() {
           </ul>
 
           <p className="mt-4">
-            Consulte nossa <a href="/reembolso" className="text-emerald-400 hover:underline">Política de Reembolso</a> para detalhes.
+            Consulte nossa <Link href="/reembolso" className="text-emerald-400 hover:underline">Política de Reembolso</Link> para detalhes.
           </p>
         </section>
 
