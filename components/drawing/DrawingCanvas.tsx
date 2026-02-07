@@ -245,8 +245,8 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       tool = 'pen',
       brushSize = 2,
       brushColor = '#000000',
-      stabilization = 35, // 35% de estabilização por padrão (bom equilíbrio)
-      streamline = 55,    // Aumentado para 55% para um traço mais "guiado" e profissional
+      stabilization = 50, // Atualizado para 50% conforme pedido
+      streamline = 50,    // Atualizado para 50% conforme pedido
       motionFiltering = 3,
       onStrokeStart,
       onStrokeEnd,
@@ -522,8 +522,8 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
         canvas.width = targetWidth;
         canvas.height = targetHeight;
-        canvas.style.width = `${width}px`;
-        canvas.style.height = `${height}px`;
+        // Removido style.width/height fixos para evitar o problema de "zoom"
+        // O canvas agora se ajustará ao container via CSS (w-full h-full)
       }
       
       // Otimização crucial: desynchronized: true reduz latência no iPad/Safari
