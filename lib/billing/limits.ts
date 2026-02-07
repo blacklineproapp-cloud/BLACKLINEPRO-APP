@@ -174,7 +174,25 @@ async function checkLimit(
 
     const plan = (user?.plan || 'free') as PlanType;
 
-    // 🆕 BLOQUEIO GLOBAL
+    // 🛡️ CORREÇÃO: Verificar cortesia PRIMEIRO. 
+    // Se o admin deu cortesia, ela ignora bloqueios de pagamento automáticos.
+    const isCourtesy = user?.admin_courtesy === true;
+    const courtesyExpiresAt = user?.admin_courtesy_expires_at ? new Date(user.admin_courtesy_expires_at) : null;
+
+    if (isCourtesy && courtesyExpiresAt) {
+      const now = new Date();
+      if (now < courtesyExpiresAt) {
+        // Cortesia válida! Ignora qualquer is_blocked de faturamento.
+        const limit = PLAN_LIMITS[plan][limitKey];
+        if (limit === -1) return { allowed: true, remaining: -1, limit: -1, usagePercentage: 0 };
+        // Continua para calcular uso normal mas permite o acesso
+      } else {
+        console.warn(`[Limits] 🔒 Usuário ${userId} (Cortesia) expirada em ${courtesyExpiresAt.toLocaleDateString('pt-BR')}`);
+        // Se a cortesia expirou, aí sim verificamos o bloqueio ou bloqueamos pelo fim da cortesia
+      }
+    }
+
+    // 🆕 BLOQUEIO GLOBAL (Só aplica se NÃO for cortesia ativa)
     if (user?.is_blocked === true) {
       console.warn(`[Limits] 🚫 Usuário ${userId} bloqueado. Motivo: ${user.blocked_reason}`);
       return {
@@ -184,26 +202,6 @@ async function checkLimit(
         usagePercentage: 100,
         warningMessage: 'Sua conta está limitada devido a pendências de pagamento ou análise de segurança. Por favor, regularize sua situação no painel financeiro.'
       };
-    }
-
-    // 🛡️ CORREÇÃO: Verificar cortesia APENAS pelo campo admin_courtesy_expires_at
-    // Usuários de boleto e pagamentos manuais NÃO devem ser bloqueados
-    const isCourtesy = user?.admin_courtesy === true;
-    const courtesyExpiresAt = user?.admin_courtesy_expires_at ? new Date(user.admin_courtesy_expires_at) : null;
-
-    if (isCourtesy && courtesyExpiresAt) {
-      const now = new Date();
-
-      if (now >= courtesyExpiresAt) {
-        console.warn(`[Limits] 🔒 Usuário ${userId} (Cortesia) bloqueado - cortesia expirou em ${courtesyExpiresAt.toLocaleDateString('pt-BR')}`);
-        return {
-          allowed: false,
-          remaining: 0,
-          limit: 0,
-          usagePercentage: 100,
-          warningMessage: `Seu período de cortesia expirou em ${courtesyExpiresAt.toLocaleDateString('pt-BR')}. Por favor, realize sua assinatura para continuar usando.`
-        };
-      }
     }
 
     const limit = PLAN_LIMITS[plan][limitKey];

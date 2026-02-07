@@ -30,7 +30,38 @@
     "all": "Todos",
     "new": "Nuevo",
     "rename": "Renombrar",
-    "of": "de"
+    "of": "de",
+    "features": {
+      "editor": "Editor Profesional",
+      "topographic": "Modo Topográfico",
+      "perfectLines": "Líneas Perfectas",
+      "intensity": "Control de Intensidad",
+      "size": "Ajuste de Tamaño",
+      "saveProjects": "Guardar Proyectos",
+      "downloadHQ": "Descarga Alta Calidad",
+      "everythingStarter": "Todo de Starter",
+      "aiGen": "Generación IA",
+      "upscale": "Mejora 4K",
+      "colorMatch": "Color Match",
+      "splitA4": "Dividir en A4",
+      "overlap": "Superposición IA",
+      "gridPreview": "Preview en Rejilla",
+      "exportMulti": "Exportación Múltiple",
+      "everythingPro": "Todo de Pro",
+      "prioritySupport": "Soporte Prioritario",
+      "idealStudios": "Ideal para Estudios",
+      "multiArtist": "Múltiples Artistas",
+      "usageReports": "Informes de Uso",
+      "advPreview": "Vista Previa Avanzada",
+      "fullTools": "Herramientas Completas",
+      "everythingStudio": "Todo de Studio",
+      "dedicatedSupport": "Soporte Dedicado",
+      "sla": "SLA Garantizado",
+      "onboarding": "Onboarding Personalizado",
+      "apiAccess": "Acceso via API",
+      "integration": "Integración Personalizada",
+      "exclusiveService": "Servicio Exclusivo"
+    }
   },
   "landing": {
     "hero": {
@@ -248,7 +279,7 @@
       "contact": "Contacto",
       "rights": "Todos los derechos reservados.",
       "dashboard": "Dashboard",
-      "security": "Pago seguro vía Stripe"
+      "security": "Pago seguro vía Asaas"
     }
   },
   "dashboard": {
@@ -376,6 +407,11 @@
       "enterprise": {
         "name": "Enterprise",
         "description": "Uso verdaderamente ilimitado",
+        "limit": "{count} generaciones/mes"
+      },
+      "legacy": {
+        "name": "Legacy",
+        "description": "Plan Especial",
         "limit": "{count} generaciones/mes"
       }
     },

@@ -240,6 +240,10 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
     // Stroke Stabilizer para suavização tipo Procreate
     const stabilizerRef = useRef(new StrokeStabilizer());
 
+    // Cache do fundo (Background + Stencil) para performance
+    const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const needsBgUpdateRef = useRef(true);
+
     // Velocidade do último movimento (para dynamic thinning)
     const lastVelocityRef = useRef(0);
     const lastPointTimeRef = useRef(0);
@@ -261,7 +265,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       // Caneta/Stylus OU dispositivo iOS: aumentar suavização
       // Em iPads, sempre usar mais suavização pois a tela é sensível
       if (usingStylus || isIOS) {
-        factor = Math.min(0.75, factor * 1.3);
+        factor = Math.min(0.85, factor * 1.5); // Aumentado para curvas ainda mais suaves
       }
 
       stabilizerRef.current.setSmoothing(factor);
@@ -292,24 +296,23 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       // Canetas capturam ~240 pontos/segundo vs ~60 do dedo
       if (usingStylus) {
         // Caneta: MÁXIMA suavização (independente de iOS)
-        // Apple Pencil, S-Pen, etc precisam de valores máximos
-        smoothingValue = 0.99;   // Máximo
-        streamlineValue = 0.98;  // Aumentado de 0.95 para 0.98
-        thinningValue = tool === 'eraser' ? 0 : 0.2;  // Reduzido de 0.25 para 0.2
+        smoothingValue = 0.995;
+        streamlineValue = 0.99;
+        thinningValue = tool === 'eraser' ? 0 : 0.15;
       } else if (isIOS) {
-        // iOS touch (dedo): valores altos mas menores que caneta
+        // iOS touch (dedo)
         smoothingValue = 0.99;
         streamlineValue = 0.95;
         thinningValue = tool === 'eraser' ? 0 : 0.3;
       } else if (isTouch) {
-        // Outros tablets/touch (Android, etc)
-        smoothingValue = 0.88;
-        streamlineValue = 0.82;
+        // Outros tablets/touch
+        smoothingValue = 0.92;
+        streamlineValue = 0.88;
         thinningValue = tool === 'eraser' ? 0 : 0.35;
       } else {
         // Desktop/mouse
-        smoothingValue = 0.7;
-        streamlineValue = 0.65;
+        smoothingValue = 0.75;
+        streamlineValue = 0.7;
         thinningValue = tool === 'eraser' ? 0 : 0.4;
       }
 
@@ -384,6 +387,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         originalImageRef.current = img;
+        needsBgUpdateRef.current = true;
         renderCanvas();
       };
       img.src = originalImage;
@@ -400,6 +404,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         stencilImageRef.current = img;
+        needsBgUpdateRef.current = true;
         renderCanvas();
 
         // Atualizar escala após imagem carregar
@@ -447,32 +452,53 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       const ctx = canvas.getContext('2d', { alpha: true });
       if (!ctx) return;
 
-      // Limpar
+      // ===== CAMADA 1 & 2 & 3: BACKGROUND CACHE =====
+      // Só desenhamos as imagens volumosas se houver mudança nelas ou na opacidade
+      if (needsBgUpdateRef.current || !offscreenCanvasRef.current) {
+        if (!offscreenCanvasRef.current) {
+          offscreenCanvasRef.current = document.createElement('canvas');
+        }
+        const bCanvas = offscreenCanvasRef.current;
+        bCanvas.width = canvas.width;
+        bCanvas.height = canvas.height;
+        const bCtx = bCanvas.getContext('2d');
+        if (bCtx) {
+          bCtx.clearRect(0, 0, bCanvas.width, bCanvas.height);
+          
+          // Fundo branco
+          bCtx.fillStyle = '#FFFFFF';
+          bCtx.fillRect(0, 0, bCanvas.width, bCanvas.height);
+
+          // Original (50%)
+          if (originalImageRef.current) {
+            bCtx.globalAlpha = 0.5;
+            bCtx.drawImage(originalImageRef.current, 0, 0, bCanvas.width, bCanvas.height);
+            bCtx.globalAlpha = 1;
+          }
+
+          // Stencil (multiply)
+          if (stencilImageRef.current) {
+            bCtx.globalCompositeOperation = 'multiply';
+            bCtx.globalAlpha = stencilOpacity / 100;
+            bCtx.drawImage(stencilImageRef.current, 0, 0, bCanvas.width, bCanvas.height);
+            bCtx.globalAlpha = 1;
+            bCtx.globalCompositeOperation = 'source-over';
+          }
+
+          // Legacy
+          if (!originalImageRef.current && !stencilImageRef.current && bgImageRef.current) {
+            bCtx.drawImage(bgImageRef.current, 0, 0, bCanvas.width, bCanvas.height);
+          }
+        }
+        needsBgUpdateRef.current = false;
+      }
+
+      // Limpar canvas principal
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // ===== CAMADA 1: Fundo branco =====
-      ctx.fillStyle = '#FFFFFF';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // ===== CAMADA 2: Imagem Original (referência - 50% opacidade) =====
-      if (originalImageRef.current) {
-        ctx.globalAlpha = 0.5; // 50% opacidade para ver bem
-        ctx.drawImage(originalImageRef.current, 0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1;
-      }
-
-      // ===== CAMADA 3: Stencil com blend multiply =====
-      if (stencilImageRef.current) {
-        ctx.globalCompositeOperation = 'multiply';
-        ctx.globalAlpha = stencilOpacity / 100;
-        ctx.drawImage(stencilImageRef.current, 0, 0, canvas.width, canvas.height);
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = 'source-over';
-      }
-
-      // Legacy: backgroundImage se não tiver camadas separadas
-      if (!originalImageRef.current && !stencilImageRef.current && bgImageRef.current) {
-        ctx.drawImage(bgImageRef.current, 0, 0, canvas.width, canvas.height);
+      
+      // Desenhar o cache (isso é MUITO mais rápido que desenhar as imagens a cada frame)
+      if (offscreenCanvasRef.current) {
+        ctx.drawImage(offscreenCanvasRef.current, 0, 0);
       }
 
       // ===== CAMADA 4: Strokes do usuário (em canvas temporário) =====
@@ -589,11 +615,12 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       const canvas = canvasRef.current;
       if (!canvas) return { x: 0, y: 0, pressure: 0.5 };
 
-      // Usar nativeEvent.offsetX/Y que já está relativo ao elemento
-      const offsetX = e.nativeEvent.offsetX;
-      const offsetY = e.nativeEvent.offsetY;
+      // Usar clientX/Y para maior precisão em telas de alta densidade (Retina)
+      const rect = canvas.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
 
-      // Aplicar escala para converter de coordenadas visuais para coordenadas do canvas
+      // Aplicar escala com floats de alta precisão
       let x = offsetX * scaleRef.current.x;
       let y = offsetY * scaleRef.current.y;
 
@@ -697,11 +724,10 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         const rect = canvas.getBoundingClientRect();
         const newPoints: Point[] = [];
 
-        // Para canetas/stylus e iOS: distância mínima entre pontos para evitar amontoamento
-        // A alta taxa de amostragem pode criar pontos muito próximos
+        // - A alta taxa de amostragem pode criar pontos muito próximos
         // que resultam em traços "serrilhados" ou "quadrados"
-        // Em iOS, SEMPRE usar distância maior pois a tela é muito sensível
-        const minDistance = isUsingStylusRef.current ? 5 : (isIOS ? 2 : 1); // Pixels mínimos entre pontos
+        // Em Stylus (Apple Pencil): manter distância MÍNIMA (0.1px) para não perder precisão
+        const minDistance = isUsingStylusRef.current ? 0.1 : (isIOS ? 1.5 : 0.5);
 
         coalescedEvents.forEach((evt: PointerEvent) => {
           // Para eventos coalesced, precisamos calcular offset manualmente

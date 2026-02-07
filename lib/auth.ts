@@ -6,15 +6,39 @@ import { maskEmail } from './logger';
 
 /**
  * Atualiza o timestamp de última atividade do usuário
+ * 🚀 OTIMIZADO: Apenas uma vez a cada 15 minutos para poupar o Supabase
  */
+const ACTIVITY_THROTTLE_MS = 15 * 60 * 1000; // 15 minutos
+const lastUpdateMap = new Map<string, number>();
+
 export async function updateUserActivity(userId: string) {
   try {
+    const now = Date.now();
+    const lastUpdate = lastUpdateMap.get(userId) || 0;
+
+    // Se já atualizou recentemente, ignorar
+    if (now - lastUpdate < ACTIVITY_THROTTLE_MS) {
+      return;
+    }
+
+    // Atualizar no DB
     const { error } = await supabaseAdmin
       .from('users')
       .update({ last_active_at: new Date().toISOString() })
       .eq('clerk_id', userId);
 
     if (error) throw error;
+
+    // Atualizar log local
+    lastUpdateMap.set(userId, now);
+    
+    // Limpeza periódica do Map (se crescer muito)
+    if (lastUpdateMap.size > 1000) {
+      const purgeThreshold = now - (ACTIVITY_THROTTLE_MS * 2);
+      for (const [id, time] of lastUpdateMap.entries()) {
+        if (time < purgeThreshold) lastUpdateMap.delete(id);
+      }
+    }
   } catch (err) {
     console.error('[Auth] Erro ao atualizar atividade do usuário:', err);
   }

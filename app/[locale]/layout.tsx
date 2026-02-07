@@ -36,6 +36,10 @@ export default async function LocaleLayout({
   // Carregar mensagens para o locale atual
   const messages = await getMessages();
 
+  // 🛡️ SANITIZAÇÃO: Garantir que apenas objetos puros sejam passados para o Client Provider
+  // O Next.js 15 é rigoroso com serialização RSC. Erros de tradução podem gerar objetos complexos.
+  const serializedMessages = JSON.parse(JSON.stringify(messages));
+
   return (
     <html lang={locale}>
       <head>

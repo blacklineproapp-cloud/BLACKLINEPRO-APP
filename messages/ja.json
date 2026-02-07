@@ -30,7 +30,38 @@
     "all": "すべて",
     "new": "新規",
     "rename": "名前を変更",
-    "of": "の"
+    "of": "の",
+    "features": {
+      "editor": "プロフェッショナルエディター",
+      "topographic": "地形モード",
+      "perfectLines": "パーフェクトライン",
+      "intensity": "強度制御",
+      "size": "サイズ調整",
+      "saveProjects": "プロジェクト保存",
+      "downloadHQ": "高品質ダウンロード",
+      "everythingStarter": "スターターの全機能",
+      "aiGen": "AI生成",
+      "upscale": "4Kアップスケーリング",
+      "colorMatch": "カラーマッチ",
+      "splitA4": "A4分割印刷",
+      "overlap": "AIオーバーラップ",
+      "gridPreview": "グリッドプレビュー",
+      "exportMulti": "一括エクスポート",
+      "everythingPro": "プロの全機能",
+      "prioritySupport": "優先サポート",
+      "idealStudios": "スタジオに最適",
+      "multiArtist": "複数アーティスト対応",
+      "usageReports": "利用レポート",
+      "advPreview": "高度なプレビュー",
+      "fullTools": "全ツール利用可能",
+      "everythingStudio": "スタジオの全機能",
+      "dedicatedSupport": "専用サポート",
+      "sla": "SLA保証",
+      "onboarding": "個別オンボーディング",
+      "apiAccess": "APIアクセス",
+      "integration": "カスタム統合",
+      "exclusiveService": "限定サービス"
+    }
   },
   "landing": {
     "hero": {
@@ -248,7 +279,7 @@
       "contact": "お問い合わせ",
       "rights": "All rights reserved.",
       "dashboard": "ダッシュボード",
-      "security": "Stripeによる安全な決済"
+      "security": "Asaasによる安全な決済"
     }
   },
   "dashboard": {
@@ -375,8 +406,13 @@
       },
       "enterprise": {
         "name": "Enterprise",
-        "description": "実質無制限の使用",
-        "limit": "月間 {count} 回生成可能"
+        "description": "完全に無制限の利用",
+        "limit": "月間{count}回生成"
+      },
+      "legacy": {
+        "name": "Legacy",
+        "description": "特別プラン",
+        "limit": "月間{count}回生成"
       }
     },
     "popular": "一番人気",

@@ -222,6 +222,7 @@ export class AsaasCustomerService {
    * Busca cliente do banco por asaas_customer_id
    * Verifica primeiro na tabela asaas_customers (nova migração)
    * Depois tenta customers (legado)
+   * 🚀 OTIMIZADO: Se não encontrar no banco, tenta buscar no Asaas e sinkronizar
    */
   static async getDbCustomerByAsaasId(asaasCustomerId: string): Promise<{ data: any, source: 'asaas_customers' | 'customers' } | null> {
     // 1. Tentar na tabela asaas_customers (nova migração)
@@ -229,7 +230,7 @@ export class AsaasCustomerService {
       .from('asaas_customers')
       .select('*')
       .eq('asaas_customer_id', asaasCustomerId)
-      .single();
+      .maybeSingle();
 
     if (asaasCustomer) {
       return { data: asaasCustomer, source: 'asaas_customers' };
@@ -240,10 +241,56 @@ export class AsaasCustomerService {
       .from('customers')
       .select('*')
       .eq('asaas_customer_id', asaasCustomerId)
-      .single();
+      .maybeSingle();
 
     if (legacyCustomer) {
       return { data: legacyCustomer, source: 'customers' };
+    }
+
+    // 3. 🔍 DESCOBERTA AUTOMÁTICA: Não está no banco, buscar no Asaas
+    console.log(`[AsaasCustomer] 🔍 Cliente ${asaasCustomerId} não encontrado no banco. Tentando descoberta via API...`);
+    
+    try {
+      const externalCustomer = await this.getById(asaasCustomerId);
+      
+      if (externalCustomer) {
+        console.log(`[AsaasCustomer] ✅ Cliente encontrado no Asaas: ${externalCustomer.email}`);
+        
+        // Tentar encontrar usuário no banco por externalReference (clerk_id) ou email
+        const searchId = externalCustomer.externalReference;
+        const searchEmail = externalCustomer.email;
+        
+        const { data: user } = await supabaseAdmin
+          .from('users')
+          .select('id')
+          .or(`clerk_id.eq."${searchId}",email.eq."${searchEmail}"`)
+          .maybeSingle();
+          
+        if (user) {
+          console.log(`[AsaasCustomer] 🔗 Linkando cliente ${asaasCustomerId} ao usuário ${user.id}`);
+          
+          // Criar registro na tabela customers (legado ou nova, aqui usaremos asaas_customers por ser mais moderna)
+          const { data: newEntry, error: insertError } = await supabaseAdmin
+            .from('asaas_customers')
+            .upsert({
+              user_id: user.id,
+              asaas_customer_id: asaasCustomerId,
+              email: externalCustomer.email,
+              name: externalCustomer.name,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id' })
+            .select()
+            .single();
+            
+          if (newEntry) {
+            return { data: newEntry, source: 'asaas_customers' };
+          }
+        } else {
+          console.warn(`[AsaasCustomer] ⚠️ Cliente ${asaasCustomerId} encontrado no Asaas mas nenhum usuário correspondente no banco (Ref: ${searchId}, Email: ${searchEmail})`);
+        }
+      }
+    } catch (apiError) {
+      console.error(`[AsaasCustomer] ❌ Erro na descoberta do cliente ${asaasCustomerId}:`, apiError);
     }
 
     return null;

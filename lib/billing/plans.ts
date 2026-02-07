@@ -351,39 +351,6 @@ export const PLANS: Record<PlanType, PlanInfo> = {
   }
 };
 
-// ============================================================================
-// PRICE IDs DO STRIPE
-// ============================================================================
-
-export interface StripePriceIds {
-  monthly: string;
-  quarterly: string;
-  semiannual: string;
-  yearly: string;
-}
-
-/**
- * Obtém os Price IDs do Stripe para um plano
- */
-export function getStripePriceIds(plan: PlanType): StripePriceIds {
-  const prefixMap: Record<PlanType, string> = {
-    free: 'FREE',
-    legacy: 'LEGACY',
-    starter: 'STARTER',
-    pro: 'PRO',
-    studio: 'STUDIO',
-    enterprise: 'ENTERPRISE'
-  };
-  const prefix = prefixMap[plan];
-
-  return {
-    monthly: process.env[`STRIPE_PRICE_${prefix}_MONTHLY`] || '',
-    quarterly: process.env[`STRIPE_PRICE_${prefix}_QUARTERLY`] || '',
-    semiannual: process.env[`STRIPE_PRICE_${prefix}_SEMIANNUAL`] || '',
-    yearly: process.env[`STRIPE_PRICE_${prefix}_YEARLY`] || ''
-  };
-}
-
 /**
  * Formata preço para exibição
  */

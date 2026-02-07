@@ -5,7 +5,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green?logo=supabase)](https://supabase.com/)
-[![Stripe](https://img.shields.io/badge/Stripe-Payments-purple?logo=stripe)](https://stripe.com/)
+[![Asaas](https://img.shields.io/badge/Asaas-Payments-blue)](https://asaas.com/)
 
 ---
 
@@ -17,7 +17,7 @@
 - npm ou pnpm
 - Conta Clerk (autenticação)
 - Conta Supabase (banco de dados)
-- Conta Stripe (pagamentos)
+- Conta Asaas (pagamentos)
 - API Key do Google Gemini
 
 ### 1. Clone e instale
@@ -47,10 +47,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
-# Stripe
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
+# Asaas
+ASAAS_API_KEY=...
+ASAAS_WEBHOOK_TOKEN=...
 
 # Google Gemini AI
 GEMINI_API_KEY=AIza...
@@ -91,8 +90,8 @@ stencilflow-nextjs/
 │   │   ├── admin/          # APIs admin
 │   │   ├── stencil/        # Geração de stencil
 │   │   ├── tools/          # Ferramentas de IA
-│   │   ├── payments/       # Stripe checkout
-│   │   └── webhooks/       # Clerk + Stripe webhooks
+│   │   ├── payments/       # Asaas checkout
+│   │   └── webhooks/       # Clerk + Asaas webhooks
 │   └── (legal)/            # Páginas públicas (termos, privacidade)
 ├── components/             # Componentes React (35 arquivos)
 ├── lib/                    # Bibliotecas core (47 arquivos)
@@ -101,7 +100,7 @@ stencilflow-nextjs/
 │   ├── gemini.ts           # Integração Gemini AI
 │   ├── queue.ts            # BullMQ job queues
 │   ├── cache-redis.ts      # Cache híbrido Redis
-│   └── stripe/             # Serviços Stripe
+│   └── asaas/              # Serviços Asaas
 ├── emails/                 # Templates de email (Resend)
 ├── scripts/                # Scripts de manutenção (99 arquivos)
 ├── migrations/             # SQL migrations (14 arquivos)
@@ -218,9 +217,8 @@ npm run dev              # Servidor de desenvolvimento
 npm run build            # Build de produção
 npm run lint             # ESLint
 
-# Stripe
-npm run stripe:listen    # Listener de webhooks local
-npm run billing:setup    # Criar produtos no Stripe
+# Asaas
+npm run asaas:setup      # Configuração inicial (se houver)
 
 # Emails
 npm run email:dev        # Preview de emails

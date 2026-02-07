@@ -30,7 +30,38 @@
     "all": "Tutti",
     "new": "Nuovo",
     "rename": "Rinomina",
-    "of": "di"
+    "of": "di",
+    "features": {
+      "editor": "Editor Professionale",
+      "topographic": "Modo Topografico",
+      "perfectLines": "Linee Perfette",
+      "intensity": "Controllo Intensità",
+      "size": "Regolazione Dimensioni",
+      "saveProjects": "Salva Progetti",
+      "downloadHQ": "Download Alta Qualità",
+      "everythingStarter": "Tutto dello Starter",
+      "aiGen": "Generazione IA",
+      "upscale": "Miglioramento 4K",
+      "colorMatch": "Color Match",
+      "splitA4": "Dividi in A4",
+      "overlap": "Sovrapposizione IA",
+      "gridPreview": "Anteprima Griglia",
+      "exportMulti": "Esportazione Multipla",
+      "everythingPro": "Tutto del Pro",
+      "prioritySupport": "Supporto Prioritario",
+      "idealStudios": "Ideale per Studi",
+      "multiArtist": "Più Artisti",
+      "usageReports": "Rapporti d'Uso",
+      "advPreview": "Anteprima Avanzata",
+      "fullTools": "Strumenti Completi",
+      "everythingStudio": "Tutto dello Studio",
+      "dedicatedSupport": "Supporto Dedicato",
+      "sla": "SLA Garantito",
+      "onboarding": "Onboarding Personalizzato",
+      "apiAccess": "Accesso via API",
+      "integration": "Integrazione Personalizzata",
+      "exclusiveService": "Servizio Esclusivo"
+    }
   },
   "landing": {
     "hero": {
@@ -248,7 +279,7 @@
       "contact": "Contatto",
       "rights": "Tutti i diritti riservati.",
       "dashboard": "Dashboard",
-      "security": "Pagamento sicuro via Stripe"
+      "security": "Pagamento sicuro via Asaas"
     }
   },
   "dashboard": {
@@ -376,6 +407,11 @@
       "enterprise": {
         "name": "Enterprise",
         "description": "Utilizzo veramente illimitato",
+        "limit": "{count} generazioni/mese"
+      },
+      "legacy": {
+        "name": "Legacy",
+        "description": "Piano Speciale",
         "limit": "{count} generazioni/mese"
       }
     },

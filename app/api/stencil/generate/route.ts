@@ -32,11 +32,8 @@ export async function POST(req: Request) {
     }
 
     // 1. Buscar usuário completo (precisa do UUID user.id)
-    const { data: userData } = await supabaseAdmin
-      .from('users')
-      .select('id, plan, is_paid, subscription_status, admin_courtesy, admin_courtesy_expires_at')
-      .eq('clerk_id', userId)
-      .single();
+    // 🚀 OTIMIZADO: Usar o helper getOrCreateUser que já tem retry e cache
+    const userData = await getOrCreateUser(userId);
 
     if (!userData) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });

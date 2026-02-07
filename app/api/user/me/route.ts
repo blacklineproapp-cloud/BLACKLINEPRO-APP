@@ -16,15 +16,11 @@ export async function GET() {
 
     console.log('[User API] Buscando dados para userId:', userId);
 
-    // Usar getOrCreateUser para garantir que o usuário existe
+    // 🚀 OTIMIZADO: Usar getOrCreateUser que tem retry interno e CACHE
     const user = await getOrCreateUser(userId);
     
-    // Atualizar timestamp de atividade (não bloqueante)
-    const { updateUserActivity } = await import('@/lib/auth');
-    updateUserActivity(userId).catch(console.error);
-
     if (!user) {
-      console.error('[User API] Usuário não encontrado após getOrCreateUser');
+      console.warn('[User API] Usuário não encontrado após getOrCreateUser');
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 

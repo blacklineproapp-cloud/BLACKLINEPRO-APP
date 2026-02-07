@@ -83,7 +83,8 @@ export async function POST(req: Request) {
           prompt,
           size,
           is_admin: userIsAdmin,
-          generated_image: tattooImage, // 🆕 Salvar imagem para galeria
+          // 🚀 OTIMIZAÇÃO: Não salvamos mais o base64 no banco de dados
+          // Isso evita o uso excessivo de disco. A imagem já é enviada no return.
         }
       });
     } catch (e) {

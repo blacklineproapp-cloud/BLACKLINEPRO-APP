@@ -30,7 +30,38 @@
     "all": "Tous",
     "new": "Nouveau",
     "rename": "Renommer",
-    "of": "de"
+    "of": "de",
+    "features": {
+      "editor": "Éditeur Professionnel",
+      "topographic": "Mode Topographique",
+      "perfectLines": "Lignes Parfaites",
+      "intensity": "Contrôle d'Intensité",
+      "size": "Ajustement de Taille",
+      "saveProjects": "Sauvegarder Projets",
+      "downloadHQ": "Téléchargement Haute Qualité",
+      "everythingStarter": "Tout du Starter",
+      "aiGen": "Génération IA",
+      "upscale": "Amélioration 4K",
+      "colorMatch": "Color Match",
+      "splitA4": "Diviser en A4",
+      "overlap": "Superposition IA",
+      "gridPreview": "Aperçu Grille",
+      "exportMulti": "Exportation Multiple",
+      "everythingPro": "Tout du Pro",
+      "prioritySupport": "Support Prioritaire",
+      "idealStudios": "Idéal pour Studios",
+      "multiArtist": "Plusieurs Artistes",
+      "usageReports": "Rapports d'Utilisation",
+      "advPreview": "Aperçu Avancé",
+      "fullTools": "Outils Complets",
+      "everythingStudio": "Tout du Studio",
+      "dedicatedSupport": "Support Dédié",
+      "sla": "SLA Garanti",
+      "onboarding": "Onboarding Personnalisé",
+      "apiAccess": "Accès via API",
+      "integration": "Intégration Personnalisée",
+      "exclusiveService": "Service Exclusif"
+    }
   },
   "landing": {
     "hero": {
@@ -248,7 +279,7 @@
       "contact": "Contact",
       "rights": "Tous droits réservés.",
       "dashboard": "Tableau de bord",
-      "security": "Paiement sécurisé via Stripe"
+      "security": "Paiement sécurisé via Asaas"
     }
   },
   "dashboard": {
@@ -376,6 +407,11 @@
       "enterprise": {
         "name": "Enterprise",
         "description": "Utilisation vraiment illimitée",
+        "limit": "{count} générations/mois"
+      },
+      "legacy": {
+        "name": "Legacy",
+        "description": "Plan Spécial",
         "limit": "{count} générations/mois"
       }
     },

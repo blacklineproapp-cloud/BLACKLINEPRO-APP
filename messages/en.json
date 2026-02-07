@@ -30,7 +30,40 @@
     "all": "All",
     "new": "New",
     "rename": "Rename",
-    "of": "of"
+    "of": "of",
+    "features": {
+      "editor": "Professional Editor",
+      "topographic": "Topographic Mode",
+      "perfectLines": "Perfect Lines",
+      "intensity": "Intensity Control",
+      "size": "Size Adjustment",
+      "saveProjects": "Save Projects",
+      "downloadHQ": "Download High Quality",
+      "everythingStarter": "Everything in Starter",
+      "aiGen": "AI Generation",
+      "upscale": "4K Upscale",
+      "colorMatch": "Color Match",
+      "splitA4": "Split into A4",
+      "overlap": "AI Overlap",
+      "gridPreview": "Grid Preview",
+      "exportMulti": "Multi Export",
+      "everythingPro": "Everything in Pro",
+      "prioritySupport": "Priority Support",
+      "idealStudios": "Ideal for Studios",
+      "multiArtist": "Multiple Artists",
+      "usageReports": "Usage Reports",
+      "advPreview": "Advanced Preview",
+      "fullTools": "Full Tools",
+      "everythingStudio": "Everything in Studio",
+      "dedicatedSupport": "Dedicated Support",
+      "sla": "Guaranteed SLA",
+      "onboarding": "Custom Onboarding",
+      "apiAccess": "API Access",
+      "integration": "Custom Integration",
+      "exclusiveService": "Exclusive Service",
+      "genLimitStudio": "Up to 680 generations/month",
+      "genLimitEnterprise": "Up to 1,400 generations/month"
+    }
   },
   "landing": {
     "hero": {
@@ -249,7 +282,7 @@
       "contact": "Contact",
       "rights": "All rights reserved.",
       "dashboard": "Dashboard",
-      "security": "Secure payment via Stripe"
+      "security": "Secure payment via Asaas"
     }
   },
   "dashboard": {

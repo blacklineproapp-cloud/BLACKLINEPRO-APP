@@ -48,7 +48,6 @@
     "require-in-the-middle": "^8.0.1",
     "resend": "^6.6.0",
     "sharp": "^0.34.5",
-    "stripe": "^20.3.0",
     "svix": "^1.21.0",
     "zod": "^4.3.5"
   },

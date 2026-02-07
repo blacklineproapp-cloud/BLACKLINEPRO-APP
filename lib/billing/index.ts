@@ -8,7 +8,6 @@ export {
   BILLING_CYCLES,
   PLAN_PRICING,
   PLANS,
-  getStripePriceIds,
   formatPrice,
   getMonthlyEquivalent,
   hasFeature
