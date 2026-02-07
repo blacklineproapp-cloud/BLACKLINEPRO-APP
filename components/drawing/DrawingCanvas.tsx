@@ -223,7 +223,13 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
 
     // Estado do desenho
     const [isDrawing, setIsDrawing] = useState(false);
-    const [currentPoints, setCurrentPoints] = useState<Point[]>([]);
+    
+    // USAR REF para os pontos atuais: Essencial para performance no iPad
+    // Evita 240 re-renderizações por segundo da Apple Pencil
+    const currentPointsRef = useRef<Point[]>([]);
+    
+    // Estado apenas para trigger de renderização de preview (quando necessário)
+    const [, forceUpdate] = useState({});
 
     // Estado para ferramenta de linha
     const [lineStart, setLineStart] = useState<Point | null>(null);
@@ -239,10 +245,6 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
 
     // Stroke Stabilizer para suavização tipo Procreate
     const stabilizerRef = useRef(new StrokeStabilizer());
-
-    // Cache do fundo (Background + Stencil) para performance
-    const offscreenCanvasRef = useRef<HTMLCanvasElement | null>(null);
-    const needsBgUpdateRef = useRef(true);
 
     // Velocidade do último movimento (para dynamic thinning)
     const lastVelocityRef = useRef(0);
@@ -265,7 +267,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       // Caneta/Stylus OU dispositivo iOS: aumentar suavização
       // Em iPads, sempre usar mais suavização pois a tela é sensível
       if (usingStylus || isIOS) {
-        factor = Math.min(0.85, factor * 1.5); // Aumentado para curvas ainda mais suaves
+        factor = Math.min(0.75, factor * 1.3);
       }
 
       stabilizerRef.current.setSmoothing(factor);
@@ -296,23 +298,24 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       // Canetas capturam ~240 pontos/segundo vs ~60 do dedo
       if (usingStylus) {
         // Caneta: MÁXIMA suavização (independente de iOS)
-        smoothingValue = 0.995;
-        streamlineValue = 0.99;
-        thinningValue = tool === 'eraser' ? 0 : 0.15;
+        // Apple Pencil, S-Pen, etc precisam de valores máximos
+        smoothingValue = 0.99;   // Máximo
+        streamlineValue = 0.98;  // Aumentado de 0.95 para 0.98
+        thinningValue = tool === 'eraser' ? 0 : 0.2;  // Reduzido de 0.25 para 0.2
       } else if (isIOS) {
-        // iOS touch (dedo)
+        // iOS touch (dedo): valores altos mas menores que caneta
         smoothingValue = 0.99;
         streamlineValue = 0.95;
         thinningValue = tool === 'eraser' ? 0 : 0.3;
       } else if (isTouch) {
-        // Outros tablets/touch
-        smoothingValue = 0.92;
-        streamlineValue = 0.88;
+        // Outros tablets/touch (Android, etc)
+        smoothingValue = 0.88;
+        streamlineValue = 0.82;
         thinningValue = tool === 'eraser' ? 0 : 0.35;
       } else {
         // Desktop/mouse
-        smoothingValue = 0.75;
-        streamlineValue = 0.7;
+        smoothingValue = 0.7;
+        streamlineValue = 0.65;
         thinningValue = tool === 'eraser' ? 0 : 0.4;
       }
 
@@ -387,7 +390,6 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         originalImageRef.current = img;
-        needsBgUpdateRef.current = true;
         renderCanvas();
       };
       img.src = originalImage;
@@ -404,7 +406,6 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         stencilImageRef.current = img;
-        needsBgUpdateRef.current = true;
         renderCanvas();
 
         // Atualizar escala após imagem carregar
@@ -449,95 +450,75 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      const ctx = canvas.getContext('2d', { alpha: true });
+      // Suporte a HIGH DPI (Retina)
+      const ratio = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      
+      // Otimização crucial: desynchronized: true reduz latência no iPad/Safari
+      const ctx = canvas.getContext('2d', { 
+        alpha: true,
+        desynchronized: isIOS // Ativar apenas em iOS onde o jitter é reportado
+      });
       if (!ctx) return;
 
-      // ===== CAMADA 1 & 2 & 3: BACKGROUND CACHE =====
-      // Só desenhamos as imagens volumosas se houver mudança nelas ou na opacidade
-      if (needsBgUpdateRef.current || !offscreenCanvasRef.current) {
-        if (!offscreenCanvasRef.current) {
-          offscreenCanvasRef.current = document.createElement('canvas');
-        }
-        const bCanvas = offscreenCanvasRef.current;
-        bCanvas.width = canvas.width;
-        bCanvas.height = canvas.height;
-        const bCtx = bCanvas.getContext('2d');
-        if (bCtx) {
-          bCtx.clearRect(0, 0, bCanvas.width, bCanvas.height);
-          
-          // Fundo branco
-          bCtx.fillStyle = '#FFFFFF';
-          bCtx.fillRect(0, 0, bCanvas.width, bCanvas.height);
-
-          // Original (50%)
-          if (originalImageRef.current) {
-            bCtx.globalAlpha = 0.5;
-            bCtx.drawImage(originalImageRef.current, 0, 0, bCanvas.width, bCanvas.height);
-            bCtx.globalAlpha = 1;
-          }
-
-          // Stencil (multiply)
-          if (stencilImageRef.current) {
-            bCtx.globalCompositeOperation = 'multiply';
-            bCtx.globalAlpha = stencilOpacity / 100;
-            bCtx.drawImage(stencilImageRef.current, 0, 0, bCanvas.width, bCanvas.height);
-            bCtx.globalAlpha = 1;
-            bCtx.globalCompositeOperation = 'source-over';
-          }
-
-          // Legacy
-          if (!originalImageRef.current && !stencilImageRef.current && bgImageRef.current) {
-            bCtx.drawImage(bgImageRef.current, 0, 0, bCanvas.width, bCanvas.height);
-          }
-        }
-        needsBgUpdateRef.current = false;
+      // Ajustar escala interna do canvas se necessário
+      if (canvas.width !== width * ratio) {
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+        ctx.scale(ratio, ratio);
       }
 
-      // Limpar canvas principal
+      // Limpar
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Desenhar o cache (isso é MUITO mais rápido que desenhar as imagens a cada frame)
-      if (offscreenCanvasRef.current) {
-        ctx.drawImage(offscreenCanvasRef.current, 0, 0);
+
+      // ===== CAMADA 1: Fundo branco =====
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // ===== CAMADA 2: Imagem Original (referência - 50% opacidade) =====
+      if (originalImageRef.current) {
+        ctx.globalAlpha = 0.5;
+        ctx.drawImage(originalImageRef.current, 0, 0, width, height);
+        ctx.globalAlpha = 1;
       }
 
-      // ===== CAMADA 4: Strokes do usuário (em canvas temporário) =====
-      // Usar canvas separado para que destination-out funcione corretamente
-      // A borracha "apaga" os traços do usuário, revelando o stencil abaixo
+      // ===== CAMADA 3: Stencil com blend multiply =====
+      if (stencilImageRef.current) {
+        ctx.globalCompositeOperation = 'multiply';
+        ctx.globalAlpha = stencilOpacity / 100;
+        ctx.drawImage(stencilImageRef.current, 0, 0, width, height);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      // Legacy fallback
+      if (!originalImageRef.current && !stencilImageRef.current && bgImageRef.current) {
+        ctx.drawImage(bgImageRef.current, 0, 0, width, height);
+      }
+
+      // ===== CAMADA 4: Strokes salvos =====
       if (strokes.length > 0) {
+        // Renderizar em buffer para suporte a eraser (destination-out)
         const drawingCanvas = document.createElement('canvas');
         drawingCanvas.width = canvas.width;
         drawingCanvas.height = canvas.height;
-        const drawCtx = drawingCanvas.getContext('2d', { alpha: true });
-
-        if (drawCtx) {
-          // Desenhar todos os strokes no canvas temporário
-          strokes.forEach((stroke) => {
-            if (!stroke.path) return;
-
-            const path = new Path2D(stroke.path);
-
-            if (stroke.tool === 'eraser') {
-              // Borracha: usar destination-out para "recortar" os desenhos
-              drawCtx.globalCompositeOperation = 'destination-out';
-            } else {
-              drawCtx.globalCompositeOperation = 'source-over';
-            }
-
-            drawCtx.fillStyle = stroke.tool === 'eraser' ? 'rgba(0,0,0,1)' : stroke.color;
-            drawCtx.fill(path);
+        const dCtx = drawingCanvas.getContext('2d');
+        if (dCtx) {
+          dCtx.scale(ratio, ratio);
+          strokes.forEach((s: Stroke) => {
+            if (!s.path) return;
+            const path = new Path2D(s.path);
+            dCtx.globalCompositeOperation = s.tool === 'eraser' ? 'destination-out' : 'source-over';
+            dCtx.fillStyle = s.tool === 'eraser' ? '#000' : s.color;
+            dCtx.fill(path);
           });
-
-          // Compositar o canvas de desenhos sobre o canvas principal
-          ctx.drawImage(drawingCanvas, 0, 0);
+          ctx.drawImage(drawingCanvas, 0, 0, width, height);
         }
       }
 
       ctx.globalCompositeOperation = 'source-over';
 
-      // ===== CAMADA 5: Stroke atual (preview) =====
+      // ===== CAMADA 5: Preview (Stroke atual) =====
       if (tool === 'line' && lineStart && lineEnd) {
-        // Preview de linha reta
         ctx.beginPath();
         ctx.moveTo(lineStart.x, lineStart.y);
         ctx.lineTo(lineEnd.x, lineEnd.y);
@@ -545,65 +526,32 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         ctx.lineWidth = brushSize;
         ctx.lineCap = 'round';
         ctx.stroke();
-      } else if (currentPoints.length >= 2) {
-        // IMPORTANTE: Aplicar interpolação Catmull-Rom DURANTE o preview para traços suaves
-        // Esta é a técnica que o Procreate usa para eliminar o efeito "quadrado/pixelado"
-        let pointsToRender = currentPoints;
-
-        // Aplicar interpolação assim que tivermos pontos suficientes
-        // Mínimo reduzido para 3 pontos para começar suavização mais cedo
-        if (currentPoints.length >= 3) {
-          // Interpolação em tempo real
-          // PRIORIZAR CANETA sobre iOS para máxima interpolação
-          let segments: number;
-          let smoothing: number;
-
-          if (isUsingStylusRef.current) {
-            // Caneta: MÁXIMA interpolação (independente de iOS)
-            // Apple Pencil precisa de mais segmentos que dedo
-            segments = 8;   // Aumentado de 5 para 8
-            smoothing = 8;  // Aumentado de 5 para 8
-          } else if (isIOS) {
-            // iOS touch (dedo): valores atuais funcionam bem
-            segments = 6;
-            smoothing = 6;
-          } else if (isTouch) {
-            segments = 4;
-            smoothing = 4;
-          } else {
-            segments = 2;
-            smoothing = 3;
+      } else {
+        const currentPoints = currentPointsRef.current;
+        if (currentPoints.length >= 2) {
+          // Interpolação para suavidade máxima (Procreate quality)
+          let pointsToRender = currentPoints;
+          if (currentPoints.length >= 3) {
+            const segments = isUsingStylusRef.current ? 12 : (isIOS ? 8 : 4);
+            const smoothing = isUsingStylusRef.current ? 10 : (isIOS ? 8 : 4);
+            pointsToRender = processPointsForProcreateQuality(currentPoints, {
+              interpolationSegments: segments,
+              pressureSmoothing: smoothing,
+            });
           }
 
-          pointsToRender = processPointsForProcreateQuality(currentPoints, {
-            interpolationSegments: segments,
-            pressureSmoothing: smoothing,
-          });
-        }
+          const inputPoints = pointsToRender.map((p: Point) => [p.x, p.y, p.pressure]);
+          const outlinePoints = getStroke(inputPoints, getStrokeOptions(true));
 
-        const inputPoints = pointsToRender.map(p => [p.x, p.y, p.pressure]);
-        const options = getStrokeOptions(true); // isPreview = true (sem tapering final)
-
-        const outlinePoints = getStroke(inputPoints, options);
-
-        if (outlinePoints.length > 0) {
-          const pathData = getSvgPathFromStroke(outlinePoints);
-          const path = new Path2D(pathData);
-
-          if (tool === 'eraser') {
-            // Preview da borracha: mostrar área que será apagada
-            // Usar vermelho semi-transparente para indicar área de apagamento
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.fillStyle = 'rgba(255, 100, 100, 0.5)';
-            ctx.fill(path);
-          } else {
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.fillStyle = brushColor;
+          if (outlinePoints.length > 0) {
+            const pathData = getSvgPathFromStroke(outlinePoints);
+            const path = new Path2D(pathData);
+            ctx.fillStyle = tool === 'eraser' ? 'rgba(255, 100, 100, 0.4)' : brushColor;
             ctx.fill(path);
           }
         }
       }
-    }, [strokes, currentPoints, brushColor, tool, stencilOpacity, getStrokeOptions, lineStart, lineEnd, brushSize, isTouch, isIOS]);
+    }, [strokes, brushColor, tool, stencilOpacity, getStrokeOptions, lineStart, lineEnd, brushSize, isTouch, isIOS, width, height]);
 
     // Re-renderizar quando strokes ou currentPoints mudam
     useEffect(() => {
@@ -615,12 +563,11 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       const canvas = canvasRef.current;
       if (!canvas) return { x: 0, y: 0, pressure: 0.5 };
 
-      // Usar clientX/Y para maior precisão em telas de alta densidade (Retina)
-      const rect = canvas.getBoundingClientRect();
-      const offsetX = e.clientX - rect.left;
-      const offsetY = e.clientY - rect.top;
+      // Usar nativeEvent.offsetX/Y que já está relativo ao elemento
+      const offsetX = e.nativeEvent.offsetX;
+      const offsetY = e.nativeEvent.offsetY;
 
-      // Aplicar escala com floats de alta precisão
+      // Aplicar escala para converter de coordenadas visuais para coordenadas do canvas
       let x = offsetX * scaleRef.current.x;
       let y = offsetY * scaleRef.current.y;
 
@@ -689,13 +636,12 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       const point = getCanvasPoint(e, false);
 
       setIsDrawing(true);
+      currentPointsRef.current = [point];
 
       // Para ferramenta de linha, salvar ponto inicial
       if (tool === 'line') {
         setLineStart(point);
         setLineEnd(point);
-      } else {
-        setCurrentPoints([point]);
       }
 
       onStrokeStart?.();
@@ -724,61 +670,47 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         const rect = canvas.getBoundingClientRect();
         const newPoints: Point[] = [];
 
-        // - A alta taxa de amostragem pode criar pontos muito próximos
-        // que resultam em traços "serrilhados" ou "quadrados"
-        // Em Stylus (Apple Pencil): manter distância MÍNIMA (0.1px) para não perder precisão
-        const minDistance = isUsingStylusRef.current ? 0.1 : (isIOS ? 1.5 : 0.5);
+        // Redução drástica de minDistance de 5px para 0.2px para capturar precisão Apple Pencil
+        const minDistance = isUsingStylusRef.current ? 0.2 : (isIOS ? 0.5 : 1);
 
         coalescedEvents.forEach((evt: PointerEvent) => {
-          // Para eventos coalesced, precisamos calcular offset manualmente
           const offsetX = evt.clientX - rect.left;
           const offsetY = evt.clientY - rect.top;
 
           let x = offsetX * scaleRef.current.x;
           let y = offsetY * scaleRef.current.y;
 
-          // Verificar distância mínima do último ponto
           const lastPoint = newPoints.length > 0
             ? newPoints[newPoints.length - 1]
-            : currentPoints[currentPoints.length - 1];
+            : currentPointsRef.current[currentPointsRef.current.length - 1];
 
           if (lastPoint) {
             const dx = x - lastPoint.x;
             const dy = y - lastPoint.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-
-            // Pular pontos muito próximos (especialmente para stylus)
-            if (distance < minDistance) {
-              return; // Skip this point
-            }
+            if (distance < minDistance) return;
           }
 
-          // Aplicar stabilizer
           const stabilized = stabilizerRef.current.stabilize(x, y);
           x = stabilized.x;
           y = stabilized.y;
 
-          // Calcular velocidade e pressão
           const now = performance.now();
-          const dt = now - lastPointTimeRef.current;
+          const dt = (now - lastPointTimeRef.current) || 16;
           lastPointTimeRef.current = now;
 
           let pressure = evt.pressure;
           if (pressure === 0 || pressure === undefined || evt.pointerType === 'mouse') {
-            // Simular pressão baseado na velocidade
             const prevPoint = newPoints.length > 0
               ? newPoints[newPoints.length - 1]
-              : currentPoints[currentPoints.length - 1];
+              : currentPointsRef.current[currentPointsRef.current.length - 1];
 
             if (prevPoint) {
               const dx = x - prevPoint.x;
               const dy = y - prevPoint.y;
-              const distance = Math.sqrt(dx * dx + dy * dy);
-              const velocity = dt > 0 ? distance / dt : 0;
-
+              const velocity = Math.sqrt(dx * dx + dy * dy) / dt;
               lastVelocityRef.current = lastVelocityRef.current * 0.7 + velocity * 0.3;
-              const normalizedVelocity = Math.min(lastVelocityRef.current / 2, 1);
-              pressure = 0.7 - normalizedVelocity * 0.4;
+              pressure = 0.7 - Math.min(lastVelocityRef.current / 2, 1) * 0.4;
             } else {
               pressure = 0.5;
             }
@@ -786,20 +718,19 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
             pressure = advancedPressureCurve(pressure);
           }
 
-          newPoints.push({
-            x,
-            y,
-            pressure: Math.max(0.1, Math.min(1, pressure)),
-          });
+          newPoints.push({ x, y, pressure: Math.max(0.1, Math.min(1, pressure)) });
         });
 
-        setCurrentPoints(prev => [...prev, ...newPoints]);
+        if (newPoints.length > 0) {
+          currentPointsRef.current = [...currentPointsRef.current, ...newPoints];
+          forceUpdate({}); // Trigger renderização via RAF/effect de forma controlada
+        }
       } else {
-        // Fallback: usar evento principal
         const point = getCanvasPoint(e);
-        setCurrentPoints(prev => [...prev, point]);
+        currentPointsRef.current = [...currentPointsRef.current, point];
+        forceUpdate({});
       }
-    }, [isDrawing, disabled, getCanvasPoint, currentPoints, tool, isIOS]);
+    }, [isDrawing, disabled, getCanvasPoint, tool, isIOS]);
 
     const handlePointerUp = useCallback((e: React.PointerEvent) => {
       if (!isDrawing) return;
@@ -862,29 +793,22 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       }
 
       // Finalizar stroke se tiver pontos suficientes
+      const currentPoints = currentPointsRef.current;
       if (currentPoints.length >= 2) {
-        // Aplicar processamento completo estilo Procreate:
-        // 1. Suavização de pressão (elimina variações bruscas)
-        // 2. Interpolação Catmull-Rom (cria curvas suaves entre pontos)
-        // PRIORIZAR CANETA sobre iOS para máxima interpolação
+        // Aplicar processamento completo estilo Procreate
         let interpolationSegments: number;
         let pressureSmoothing: number;
 
         if (isUsingStylusRef.current) {
-          // Caneta: MÁXIMA interpolação (independente de iOS)
-          // Apple Pencil precisa de mais segmentos que dedo
-          interpolationSegments = 14;  // Aumentado de 8 para 14
-          pressureSmoothing = 10;      // Aumentado de 7 para 10
+          interpolationSegments = 16;  // Aumentado p/ máxima suavidade final
+          pressureSmoothing = 12;
         } else if (isIOS) {
-          // iOS touch (dedo): valores atuais funcionam bem
           interpolationSegments = 12;
           pressureSmoothing = 9;
         } else if (isTouch) {
-          // Outros tablets/touch
           interpolationSegments = 8;
           pressureSmoothing = 7;
         } else {
-          // Desktop/mouse
           interpolationSegments = 4;
           pressureSmoothing = 5;
         }
@@ -894,8 +818,8 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
           pressureSmoothing,
         });
 
-        const inputPoints = processedPoints.map(p => [p.x, p.y, p.pressure]);
-        const options = getStrokeOptions(false); // isPreview = false para tapering final
+        const inputPoints = processedPoints.map((p: Point) => [p.x, p.y, p.pressure]);
+        const options = getStrokeOptions(false);
 
         const outlinePoints = getStroke(inputPoints, options);
 
@@ -904,7 +828,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
 
           const newStroke: Stroke = {
             id: generateStrokeId(),
-            points: currentPoints, // Manter pontos originais para histórico
+            points: [...currentPoints],
             path: pathData,
             color: tool === 'eraser' ? '#FFFFFF' : brushColor,
             size: brushSize,
@@ -915,7 +839,6 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
           const newStrokes = [...strokes, newStroke];
           setStrokes(newStrokes);
 
-          // Atualizar histórico
           historyRef.current = [
             ...historyRef.current.slice(0, historyIndexRef.current + 1),
             newStrokes,
@@ -930,8 +853,8 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       // Resetar estado
       stabilizerRef.current.reset();
       setIsDrawing(false);
-      setCurrentPoints([]);
-    }, [isDrawing, currentPoints, strokes, tool, brushColor, brushSize, getStrokeOptions, onStrokeEnd, onStrokesChange, lineStart, lineEnd, isIOS, isTouch]);
+      currentPointsRef.current = [];
+    }, [isDrawing, strokes, tool, brushColor, brushSize, getStrokeOptions, onStrokeEnd, onStrokesChange, lineStart, lineEnd, isIOS, isTouch]);
 
     const handlePointerLeave = useCallback((e: React.PointerEvent) => {
       if (isDrawing) {
@@ -964,7 +887,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
 
     const clear = useCallback(() => {
       setStrokes([]);
-      setCurrentPoints([]);
+      currentPointsRef.current = [];
       setLineStart(null);
       setLineEnd(null);
       historyRef.current = [[]];
