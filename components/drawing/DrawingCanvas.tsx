@@ -80,52 +80,73 @@ class StrokeStabilizer {
   private initialized: boolean = false;
 
   // Parâmetros para Double Exponential Smoothing
-  // alpha: peso da posição atual (suavidade)
-  // beta: peso da tendência (antecipação)
   private alpha: number = 0.5;
   private beta: number = 0.5;
 
+  // Filtragem de movimento (Média Móvel) para remover tremores iniciais
+  private filterBuffer: { x: number; y: number }[] = [];
+  private maxFilterSize: number = 3; // Ajustável conforme o prop 'motionFiltering'
+
   reset() {
     this.initialized = false;
+    this.filterBuffer = [];
   }
 
-  setSmoothing(factor: number) {
-    // Escalonar factor (0-1) para alpha e beta
-    // Fatores Procreate optimizados
-    this.alpha = 1 - Math.pow(factor, 0.5) * 0.9;
-    this.beta = 1 - Math.pow(factor, 0.3) * 0.8;
+  setSmoothing(factor: number, filterSize: number = 3) {
+    // alpha: peso da posição (suavidade)
+    // beta: peso da tendência (antecipação - streamline)
+    this.alpha = 1 - Math.pow(factor, 0.5) * 0.85;
+    this.beta = 1 - Math.pow(factor, 0.3) * 0.75;
+    this.maxFilterSize = Math.max(1, Math.floor(filterSize));
   }
 
-  stabilize(targetX: number, targetY: number): { x: number; y: number } {
+  /**
+   * Estabiliza o movimento com suavidade adaptativa à velocidade
+   * @param targetX Coordenada X bruta
+   * @param targetY Coordenada Y bruta
+   * @param velocity Velocidade atual do movimento (opcional)
+   */
+  stabilize(targetX: number, targetY: number, velocity: number = 1): { x: number; y: number } {
+    // 1. Filtragem de Movimento (Média Móvel simples)
+    this.filterBuffer.push({ x: targetX, y: targetY });
+    if (this.filterBuffer.length > this.maxFilterSize) {
+      this.filterBuffer.shift();
+    }
+
+    const filtered = this.filterBuffer.reduce(
+      (acc, p) => ({ x: acc.x + p.x, y: acc.y + p.y }),
+      { x: 0, y: 0 }
+    );
+    const avgX = filtered.x / this.filterBuffer.length;
+    const avgY = filtered.y / this.filterBuffer.length;
+
     if (!this.initialized) {
-      this.x = targetX;
-      this.y = targetY;
+      this.x = avgX;
+      this.y = avgY;
       this.dx = 0;
       this.dy = 0;
       this.initialized = true;
-      return { x: targetX, y: targetY };
+      return { x: avgX, y: avgY };
     }
+
+    // 2. INVERTER A LÓGICA (Procreate Insight):
+    // Movimento lento (velocity baixa) = Alpha ALTO (mais precisão, menos suavização)
+    // Movimento rápido (velocity alta) = Alpha BAIXO (mais estabilização)
+    const speedFactor = Math.min(velocity / 2, 1);
+    const adaptiveAlpha = 0.9 - (speedFactor * (0.9 - this.alpha));
 
     const prevX = this.x;
     const prevY = this.y;
 
     // Double Exponential Smoothing (Holt-Winters)
-    // 1. Level estimation
-    this.x = this.alpha * targetX + (1 - this.alpha) * (this.x + this.dx);
-    this.y = this.alpha * targetY + (1 - this.alpha) * (this.y + this.dy);
+    // Level
+    this.x = adaptiveAlpha * avgX + (1 - adaptiveAlpha) * (this.x + this.dx);
+    this.y = adaptiveAlpha * avgY + (1 - adaptiveAlpha) * (this.y + this.dy);
 
-    // 2. Trend estimation
+    // Trend (Streamline)
     this.dx = this.beta * (this.x - prevX) + (1 - this.beta) * this.dx;
     this.dy = this.beta * (this.y - prevY) + (1 - this.beta) * this.dy;
 
-    return {
-      x: this.x,
-      y: this.y,
-    };
-  }
-
-  // Acessores para depuração se necessário
-  get lastTarget() {
     return { x: this.x, y: this.y };
   }
 }
@@ -152,6 +173,8 @@ interface DrawingCanvasProps {
   brushSize?: number;
   brushColor?: string;
   stabilization?: number;      // Nível de estabilização 0-100 (0=off, 100=máximo)
+  streamline?: number;         // Força da tendência do traço 0-100 (Procreate)
+  motionFiltering?: number;    // Filtragem de micro-tremores (quantidade de pontos)
   onStrokeStart?: () => void;
   onStrokeEnd?: (stroke: Stroke) => void;
   onStrokesChange?: (strokes: Stroke[]) => void;
@@ -217,6 +240,8 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       brushSize = 2,
       brushColor = '#000000',
       stabilization = 35, // 35% de estabilização por padrão (bom equilíbrio)
+      streamline = 40,    // Valor ideal para "Technical Pen"
+      motionFiltering = 3,
       onStrokeStart,
       onStrokeEnd,
       onStrokesChange,
@@ -246,6 +271,12 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
 
     // Função forceUpdate com throttle via requestAnimationFrame
     const throttledForceUpdate = useCallback(() => {
+      // Apple Pencil: ZERO throttle, renderizar IMEDIATAMENTE para máxima fluidez
+      if (isUsingStylusRef.current) {
+        forceUpdate({});
+        return;
+      }
+
       if (rafIdRef.current) return;
       rafIdRef.current = requestAnimationFrame(() => {
         forceUpdate({});
@@ -290,17 +321,18 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
 
     // Função para atualizar a estabilização sincronamente
     const updateStabilization = useCallback((usingStylus: boolean) => {
-      // Base: converter de 0-100 para 0-0.6
-      let factor = (stabilization / 100) * 0.6;
+      // Base: converter de 0-100 para 0-0.7
+      let stabFactor = (stabilization / 100) * 0.7;
+      let streamFactor = (streamline / 100) * 0.7;
 
       // Caneta/Stylus OU dispositivo iOS: aumentar suavização
-      // Em iPads, sempre usar mais suavização pois a tela é sensível
       if (usingStylus || isIOS) {
-        factor = Math.min(0.75, factor * 1.3);
+        stabFactor = Math.min(0.85, stabFactor * 1.2);
+        streamFactor = Math.min(0.85, streamFactor * 1.2);
       }
 
-      stabilizerRef.current.setSmoothing(factor);
-    }, [stabilization, isIOS]);
+      stabilizerRef.current.setSmoothing(stabFactor, motionFiltering);
+    }, [stabilization, streamline, motionFiltering, isIOS]);
 
     // Atualizar fator de estabilização quando prop muda
     useEffect(() => {
@@ -326,26 +358,22 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       // PRIORIZAR CANETA sobre iOS para máxima suavização
       // Canetas capturam ~240 pontos/segundo vs ~60 do dedo
       if (usingStylus) {
-        // Caneta: MÁXIMA suavização (independente de iOS)
-        // Apple Pencil, S-Pen, etc precisam de valores máximos
-        smoothingValue = 0.99;   // Máximo
-        streamlineValue = 0.98;  // Aumentado de 0.95 para 0.98
-        thinningValue = tool === 'eraser' ? 0 : 0.2;  // Reduzido de 0.25 para 0.2
+        // Caneta: "Technical Pen" - Alta precisão, streamLine alto
+        smoothingValue = 0.98;
+        streamlineValue = 0.95 + (streamline / 100) * 0.04; // 0.95 - 0.99
+        thinningValue = tool === 'eraser' ? 0 : 0.15; // Linha constante mas com leve resposta
       } else if (isIOS) {
-        // iOS touch (dedo): valores altos mas menores que caneta
-        smoothingValue = 0.99;
-        streamlineValue = 0.95;
-        thinningValue = tool === 'eraser' ? 0 : 0.3;
+        smoothingValue = 0.95;
+        streamlineValue = 0.90 + (streamline / 100) * 0.08;
+        thinningValue = tool === 'eraser' ? 0 : 0.25;
       } else if (isTouch) {
-        // Outros tablets/touch (Android, etc)
-        smoothingValue = 0.88;
-        streamlineValue = 0.82;
-        thinningValue = tool === 'eraser' ? 0 : 0.35;
+        smoothingValue = 0.85;
+        streamlineValue = 0.80 + (streamline / 100) * 0.10;
+        thinningValue = tool === 'eraser' ? 0 : 0.3;
       } else {
-        // Desktop/mouse
-        smoothingValue = 0.7;
-        streamlineValue = 0.65;
-        thinningValue = tool === 'eraser' ? 0 : 0.4;
+        smoothingValue = 0.6;
+        streamlineValue = 0.5 + (streamline / 100) * 0.2;
+        thinningValue = tool === 'eraser' ? 0 : 0.35;
       }
 
       return {
@@ -474,13 +502,23 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       img.src = backgroundImage;
     }, [backgroundImage, originalImage, stencilImage]);
 
-    // Renderizar canvas com camadas: Original (fundo) -> Stencil (blend) -> Desenhos
     const renderCanvas = useCallback(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      // Suporte a HIGH DPI (Retina)
+      // Suporte a HIGH DPI (Retina) - Forçar ajuste sempre
       const ratio = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+      
+      // Sincronizar tamanho físico e visual
+      const targetWidth = width * ratio;
+      const targetHeight = height * ratio;
+      
+      if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+      }
       
       // Otimização crucial: desynchronized: true reduz latência no iPad/Safari
       const ctx = canvas.getContext('2d', { 
@@ -489,17 +527,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       });
       if (!ctx) return;
 
-      // Ajustar escala interna do canvas se necessário (Sempre garantir escala física)
-      const targetWidth = width * ratio;
-      const targetHeight = height * ratio;
-
-      if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
-        canvas.width = targetWidth;
-        canvas.height = targetHeight;
-      }
-      
       // RESETAR TRANSFORMAÇÃO E APLICAR ESCALA FÍSICA A CADA RENDER
-      // Isso corrige a pixelização em dispositivos Retina
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
@@ -613,45 +641,42 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       const canvas = canvasRef.current;
       if (!canvas) return { x: 0, y: 0, pressure: 0.5 };
 
-      // Usar nativeEvent.offsetX/Y que já está relativo ao elemento
-      const offsetX = e.nativeEvent.offsetX;
-      const offsetY = e.nativeEvent.offsetY;
+      // Usar clientX/Y para maior confiabilidade no iOS/Safari (ignora zoom/scroll)
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX - rect.left;
+      const clientY = e.clientY - rect.top;
 
-      // Aplicar escala para converter de coordenadas visuais para coordenadas do canvas
-      let x = offsetX * scaleRef.current.x;
-      let y = offsetY * scaleRef.current.y;
+      // Aplicar escala do canvas
+      let x = clientX * scaleRef.current.x;
+      let y = clientY * scaleRef.current.y;
 
-      // Aplicar stroke stabilizer para suavizar tremores
+      // Calcular velocidade antes da estabilização
+      const now = performance.now();
+      const dt = Math.max(1, now - lastPointTimeRef.current);
+      lastPointTimeRef.current = now;
+
+      const lastPoint = currentPointsRef.current[currentPointsRef.current.length - 1];
+      let velocity = 1;
+
+      if (lastPoint) {
+        const dx = x - lastPoint.x;
+        const dy = y - lastPoint.y;
+        velocity = Math.sqrt(dx * dx + dy * dy) / dt;
+      }
+
+      // Aplicar stroke stabilizer
       if (useStabilizer) {
-        const stabilized = stabilizerRef.current.stabilize(x, y);
+        const stabilized = stabilizerRef.current.stabilize(x, y, velocity);
         x = stabilized.x;
         y = stabilized.y;
       }
 
-      // Calcular velocidade para simulação de pressão
-      const now = performance.now();
-      const dt = now - lastPointTimeRef.current;
-      lastPointTimeRef.current = now;
-
-      // Pressure: usar valor real se disponível
+      // Pressure
       let pressure = e.pressure;
-
       if (pressure === 0 || pressure === undefined || e.pointerType === 'mouse') {
-        // Simular pressão baseado na velocidade para mouse/touch sem pressão
-        // Movimento lento = mais pressão, movimento rápido = menos pressão
-        const dx = x - (stabilizerRef.current as any).targetX || 0;
-        const dy = y - (stabilizerRef.current as any).targetY || 0;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const velocity = dt > 0 ? distance / dt : 0;
-
-        // Suavizar velocidade para evitar mudanças bruscas
-        lastVelocityRef.current = lastVelocityRef.current * 0.7 + velocity * 0.3;
-
-        // Converter velocidade em pressão (velocidade baixa = pressão alta)
-        const normalizedVelocity = Math.min(lastVelocityRef.current / 2, 1);
-        pressure = 0.7 - normalizedVelocity * 0.4; // Range: 0.3 - 0.7
+        const normalizedVelocity = Math.min(velocity / 2, 1);
+        pressure = 0.7 - normalizedVelocity * 0.4;
       } else {
-        // Aplicar curva de pressão avançada para stylus/Apple Pencil
         pressure = advancedPressureCurve(pressure);
       }
 
@@ -712,73 +737,63 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         return;
       }
 
-      // Capturar eventos coalesced para máxima precisão (Chrome/Firefox)
-      const coalescedEvents = (e.nativeEvent as any).getCoalescedEvents?.();
+      // Capturar eventos (Coalesced p/ Windows/Android, Predicted p/ iOS)
+      const nativeEvent = e.nativeEvent as any;
+      const coalescedEvents = nativeEvent.getCoalescedEvents?.() || [nativeEvent];
+      const predictedEvents = isIOS ? nativeEvent.getPredictedEvents?.() || [] : [];
 
-      if (coalescedEvents && coalescedEvents.length > 0) {
-        // Usar eventos coalesced se disponíveis
-        const rect = canvas.getBoundingClientRect();
-        const newPoints: Point[] = [];
+      const rect = canvas.getBoundingClientRect();
+      const newPoints: Point[] = [];
 
-        // Redução drástica de minDistance de 5px para 0.2px para capturar precisão Apple Pencil
-        const minDistance = isUsingStylusRef.current ? 0.2 : (isIOS ? 0.5 : 1);
+      coalescedEvents.forEach((evt: PointerEvent) => {
+        const clientX = evt.clientX - rect.left;
+        const clientY = evt.clientY - rect.top;
 
-        coalescedEvents.forEach((evt: PointerEvent) => {
-          const offsetX = evt.clientX - rect.left;
-          const offsetY = evt.clientY - rect.top;
+        let x = clientX * scaleRef.current.x;
+        let y = clientY * scaleRef.current.y;
 
-          let x = offsetX * scaleRef.current.x;
-          let y = offsetY * scaleRef.current.y;
+        const now = performance.now();
+        const dt = Math.max(1, now - lastPointTimeRef.current);
+        lastPointTimeRef.current = now;
 
-          const lastPoint = newPoints.length > 0
-            ? newPoints[newPoints.length - 1]
-            : currentPointsRef.current[currentPointsRef.current.length - 1];
+        const lastPoint = newPoints.length > 0
+          ? newPoints[newPoints.length - 1]
+          : currentPointsRef.current[currentPointsRef.current.length - 1];
 
-          if (lastPoint) {
-            const dx = x - lastPoint.x;
-            const dy = y - lastPoint.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < minDistance) return;
+        // Calcular velocidade para filtro e estabilização
+        let velocity = 1;
+        if (lastPoint) {
+          const dx = x - lastPoint.x;
+          const dy = y - lastPoint.y;
+          const rawDistance = Math.sqrt(dx * dx + dy * dy);
+          velocity = rawDistance / dt;
+          
+          // SÓ filtrar minDistance em movimentos RÁPIDOS
+          if (velocity > 0.5) {
+            const minDist = isUsingStylusRef.current ? 0.1 : 0.2;
+            if (rawDistance < minDist) return;
           }
-
-          // 2. Estabilizar (pipeline: distância -> estabilização)
-          const stabilized = stabilizerRef.current.stabilize(x, y);
-          x = stabilized.x;
-          y = stabilized.y;
-
-          const now = performance.now();
-          const dt = (now - lastPointTimeRef.current) || 16;
-          lastPointTimeRef.current = now;
-
-          let pressure = evt.pressure;
-          if (pressure === 0 || pressure === undefined || evt.pointerType === 'mouse') {
-            const prevPoint = newPoints.length > 0
-              ? newPoints[newPoints.length - 1]
-              : currentPointsRef.current[currentPointsRef.current.length - 1];
-
-            if (prevPoint) {
-              const dx = x - prevPoint.x;
-              const dy = y - prevPoint.y;
-              const velocity = Math.sqrt(dx * dx + dy * dy) / dt;
-              lastVelocityRef.current = lastVelocityRef.current * 0.7 + velocity * 0.3;
-              pressure = 0.7 - Math.min(lastVelocityRef.current / 2, 1) * 0.4;
-            } else {
-              pressure = 0.5;
-            }
-          } else {
-            pressure = advancedPressureCurve(pressure);
-          }
-
-          newPoints.push({ x, y, pressure: Math.max(0.1, Math.min(1, pressure)) });
-        });
-
-        if (newPoints.length > 0) {
-          currentPointsRef.current = [...currentPointsRef.current, ...newPoints];
-          throttledForceUpdate(); // Usar a versão com throttle
         }
-      } else {
-        const point = getCanvasPoint(e);
-        currentPointsRef.current = [...currentPointsRef.current, point];
+
+        // Estabilização Adaptativa à velocidade
+        const stabilized = stabilizerRef.current.stabilize(x, y, velocity);
+        x = stabilized.x;
+        y = stabilized.y;
+
+        // Pressure
+        let pressure = evt.pressure;
+        if (pressure === 0 || pressure === undefined || evt.pointerType === 'mouse') {
+          const normalizedVelocity = Math.min(velocity / 2, 1);
+          pressure = 0.7 - normalizedVelocity * 0.4;
+        } else {
+          pressure = advancedPressureCurve(pressure);
+        }
+
+        newPoints.push({ x, y, pressure: Math.max(0.1, Math.min(1, pressure)) });
+      });
+
+      if (newPoints.length > 0) {
+        currentPointsRef.current = [...currentPointsRef.current, ...newPoints];
         throttledForceUpdate();
       }
     }, [isDrawing, disabled, getCanvasPoint, tool, isIOS]);
@@ -835,33 +850,39 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
           onStrokeEnd?.(newStroke);
           onStrokesChange?.(newStrokes);
         }
-
-        // Resetar estado da linha
-        setLineStart(null);
-        setLineEnd(null);
-        setIsDrawing(false);
-        return;
       }
 
-      // Finalizar stroke se tiver pontos suficientes
+      // Resetar estado da linha
+      setLineStart(null);
+      setLineEnd(null);
+      setIsDrawing(false);
+
       const currentPoints = currentPointsRef.current;
       if (currentPoints.length >= 2) {
-        // Aplicar processamento completo estilo Procreate
         let interpolationSegments: number;
         let pressureSmoothing: number;
 
-        if (isUsingStylusRef.current) {
-          interpolationSegments = 16;  // Aumentado p/ máxima suavidade final
-          pressureSmoothing = 12;
-        } else if (isIOS) {
-          interpolationSegments = 12;
-          pressureSmoothing = 9;
-        } else if (isTouch) {
-          interpolationSegments = 8;
-          pressureSmoothing = 7;
+        // Calcular velocidade média do traço para interpolação adaptativa
+        let totalVelocity = 0;
+        for (let i = 1; i < currentPoints.length; i++) {
+          const p1 = currentPoints[i - 1];
+          const p2 = currentPoints[i];
+          const dist = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+          totalVelocity += dist;
+        }
+        const avgVelocity = totalVelocity / Math.max(currentPoints.length, 1);
+
+        // Movimento lento = MENOS interpolação para evitar "pontos fantasma" quadrados
+        // Movimento rápido = MAIS interpolação para preencher lacunas
+        if (avgVelocity < 0.5) {
+          interpolationSegments = isUsingStylusRef.current ? 4 : 2;
+          pressureSmoothing = 4;
+        } else if (avgVelocity < 2) {
+          interpolationSegments = isUsingStylusRef.current ? 12 : 6;
+          pressureSmoothing = 8;
         } else {
-          interpolationSegments = 4;
-          pressureSmoothing = 5;
+          interpolationSegments = isUsingStylusRef.current ? 20 : 10;
+          pressureSmoothing = 14;
         }
 
         const processedPoints = processPointsForProcreateQuality(currentPoints, {
