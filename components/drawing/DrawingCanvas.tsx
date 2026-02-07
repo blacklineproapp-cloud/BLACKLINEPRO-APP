@@ -220,6 +220,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
     const originalImageRef = useRef<HTMLImageElement | null>(null);
     const stencilImageRef = useRef<HTMLImageElement | null>(null);
     const bgImageRef = useRef<HTMLImageElement | null>(null); // Legacy
+    const drawingBufferRef = useRef<HTMLCanvasElement | null>(null);
 
     // Estado do desenho
     const [isDrawing, setIsDrawing] = useState(false);
@@ -460,15 +461,23 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
       });
       if (!ctx) return;
 
-      // Ajustar escala interna do canvas se necessário
-      if (canvas.width !== width * ratio) {
-        canvas.width = width * ratio;
-        canvas.height = height * ratio;
-        ctx.scale(ratio, ratio);
+      // Ajustar escala interna do canvas se necessário (Sempre garantir escala física)
+      const targetWidth = width * ratio;
+      const targetHeight = height * ratio;
+
+      if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
       }
+      
+      // RESETAR TRANSFORMAÇÃO E APLICAR ESCALA FÍSICA A CADA RENDER
+      // Isso corrige a pixelização em dispositivos Retina
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       // Limpar
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, width, height);
 
       // ===== CAMADA 1: Fundo branco =====
       ctx.fillStyle = '#FFFFFF';
@@ -495,23 +504,36 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
         ctx.drawImage(bgImageRef.current, 0, 0, width, height);
       }
 
-      // ===== CAMADA 4: Strokes salvos =====
+      // ===== CAMADA 4: Strokes salvos (usando buffer p/ suporte a borracha) =====
       if (strokes.length > 0) {
-        // Renderizar em buffer para suporte a eraser (destination-out)
-        const drawingCanvas = document.createElement('canvas');
-        drawingCanvas.width = canvas.width;
-        drawingCanvas.height = canvas.height;
-        const dCtx = drawingCanvas.getContext('2d');
-        if (dCtx) {
-          dCtx.scale(ratio, ratio);
+        // Inicializar ou redimensionar buffer se necessário
+        if (!drawingBufferRef.current) {
+          drawingBufferRef.current = document.createElement('canvas');
+        }
+        
+        const buffer = drawingBufferRef.current;
+        if (buffer.width !== targetWidth || buffer.height !== targetHeight) {
+          buffer.width = targetWidth;
+          buffer.height = targetHeight;
+        }
+
+        const bCtx = buffer.getContext('2d');
+        if (bCtx) {
+          bCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+          bCtx.clearRect(0, 0, width, height);
+          bCtx.imageSmoothingEnabled = true;
+          bCtx.imageSmoothingQuality = 'high';
+
           strokes.forEach((s: Stroke) => {
             if (!s.path) return;
             const path = new Path2D(s.path);
-            dCtx.globalCompositeOperation = s.tool === 'eraser' ? 'destination-out' : 'source-over';
-            dCtx.fillStyle = s.tool === 'eraser' ? '#000' : s.color;
-            dCtx.fill(path);
+            bCtx.globalCompositeOperation = s.tool === 'eraser' ? 'destination-out' : 'source-over';
+            bCtx.fillStyle = s.tool === 'eraser' ? '#000' : s.color;
+            bCtx.fill(path);
           });
-          ctx.drawImage(drawingCanvas, 0, 0, width, height);
+
+          // Desenhar buffer no canvas principal
+          ctx.drawImage(buffer, 0, 0, width, height);
         }
       }
 
@@ -1028,6 +1050,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
             userSelect: 'none',
             WebkitUserSelect: 'none',
             WebkitTouchCallout: 'none',
+            imageRendering: 'auto', // FORÇAR AUTO P/ ANTI-ALIASING
           }}
         />
       </div>

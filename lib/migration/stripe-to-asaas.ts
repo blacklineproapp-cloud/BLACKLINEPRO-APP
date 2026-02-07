@@ -45,7 +45,7 @@ export class StripeToAsaasMigration {
     // Buscar usuário
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('email, requires_cpf, cpf_cnpj, migration_status, plan')
+      .select('email, requires_cpf, cpf_cnpj, migration_status, plan, admin_courtesy')
       .eq('id', userId)
       .single();
 
@@ -53,8 +53,14 @@ export class StripeToAsaasMigration {
       return { needsCpf: false, migrationItem: null, currentPlan: null };
     }
 
-    // Se já tem CPF ou não precisa, retornar
-    if (!user.requires_cpf || user.cpf_cnpj || user.migration_status === 'migrated') {
+    // Se já tem CPF, não precisa, já migrou ou é cortesia admin, retornar
+    if (
+      !user.requires_cpf || 
+      user.cpf_cnpj || 
+      user.migration_status === 'migrated' || 
+      user.migration_status === 'completed' ||
+      user.admin_courtesy === true
+    ) {
       return { needsCpf: false, migrationItem: null, currentPlan: user.plan };
     }
 
