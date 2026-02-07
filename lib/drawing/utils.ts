@@ -33,7 +33,7 @@ export function getSvgPathFromStroke(stroke: number[][], closed = true): string 
     return `M ${x0.toFixed(2)},${y0.toFixed(2)} L ${x1.toFixed(2)},${y1.toFixed(2)} Z`;
   }
 
-  // Usar curvas Bézier cúbicas para máxima suavidade
+  // Usar geometria híbrida para evitar loops e serrilhados curvos
   const d: string[] = [`M ${stroke[0][0].toFixed(2)},${stroke[0][1].toFixed(2)}`];
 
   for (let i = 0; i < stroke.length - 1; i++) {
@@ -42,17 +42,24 @@ export function getSvgPathFromStroke(stroke: number[][], closed = true): string 
     const p2 = stroke[i + 1];
     const p3 = stroke[Math.min(stroke.length - 1, i + 2)];
 
-    // Calcular pontos de controle para curva Bézier cúbica
-    // Usando tensão de 0.5 para curvas suaves mas responsivas
-    const tension = 0.5;
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+    const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Ponto de controle 1: baseado na tangente em p1
-    const cp1x = p1[0] + (p2[0] - p0[0]) * tension / 3;
-    const cp1y = p1[1] + (p2[1] - p0[1]) * tension / 3;
+    // Se os pontos estão muito próximos, usar lineTo para evitar artefatos de curvatura
+    if (distance < 0.5) {
+      d.push(`L ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`);
+      continue;
+    }
 
-    // Ponto de controle 2: baseado na tangente em p2
-    const cp2x = p2[0] - (p3[0] - p1[0]) * tension / 3;
-    const cp2y = p2[1] - (p3[1] - p1[1]) * tension / 3;
+    // Calcular pontos de controle com tensão REDUZIDA (0.2 em vez de 0.5)
+    // Isso evita o overshoot que causa "serrilhados mais curvados"
+    const tension = 0.2;
+
+    const cp1x = p1[0] + (p2[0] - p0[0]) * tension;
+    const cp1y = p1[1] + (p2[1] - p0[1]) * tension;
+    const cp2x = p2[0] - (p3[0] - p1[0]) * tension;
+    const cp2y = p2[1] - (p3[1] - p1[1]) * tension;
 
     d.push(`C ${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`);
   }
