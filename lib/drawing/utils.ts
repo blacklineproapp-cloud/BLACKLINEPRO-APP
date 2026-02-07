@@ -47,12 +47,12 @@ export function getSvgPathFromStroke(stroke: number[][], closed = true): string 
     const tension = 0.5;
 
     // Ponto de controle 1: baseado na tangente em p1
-    const cp1x = p1[0] + (p2[0] - p0[0]) * tension / 6;
-    const cp1y = p1[1] + (p2[1] - p0[1]) * tension / 6;
+    const cp1x = p1[0] + (p2[0] - p0[0]) * tension / 3;
+    const cp1y = p1[1] + (p2[1] - p0[1]) * tension / 3;
 
     // Ponto de controle 2: baseado na tangente em p2
-    const cp2x = p2[0] - (p3[0] - p1[0]) * tension / 6;
-    const cp2y = p2[1] - (p3[1] - p1[1]) * tension / 6;
+    const cp2x = p2[0] - (p3[0] - p1[0]) * tension / 3;
+    const cp2y = p2[1] - (p3[1] - p1[1]) * tension / 3;
 
     d.push(`C ${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`);
   }
@@ -306,9 +306,9 @@ export function processPointsForProcreateQuality(
   let processed = smoothPressure(points, pressureSmoothing);
 
   // 2. Interpolar com Catmull-Rom
-  if (processed.length >= 4) {
-    processed = interpolatePoints(processed, interpolationSegments);
-  }
+  // Agora interpolamos mesmo para traços curtos, pois interpolatePoints 
+  // já trata a duplicação de pontos internos para suavidade extra.
+  processed = interpolatePoints(processed, interpolationSegments);
 
   return processed;
 }

@@ -73,49 +73,60 @@ function isIOSDevice(): boolean {
  * Otimizado para dispositivos touch com maior suavização
  */
 class StrokeStabilizer {
-  private targetX: number = 0;
-  private targetY: number = 0;
-  private currentX: number = 0;
-  private currentY: number = 0;
+  private x: number = 0;
+  private y: number = 0;
+  private dx: number = 0;
+  private dy: number = 0;
   private initialized: boolean = false;
 
-  // Fator de suavização (0 = sem suavização, 1 = máxima suavização)
-  // Para iPad/iOS: 0.55-0.65 para curvas ultra-suaves
-  // Para outros touch: 0.45-0.55
-  // Para mouse: 0.3-0.4
-  private smoothFactor: number = isIOSDevice() ? 0.6 : (isTouchDevice() ? 0.5 : 0.35);
+  // Parâmetros para Double Exponential Smoothing
+  // alpha: peso da posição atual (suavidade)
+  // beta: peso da tendência (antecipação)
+  private alpha: number = 0.5;
+  private beta: number = 0.5;
 
   reset() {
     this.initialized = false;
   }
 
   setSmoothing(factor: number) {
-    this.smoothFactor = Math.max(0, Math.min(1, factor));
+    // Escalonar factor (0-1) para alpha e beta
+    // Fatores Procreate optimizados
+    this.alpha = 1 - Math.pow(factor, 0.5) * 0.9;
+    this.beta = 1 - Math.pow(factor, 0.3) * 0.8;
   }
 
-  stabilize(x: number, y: number): { x: number; y: number } {
+  stabilize(targetX: number, targetY: number): { x: number; y: number } {
     if (!this.initialized) {
-      this.targetX = x;
-      this.targetY = y;
-      this.currentX = x;
-      this.currentY = y;
+      this.x = targetX;
+      this.y = targetY;
+      this.dx = 0;
+      this.dy = 0;
       this.initialized = true;
-      return { x, y };
+      return { x: targetX, y: targetY };
     }
 
-    this.targetX = x;
-    this.targetY = y;
+    const prevX = this.x;
+    const prevY = this.y;
 
-    // Interpolação linear com fator de suavização
-    // Quanto maior o smoothFactor, mais "lazy" o brush
-    const lerp = 1 - this.smoothFactor;
-    this.currentX += (this.targetX - this.currentX) * lerp;
-    this.currentY += (this.targetY - this.currentY) * lerp;
+    // Double Exponential Smoothing (Holt-Winters)
+    // 1. Level estimation
+    this.x = this.alpha * targetX + (1 - this.alpha) * (this.x + this.dx);
+    this.y = this.alpha * targetY + (1 - this.alpha) * (this.y + this.dy);
+
+    // 2. Trend estimation
+    this.dx = this.beta * (this.x - prevX) + (1 - this.beta) * this.dx;
+    this.dy = this.beta * (this.y - prevY) + (1 - this.beta) * this.dy;
 
     return {
-      x: this.currentX,
-      y: this.currentY,
+      x: this.x,
+      y: this.y,
     };
+  }
+
+  // Acessores para depuração se necessário
+  get lastTarget() {
+    return { x: this.x, y: this.y };
   }
 }
 
@@ -179,12 +190,12 @@ function getSvgPathFromStroke(stroke: number[][]): string {
     const tension = 0.5;
 
     // Ponto de controle 1: baseado na tangente em p1
-    const cp1x = p1[0] + (p2[0] - p0[0]) * tension / 6;
-    const cp1y = p1[1] + (p2[1] - p0[1]) * tension / 6;
+    const cp1x = p1[0] + (p2[0] - p0[0]) * tension / 3;
+    const cp1y = p1[1] + (p2[1] - p0[1]) * tension / 3;
 
     // Ponto de controle 2: baseado na tangente em p2
-    const cp2x = p2[0] - (p3[0] - p1[0]) * tension / 6;
-    const cp2y = p2[1] - (p3[1] - p1[1]) * tension / 6;
+    const cp2x = p2[0] - (p3[0] - p1[0]) * tension / 3;
+    const cp2y = p2[1] - (p3[1] - p1[1]) * tension / 3;
 
     d.push(`C ${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2[0].toFixed(2)},${p2[1].toFixed(2)}`);
   }
@@ -231,6 +242,23 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
     
     // Estado apenas para trigger de renderização de preview (quando necessário)
     const [, forceUpdate] = useState({});
+    const rafIdRef = useRef<number | null>(null);
+
+    // Função forceUpdate com throttle via requestAnimationFrame
+    const throttledForceUpdate = useCallback(() => {
+      if (rafIdRef.current) return;
+      rafIdRef.current = requestAnimationFrame(() => {
+        forceUpdate({});
+        rafIdRef.current = null;
+      });
+    }, []);
+
+    // Limpar RAF ao desmontar
+    useEffect(() => {
+      return () => {
+        if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+      };
+    }, []);
 
     // Estado para ferramenta de linha
     const [lineStart, setLineStart] = useState<Point | null>(null);
@@ -713,6 +741,7 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
             if (distance < minDistance) return;
           }
 
+          // 2. Estabilizar (pipeline: distância -> estabilização)
           const stabilized = stabilizerRef.current.stabilize(x, y);
           x = stabilized.x;
           y = stabilized.y;
@@ -745,12 +774,12 @@ const DrawingCanvas = forwardRef<DrawingCanvasRef, DrawingCanvasProps>(
 
         if (newPoints.length > 0) {
           currentPointsRef.current = [...currentPointsRef.current, ...newPoints];
-          forceUpdate({}); // Trigger renderização via RAF/effect de forma controlada
+          throttledForceUpdate(); // Usar a versão com throttle
         }
       } else {
         const point = getCanvasPoint(e);
         currentPointsRef.current = [...currentPointsRef.current, point];
-        forceUpdate({});
+        throttledForceUpdate();
       }
     }, [isDrawing, disabled, getCanvasPoint, tool, isIOS]);
 
