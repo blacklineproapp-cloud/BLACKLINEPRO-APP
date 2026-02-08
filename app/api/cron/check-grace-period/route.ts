@@ -10,6 +10,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 import { maskEmail } from '@/lib/logger';
 
@@ -29,7 +30,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
     }
 
-    if (secret !== cronSecret) {
+    if (
+      !secret ||
+      secret.length !== cronSecret.length ||
+      !crypto.timingSafeEqual(Buffer.from(secret), Buffer.from(cronSecret))
+    ) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -39,6 +44,7 @@ export async function GET(req: Request) {
     const results = {
       blocked: 0,
       reminded: 0,
+      expiredSwept: 0,
       errors: [] as string[],
     };
 
@@ -115,7 +121,59 @@ export async function GET(req: Request) {
       }
     }
 
-    // 5. Relatório
+    // 5. SWEEP: Buscar usuários pagos com assinatura expirada que ainda não foram bloqueados
+    const { data: expiredSubUsers, error: expiredSubError } = await supabaseAdmin
+      .from('users')
+      .select('id, email, subscription_expires_at')
+      .eq('is_paid', true)
+      .eq('is_blocked', false)
+      .not('subscription_expires_at', 'is', null)
+      .lt('subscription_expires_at', now.toISOString())
+      .neq('plan', 'free');
+
+    if (expiredSubError) {
+      console.error('[Cron] Erro ao buscar assinaturas expiradas:', expiredSubError);
+      results.errors.push(expiredSubError.message);
+    }
+
+    if (expiredSubUsers && expiredSubUsers.length > 0) {
+      console.log(`[Cron] ⚠️ ${expiredSubUsers.length} usuários com assinatura expirada (sweep)`);
+
+      for (const user of expiredSubUsers) {
+        try {
+          // Verificar se tem cortesia ativa (não bloquear cortesias)
+          const { data: courtesyCheck } = await supabaseAdmin
+            .from('users')
+            .select('admin_courtesy, admin_courtesy_expires_at')
+            .eq('id', user.id)
+            .single();
+
+          if (
+            courtesyCheck?.admin_courtesy === true &&
+            courtesyCheck?.admin_courtesy_expires_at &&
+            new Date(courtesyCheck.admin_courtesy_expires_at) > now
+          ) {
+            console.log(`[Cron] ⏭️ Pulando ${maskEmail(user.email)} - cortesia ativa`);
+            continue;
+          }
+
+          await supabaseAdmin.from('users').update({
+            is_blocked: true,
+            blocked_reason: 'Assinatura expirada - pagamento não renovado',
+            blocked_at: now.toISOString(),
+            subscription_status: 'expired',
+          }).eq('id', user.id);
+
+          console.log(`[Cron] 🚫 Bloqueado (assinatura expirada): ${maskEmail(user.email)} - expirou em ${user.subscription_expires_at}`);
+          results.expiredSwept++;
+        } catch (sweepError: any) {
+          console.error(`[Cron] Erro no sweep ${maskEmail(user.email)}:`, sweepError);
+          results.errors.push(`Erro no sweep user ${user.id}: ${sweepError.message}`);
+        }
+      }
+    }
+
+    // 6. Relatório
     console.log('[Cron] ✅ Verificação concluída:', results);
 
     return NextResponse.json({

@@ -131,6 +131,50 @@ export async function activateUserAtomic(
      }
   }
 
+  // 3. 🔄 SINCRONIZAR COM ASAAS (Se houver assinatura ativa)
+  try {
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('asaas_subscription_id')
+      .eq('id', userId)
+      .single();
+
+    if (userData?.asaas_subscription_id) {
+      const { AsaasSubscriptionService } = await import('../asaas/subscription-service');
+      const { ASAAS_PLANS } = await import('../asaas/types');
+      
+      const sub = await AsaasSubscriptionService.getById(userData.asaas_subscription_id);
+      
+      if (sub && sub.status === 'ACTIVE') {
+        console.log(`[UserActivation] 🔄 Sincronizando mudança de plano com Asaas: ${sub.id}`);
+        
+        const cycleKeyMap: Record<string, string> = {
+          'MONTHLY': 'monthly',
+          'QUARTERLY': 'quarterly',
+          'SEMIANNUALLY': 'semiannual',
+          'YEARLY': 'yearly'
+        };
+        
+        const cycleKey = cycleKeyMap[sub.cycle] || 'monthly';
+        const planConfig = ASAAS_PLANS[newPlan];
+        
+        if (planConfig) {
+          const newValue = (planConfig.prices as any)[cycleKey];
+          
+          if (newValue !== undefined && newValue !== sub.value) {
+            await AsaasSubscriptionService.update(sub.id, {
+              value: newValue,
+              description: `Alteração de plano via Painel Admin: ${newPlan.toUpperCase()}`
+            });
+            console.log(`[UserActivation] ✅ Asaas atualizado: ${newPlan} (${cycleKey}) -> R$ ${newValue}`);
+          }
+        }
+      }
+    }
+  } catch (syncError: any) {
+    console.warn(`[UserActivation] ⚠️ Falha na sincronização Asaas:`, syncError.message);
+  }
+
   console.log(`[UserActivation] ✅ ${result.message}`);
 
   return result;

@@ -36,7 +36,7 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Executar middleware next-intl apenas para rotas que NÃO são de API
   // Isso evita que o next-intl intercepte APIs e retorne 404 ou redirects
-  const response = isApiRequest ? NextResponse.next() : handleI18nRouting(request);
+  const response = isApiRequest ? NextResponse.next() : await handleI18nRouting(request);
   
   // Se next-intl retornou redirect (307/308) em uma página, retornar imediatamente
   if (!isApiRequest && (response.status === 307 || response.status === 308)) {
@@ -106,7 +106,7 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Verificar rotas de admin PRIMEIRO
   if (isAdminRoute(request)) {
-    const { userId } = auth();
+    const { userId } = await auth();
     
     // Não autenticado = bloquear
     if (!userId) {
@@ -141,7 +141,7 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Rotas públicas não precisam de auth
   if (!isPublicRoute(request)) {
-    auth().protect();
+    (await auth()).protect();
   }
 
   // Retornar response do next-intl

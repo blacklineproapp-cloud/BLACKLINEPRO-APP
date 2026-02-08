@@ -78,7 +78,7 @@ async function systemAudit() {
   try {
     const { data: paidUsers, error } = await supabase
       .from('users')
-      .select('id, email, plan, is_paid, subscription_status, subscription_expires_at, stripe_customer_id')
+      .select('id, email, plan, is_paid, subscription_status, subscription_expires_at, stripe_customer_id, asaas_customer_id')
       .eq('is_paid', true)
       .limit(10);
 
@@ -87,14 +87,14 @@ async function systemAudit() {
     console.log(`   ✅ ${paidUsers?.length || 0} usuários pagantes encontrados`);
     results.passed++;
 
-    // Verificar se têm stripe_customer_id
-    const withoutStripeId = paidUsers?.filter(u => !u.stripe_customer_id) || [];
-    if (withoutStripeId.length > 0) {
-      console.log(`   ⚠️  ${withoutStripeId.length} usuários pagos sem stripe_customer_id`);
+    // Verificar se têm stripe_customer_id ou asaas_customer_id
+    const withoutBillingId = paidUsers?.filter(u => !u.stripe_customer_id && !u.asaas_customer_id) || [];
+    if (withoutBillingId.length > 0) {
+      console.log(`   ⚠️  ${withoutBillingId.length} usuários pagos sem ID de billing (Stripe/Asaas)`);
       results.warnings++;
-      results.issues.push(`${withoutStripeId.length} usuários pagos sem stripe_customer_id`);
+      results.issues.push(`${withoutBillingId.length} usuários pagos sem ID de billing`);
     } else {
-      console.log(`   ✅ Todos os usuários pagos têm stripe_customer_id`);
+      console.log(`   ✅ Todos os usuários pagos têm ID de billing`);
       results.passed++;
     }
 
@@ -272,6 +272,8 @@ async function systemAudit() {
     'CLERK_SECRET_KEY': process.env.CLERK_SECRET_KEY,
     'STRIPE_SECRET_KEY': process.env.STRIPE_SECRET_KEY,
     'STRIPE_WEBHOOK_SECRET': process.env.STRIPE_WEBHOOK_SECRET,
+    'ASAAS_API_KEY': process.env.ASAAS_API_KEY,
+    'ASAAS_ENVIRONMENT': process.env.ASAAS_ENVIRONMENT,
     'RESEND_API_KEY': process.env.RESEND_API_KEY,
     'GEMINI_API_KEY': process.env.GEMINI_API_KEY,
   };

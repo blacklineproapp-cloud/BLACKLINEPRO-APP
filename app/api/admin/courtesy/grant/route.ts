@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     // 3. 📧 BUSCAR USUÁRIO PELO EMAIL (case-insensitive)
     const { data: targetUser, error: userError } = await supabaseAdmin
       .from('users')
-      .select('id, email, name, plan, admin_courtesy, subscription_id')
+      .select('id, email, name, plan, admin_courtesy, subscription_id, asaas_subscription_id')
       .ilike('email', validated.userEmail)
       .single();
 
@@ -54,12 +54,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. ⚠️ VERIFICAR SE JÁ TEM SUBSCRIPTION ATIVA
-    if (targetUser.subscription_id) {
+    // 4. ⚠️ VERIFICAR SE JÁ TEM SUBSCRIPTION ATIVA (Stripe ou Asaas)
+    if (targetUser.subscription_id || targetUser.asaas_subscription_id) {
       return NextResponse.json(
         { 
-          error: 'Usuário já possui assinatura ativa no Stripe',
-          details: 'Não é possível conceder cortesia para usuários com pagamento recorrente'
+          error: 'Usuário já possui assinatura ativa',
+          details: 'Não é possível conceder cortesia para usuários com pagamento recorrente ativo'
         },
         { status: 400 }
       );

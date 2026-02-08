@@ -4,7 +4,7 @@
  * Gerenciamento de cobranças avulsas e PIX
  */
 
-import { asaasGet, asaasPost, asaasPut, asaasDelete, getDueDate } from './client';
+import { asaasGet, asaasPost, asaasPut, asaasDelete, getDueDate, isSandbox } from './client';
 import { supabaseAdmin } from '../supabase';
 import type {
   AsaasPayment,
@@ -330,6 +330,8 @@ export class AsaasPaymentService {
       plan_type: plan,
       invoice_url: payment.invoiceUrl || payment.bankSlipUrl,
       receipt_url: payment.transactionReceiptUrl,
+      is_test: isSandbox(),
+      provider: 'asaas',
       metadata: {
         asaas_status: payment.status,
         due_date: payment.dueDate,

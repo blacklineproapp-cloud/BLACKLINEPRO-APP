@@ -168,7 +168,7 @@ async function checkLimit(
     // 1. Buscar plano e flags do usuário
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('plan, admin_courtesy, admin_courtesy_expires_at, is_paid, is_blocked, blocked_reason')
+      .select('plan, admin_courtesy, admin_courtesy_expires_at, is_paid, is_blocked, blocked_reason, subscription_expires_at, subscription_status')
       .eq('id', userId)
       .single();
 
@@ -189,6 +189,40 @@ async function checkLimit(
       } else {
         console.warn(`[Limits] 🔒 Usuário ${userId} (Cortesia) expirada em ${courtesyExpiresAt.toLocaleDateString('pt-BR')}`);
         // Se a cortesia expirou, aí sim verificamos o bloqueio ou bloqueamos pelo fim da cortesia
+      }
+    }
+
+    // 🆕 VERIFICAÇÃO DE ASSINATURA EXPIRADA
+    // Se o usuário tem plano pago e subscription_expires_at no passado → bloquear
+    const isCourtesyActive = isCourtesy && courtesyExpiresAt && new Date() < courtesyExpiresAt;
+    if (
+      !isCourtesyActive &&
+      plan !== 'free' &&
+      user?.is_paid === true &&
+      user?.subscription_expires_at
+    ) {
+      const expiresAt = new Date(user.subscription_expires_at);
+      if (expiresAt < new Date()) {
+        console.warn(`[Limits] 🚫 Assinatura expirada para usuário ${userId}. Expirou em: ${expiresAt.toISOString()}`);
+
+        // Auto-bloquear (fire-and-forget)
+        supabaseAdmin.from('users').update({
+          is_blocked: true,
+          blocked_reason: 'Assinatura expirada - pagamento não renovado',
+          blocked_at: new Date().toISOString(),
+          subscription_status: 'expired',
+        }).eq('id', userId).then(({ error }) => {
+          if (error) console.error(`[Limits] Erro ao auto-bloquear ${userId}:`, error);
+          else console.log(`[Limits] ✅ Usuário ${userId} auto-bloqueado por assinatura expirada`);
+        });
+
+        return {
+          allowed: false,
+          remaining: 0,
+          limit: 0,
+          usagePercentage: 100,
+          warningMessage: 'Sua assinatura expirou. Por favor, renove seu plano para continuar usando o StencilFlow.'
+        };
       }
     }
 

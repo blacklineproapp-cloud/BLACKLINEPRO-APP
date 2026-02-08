@@ -17,7 +17,8 @@ export type AdminAction =
   | 'change_plan'
   | 'delete_user'
   | 'refund_payment'
-  | 'cancel_subscription';
+  | 'cancel_subscription'
+  | 'send_courtesy_links';
 
 interface AuditLogEntry {
   adminId: string;

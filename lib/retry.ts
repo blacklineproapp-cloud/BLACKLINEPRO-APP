@@ -287,6 +287,12 @@ export async function retryGeminiAPI<T>(
         return true;
       }
 
+      // ✅ RETRY: Modelo bloqueou a resposta (pode ser erro temporário ou falso positivo)
+      if (errorMessage.includes('bloqueou a resposta') || errorMessage.includes('other')) {
+        console.warn(`[${operationType}] Resposta bloqueada ou OTHER - tentará novamente`);
+        return attempt <= 2;
+      }
+
       return defaultShouldRetry(error, attempt);
     },
     onRetry: (error, attempt, delay) => {

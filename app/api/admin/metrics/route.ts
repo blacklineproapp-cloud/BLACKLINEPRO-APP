@@ -93,23 +93,23 @@ export async function GET(req: Request) {
     // 1. Receita Histórica do Stripe (Valor confirmado no resumo de migração)
     const stripeHistoricalRevenue = 7025.00;
 
-    // 2. Receita Asaas (Distinguir Real vs Teste se possível)
-    // Se o environment for sandbox, a receita do banco é considerada teste.
-    // Para maior precisão, o ideal seria um campo 'is_test' na tabela payments.
-    const isSandbox = process.env.ASAAS_ENVIRONMENT === 'sandbox';
-
-    const { data: allPayments } = await supabaseAdmin
+    // 2. Receita Asaas (Distinguir Real vs Teste)
+    const { data: realAsaasPayments } = await supabaseAdmin
       .from('payments')
-      .select('amount, status, metadata')
+      .select('amount')
+      .eq('provider', 'asaas')
+      .eq('is_test', false)
       .in('status', ['succeeded', 'paid']);
 
-    const asaasRevenue = allPayments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0;
-    
-    // Separamos a receita Asaas entre 'Real' e 'Teste'
-    // Se estivermos em sandbox, toda receita de payments é teste.
-    // Se estivermos em produção, toda receita é real.
-    const asaasRealRevenue = isSandbox ? 0 : asaasRevenue;
-    const asaasTestRevenue = isSandbox ? asaasRevenue : 0;
+    const asaasRealRevenue = realAsaasPayments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0;
+
+    const { data: testAsaasPayments } = await supabaseAdmin
+      .from('payments')
+      .select('amount')
+      .eq('is_test', true)
+      .in('status', ['succeeded', 'paid']);
+
+    const asaasTestRevenue = testAsaasPayments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0;
 
     const totalRevenue = stripeHistoricalRevenue + asaasRealRevenue;
 
@@ -121,10 +121,12 @@ export async function GET(req: Request) {
     const { data: monthPayments } = await supabaseAdmin
       .from('payments')
       .select('amount')
+      .eq('provider', 'asaas')
+      .eq('is_test', false)
       .in('status', ['succeeded', 'paid'])
       .gte('created_at', firstDayOfMonth.toISOString());
 
-    const monthRevenue = isSandbox ? 0 : (monthPayments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0);
+    const monthRevenue = monthPayments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0;
 
     // =========================================================================
     // KPIS DA MIGRAÇÃO (STRIPE -> ASAAS)
@@ -354,7 +356,7 @@ export async function GET(req: Request) {
         stripeHistorical: stripeHistoricalRevenue,
         asaasReal: asaasRealRevenue,
         asaasTest: asaasTestRevenue,
-        isSandbox,
+        isSandbox: process.env.ASAAS_ENVIRONMENT === 'sandbox',
       },
       migration: {
         total: totalMigrationQueue || 0,

@@ -90,10 +90,11 @@ export async function GET(req: Request) {
 
     // 4. 💰 CALCULAR TOTAL FINANCEIRO (Geral)
     // Nota: Em um banco grande, isso deveria ser uma query separada ou materializada.
-    // Aqui faremos uma query de agregação simples.
+    // Aqui faremos uma query de agregação simples filtrando testes.
     const { data: totalData, error: totalError } = await supabaseAdmin
       .from('payments')
       .select('amount, currency')
+      .eq('is_test', false)
       .or('status.eq.succeeded,status.eq.paid');
     
     let totalRevenue = 0;

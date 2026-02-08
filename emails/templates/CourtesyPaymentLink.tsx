@@ -80,54 +80,54 @@ export const CourtesyPaymentLink = ({
 
               <HighlightBox title="🎯 Ação Necessária">
                 <Text style={{ ...styles.paragraph, margin: '0 0 12px 0' }}>
-                  Para <strong>continuar usando todas as ferramentas</strong> sem interrupções,
-                  você precisa configurar sua assinatura recorrente via Stripe.
-                </Text>
-                <Text style={{ ...styles.paragraph, margin: '0' }}>
-                  Clique no botão abaixo para acessar o <strong>checkout seguro do Stripe</strong> e
-                  garantir seu acesso contínuo.
-                </Text>
-              </HighlightBox>
-
-              <Section style={styles.planBox}>
-                <Text style={styles.planLabel}>Seu Plano Atual</Text>
-                <Text style={styles.planName}>{planName}</Text>
-                <ul style={styles.list}>
-                  {features.map((feature, index) => (
-                    <li key={index} style={styles.listItem}>
-                      <strong>✓</strong> {feature}
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-
-              <div style={{ textAlign: 'center', margin: '40px 0' }}>
-                <EmailButton href={paymentLink}>
-                  Configurar Assinatura Agora
-                </EmailButton>
-              </div>
-
-              <Section style={styles.warningBox}>
-                <Text style={styles.warningText}>
-                  ⚠️ <strong>Importante:</strong> Sem a configuração da assinatura, seu acesso às
-                  ferramentas premium será interrompido em breve.
-                </Text>
-              </Section>
-
-              <Text style={styles.paragraph}>
-                <strong>Por que Stripe?</strong>
-              </Text>
-              <Text style={styles.paragraph}>
-                O Stripe é a plataforma de pagamentos mais segura do mundo, usada por milhões de empresas.
-                Você pode pagar com <strong>cartão de crédito</strong>, <strong>PIX</strong>,
-                ou <strong>boleto bancário</strong>.
-              </Text>
-
-              <Text style={styles.paragraph}>
-                💳 <strong>Pagamento 100% seguro</strong><br />
-                🔄 <strong>Cobrança automática mensal</strong><br />
-                ❌ <strong>Cancele quando quiser</strong> (sem multas ou taxas)
-              </Text>
+                   Para <strong>continuar usando todas as ferramentas</strong> sem interrupções,
+                   você precisa configurar sua assinatura recorrente.
+                 </Text>
+                 <Text style={{ ...styles.paragraph, margin: '0' }}>
+                   Clique no botão abaixo para acessar o <strong>checkout seguro</strong> e
+                   garantir seu acesso contínuo.
+                 </Text>
+               </HighlightBox>
+ 
+               <Section style={styles.planBox}>
+                 <Text style={styles.planLabel}>Seu Plano Atual</Text>
+                 <Text style={styles.planName}>{planName}</Text>
+                 <ul style={styles.list}>
+                   {features.map((feature, index) => (
+                     <li key={index} style={styles.listItem}>
+                       <strong>✓</strong> {feature}
+                     </li>
+                   ))}
+                 </ul>
+               </Section>
+ 
+               <div style={{ textAlign: 'center', margin: '40px 0' }}>
+                 <EmailButton href={paymentLink}>
+                   Configurar Assinatura Agora
+                 </EmailButton>
+               </div>
+ 
+               <Section style={styles.warningBox}>
+                 <Text style={styles.warningText}>
+                   ⚠️ <strong>Importante:</strong> Sem a configuração da assinatura, seu acesso às
+                   ferramentas premium será interrompido em breve.
+                 </Text>
+               </Section>
+ 
+               <Text style={styles.paragraph}>
+                 <strong>Pagamento Seguro e Flexível</strong>
+               </Text>
+               <Text style={styles.paragraph}>
+                 Utilizamos as plataformas de pagamento mais seguras do mercado.
+                 Você pode pagar com <strong>cartão de crédito</strong>, <strong>PIX</strong>,
+                 ou <strong>boleto bancário</strong>.
+               </Text>
+ 
+               <Text style={styles.paragraph}>
+                 💳 <strong>Pagamento 100% seguro</strong><br />
+                 🔄 <strong>Cobrança automática mensal</strong><br />
+                 ❌ <strong>Cancele quando quiser</strong> (sem multas ou taxas)
+               </Text>
 
               <Text style={styles.disclaimer}>
                 Qualquer dúvida, responda este email ou entre em contato via suporte no app.

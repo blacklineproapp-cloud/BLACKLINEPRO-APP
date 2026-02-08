@@ -14,6 +14,8 @@ interface Payment {
   status: string;
   payment_method: string;
   stripe_payment_id: string;
+  asaas_payment_id: string;
+  provider: 'stripe' | 'asaas';
   user: {
     email: string;
     name: string | null;
@@ -109,7 +111,7 @@ export default function FinancePage() {
            <div className="relative z-10">
               <p className="text-emerald-400 font-medium mb-1 flex items-center gap-2">
                  <CheckCircle size={16} />
-                 Receita Total Confirmada (Stripe)
+                 Receita Total Confirmada (Asaas + Stripe)
               </p>
               <h2 className="text-4xl lg:text-5xl font-bold text-white tracking-tight">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalRevenue)}
@@ -227,18 +229,29 @@ export default function FinancePage() {
                          )}
                        </td>
                        <td className="p-4 font-mono text-xs text-zinc-500 truncate max-w-[120px]">
-                         {payment.stripe_payment_id}
+                         {payment.provider === 'asaas' ? payment.asaas_payment_id : payment.stripe_payment_id}
                        </td>
                        <td className="p-4 text-right">
-                         <a 
-                           href={`https://dashboard.stripe.com/payments/${payment.stripe_payment_id}`}
-                           target="_blank"
-                           rel="noreferrer"
-                           className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition"
-                         >
-                           Stripe <ExternalLink size={12} />
-                         </a>
-                       </td>
+                          {payment.provider === 'asaas' ? (
+                            <a 
+                              href={`https://www.asaas.com/dashboard/payments/${payment.asaas_payment_id}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition"
+                            >
+                              Asaas <ExternalLink size={12} />
+                            </a>
+                          ) : (
+                            <a 
+                              href={`https://dashboard.stripe.com/payments/${payment.stripe_payment_id}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition"
+                            >
+                              Stripe <ExternalLink size={12} />
+                            </a>
+                          )}
+                        </td>
                      </tr>
                    ))}
                  </tbody>

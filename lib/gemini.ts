@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import sharp from 'sharp';
 import { retryGeminiAPI } from './retry';
 import { TOPOGRAPHIC_INSTRUCTION_OPTIMIZED, PERFECT_LINES_INSTRUCTION_OPTIMIZED, SIMPLIFY_TOPOGRAPHIC_TO_LINES, ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED } from './prompts-optimized';
@@ -105,6 +105,26 @@ async function ensureDimensionsMatch(
 const apiKey = process.env.GEMINI_API_KEY!;
 const genAI = new GoogleGenerativeAI(apiKey);
 
+// Configuração de segurança relaxada para stencils (arte pode ser interpretada erroneamente)
+const safetySettings = [
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+];
+
 // Modelo para TOPOGRÁFICO V7.0 - MAPEAMENTO TOPOGRÁFICO INTERPRETATIVO
 // Temperature 0.4 = permite criar contornos e hatching criativamente
 // topP 0.4 = seleção ampla para variar padrões de linhas
@@ -118,6 +138,7 @@ const topographicModel = genAI.getGenerativeModel({
     topP: 0.4,         // Amplo o suficiente para variar hatching/textura
     topK: 20,          // Mais opções para padrões de linha diferenciados
   },
+  safetySettings,
 });
 
 
@@ -131,6 +152,7 @@ const linesModel = genAI.getGenerativeModel({
     topP: 0.15,        // Mesmo do Topográfico (funcionou)
     topK: 10,          // Mesmo do Topográfico (funcionou)
   },
+  safetySettings,
 });
 
 
@@ -144,6 +166,7 @@ const animeModel = genAI.getGenerativeModel({
     topP: 0.1,         // Ultra conservador - não adiciona nada
     topK: 5,           // Poucos tokens - mantém simplicidade
   },
+  safetySettings,
 });
 
 
@@ -155,6 +178,7 @@ const textToImageModel = genAI.getGenerativeModel({
     topP: 0.95,
     topK: 40,
   },
+  safetySettings,
 });
 
 // Modelo DEDICADO para Aprimoramento - Gemini 2.5 Flash
@@ -166,6 +190,7 @@ const dedicatedEnhanceModel = genAI.getGenerativeModel({
     topP: 0.2,        // Conservador mas permite reconstrução de texturas
     topK: 5,          // Poucas opções para manter fidelidade
   },
+  safetySettings,
 });
 
 // Modelo para operações apenas texto (análise de cores)
@@ -402,19 +427,18 @@ OUTPUT: Black contour lines on white. Both structure AND shadow boundaries.`;
       ]);
 
       const response = result.response;
-      const parts = response.candidates?.[0]?.content?.parts;
+      const candidate = response.candidates?.[0];
+      const parts = candidate?.content?.parts;
 
       if (parts) {
         for (const part of parts) {
           // @ts-ignore - Check for inline image data
           if (part.inlineData) {
-            // @ts-ignore
+            // ... (success logic remains)
             const rawImage = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-            // 🎯 FORÇAR MONOCROMÁTICO: Remove qualquer cor que o Gemini tenha gerado
             console.log('[Gemini] Aplicando enforceMonochrome para garantir saída B&W');
             const monochromeImage = await enforceMonochrome(rawImage);
             
-            // 📐 VERIFICAR E CORRIGIR DIMENSÕES: Garante que saída = entrada
             console.log('[Gemini] Verificando dimensões da saída...');
             const finalImage = await ensureDimensionsMatch(
               monochromeImage,
@@ -422,7 +446,6 @@ OUTPUT: Black contour lines on white. Both structure AND shadow boundaries.`;
               originalHeight
             );
             
-            // 💰 CAPTURAR CUSTO REAL: usageMetadata da API Gemini
             const usageMetadata = response.usageMetadata;
             console.log('[Gemini] 💰 usageMetadata:', JSON.stringify(usageMetadata));
             
@@ -436,7 +459,13 @@ OUTPUT: Black contour lines on white. Both structure AND shadow boundaries.`;
 
       // Se não retornou imagem, logar resposta para debug
       console.error('Resposta do Gemini:', JSON.stringify(response, null, 2));
-      throw new Error('Modelo não retornou imagem no formato esperado');
+      
+      const finishReason = candidate?.finishReason;
+      if (finishReason === 'OTHER') {
+        throw new Error('Modelo bloqueou a resposta (Reason: OTHER). Isso pode ser causado por filtros de segurança ou restrições do modelo.');
+      }
+      
+      throw new Error(`Modelo não retornou imagem (Reason: ${finishReason || 'Desconhecida'})`);
     } catch (error: any) {
       console.error('Erro ao gerar estêncil com Gemini:', error);
       throw new Error(`Falha ao gerar estêncil: ${error.message || 'Erro desconhecido'}`);

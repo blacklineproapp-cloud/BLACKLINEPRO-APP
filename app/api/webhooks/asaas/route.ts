@@ -451,7 +451,18 @@ async function handlePaymentFailed(payment: AsaasPayment) {
     customerSource: source,
   });
 
-  // TODO: Enviar email sobre falha
+  // Iniciar grace period de 1 dia (mesmo comportamento de PAYMENT_OVERDUE)
+  const gracePeriodUntil = new Date();
+  gracePeriodUntil.setDate(gracePeriodUntil.getDate() + 1);
+
+  await supabaseAdmin.from('users').update({
+    subscription_status: 'past_due',
+    grace_period_until: gracePeriodUntil.toISOString(),
+  }).eq('id', dbCustomer.user_id);
+
+  console.log(`[Asaas Webhook] ⏰ Grace period (falha cartão) até: ${gracePeriodUntil.toISOString()}`);
+
+  // TODO: Enviar email sobre falha no cartão com link para atualizar método de pagamento
 }
 
 /**
