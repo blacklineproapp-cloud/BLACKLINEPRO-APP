@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getOrCreateUser } from '@/lib/auth';
 import { StripeToAsaasMigration } from '@/lib/migration/stripe-to-asaas';
 
 export async function GET() {
@@ -16,17 +16,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    // Buscar usuário no banco
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('id, email, name, requires_cpf, migration_status, plan')
-      .eq('clerk_id', clerkId)
-      .single();
+    // Buscar ou criar usuário (garante que existe no Supabase mesmo se webhook falhou)
+    const user = await getOrCreateUser(clerkId);
 
     if (!user) {
       return NextResponse.json({
         needsCpf: false,
-        message: 'Usuário não encontrado',
+        message: 'Erro ao processar usuário',
       });
     }
 

@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getOrCreateUser } from '@/lib/auth';
 import { StripeToAsaasMigration } from '@/lib/migration/stripe-to-asaas';
 
 export async function POST(request: NextRequest) {
@@ -38,19 +38,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Buscar usuário no banco
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('id, email, name')
-      .eq('clerk_id', clerkId)
-      .single();
+    // Buscar ou criar usuário (garante que existe no Supabase mesmo se webhook falhou)
+    console.log(`[Migration API] Buscando usuário para clerk_id: ${clerkId}`);
+    const user = await getOrCreateUser(clerkId);
 
     if (!user) {
+      console.error(`[Migration API] ❌ getOrCreateUser retornou null para ${clerkId}`);
       return NextResponse.json(
-        { error: 'Usuário não encontrado' },
-        { status: 404 }
+        { error: 'Erro ao processar usuário. Tente novamente.' },
+        { status: 500 }
       );
     }
+
+    console.log(`[Migration API] ✅ Usuário: ${user.email} (id: ${user.id})`);
 
     // Processar migração
     const result = await StripeToAsaasMigration.processMigration({
@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
+      console.error(`[Migration API] ❌ Migração falhou: ${result.error}`);
       return NextResponse.json(
         { error: result.error || 'Erro ao processar migração' },
         { status: 400 }

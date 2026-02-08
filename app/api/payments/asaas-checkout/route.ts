@@ -8,6 +8,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getOrCreateUser } from '@/lib/auth';
 import { rateLimit } from '@/lib/ratelimit';
 import {
   AsaasCustomerService,
@@ -60,21 +61,13 @@ export async function POST(req: Request) {
       }, { status: 429 });
     }
 
-    // 2. Buscar usuário
-    console.log('[Asaas Checkout] Buscando usuário no banco...');
-    const { data: user, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('id, email, name, asaas_customer_id')
-      .eq('clerk_id', clerkId)
-      .single();
+    // 2. Buscar ou criar usuário (garante que existe no Supabase mesmo se webhook falhou)
+    console.log('[Asaas Checkout] Buscando/criando usuário no banco...');
+    const user = await getOrCreateUser(clerkId);
 
-    if (userError) {
-      console.error('[Asaas Checkout] Erro ao buscar usuário:', userError);
-    }
-
-    if (userError || !user) {
-      console.log('[Asaas Checkout] ❌ Usuário não encontrado no banco');
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
+    if (!user) {
+      console.log('[Asaas Checkout] ❌ Não foi possível buscar/criar usuário');
+      return NextResponse.json({ error: 'Erro ao processar usuário. Tente novamente.' }, { status: 500 });
     }
 
     console.log('[Asaas Checkout] ✅ Usuário encontrado:', user.email);

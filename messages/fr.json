@@ -355,16 +355,19 @@
       "support": "Si le problème persiste, contactez le support."
     },
     "nav": {
+      "home": "Accueil",
       "editor": "Éditeur",
       "generator": "IA Gen",
       "tools": "Outils",
-      "myBoletos": "Mes Boletos",
-      "mySubscription": "Mon Abonnement",
       "support": "Support",
-      "user": "Utilisateur",
-      "settings": "Paramètres",
+      "subscription": "Abonnement",
+      "boletos": "Boletos",
       "upgrade": "Améliorer",
-      "logout": "Déconnexion"
+      "logout": "Déconnexion",
+      "settings": "Paramètres",
+      "user": "Utilisateur",
+      "myBoletos": "Mes Boletos",
+      "mySubscription": "Mon Abonnement"
     }
   },
   "PricingPage": {
@@ -540,16 +543,58 @@
         "A3": "A3",
         "Portrait": "Portrait",
         "Square": "Carré"
+      },
+      "essential": "Réglages Essentiels",
+      "dark": "Sombre",
+      "light": "Clair",
+      "contrast": "Contraste",
+      "soft": "Doux",
+      "strong": "Fort",
+      "threshold": "Noir/Blanc",
+      "moreBlack": "Plus de noir",
+      "moreWhite": "Plus de blanc",
+      "gamma": "Gamma (Demi-teintes)",
+      "sharpen": "Netteté",
+      "amount": "Intensité",
+      "transformations": "Transformations",
+      "rotation": "Rotation",
+      "flipH": "Miroir H",
+      "flipV": "Miroir V",
+      "invert": "Inverser",
+      "lineColor": "Couleur du Contour",
+      "custom": "Personnalisée :",
+      "sensitivity": "Sensibilité",
+      "moreColor": "Plus de couleur",
+      "lessColor": "Moins de couleur",
+      "colorHint": "La couleur est appliquée uniquement aux contours. Le fond blanc reste intact.",
+      "resetTooltip": "Réinitialiser tous les réglages",
+      "colors": {
+        "black": "Noir",
+        "darkBlue": "Bleu Foncé",
+        "navy": "Marine",
+        "blue": "Bleu",
+        "purple": "Violet",
+        "red": "Rouge",
+        "green": "Vert",
+        "orange": "Orange",
+        "violet": "Violet",
+        "cyan": "Cyan",
+        "brown": "Marron",
+        "graphite": "Graphite"
       }
     },
     "comparison": {
       "horizontal": "Horizontal",
       "blend": "Mélange",
-      "holdSpace": "Maintenez ESPACE pour comparer"
+      "holdSpace": "Maintenez ESPACE pour comparer",
+      "horizontalTooltip": "Glisser horizontal",
+      "blendTooltip": "Superposition ajustable"
     },
     "actions": {
       "download": "Télécharger",
       "save": "Enregistrer Projet",
+      "saveName": "Nom du projet",
+      "stencil": "Pochoir",
       "saveShort": "Enregistrer",
       "saving": "Enregistrement...",
       "copy": "Copier",
@@ -572,7 +617,65 @@
       "saveSuccess": "Projet enregistré avec succès !",
       "saveError": "Erreur lors de l'enregistrement",
       "downloadStarted": "Téléchargement démarré !",
-      "copied": "Copié dans le presse-papiers !"
+      "copied": "Copié dans le presse-papiers !",
+      "limitReached": "Limite de générations atteinte. Abonnez-vous pour continuer !",
+      "generateError": "Erreur lors de la génération du pochoir.",
+      "downloadWithoutAdjustments": "Avertissement : Téléchargement sans réglages",
+      "drawingSaved": "Dessin enregistré avec {count} traits !"
+    },
+    "quality": {
+      "title": "Informations de Qualité",
+      "resolution": "Résolution",
+      "estimatedDpi": "DPI Estimé",
+      "physicalSize": "Taille Physique",
+      "status": "Statut",
+      "optimize": "Optimiser la Qualité",
+      "recommendation": "Recommandation",
+      "recommendationText": "Augmentez la résolution de l'image ou réduisez la taille physique souhaitée pour améliorer la qualité d'impression.",
+      "excellent": {
+        "label": "Excellente",
+        "desc": "Idéale pour l'impression professionnelle"
+      },
+      "good": {
+        "label": "Bonne",
+        "desc": "Adaptée à l'impression"
+      },
+      "acceptable": {
+        "label": "Acceptable",
+        "desc": "Qualité minimale acceptable"
+      },
+      "poor": {
+        "label": "Faible",
+        "desc": "Non recommandé pour l'impression"
+      },
+      "warnings": {
+        "belowIdeal": "DPI en dessous de l'idéal. Recommandé : 300 DPI",
+        "low": "DPI faible. Perte de qualité possible à l'impression",
+        "veryLow": "DPI très faible ! Qualité insuffisante pour l'impression professionnelle"
+      }
+    },
+    "resize": {
+      "title": "Optimiser la Qualité / Redimensionner",
+      "currentInfo": "Informations Actuelles",
+      "newSize": "Nouvelle Taille",
+      "suggestOptimal": "Suggérer la Taille Idéale",
+      "width": "Largeur (cm)",
+      "height": "Hauteur (cm)",
+      "maintainAspect": "Maintenir les Proportions",
+      "outputDpi": "DPI de Sortie",
+      "dpiOptions": {
+        "min": "150 DPI (Minimum)",
+        "good": "200 DPI (Bon)",
+        "professional": "300 DPI (Professionnel)",
+        "ultra": "600 DPI (Ultra)"
+      },
+      "preview": "Aperçu du Résultat",
+      "newResolution": "Nouvelle Résolution",
+      "finalDpi": "DPI Final",
+      "algorithm": "Algorithme",
+      "apply": "Appliquer le Redimensionnement",
+      "upscaleWarning": "L'upscale peut ne pas ajouter de détails réels, il augmente seulement les pixels",
+      "downscaleSuccess": "Le downscale conservera toute la qualité en réduisant la taille du fichier"
     }
   },
   "generator": {

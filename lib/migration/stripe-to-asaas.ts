@@ -209,31 +209,38 @@ export class StripeToAsaasMigration {
       // 1. Validar CPF/CNPJ
       const validation = this.validateCpfCnpj(cpfCnpj);
       if (!validation.valid) {
+        console.log(`[Migration] CPF/CNPJ inválido para userId=${userId}: ${cpfCnpj}`);
         return { success: false, error: 'CPF/CNPJ inválido' };
       }
 
       // 2. Buscar usuário
-      const { data: user } = await supabaseAdmin
+      const { data: user, error: userError } = await supabaseAdmin
         .from('users')
         .select('id, email, name, clerk_id, plan')
         .eq('id', userId)
         .single();
 
-      if (!user) {
-        return { success: false, error: 'Usuário não encontrado' };
+      if (userError || !user) {
+        console.error(`[Migration] ❌ Erro ao buscar usuário ${userId}:`, userError?.message || 'user is null', userError?.code);
+        return { success: false, error: `Erro ao buscar usuário: ${userError?.message || 'não encontrado'}` };
       }
 
+      console.log(`[Migration] ✅ Usuário encontrado: ${user.email}, plano: ${user.plan}`);
+
       // 3. Buscar item na fila de migração
-      const { data: migrationItem } = await supabaseAdmin
+      const { data: migrationItem, error: mqError } = await supabaseAdmin
         .from('migration_queue')
         .select('*')
         .eq('user_id', userId)
         .eq('status', 'pending')
         .single();
 
-      if (!migrationItem) {
-        return { success: false, error: 'Usuário não está na fila de migração' };
+      if (mqError || !migrationItem) {
+        console.error(`[Migration] ❌ Fila de migração não encontrada para ${userId}:`, mqError?.message || 'item is null', mqError?.code);
+        return { success: false, error: 'Nenhuma migração pendente encontrada para sua conta' };
       }
+
+      console.log(`[Migration] ✅ Item de migração: tipo=${migrationItem.migration_type}, plano=${migrationItem.current_plan}`);
 
       // 4. Verificar se já existe cliente no Asaas por CPF
       let asaasCustomer = await AsaasCustomerService.getByCpfCnpj(validation.cleaned);
