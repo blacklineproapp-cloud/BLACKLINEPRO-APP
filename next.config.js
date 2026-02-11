@@ -75,7 +75,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.stencilflow.com.br https://*.clerk.accounts.dev https://challenges.cloudflare.com https://connect.facebook.net https://www.googletagmanager.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.stencilflow.com.br https://*.clerk.accounts.dev https://challenges.cloudflare.com https://connect.facebook.net https://www.facebook.com https://www.googletagmanager.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
