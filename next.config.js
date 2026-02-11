@@ -79,7 +79,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co https://clerk.stencilflow.com.br https://*.clerk.accounts.dev https://generativelanguage.googleapis.com https://www.facebook.com https://connect.facebook.net https://www.google-analytics.com https://*.ingest.us.sentry.io https://capig.madgicx.ai",
+              "connect-src 'self' https://*.supabase.co https://clerk.stencilflow.com.br https://*.clerk.accounts.dev https://generativelanguage.googleapis.com https://www.facebook.com https://connect.facebook.net https://graph.facebook.com https://www.google-analytics.com https://*.ingest.us.sentry.io https://capig.madgicx.ai",
               "frame-src 'self' https://challenges.cloudflare.com",
               "worker-src 'self' blob:",
               "object-src 'none'",
