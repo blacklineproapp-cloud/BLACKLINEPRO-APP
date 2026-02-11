@@ -28,7 +28,6 @@ import type {
   AsaasWebhookPayload,
   AsaasPayment,
   AsaasSubscription,
-  ASAAS_PLANS,
 } from '@/lib/asaas';
 
 export const dynamic = 'force-dynamic';
@@ -252,8 +251,8 @@ async function handlePaymentReceived(payment: AsaasPayment) {
 
   const { data: dbCustomer, source } = dbCustomerResult;
 
-  // 2. Determinar plano pelo valor ou metadata
-  const plan = getPlanFromPayment(payment);
+  // 2. Determinar plano via externalReference → banco → description
+  const plan = await getPlanFromPayment(payment);
 
   // 3. Ativar usuário
   try {
@@ -341,7 +340,7 @@ async function handlePaymentCreated(payment: AsaasPayment) {
   const { data: dbCustomer, source } = dbCustomerResult;
 
   // Salvar como pendente
-  const plan = getPlanFromPayment(payment);
+  const plan = await getPlanFromPayment(payment);
 
   await AsaasPaymentService.saveToDatabase({
     userId: dbCustomer.user_id,
@@ -520,7 +519,7 @@ async function handleSubscriptionCreated(subscription: AsaasSubscription) {
 
   const { data: dbCustomer, source } = dbCustomerResult;
 
-  const plan = getPlanFromValue(subscription.value);
+  const plan = getPlanFromSubscription(subscription);
 
   await AsaasSubscriptionService.saveToDatabase({
     userId: dbCustomer.user_id,
@@ -586,35 +585,111 @@ async function handleSubscriptionCanceled(subscription: AsaasSubscription) {
 // HELPERS
 // ============================================================================
 
-/**
- * Determina o plano baseado no valor
- */
-/**
- * Extrai o plano do pagamento usando description ou externalReference
- * Fallback para valor se não encontrar
- */
-function getPlanFromPayment(payment: AsaasPayment): 'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy' {
-  const ref = (payment.externalReference || '').toLowerCase();
-  const desc = (payment.description || '').toLowerCase();
-  const searchText = `${ref} ${desc}`;
+// Planos válidos para validação
+const VALID_PLANS = ['free', 'starter', 'pro', 'studio', 'enterprise', 'legacy'] as const;
+type PlanResult = typeof VALID_PLANS[number];
 
-  // Tentar extrair do texto (externalReference ou description)
-  if (searchText.includes('enterprise')) return 'enterprise';
-  if (searchText.includes('studio')) return 'studio';
-  if (searchText.includes('pro')) return 'pro';
-  if (searchText.includes('starter')) return 'starter';
-  if (searchText.includes('legacy')) return 'legacy';
-
-  // Fallback: usar valor (preços mensais como referência)
-  return getPlanFromValue(payment.value);
+function isValidPlan(value: string): value is PlanResult {
+  return VALID_PLANS.includes(value as PlanResult);
 }
 
-function getPlanFromValue(value: number): 'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy' {
-  // Preços mensais como referência
-  if (value >= 500) return 'enterprise';
-  if (value >= 250) return 'studio';
-  if (value >= 80) return 'pro';
-  if (value >= 40) return 'starter';
-  if (value >= 20) return 'legacy';
-  return 'starter'; // Default
+/**
+ * Extrai o plano do externalReference de forma estruturada.
+ * Formato esperado: "{userId}_{plan}_{cycle}"
+ */
+function parsePlanFromReference(externalReference?: string): PlanResult | null {
+  if (!externalReference) return null;
+
+  const parts = externalReference.toLowerCase().split('_');
+  // O formato é: uuid_plan_cycle (uuid pode conter hifens mas não underscores)
+  // Pegar os dois últimos segmentos: plan e cycle
+  if (parts.length < 3) return null;
+
+  const plan = parts[parts.length - 2];
+  return isValidPlan(plan) ? plan : null;
+}
+
+/**
+ * Extrai o plano da description do Asaas.
+ * Formato esperado: "StencilFlow Pro - monthly"
+ */
+function parsePlanFromDescription(description?: string): PlanResult | null {
+  if (!description) return null;
+
+  const desc = description.toLowerCase();
+  // Ordem do mais específico para o menos específico
+  if (desc.includes('enterprise')) return 'enterprise';
+  if (desc.includes('studio')) return 'studio';
+  if (desc.includes('pro')) return 'pro';
+  if (desc.includes('starter')) return 'starter';
+  if (desc.includes('legacy')) return 'legacy';
+  return null;
+}
+
+/**
+ * Busca o plano salvo no banco de dados durante o checkout.
+ * Fonte confiável: o plano foi registrado quando o pagamento foi criado.
+ */
+async function getPlanFromDatabase(asaasPaymentId: string): Promise<PlanResult | null> {
+  try {
+    const { data } = await supabaseAdmin
+      .from('payments')
+      .select('plan_type')
+      .eq('asaas_payment_id', asaasPaymentId)
+      .single();
+
+    if (data?.plan_type && isValidPlan(data.plan_type)) {
+      return data.plan_type;
+    }
+  } catch {
+    // Silencioso - fallback para próxima camada
+  }
+  return null;
+}
+
+/**
+ * Determina o plano do pagamento com 3 camadas de segurança:
+ * 1. Parse estruturado do externalReference (fonte primária)
+ * 2. Consulta ao banco de dados (fallback seguro)
+ * 3. Análise da description (último recurso)
+ */
+async function getPlanFromPayment(payment: AsaasPayment): Promise<PlanResult> {
+  // 1. externalReference (mais confiável - setado no checkout)
+  const fromRef = parsePlanFromReference(payment.externalReference);
+  if (fromRef) {
+    console.log(`[Asaas Webhook] Plano detectado via externalReference: ${fromRef}`);
+    return fromRef;
+  }
+
+  // 2. Banco de dados (salvo durante o checkout)
+  const fromDb = await getPlanFromDatabase(payment.id);
+  if (fromDb) {
+    console.log(`[Asaas Webhook] Plano detectado via banco de dados: ${fromDb}`);
+    return fromDb;
+  }
+
+  // 3. Description (fallback textual)
+  const fromDesc = parsePlanFromDescription(payment.description);
+  if (fromDesc) {
+    console.warn(`[Asaas Webhook] ⚠️ Plano detectado via description (externalReference ausente): ${fromDesc} | Payment: ${payment.id}`);
+    return fromDesc;
+  }
+
+  // Nenhuma fonte encontrou - logar para investigação
+  console.error(`[Asaas Webhook] ❌ Não foi possível determinar plano do pagamento ${payment.id}. Ref: "${payment.externalReference}", Desc: "${payment.description}", Valor: R$${payment.value}. Usando 'starter' como fallback seguro.`);
+  return 'starter';
+}
+
+/**
+ * Extrai o plano de uma assinatura usando externalReference ou description.
+ */
+function getPlanFromSubscription(subscription: AsaasSubscription): PlanResult {
+  const fromRef = parsePlanFromReference(subscription.externalReference);
+  if (fromRef) return fromRef;
+
+  const fromDesc = parsePlanFromDescription(subscription.description);
+  if (fromDesc) return fromDesc;
+
+  console.warn(`[Asaas Webhook] ⚠️ Plano não identificado na assinatura ${subscription.id}. Usando 'starter' como fallback.`);
+  return 'starter';
 }

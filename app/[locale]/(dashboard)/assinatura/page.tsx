@@ -3,10 +3,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { 
-  Crown, Zap, Sparkles, CreditCard, Calendar, 
-  ExternalLink, Loader2, CheckCircle, XCircle,
-  ArrowLeft, Settings, AlertTriangle
+import {
+  Crown, Zap, Sparkles, CreditCard, Calendar,
+  ExternalLink, CheckCircle, XCircle,
+  ArrowLeft, AlertTriangle
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import CancellationModal from '@/components/subscription/CancellationModal';
@@ -17,7 +17,6 @@ interface UserData {
   subscription_status: string;
   subscription_expires_at: string | null;
   admin_courtesy: boolean;
-  stripe_customer_id: string | null;
   asaas_subscription_id: string | null;
   asaas_customer_id: string | null;
   scheduled_to_cancel_at?: string | null;
@@ -28,7 +27,6 @@ export default function AssinaturaPage() {
   const { isLoaded, isSignedIn } = useUser();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [portalLoading, setPortalLoading] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
 
@@ -56,37 +54,10 @@ export default function AssinaturaPage() {
     }
   }, [isLoaded, isSignedIn, router, loadUserData]);
 
-  const handleManageSubscription = async () => {
-    setPortalLoading(true);
-    try {
-      const res = await fetch('/api/billing/portal', {
-        method: 'POST',
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Erro ao abrir portal');
-      }
-
-      const { url } = await res.json();
-      window.location.href = url;
-    } catch (error: any) {
-      alert(error.message || 'Erro ao abrir portal de pagamento');
-      setPortalLoading(false);
-    }
-  };
-
   const handleCancelSubscription = async (reason: string, feedback: string) => {
     setCancelLoading(true);
     try {
-      // Determinar qual gateway usar baseado nos dados do usuário
-      // Prioridade: Asaas (se tiver asaas_subscription_id) > Stripe
-      const isAsaasUser = !!userData?.asaas_subscription_id;
-      const cancelEndpoint = isAsaasUser ? '/api/asaas/cancel' : '/api/billing/cancel';
-
-      console.log(`[Cancelamento] Usando gateway: ${isAsaasUser ? 'Asaas' : 'Stripe'}`);
-
-      const res = await fetch(cancelEndpoint, {
+      const res = await fetch('/api/asaas/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason, feedback }),
@@ -97,16 +68,9 @@ export default function AssinaturaPage() {
         throw new Error(data.error || 'Erro ao cancelar assinatura');
       }
 
-      // Recarregar dados para atualizar UI
       await loadUserData();
       setCancelModalOpen(false);
-
-      // Mensagem diferente baseado no gateway
-      if (isAsaasUser) {
-        alert('Assinatura cancelada com sucesso.');
-      } else {
-        alert('Assinatura cancelada com sucesso. Seu acesso continuará até o fim do período.');
-      }
+      alert('Assinatura cancelada com sucesso.');
     } catch (error: any) {
       alert(error.message || 'Erro ao processar cancelamento');
     } finally {
@@ -166,14 +130,7 @@ export default function AssinaturaPage() {
   const hasActiveSubscription = userData.is_paid && userData.subscription_status === 'active';
   const isScheduledToCancel = !!userData.scheduled_to_cancel_at;
 
-  // Detectar tipo de gateway de pagamento
   const isAsaasUser = !!userData.asaas_subscription_id;
-  const isStripeUser = !!userData.stripe_customer_id && !isAsaasUser;
-
-  // Mostrar botão de gerenciar apenas para usuários Stripe (Asaas não tem portal externo)
-  const canManageStripePortal = hasActiveSubscription && !isCourtesy && isStripeUser;
-
-  // Permitir cancelamento para qualquer usuário pago (Stripe ou Asaas)
   const canCancelSubscription = hasActiveSubscription && !isCourtesy;
 
   return (
@@ -307,28 +264,6 @@ export default function AssinaturaPage() {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            {/* Botão Gerenciar Pagamento - apenas para Stripe */}
-            {canManageStripePortal && (
-              <button
-                onClick={handleManageSubscription}
-                disabled={portalLoading}
-                className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-medium transition flex items-center justify-center gap-2"
-              >
-                {portalLoading ? (
-                  <>
-                    <Loader2 size={20} className="animate-spin" />
-                    Abrindo portal...
-                  </>
-                ) : (
-                  <>
-                    <Settings size={20} />
-                    Gerenciar Pagamento
-                    <ExternalLink size={16} />
-                  </>
-                )}
-              </button>
-            )}
-
             {/* Info para usuários Asaas - não tem portal externo */}
             {isAsaasUser && hasActiveSubscription && !isCourtesy && (
               <div className="flex-1 px-6 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-center">
@@ -366,29 +301,6 @@ export default function AssinaturaPage() {
 
         {/* Info Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Payment Method - Stripe */}
-          {canManageStripePortal && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center">
-                  <CreditCard size={20} className="text-zinc-400" />
-                </div>
-                <h3 className="font-semibold">Forma de Pagamento</h3>
-              </div>
-              <p className="text-sm text-zinc-400 mb-4">
-                Gerencie seus métodos de pagamento e veja o histórico de faturas no portal Stripe.
-              </p>
-              <button
-                onClick={handleManageSubscription}
-                disabled={portalLoading}
-                className="text-sm text-blue-400 hover:text-blue-300 transition flex items-center gap-1"
-              >
-                Abrir portal de pagamento
-                <ExternalLink size={14} />
-              </button>
-            </div>
-          )}
-
           {/* Payment Info - Asaas */}
           {isAsaasUser && hasActiveSubscription && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
@@ -408,7 +320,7 @@ export default function AssinaturaPage() {
           )}
 
           {/* Minhas Faturas - Histórico de pagamentos */}
-          {(userData?.stripe_customer_id || hasActiveSubscription) && (
+          {hasActiveSubscription && (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 bg-emerald-600/10 rounded-lg flex items-center justify-center border border-emerald-500/30">

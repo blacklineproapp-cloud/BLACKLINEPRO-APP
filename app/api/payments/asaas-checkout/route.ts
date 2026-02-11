@@ -106,7 +106,19 @@ export async function POST(req: Request) {
       phone: validPhone, // Telefone real ou undefined (Asaas aceita sem telefone)
     });
 
-    // 7. Criar assinatura ou cobrança baseado no método
+    // 9. Cancelar assinatura anterior (se existir) para evitar cobranças duplicadas
+    if (user.asaas_subscription_id) {
+      try {
+        console.log(`[Asaas Checkout] Cancelando assinatura anterior: ${user.asaas_subscription_id}`);
+        await AsaasSubscriptionService.cancel(user.asaas_subscription_id);
+        console.log(`[Asaas Checkout] ✅ Assinatura anterior cancelada`);
+      } catch (cancelError: any) {
+        // Se a assinatura já estava cancelada/inativa, seguir normalmente
+        console.warn(`[Asaas Checkout] ⚠️ Erro ao cancelar assinatura anterior (pode já estar inativa): ${cancelError.message}`);
+      }
+    }
+
+    // 10. Criar nova assinatura baseado no método de pagamento
     const externalReference = `${user.id}_${plan}_${cycle}`;
     const asaasCycle = BILLING_CYCLE_MAP[cycle] || 'MONTHLY';
 
@@ -117,34 +129,50 @@ export async function POST(req: Request) {
       // PIX
       // ==========================================
       case 'pix': {
-        // Criar cobrança PIX avulsa (primeira)
-        // Depois do pagamento, criar assinatura
-        const { payment, pixQrCode } = await AsaasPaymentService.createPixForPlan({
+        // Criar assinatura recorrente com PIX (mesmo padrão do Boleto)
+        const pixSubscription = await AsaasSubscriptionService.createWithPix({
           customerId: asaasCustomer.id,
           plan,
           cycle,
           externalReference,
         });
 
-        // Salvar no banco
-        await AsaasPaymentService.saveToDatabase({
+        // Buscar primeira cobrança gerada pela assinatura
+        const pixPayments = await AsaasSubscriptionService.getPayments(pixSubscription.id);
+        const firstPixPayment = pixPayments.data[0];
+
+        if (!firstPixPayment) {
+          console.error('[Asaas Checkout] ❌ Nenhuma cobrança gerada para assinatura PIX:', pixSubscription.id);
+          return NextResponse.json({
+            error: 'Erro ao gerar cobrança PIX. Tente novamente.',
+          }, { status: 500 });
+        }
+
+        // Buscar QR Code PIX da primeira cobrança
+        const pixQrCode = await AsaasPaymentService.getPixQrCode(firstPixPayment.id);
+
+        // Salvar assinatura no banco
+        await AsaasSubscriptionService.saveToDatabase({
           userId: user.id,
           customerId: dbCustomer.id,
-          payment,
+          subscription: pixSubscription,
           plan,
         });
 
         // Atualizar usuário com info pendente
         await supabaseAdmin.from('users').update({
           asaas_customer_id: asaasCustomer.id,
+          asaas_subscription_id: pixSubscription.id,
           plan,
           subscription_status: 'pending',
+          subscription_expires_at: pixSubscription.nextDueDate,
         }).eq('id', user.id);
 
         result = {
           success: true,
           method: 'pix',
-          paymentId: payment.id,
+          subscriptionId: pixSubscription.id,
+          paymentId: firstPixPayment.id,
           pixQrCode: {
             encodedImage: pixQrCode.encodedImage,
             payload: pixQrCode.payload,

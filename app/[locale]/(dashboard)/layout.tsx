@@ -102,13 +102,13 @@ export default function DashboardLayout({
 
             {/* Menu Links */}
             <div className="p-1.5 flex flex-col gap-0.5">
-               <Link 
-                 href="/boletos" 
-                 onClick={() => setIsMenuOpen(false)} 
+               <Link
+                 href="/faturas"
+                 onClick={() => setIsMenuOpen(false)}
                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-800 transition-colors"
                >
                   <CreditCard size={16} className="text-zinc-400" />
-                  <span className="text-xs text-zinc-300 font-medium">{t('myBoletos')}</span>
+                  <span className="text-xs text-zinc-300 font-medium">{t('myInvoices')}</span>
                </Link>
 
                <Link 
@@ -206,11 +206,11 @@ export default function DashboardLayout({
           label={t('subscription')}
           className="hidden md:flex"
         />
-        <NavItem 
-          href="/boletos"
-          active={pathname === '/boletos'} 
-          icon={<CreditCard size={24} />} 
-          label={t('boletos')} 
+        <NavItem
+          href="/faturas"
+          active={pathname === '/faturas'}
+          icon={<CreditCard size={24} />}
+          label={t('invoices')}
           className="hidden md:flex"
         />
 

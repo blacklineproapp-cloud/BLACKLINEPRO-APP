@@ -294,11 +294,13 @@
       "support": "Support",
       "subscription": "Subscription",
       "boletos": "Boletos",
+      "invoices": "Invoices",
       "upgrade": "Upgrade",
       "logout": "Log Out",
       "settings": "Settings",
       "user": "User",
       "myBoletos": "My Boletos",
+      "myInvoices": "My Invoices",
       "mySubscription": "My Subscription"
     },
     "title": "Dashboard",

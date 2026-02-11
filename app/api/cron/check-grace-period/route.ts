@@ -122,12 +122,14 @@ export async function GET(req: Request) {
     }
 
     // 5. SWEEP: Buscar usuários pagos com assinatura expirada que ainda não foram bloqueados
+    // Só considerar usuários que têm subscription real (asaas_subscription_id)
     const { data: expiredSubUsers, error: expiredSubError } = await supabaseAdmin
       .from('users')
       .select('id, email, subscription_expires_at')
       .eq('is_paid', true)
       .eq('is_blocked', false)
       .not('subscription_expires_at', 'is', null)
+      .not('asaas_subscription_id', 'is', null)
       .lt('subscription_expires_at', now.toISOString())
       .neq('plan', 'free');
 

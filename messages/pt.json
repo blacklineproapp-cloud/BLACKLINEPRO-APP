@@ -292,11 +292,13 @@
       "support": "Suporte",
       "subscription": "Assinatura",
       "boletos": "Boletos",
+      "invoices": "Faturas",
       "upgrade": "Upgrade",
       "logout": "Sair da Conta",
       "settings": "Configurações",
       "user": "Usuário",
       "myBoletos": "Meus Boletos",
+      "myInvoices": "Minhas Faturas",
       "mySubscription": "Minha Assinatura"
     },
     "title": "Painel",

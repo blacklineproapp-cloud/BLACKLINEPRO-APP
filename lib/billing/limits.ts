@@ -168,7 +168,7 @@ async function checkLimit(
     // 1. Buscar plano e flags do usuário
     const { data: user } = await supabaseAdmin
       .from('users')
-      .select('plan, admin_courtesy, admin_courtesy_expires_at, is_paid, is_blocked, blocked_reason, subscription_expires_at, subscription_status')
+      .select('plan, admin_courtesy, admin_courtesy_expires_at, is_paid, is_blocked, blocked_reason, subscription_expires_at, subscription_status, asaas_subscription_id')
       .eq('id', userId)
       .single();
 
@@ -193,17 +193,20 @@ async function checkLimit(
     }
 
     // 🆕 VERIFICAÇÃO DE ASSINATURA EXPIRADA
-    // Se o usuário tem plano pago e subscription_expires_at no passado → bloquear
+    // Só auto-bloquear se o usuário tem uma subscription real (asaas_subscription_id)
+    // e subscription_expires_at está no passado. Usuários sem subscription
+    // (ex: pagamento avulso PIX antigo) não devem ser bloqueados automaticamente.
     const isCourtesyActive = isCourtesy && courtesyExpiresAt && new Date() < courtesyExpiresAt;
     if (
       !isCourtesyActive &&
       plan !== 'free' &&
       user?.is_paid === true &&
+      user?.asaas_subscription_id &&
       user?.subscription_expires_at
     ) {
       const expiresAt = new Date(user.subscription_expires_at);
       if (expiresAt < new Date()) {
-        console.warn(`[Limits] 🚫 Assinatura expirada para usuário ${userId}. Expirou em: ${expiresAt.toISOString()}`);
+        console.warn(`[Limits] 🚫 Assinatura expirada para usuário ${userId}. Subscription: ${user.asaas_subscription_id}. Expirou em: ${expiresAt.toISOString()}`);
 
         // Auto-bloquear (fire-and-forget)
         supabaseAdmin.from('users').update({

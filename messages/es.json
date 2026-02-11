@@ -362,11 +362,13 @@
       "support": "Soporte",
       "subscription": "Suscripción",
       "boletos": "Boletos",
+      "invoices": "Facturas",
       "upgrade": "Mejorar",
       "logout": "Cerrar Sesión",
       "settings": "Configuración",
       "user": "Usuario",
       "myBoletos": "Mis Boletos",
+      "myInvoices": "Mis Facturas",
       "mySubscription": "Mi Suscripción"
     }
   },
