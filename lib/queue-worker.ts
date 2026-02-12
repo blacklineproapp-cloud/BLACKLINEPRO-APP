@@ -38,8 +38,9 @@ function parseRedisUrl(url: string): ConnectionOptions {
     maxRetriesPerRequest: null, // BullMQ exige null
     enableReadyCheck: false,
     keepAlive: 30000, // Keep-alive a cada 30s (mais conservador)
-    connectTimeout: 10000, // 10s para conectar
-    commandTimeout: 5000, // 5s para comandos
+    connectTimeout: 15000, // 15s para conectar
+    // Sem commandTimeout — BullMQ usa comandos blocking (BRPOPLPUSH/BZPOPMIN)
+    // que podem demorar tempo indeterminado. ioredis commandTimeout interfere.
     tls: isTls ? {
       rejectUnauthorized: false,
     } : undefined,

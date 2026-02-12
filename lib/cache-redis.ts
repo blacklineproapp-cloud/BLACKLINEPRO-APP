@@ -24,8 +24,8 @@ if (process.env.REDIS_URL) {
     redisClient = new Redis(process.env.REDIS_URL, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
-      commandTimeout: 3000, // Timeout de 3s para comandos (evita travar response)
-      connectTimeout: 5000, // Timeout de 5s para conexão
+      commandTimeout: 10000, // Timeout de 10s para comandos (fallback para memória se exceder)
+      connectTimeout: 10000, // Timeout de 10s para conexão
       // Configurações de reconnection
       retryStrategy(times) {
         const delay = Math.min(times * 50, 2000);
