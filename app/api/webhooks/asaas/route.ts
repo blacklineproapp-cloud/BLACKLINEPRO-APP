@@ -287,14 +287,55 @@ async function handlePaymentReceived(payment: AsaasPayment) {
     }).eq('id', dbCustomer.user_id);
   }
 
-  // 4. Atualizar subscription_expires_at se for assinatura
+  // 4. Atualizar subscription ou criar uma se pagamento for avulso
   if (payment.subscription) {
+    // Pagamento vinculado a assinatura — atualizar datas
     const subscription = await AsaasSubscriptionService.getById(payment.subscription);
     if (subscription) {
       await supabaseAdmin.from('users').update({
         subscription_expires_at: subscription.nextDueDate,
         asaas_subscription_id: subscription.id,
       }).eq('id', dbCustomer.user_id);
+    }
+  } else {
+    // Pagamento AVULSO (sem subscription) — criar assinatura para evitar cobranca orphan
+    // Isso acontece quando o checkout falha parcialmente: cria cobranca mas perde a assinatura
+    console.warn(`[Asaas Webhook] Pagamento avulso detectado: ${payment.id}. Criando assinatura para o usuario.`);
+
+    try {
+      // Buscar dados do usuario para determinar plano e ciclo
+      const { data: userData } = await supabaseAdmin
+        .from('users')
+        .select('plan, asaas_subscription_id')
+        .eq('id', dbCustomer.user_id)
+        .single();
+
+      // So criar se o usuario nao tem assinatura ativa
+      if (userData && !userData.asaas_subscription_id) {
+        const userPlan = plan !== 'free' ? plan : 'starter';
+        const billingType = payment.billingType || 'PIX';
+
+        const createMethod = billingType === 'BOLETO'
+          ? AsaasSubscriptionService.createWithBoleto
+          : AsaasSubscriptionService.createWithPix;
+
+        const newSub = await createMethod.call(AsaasSubscriptionService, {
+          customerId: payment.customer,
+          plan: userPlan,
+          cycle: 'monthly',
+          externalReference: `${dbCustomer.user_id}_${userPlan}_monthly`,
+        });
+
+        await supabaseAdmin.from('users').update({
+          asaas_subscription_id: newSub.id,
+          subscription_expires_at: newSub.nextDueDate,
+        }).eq('id', dbCustomer.user_id);
+
+        console.log(`[Asaas Webhook] Assinatura criada para pagamento avulso: ${newSub.id}`);
+      }
+    } catch (subError: any) {
+      // Nao bloquear o webhook se falhar — o usuario ja foi ativado acima
+      console.error(`[Asaas Webhook] Erro ao criar assinatura para pagamento avulso: ${subError.message}`);
     }
   }
 

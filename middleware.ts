@@ -117,7 +117,8 @@ export default clerkMiddleware(async (auth, request) => {
     }
 
     // Buscar dados completos do usuário via Clerk API
-    const user = await clerkClient.users.getUser(userId);
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
     const userEmail = user.emailAddresses[0]?.emailAddress;
     const role = user.publicMetadata?.role as string | undefined;
 
@@ -141,7 +142,7 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Rotas públicas não precisam de auth
   if (!isPublicRoute(request)) {
-    (await auth()).protect();
+    await auth.protect();
   }
 
   // Retornar response do next-intl

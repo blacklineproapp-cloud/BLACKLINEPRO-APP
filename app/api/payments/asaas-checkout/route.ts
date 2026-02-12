@@ -106,30 +106,23 @@ export async function POST(req: Request) {
       phone: validPhone, // Telefone real ou undefined (Asaas aceita sem telefone)
     });
 
-    // 9. Cancelar assinatura anterior (se existir) para evitar cobranças duplicadas
-    if (user.asaas_subscription_id) {
-      try {
-        console.log(`[Asaas Checkout] Cancelando assinatura anterior: ${user.asaas_subscription_id}`);
-        await AsaasSubscriptionService.cancel(user.asaas_subscription_id);
-        console.log(`[Asaas Checkout] ✅ Assinatura anterior cancelada`);
-      } catch (cancelError: any) {
-        // Se a assinatura já estava cancelada/inativa, seguir normalmente
-        console.warn(`[Asaas Checkout] ⚠️ Erro ao cancelar assinatura anterior (pode já estar inativa): ${cancelError.message}`);
-      }
-    }
+    // 9. Guardar ID da assinatura anterior para cancelar DEPOIS de criar a nova
+    const previousSubscriptionId = user.asaas_subscription_id;
 
     // 10. Criar nova assinatura baseado no método de pagamento
+    // IMPORTANTE: Criar PRIMEIRO, cancelar antiga DEPOIS para evitar estado inconsistente
     const externalReference = `${user.id}_${plan}_${cycle}`;
     const asaasCycle = BILLING_CYCLE_MAP[cycle] || 'MONTHLY';
 
     let result: any;
+    let newSubscriptionId: string | null = null;
 
     switch (paymentMethod) {
       // ==========================================
       // PIX
       // ==========================================
       case 'pix': {
-        // Criar assinatura recorrente com PIX (mesmo padrão do Boleto)
+        // Criar assinatura recorrente com PIX
         const pixSubscription = await AsaasSubscriptionService.createWithPix({
           customerId: asaasCustomer.id,
           plan,
@@ -137,12 +130,16 @@ export async function POST(req: Request) {
           externalReference,
         });
 
+        newSubscriptionId = pixSubscription.id;
+
         // Buscar primeira cobrança gerada pela assinatura
         const pixPayments = await AsaasSubscriptionService.getPayments(pixSubscription.id);
         const firstPixPayment = pixPayments.data[0];
 
         if (!firstPixPayment) {
-          console.error('[Asaas Checkout] ❌ Nenhuma cobrança gerada para assinatura PIX:', pixSubscription.id);
+          console.error('[Asaas Checkout] Nenhuma cobranca gerada para assinatura PIX:', pixSubscription.id);
+          // Cancelar a assinatura que acabou de criar (sem cobrança = inútil)
+          try { await AsaasSubscriptionService.cancel(pixSubscription.id); } catch {}
           return NextResponse.json({
             error: 'Erro ao gerar cobrança PIX. Tente novamente.',
           }, { status: 500 });
@@ -195,6 +192,8 @@ export async function POST(req: Request) {
           cycle,
           externalReference,
         });
+
+        newSubscriptionId = subscription.id;
 
         // Buscar primeira cobrança (boleto)
         const payments = await AsaasSubscriptionService.getPayments(subscription.id);
@@ -251,6 +250,8 @@ export async function POST(req: Request) {
           externalReference,
         });
 
+        newSubscriptionId = subscription.id;
+
         // Salvar assinatura
         await AsaasSubscriptionService.saveToDatabase({
           userId: user.id,
@@ -304,6 +305,18 @@ export async function POST(req: Request) {
         return NextResponse.json({
           error: 'Método de pagamento inválido',
         }, { status: 400 });
+    }
+
+    // 11. Cancelar assinatura anterior DEPOIS que a nova foi criada com sucesso
+    if (previousSubscriptionId && previousSubscriptionId !== newSubscriptionId) {
+      try {
+        console.log(`[Asaas Checkout] Cancelando assinatura anterior: ${previousSubscriptionId}`);
+        await AsaasSubscriptionService.cancel(previousSubscriptionId);
+        console.log(`[Asaas Checkout] Assinatura anterior cancelada`);
+      } catch (cancelError: any) {
+        // Se a assinatura já estava cancelada/inativa, seguir normalmente
+        console.warn(`[Asaas Checkout] Erro ao cancelar assinatura anterior (pode ja estar inativa): ${cancelError.message}`);
+      }
     }
 
     return NextResponse.json(result);

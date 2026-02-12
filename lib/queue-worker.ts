@@ -11,18 +11,21 @@ import { BRL_COST } from './billing/costs';
 import { supabaseAdmin } from './supabase';
 
 /**
- * Workers que processam jobs em background
+ * Workers que processam jobs em background (Railway)
  *
- * IMPORTANTE: Em produção, rodar workers em processos separados
- * ou em workers do Vercel/Railway
- *
- * 🚀 MIGRAÇÃO: Upstash → Railway Redis
- * - Workers agora usam Railway Redis (TCP nativo)
- * - Configuração idêntica ao queue.ts para garantir compatibilidade
+ * Correções aplicadas:
+ * - retryStrategy com limite máximo de tentativas (evita loop infinito)
+ * - Error handlers em TODOS os workers (evita crash por unhandled error)
+ * - Graceful shutdown com timeout (evita hang no SIGTERM)
+ * - Conexão Redis com reconnectOnError seletivo
  */
 
-// Railway Redis Connection (mesma do queue.ts)
-// Parser manual para evitar conflito de versões do ioredis
+// ============================================
+// CONFIGURAÇÃO DO REDIS
+// ============================================
+
+const MAX_REDIS_RETRIES = 20; // Máximo de tentativas de reconexão antes de desistir
+
 function parseRedisUrl(url: string): ConnectionOptions {
   const urlObj = new URL(url);
   const isTls = urlObj.protocol === 'rediss:';
@@ -32,17 +35,30 @@ function parseRedisUrl(url: string): ConnectionOptions {
     port: parseInt(urlObj.port) || 6379,
     password: urlObj.password || undefined,
     username: urlObj.username || undefined,
-    maxRetriesPerRequest: null,
-    enableReadyCheck: false, // Melhora estabilidade em algumas clouds
-    keepAlive: 10000, // Enviar keep-alive a cada 10s para evitar timeout
+    maxRetriesPerRequest: null, // BullMQ exige null
+    enableReadyCheck: false,
+    keepAlive: 30000, // Keep-alive a cada 30s (mais conservador)
+    connectTimeout: 10000, // 10s para conectar
+    commandTimeout: 5000, // 5s para comandos
     tls: isTls ? {
-      rejectUnauthorized: false // Aceitar certificados self-signed (comum em clouds)
+      rejectUnauthorized: false,
     } : undefined,
-    retryStrategy: (times) => {
-      // Retry com backoff exponencial: 50, 100, 200, 400, 800... max 2s
-      const delay = Math.min(times * 50, 2000);
+    retryStrategy: (times: number) => {
+      if (times > MAX_REDIS_RETRIES) {
+        console.error(`[Workers] Redis: ${times} tentativas falharam. Encerrando processo.`);
+        // Retornar null para parar de reconectar
+        // O processo será encerrado pelo health check abaixo
+        return null;
+      }
+      const delay = Math.min(times * 100, 5000); // Backoff: 100, 200, 300... max 5s
+      console.warn(`[Workers] Redis reconectando (tentativa ${times}/${MAX_REDIS_RETRIES}), delay: ${delay}ms`);
       return delay;
-    }
+    },
+    reconnectOnError: (err: Error) => {
+      // Reconectar apenas em erros de conexão, não em erros de comando
+      const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED'];
+      return targetErrors.some(e => err.message.includes(e));
+    },
   };
 }
 
@@ -54,13 +70,14 @@ const redisConnection: ConnectionOptions = process.env.REDIS_URL
       maxRetriesPerRequest: null,
     };
 
-console.log('[Workers] Configurando workers com Railway Redis:',
-  process.env.REDIS_URL ? '✅ Conectado' : '⚠️ Usando localhost'
-);
+console.log('[Workers] Redis config:', process.env.REDIS_URL ? 'Railway Redis' : 'localhost');
 
 // ============================================
-// WORKER: STENCIL GENERATION
+// WORKERS
 // ============================================
+
+let allWorkers: Worker[] = [];
+let isShuttingDown = false;
 
 export const stencilWorker = new Worker<StencilJobData>(
   'stencil-generation',
@@ -70,14 +87,11 @@ export const stencilWorker = new Worker<StencilJobData>(
     console.log(`[Worker] Processando job ${job.id} para user ${userId}`);
 
     try {
-      // 1. Atualizar progresso: começando
       await job.updateProgress(10);
 
-      // 2. Gerar stencil
       await job.updateProgress(30);
       const stencilImage = await generateStencilFromImage(image, promptDetails, style);
 
-      // 3. Buscar user ID (UUID) do banco
       await job.updateProgress(80);
 
       const { data: user } = await supabaseAdmin
@@ -86,7 +100,6 @@ export const stencilWorker = new Worker<StencilJobData>(
         .eq('clerk_id', userId)
         .single();
 
-      // 4. Registrar uso
       if (user) {
         await recordUsage({
           userId: user.id,
@@ -100,63 +113,47 @@ export const stencilWorker = new Worker<StencilJobData>(
           }
         });
 
-        // Salvar no banco (opcional - para histórico)
         await job.updateProgress(90);
 
         await supabaseAdmin.from('projects').insert({
           user_id: user.id,
           name: `Stencil ${new Date().toLocaleDateString()}`,
-          original_image: image.substring(0, 100) + '...', // Truncar para não sobrecarregar
+          original_image: image.substring(0, 100) + '...',
           stencil_image: stencilImage.substring(0, 100) + '...',
           style: style === 'perfect_lines' ? 'perfect_lines' : 'standard',
         });
       }
 
-      // 5. Concluído
       await job.updateProgress(100);
+      console.log(`[Worker] Job ${job.id} concluido com sucesso`);
 
-      console.log(`[Worker] Job ${job.id} concluído com sucesso`);
-
-      return {
-        success: true,
-        image: stencilImage,
-        userId,
-      };
+      return { success: true, image: stencilImage, userId };
     } catch (error: any) {
-      console.error(`[Worker] Erro no job ${job.id}:`, error);
-      throw error; // BullMQ vai fazer retry automaticamente
+      console.error(`[Worker] Erro no job ${job.id}:`, error.message);
+      throw error;
     }
   },
   {
     connection: redisConnection,
-    // Concorrência configurável via ENV (Padrão: 5)
-    // Para escalar no Railway, aumente WORKER_CONCURRENCY_STENCIL
     concurrency: parseInt(process.env.WORKER_CONCURRENCY_STENCIL || '5'),
     limiter: {
-      max: 10, // Máximo 10 jobs
-      duration: 60000, // por minuto
+      max: 10,
+      duration: 60000,
     },
   }
 );
-
-// ============================================
-// WORKER: ENHANCE
-// ============================================
 
 export const enhanceWorker = new Worker<EnhanceJobData>(
   'enhance',
   async (job: Job<EnhanceJobData>) => {
     const { userId, image } = job.data;
-
     console.log(`[Worker] Processando enhance ${job.id}`);
 
     try {
       await job.updateProgress(20);
       const enhancedImage = await enhanceImage(image);
-
       await job.updateProgress(80);
 
-      // Buscar UUID do usuário
       const { data: user } = await supabaseAdmin
         .from('users')
         .select('id')
@@ -169,23 +166,14 @@ export const enhanceWorker = new Worker<EnhanceJobData>(
           type: 'tool_usage',
           operationType: 'enhance_image',
           cost: BRL_COST.enhance,
-          metadata: {
-            tool: 'enhance',
-            via: 'queue',
-            operation: 'enhance_image'
-          }
+          metadata: { tool: 'enhance', via: 'queue', operation: 'enhance_image' }
         });
       }
 
       await job.updateProgress(100);
-
-      return {
-        success: true,
-        image: enhancedImage,
-        userId,
-      };
+      return { success: true, image: enhancedImage, userId };
     } catch (error: any) {
-      console.error(`[Worker] Erro no enhance ${job.id}:`, error);
+      console.error(`[Worker] Erro no enhance ${job.id}:`, error.message);
       throw error;
     }
   },
@@ -195,24 +183,17 @@ export const enhanceWorker = new Worker<EnhanceJobData>(
   }
 );
 
-// ============================================
-// WORKER: IA GEN
-// ============================================
-
 export const iaGenWorker = new Worker<IaGenJobData>(
   'ia-gen',
   async (job: Job<IaGenJobData>) => {
     const { userId, prompt, size } = job.data;
-
     console.log(`[Worker] Processando IA Gen ${job.id}`);
 
     try {
       await job.updateProgress(20);
       const generatedImage = await generateTattooIdea(prompt, size);
-
       await job.updateProgress(80);
 
-      // Buscar UUID do usuário
       const { data: user } = await supabaseAdmin
         .from('users')
         .select('id')
@@ -225,23 +206,14 @@ export const iaGenWorker = new Worker<IaGenJobData>(
           type: 'ai_request',
           operationType: 'ia_gen',
           cost: BRL_COST.ia_gen,
-          metadata: {
-            operation: 'ia_gen',
-            prompt_length: prompt.length,
-            via: 'queue'
-          }
+          metadata: { operation: 'ia_gen', prompt_length: prompt.length, via: 'queue' }
         });
       }
 
       await job.updateProgress(100);
-
-      return {
-        success: true,
-        image: generatedImage,
-        userId,
-      };
+      return { success: true, image: generatedImage, userId };
     } catch (error: any) {
-      console.error(`[Worker] Erro no IA Gen ${job.id}:`, error);
+      console.error(`[Worker] Erro no IA Gen ${job.id}:`, error.message);
       throw error;
     }
   },
@@ -251,24 +223,17 @@ export const iaGenWorker = new Worker<IaGenJobData>(
   }
 );
 
-// ============================================
-// WORKER: COLOR MATCH
-// ============================================
-
 export const colorMatchWorker = new Worker<ColorMatchJobData>(
   'color-match',
   async (job: Job<ColorMatchJobData>) => {
     const { userId, image } = job.data;
-
     console.log(`[Worker] Processando Color Match ${job.id}`);
 
     try {
       await job.updateProgress(30);
       const colors = await analyzeImageColors(image);
-
       await job.updateProgress(80);
 
-      // Buscar UUID do usuário
       const { data: user } = await supabaseAdmin
         .from('users')
         .select('id')
@@ -281,91 +246,99 @@ export const colorMatchWorker = new Worker<ColorMatchJobData>(
           type: 'tool_usage',
           operationType: 'color_match',
           cost: BRL_COST.color_match,
-          metadata: {
-            tool: 'color_match',
-            via: 'queue',
-            operation: 'color_match'
-          }
+          metadata: { tool: 'color_match', via: 'queue', operation: 'color_match' }
         });
       }
 
       await job.updateProgress(100);
-
-      return {
-        success: true,
-        colors,
-        userId,
-      };
+      return { success: true, colors, userId };
     } catch (error: any) {
-      console.error(`[Worker] Erro no Color Match ${job.id}:`, error);
+      console.error(`[Worker] Erro no Color Match ${job.id}:`, error.message);
       throw error;
     }
   },
   {
     connection: redisConnection,
-    concurrency: 10, // Color match é rápido
+    concurrency: 10,
   }
 );
 
-// ============================================
-// EVENT HANDLERS
-// ============================================
-
-// Logs de eventos importantes
-stencilWorker.on('completed', (job) => {
-  console.log(`[Worker] ✅ Job ${job.id} completado`);
-});
-
-stencilWorker.on('failed', (job, err) => {
-  console.error(`[Worker] ❌ Job ${job?.id} falhou:`, err.message);
-});
-
-stencilWorker.on('error', (err) => {
-  console.error('[Worker] ⚠️ Erro no worker:', err);
-});
-
-enhanceWorker.on('completed', (job) => {
-  console.log(`[Worker] ✅ Enhance ${job.id} completado`);
-});
-
-iaGenWorker.on('completed', (job) => {
-  console.log(`[Worker] ✅ IA Gen ${job.id} completado`);
-});
-
-colorMatchWorker.on('completed', (job) => {
-  console.log(`[Worker] ✅ Color Match ${job.id} completado`);
-});
+// Registrar todos os workers
+allWorkers = [stencilWorker, enhanceWorker, iaGenWorker, colorMatchWorker];
 
 // ============================================
-// GRACEFUL SHUTDOWN
+// EVENT HANDLERS (TODOS os workers)
 // ============================================
 
-async function gracefulShutdown() {
-  console.log('[Worker] Iniciando shutdown gracioso...');
+const workerNames: Record<string, string> = {
+  'stencil-generation': 'Stencil',
+  'enhance': 'Enhance',
+  'ia-gen': 'IA Gen',
+  'color-match': 'Color Match',
+};
 
-  await Promise.all([
-    stencilWorker.close(),
-    enhanceWorker.close(),
-    iaGenWorker.close(),
-    colorMatchWorker.close(),
-  ]);
+for (const worker of allWorkers) {
+  const name = workerNames[worker.name] || worker.name;
 
-  console.log('[Worker] Workers fechados com sucesso');
+  worker.on('completed', (job) => {
+    console.log(`[${name}] Job ${job.id} completado`);
+  });
+
+  worker.on('failed', (job, err) => {
+    console.error(`[${name}] Job ${job?.id} falhou: ${err.message}`);
+  });
+
+  worker.on('error', (err) => {
+    // Tratar erros de conexão sem crashar
+    if (isShuttingDown) return;
+    console.error(`[${name}] Erro no worker: ${err.message}`);
+  });
+
+  worker.on('stalled', (jobId) => {
+    console.warn(`[${name}] Job ${jobId} ficou stalled (possivel crash anterior)`);
+  });
+}
+
+// ============================================
+// GRACEFUL SHUTDOWN (com timeout)
+// ============================================
+
+const SHUTDOWN_TIMEOUT_MS = 10000; // 10s max para encerrar
+
+async function gracefulShutdown(signal: string) {
+  if (isShuttingDown) return; // Evitar dupla execução
+  isShuttingDown = true;
+
+  console.log(`[Workers] ${signal} recebido. Encerrando workers...`);
+
+  // Timeout de seguranca: se workers nao fecharem em 10s, force exit
+  const forceExit = setTimeout(() => {
+    console.error('[Workers] Timeout no shutdown. Forcando saida.');
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS);
+
+  try {
+    await Promise.allSettled(allWorkers.map(w => w.close()));
+    console.log('[Workers] Workers fechados com sucesso');
+  } catch (err: any) {
+    console.error('[Workers] Erro ao fechar workers:', err.message);
+  }
+
+  clearTimeout(forceExit);
   process.exit(0);
 }
 
-process.on('SIGTERM', gracefulShutdown);
-process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // ============================================
-// FUNÇÕES UTILITÁRIAS
+// INICIALIZAÇÃO
 // ============================================
 
-// Para iniciar todos os workers
 export function startAllWorkers() {
-  console.log('[Worker] 🚀 Iniciando todos os workers...');
-  console.log('[Worker] - Stencil Worker: concurrency 5');
-  console.log('[Worker] - Enhance Worker: concurrency 3');
-  console.log('[Worker] - IA Gen Worker: concurrency 3');
-  console.log('[Worker] - Color Match Worker: concurrency 10');
+  console.log('[Workers] Iniciando todos os workers...');
+  console.log(`[Workers] - Stencil: concurrency ${process.env.WORKER_CONCURRENCY_STENCIL || '5'}`);
+  console.log(`[Workers] - Enhance: concurrency ${process.env.WORKER_CONCURRENCY_ENHANCE || '3'}`);
+  console.log(`[Workers] - IA Gen: concurrency ${process.env.WORKER_CONCURRENCY_GEN || '3'}`);
+  console.log('[Workers] - Color Match: concurrency 10');
 }

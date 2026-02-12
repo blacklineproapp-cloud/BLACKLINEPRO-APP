@@ -79,6 +79,7 @@ export default async function LocaleLayout({
       </head>
       <body>
         <ClerkProvider
+          dynamic
           localization={clerkLocalizations[locale as keyof typeof clerkLocalizations] as any}
           appearance={{
             baseTheme: undefined,
@@ -120,7 +121,7 @@ export default async function LocaleLayout({
             },
           }}
         >
-          <NextIntlClientProvider messages={messages}>
+          <NextIntlClientProvider messages={serializedMessages}>
             {children}
             <ServiceWorkerRegister />
             <CookieConsent />

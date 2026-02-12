@@ -33,17 +33,26 @@ function parseRedisUrl(url: string): ConnectionOptions {
     port: parseInt(urlObj.port) || 6379,
     password: urlObj.password || undefined,
     username: urlObj.username || undefined,
-    maxRetriesPerRequest: null,
-    enableReadyCheck: false, // Melhora estabilidade
-    keepAlive: 10000, // Ping a cada 10s
+    maxRetriesPerRequest: null, // BullMQ exige null
+    enableReadyCheck: false,
+    keepAlive: 30000, // Keep-alive a cada 30s
+    connectTimeout: 10000,
+    commandTimeout: 5000,
     tls: isTls ? {
-      rejectUnauthorized: false
+      rejectUnauthorized: false,
     } : undefined,
     retryStrategy: (times) => {
-      // Retry com backoff: 50, 100, 200, 400, 800... max 2s
-      const delay = Math.min(times * 50, 2000);
+      if (times > 20) {
+        console.error(`[BullMQ] Redis: ${times} tentativas falharam.`);
+        return null; // Parar de reconectar
+      }
+      const delay = Math.min(times * 100, 5000);
       return delay;
-    }
+    },
+    reconnectOnError: (err: Error) => {
+      const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED'];
+      return targetErrors.some(e => err.message.includes(e));
+    },
   };
 }
 
