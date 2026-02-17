@@ -520,12 +520,14 @@ async function handleChargeback(payment: AsaasPayment) {
 
   const { data: dbCustomer } = dbCustomerResult;
 
-  // Bloquear usuário imediatamente
+  // Bloquear usuário imediatamente e remover status de pagante
   await supabaseAdmin.from('users').update({
     is_blocked: true,
+    is_paid: false,
     blocked_reason: 'chargeback_requested',
     blocked_at: new Date().toISOString(),
     subscription_status: 'suspended',
+    tools_unlocked: false,
   }).eq('id', dbCustomer.user_id);
 
   // Atualizar pagamento

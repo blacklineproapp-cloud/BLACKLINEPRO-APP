@@ -69,9 +69,11 @@ export async function GET(req: Request) {
         try {
           await supabaseAdmin.from('users').update({
             is_blocked: true,
+            is_paid: false,
             blocked_reason: 'Pagamento não regularizado após grace period de 1 dia',
             blocked_at: now.toISOString(),
             subscription_status: 'blocked',
+            tools_unlocked: false,
           }).eq('id', user.id);
 
           console.log(`[Cron] 🚫 Bloqueado: ${maskEmail(user.email)}`);
@@ -161,9 +163,11 @@ export async function GET(req: Request) {
 
           await supabaseAdmin.from('users').update({
             is_blocked: true,
+            is_paid: false,
             blocked_reason: 'Assinatura expirada - pagamento não renovado',
             blocked_at: now.toISOString(),
             subscription_status: 'expired',
+            tools_unlocked: false,
           }).eq('id', user.id);
 
           console.log(`[Cron] 🚫 Bloqueado (assinatura expirada): ${maskEmail(user.email)} - expirou em ${user.subscription_expires_at}`);

@@ -257,14 +257,29 @@ export class AsaasCustomerService {
         console.log(`[AsaasCustomer] ✅ Cliente encontrado no Asaas: ${externalCustomer.email}`);
         
         // Tentar encontrar usuário no banco por externalReference (clerk_id) ou email
+        // Busca separada para evitar PostgREST filter injection
         const searchId = externalCustomer.externalReference;
         const searchEmail = externalCustomer.email;
-        
-        const { data: user } = await supabaseAdmin
-          .from('users')
-          .select('id')
-          .or(`clerk_id.eq."${searchId}",email.eq."${searchEmail}"`)
-          .maybeSingle();
+
+        let user = null;
+
+        if (searchId) {
+          const { data } = await supabaseAdmin
+            .from('users')
+            .select('id')
+            .eq('clerk_id', searchId)
+            .maybeSingle();
+          user = data;
+        }
+
+        if (!user && searchEmail) {
+          const { data } = await supabaseAdmin
+            .from('users')
+            .select('id')
+            .eq('email', searchEmail)
+            .maybeSingle();
+          user = data;
+        }
           
         if (user) {
           console.log(`[AsaasCustomer] 🔗 Linkando cliente ${asaasCustomerId} ao usuário ${user.id}`);
