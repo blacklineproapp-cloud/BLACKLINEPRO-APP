@@ -8,6 +8,7 @@ import { LayoutGrid, PenTool, Sparkles, Package, CreditCard, Menu, X, Rocket, He
 import { useState } from 'react';
 import { InstallBanner } from '@/components/InstallBanner';
 import MigrationChecker from '@/components/migration/MigrationChecker';
+import SecurityNoticeModal from '@/components/SecurityNoticeModal';
 
 // Carregar UserButton apenas no cliente para evitar hydration mismatch
 const UserButton = dynamic(
@@ -268,6 +269,9 @@ export default function DashboardLayout({
 
       {/* Modal de migração Stripe → Asaas (solicita CPF se necessário) */}
       <MigrationChecker />
+
+      {/* Comunicado Oficial de Segurança */}
+      <SecurityNoticeModal />
     </div>
   );
 }
