@@ -4,8 +4,21 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { ReactNode } from 'react';
+import Script from 'next/script';
+import { Geist, Geist_Mono } from "next/font/google";
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 import CookieConsent from '@/components/CookieConsent';
+import '../globals.css';
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 // Mapeamento de locales para Clerk localizations
 const clerkLocalizations = {
@@ -62,7 +75,6 @@ export default async function LocaleLayout({
             }),
           }}
         />
-        {/* JSON-LD para WebSite */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -76,8 +88,50 @@ export default async function LocaleLayout({
             }),
           }}
         />
+
+        {/* Google Tag Manager */}
+        <Script
+          id="gtm-script"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+              })(window,document,'script','dataLayer','GTM-P58Q7C45');
+            `,
+          }}
+        />
+
+        {/* Google Analytics 4 (gtag.js) */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-GXBH5H30FY"
+        />
+        <Script
+          id="ga4-script"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-GXBH5H30FY');
+            `,
+          }}
+        />
       </head>
-      <body>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe 
+            src="https://www.googletagmanager.com/ns.html?id=GTM-P58Q7C45"
+            height="0" 
+            width="0" 
+            style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
         <ClerkProvider
           dynamic
           localization={clerkLocalizations[locale as keyof typeof clerkLocalizations] as any}

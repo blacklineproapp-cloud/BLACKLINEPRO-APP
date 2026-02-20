@@ -66,26 +66,14 @@ export default function SuccessPage() {
 
   const details = plan ? (planDetails[plan] || null) : null;
 
-  // Rastreamento Facebook Pixel + Auto-redirecionar
+  // Auto-redirecionar
   useEffect(() => {
-    // 1. Rastrear Conversão (Purchase)
-    if (plan && planDetails[plan] && typeof window !== 'undefined' && (window as any).fbq) {
-      const p = planDetails[plan];
-      (window as any).fbq('track', 'Purchase', {
-        value: (p as any).value || 0,
-        currency: 'BRL',
-        content_name: p.name,
-        content_category: 'Subscription'
-      });
-      console.log(`[Pixel] Purchase tracked: ${p.name} - R$ ${(p as any).value}`);
-    }
-
     const timeout = setTimeout(() => {
       router.push('/dashboard');
     }, 5000);
 
     return () => clearTimeout(timeout);
-  }, [router, plan]);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4">
