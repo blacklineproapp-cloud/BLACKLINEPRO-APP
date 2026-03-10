@@ -174,7 +174,7 @@ export default function DashboardLayout({
         {/* Logo - Desktop only */}
         <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-xl mb-4 shadow-lg shadow-indigo-900/50 overflow-hidden">
           <Image
-            src="/models/blackline-logo.jpg"
+            src="/models/blackline-logo-oficial.png"
             alt="BlacklinePRO"
             width={48}
             height={48}
