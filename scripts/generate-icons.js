@@ -23,31 +23,31 @@ function createIconSVG(size) {
   <g transform="translate(${padding}, ${padding})">
     <path d="M${iconSize/2} ${iconSize*0.15} L${iconSize*0.2} ${iconSize*0.35} V${iconSize*0.65} L${iconSize/2} ${iconSize*0.85} L${iconSize*0.8} ${iconSize*0.65} V${iconSize*0.35} Z"
           fill="none"
-          stroke="#10b981"
+          stroke="#6366F1"
           stroke-width="${size/20}"
           stroke-linecap="round"
           stroke-linejoin="round"/>
 
     <path d="M${iconSize/2} ${iconSize/2} V${iconSize*0.85}"
-          stroke="#10b981"
+          stroke="#6366F1"
           stroke-width="${size/20}"
           stroke-linecap="round"/>
 
     <path d="M${iconSize*0.2} ${iconSize*0.35} L${iconSize/2} ${iconSize/2} L${iconSize*0.8} ${iconSize*0.35}"
-          stroke="#10b981"
+          stroke="#6366F1"
           stroke-width="${size/20}"
           stroke-linecap="round"
           stroke-linejoin="round"/>
 
-    <circle cx="${iconSize/2}" cy="${iconSize*0.35}" r="${size/30}" fill="#10b981"/>
-    <circle cx="${iconSize*0.2}" cy="${iconSize/2}" r="${size/30}" fill="#10b981"/>
-    <circle cx="${iconSize*0.8}" cy="${iconSize/2}" r="${size/30}" fill="#10b981"/>
+    <circle cx="${iconSize/2}" cy="${iconSize*0.35}" r="${size/30}" fill="#6366F1"/>
+    <circle cx="${iconSize*0.2}" cy="${iconSize/2}" r="${size/30}" fill="#6366F1"/>
+    <circle cx="${iconSize*0.8}" cy="${iconSize/2}" r="${size/30}" fill="#6366F1"/>
   </g>
 
   <defs>
     <linearGradient id="grad" x1="0" y1="0" x2="${size}" y2="${size}" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#000000"/>
-      <stop offset="100%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#6366F1"/>
     </linearGradient>
   </defs>
 </svg>`;
@@ -82,19 +82,19 @@ function createMaskableSVG(size) {
   <g transform="translate(${padding}, ${padding})">
     <path d="M${iconSize/2} ${iconSize*0.15} L${iconSize*0.2} ${iconSize*0.35} V${iconSize*0.65} L${iconSize/2} ${iconSize*0.85} L${iconSize*0.8} ${iconSize*0.65} V${iconSize*0.35} Z"
           fill="none"
-          stroke="#10b981"
+          stroke="#6366F1"
           stroke-width="${size/25}"
           stroke-linecap="round"
           stroke-linejoin="round"/>
 
     <path d="M${iconSize/2} ${iconSize/2} V${iconSize*0.85}"
-          stroke="#10b981"
+          stroke="#6366F1"
           stroke-width="${size/25}"
           stroke-linecap="round"/>
 
-    <circle cx="${iconSize/2}" cy="${iconSize*0.35}" r="${size/40}" fill="#10b981"/>
-    <circle cx="${iconSize*0.2}" cy="${iconSize/2}" r="${size/40}" fill="#10b981"/>
-    <circle cx="${iconSize*0.8}" cy="${iconSize/2}" r="${size/40}" fill="#10b981"/>
+    <circle cx="${iconSize/2}" cy="${iconSize*0.35}" r="${size/40}" fill="#6366F1"/>
+    <circle cx="${iconSize*0.2}" cy="${iconSize/2}" r="${size/40}" fill="#6366F1"/>
+    <circle cx="${iconSize*0.8}" cy="${iconSize/2}" r="${size/40}" fill="#6366F1"/>
   </g>
 </svg>`;
 }

@@ -1,4 +1,4 @@
-import { Worker, Job, ConnectionOptions } from 'bullmq';
+import { Worker, Job } from 'bullmq';
 import {
   StencilJobData,
   EnhanceJobData,
@@ -8,70 +8,55 @@ import {
 import { generateStencilFromImage, enhanceImage, generateTattooIdea, analyzeImageColors } from './gemini';
 import { recordUsage } from './billing/limits';
 import { BRL_COST } from './billing/costs';
+import { logger } from './logger';
 import { supabaseAdmin } from './supabase';
+import { getRedisConnection } from './redis-utils';
+import { WORKER_CONCURRENCY } from './constants/limits';
+import { TIMEOUTS } from './constants/timeouts';
 
 /**
  * Workers que processam jobs em background (Railway)
  *
- * Correções aplicadas:
- * - retryStrategy com limite máximo de tentativas (evita loop infinito)
  * - Error handlers em TODOS os workers (evita crash por unhandled error)
  * - Graceful shutdown com timeout (evita hang no SIGTERM)
  * - Conexão Redis com reconnectOnError seletivo
  */
 
+const redisConnection = getRedisConnection();
+
 // ============================================
-// CONFIGURAÇÃO DO REDIS
+// JOB HISTORY (in-memory ring buffer)
 // ============================================
 
-const MAX_REDIS_RETRIES = 20; // Máximo de tentativas de reconexão antes de desistir
-
-function parseRedisUrl(url: string): ConnectionOptions {
-  const urlObj = new URL(url);
-  const isTls = urlObj.protocol === 'rediss:';
-
-  return {
-    host: urlObj.hostname,
-    port: parseInt(urlObj.port) || 6379,
-    password: urlObj.password || undefined,
-    username: urlObj.username || undefined,
-    maxRetriesPerRequest: null, // BullMQ exige null
-    enableReadyCheck: false,
-    keepAlive: 30000, // Keep-alive a cada 30s (mais conservador)
-    connectTimeout: 15000, // 15s para conectar
-    // Sem commandTimeout — BullMQ usa comandos blocking (BRPOPLPUSH/BZPOPMIN)
-    // que podem demorar tempo indeterminado. ioredis commandTimeout interfere.
-    tls: isTls ? {
-      rejectUnauthorized: false,
-    } : undefined,
-    retryStrategy: (times: number) => {
-      if (times > MAX_REDIS_RETRIES) {
-        console.error(`[Workers] Redis: ${times} tentativas falharam. Encerrando processo.`);
-        // Retornar null para parar de reconectar
-        // O processo será encerrado pelo health check abaixo
-        return null;
-      }
-      const delay = Math.min(times * 100, 5000); // Backoff: 100, 200, 300... max 5s
-      console.warn(`[Workers] Redis reconectando (tentativa ${times}/${MAX_REDIS_RETRIES}), delay: ${delay}ms`);
-      return delay;
-    },
-    reconnectOnError: (err: Error) => {
-      // Reconectar apenas em erros de conexão, não em erros de comando
-      const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED'];
-      return targetErrors.some(e => err.message.includes(e));
-    },
-  };
+interface JobHistoryEntry {
+  jobId: string;
+  queue: string;
+  status: 'completed' | 'failed' | 'stalled';
+  timestamp: number;
+  duration?: number;
+  error?: string;
 }
 
-const redisConnection: ConnectionOptions = process.env.REDIS_URL
-  ? parseRedisUrl(process.env.REDIS_URL)
-  : {
-      host: 'localhost',
-      port: 6379,
-      maxRetriesPerRequest: null,
-    };
+const jobHistory: JobHistoryEntry[] = [];
+const MAX_HISTORY = 500;
 
-console.log('[Workers] Redis config:', process.env.REDIS_URL ? 'Railway Redis' : 'localhost');
+/** Track job start times for duration calculation */
+const jobStartTimes = new Map<string, number>();
+
+function addJobHistoryEntry(entry: JobHistoryEntry) {
+  jobHistory.push(entry);
+  if (jobHistory.length > MAX_HISTORY) {
+    jobHistory.splice(0, jobHistory.length - MAX_HISTORY);
+  }
+}
+
+/**
+ * Returns recent job history entries (newest first)
+ */
+export function getJobHistory(limit?: number): JobHistoryEntry[] {
+  const entries = [...jobHistory].reverse();
+  return limit ? entries.slice(0, limit) : entries;
+}
 
 // ============================================
 // WORKERS
@@ -84,8 +69,9 @@ export const stencilWorker = new Worker<StencilJobData>(
   'stencil-generation',
   async (job: Job<StencilJobData>) => {
     const { userId, image, style, promptDetails, operationType } = job.data;
+    if (job.id) jobStartTimes.set(job.id, Date.now());
 
-    console.log(`[Worker] Processando job ${job.id} para user ${userId}`);
+    logger.info('[Worker] Processando job stencil', { jobId: job.id, userId });
 
     try {
       await job.updateProgress(10);
@@ -126,21 +112,18 @@ export const stencilWorker = new Worker<StencilJobData>(
       }
 
       await job.updateProgress(100);
-      console.log(`[Worker] Job ${job.id} concluido com sucesso`);
+      logger.info('[Worker] Job stencil concluído', { jobId: job.id });
 
       return { success: true, image: stencilImage, userId };
     } catch (error: any) {
-      console.error(`[Worker] Erro no job ${job.id}:`, error.message);
+      logger.error('[Worker] Erro no job stencil', error, { jobId: job.id });
       throw error;
     }
   },
   {
     connection: redisConnection,
-    concurrency: parseInt(process.env.WORKER_CONCURRENCY_STENCIL || '5'),
-    limiter: {
-      max: 10,
-      duration: 60000,
-    },
+    concurrency: parseInt(process.env.WORKER_CONCURRENCY_STENCIL || String(WORKER_CONCURRENCY.STENCIL_DEFAULT)),
+    limiter: WORKER_CONCURRENCY.STENCIL_LIMITER,
   }
 );
 
@@ -148,7 +131,8 @@ export const enhanceWorker = new Worker<EnhanceJobData>(
   'enhance',
   async (job: Job<EnhanceJobData>) => {
     const { userId, image } = job.data;
-    console.log(`[Worker] Processando enhance ${job.id}`);
+    if (job.id) jobStartTimes.set(job.id, Date.now());
+    logger.info('[Worker] Processando enhance', { jobId: job.id });
 
     try {
       await job.updateProgress(20);
@@ -174,13 +158,13 @@ export const enhanceWorker = new Worker<EnhanceJobData>(
       await job.updateProgress(100);
       return { success: true, image: enhancedImage, userId };
     } catch (error: any) {
-      console.error(`[Worker] Erro no enhance ${job.id}:`, error.message);
+      logger.error('[Worker] Erro no enhance', error, { jobId: job.id });
       throw error;
     }
   },
   {
     connection: redisConnection,
-    concurrency: parseInt(process.env.WORKER_CONCURRENCY_ENHANCE || '3'),
+    concurrency: parseInt(process.env.WORKER_CONCURRENCY_ENHANCE || String(WORKER_CONCURRENCY.ENHANCE_DEFAULT)),
   }
 );
 
@@ -188,7 +172,8 @@ export const iaGenWorker = new Worker<IaGenJobData>(
   'ia-gen',
   async (job: Job<IaGenJobData>) => {
     const { userId, prompt, size } = job.data;
-    console.log(`[Worker] Processando IA Gen ${job.id}`);
+    if (job.id) jobStartTimes.set(job.id, Date.now());
+    logger.info('[Worker] Processando IA Gen', { jobId: job.id });
 
     try {
       await job.updateProgress(20);
@@ -214,13 +199,13 @@ export const iaGenWorker = new Worker<IaGenJobData>(
       await job.updateProgress(100);
       return { success: true, image: generatedImage, userId };
     } catch (error: any) {
-      console.error(`[Worker] Erro no IA Gen ${job.id}:`, error.message);
+      logger.error('[Worker] Erro no IA Gen', error, { jobId: job.id });
       throw error;
     }
   },
   {
     connection: redisConnection,
-    concurrency: parseInt(process.env.WORKER_CONCURRENCY_GEN || '3'),
+    concurrency: parseInt(process.env.WORKER_CONCURRENCY_GEN || String(WORKER_CONCURRENCY.IA_GEN_DEFAULT)),
   }
 );
 
@@ -228,7 +213,8 @@ export const colorMatchWorker = new Worker<ColorMatchJobData>(
   'color-match',
   async (job: Job<ColorMatchJobData>) => {
     const { userId, image } = job.data;
-    console.log(`[Worker] Processando Color Match ${job.id}`);
+    if (job.id) jobStartTimes.set(job.id, Date.now());
+    logger.info('[Worker] Processando Color Match', { jobId: job.id });
 
     try {
       await job.updateProgress(30);
@@ -254,13 +240,13 @@ export const colorMatchWorker = new Worker<ColorMatchJobData>(
       await job.updateProgress(100);
       return { success: true, colors, userId };
     } catch (error: any) {
-      console.error(`[Worker] Erro no Color Match ${job.id}:`, error.message);
+      logger.error('[Worker] Erro no Color Match', error, { jobId: job.id });
       throw error;
     }
   },
   {
     connection: redisConnection,
-    concurrency: 10,
+    concurrency: WORKER_CONCURRENCY.COLOR_MATCH,
   }
 );
 
@@ -282,21 +268,49 @@ for (const worker of allWorkers) {
   const name = workerNames[worker.name] || worker.name;
 
   worker.on('completed', (job) => {
-    console.log(`[${name}] Job ${job.id} completado`);
+    logger.info(`[${name}] Job completado`, { jobId: job.id });
+    const jobId = job.id || 'unknown';
+    const startTime = jobStartTimes.get(jobId);
+    const duration = startTime ? Date.now() - startTime : undefined;
+    if (startTime) jobStartTimes.delete(jobId);
+    addJobHistoryEntry({
+      jobId,
+      queue: worker.name,
+      status: 'completed',
+      timestamp: Date.now(),
+      duration,
+    });
   });
 
   worker.on('failed', (job, err) => {
-    console.error(`[${name}] Job ${job?.id} falhou: ${err.message}`);
+    logger.error(`[${name}] Job falhou`, err, { jobId: job?.id });
+    const jobId = job?.id || 'unknown';
+    const startTime = jobStartTimes.get(jobId);
+    const duration = startTime ? Date.now() - startTime : undefined;
+    if (startTime) jobStartTimes.delete(jobId);
+    addJobHistoryEntry({
+      jobId,
+      queue: worker.name,
+      status: 'failed',
+      timestamp: Date.now(),
+      duration,
+      error: err?.message,
+    });
   });
 
   worker.on('error', (err) => {
-    // Tratar erros de conexão sem crashar
     if (isShuttingDown) return;
-    console.error(`[${name}] Erro no worker: ${err.message}`);
+    logger.error(`[${name}] Erro no worker`, err);
   });
 
   worker.on('stalled', (jobId) => {
-    console.warn(`[${name}] Job ${jobId} ficou stalled (possivel crash anterior)`);
+    logger.warn(`[${name}] Job ficou stalled (possivel crash anterior)`, { jobId });
+    addJobHistoryEntry({
+      jobId,
+      queue: worker.name,
+      status: 'stalled',
+      timestamp: Date.now(),
+    });
   });
 }
 
@@ -304,25 +318,22 @@ for (const worker of allWorkers) {
 // GRACEFUL SHUTDOWN (com timeout)
 // ============================================
 
-const SHUTDOWN_TIMEOUT_MS = 10000; // 10s max para encerrar
-
 async function gracefulShutdown(signal: string) {
-  if (isShuttingDown) return; // Evitar dupla execução
+  if (isShuttingDown) return;
   isShuttingDown = true;
 
-  console.log(`[Workers] ${signal} recebido. Encerrando workers...`);
+  logger.info('[Workers] Sinal recebido, encerrando workers...', { signal });
 
-  // Timeout de seguranca: se workers nao fecharem em 10s, force exit
   const forceExit = setTimeout(() => {
-    console.error('[Workers] Timeout no shutdown. Forcando saida.');
+    logger.error('[Workers] Timeout no shutdown. Forcando saida.');
     process.exit(1);
-  }, SHUTDOWN_TIMEOUT_MS);
+  }, TIMEOUTS.WORKER_SHUTDOWN);
 
   try {
     await Promise.allSettled(allWorkers.map(w => w.close()));
-    console.log('[Workers] Workers fechados com sucesso');
+    logger.info('[Workers] Workers fechados com sucesso');
   } catch (err: any) {
-    console.error('[Workers] Erro ao fechar workers:', err.message);
+    logger.error('[Workers] Erro ao fechar workers', err);
   }
 
   clearTimeout(forceExit);
@@ -337,9 +348,10 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 // ============================================
 
 export function startAllWorkers() {
-  console.log('[Workers] Iniciando todos os workers...');
-  console.log(`[Workers] - Stencil: concurrency ${process.env.WORKER_CONCURRENCY_STENCIL || '5'}`);
-  console.log(`[Workers] - Enhance: concurrency ${process.env.WORKER_CONCURRENCY_ENHANCE || '3'}`);
-  console.log(`[Workers] - IA Gen: concurrency ${process.env.WORKER_CONCURRENCY_GEN || '3'}`);
-  console.log('[Workers] - Color Match: concurrency 10');
+  logger.info('[Workers] Iniciando todos os workers...', {
+    stencilConcurrency: process.env.WORKER_CONCURRENCY_STENCIL || WORKER_CONCURRENCY.STENCIL_DEFAULT,
+    enhanceConcurrency: process.env.WORKER_CONCURRENCY_ENHANCE || WORKER_CONCURRENCY.ENHANCE_DEFAULT,
+    iaGenConcurrency: process.env.WORKER_CONCURRENCY_GEN || WORKER_CONCURRENCY.IA_GEN_DEFAULT,
+    colorMatchConcurrency: WORKER_CONCURRENCY.COLOR_MATCH,
+  });
 }

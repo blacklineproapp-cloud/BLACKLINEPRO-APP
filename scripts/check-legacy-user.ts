@@ -54,10 +54,10 @@ async function checkLegacyUser() {
   console.log('\n' + '='.repeat(80));
   console.log('📊 DIAGNÓSTICO:');
   
-  if (user.plan === 'legacy' && user.is_paid === false) {
-    console.log('✅ CORRETO: Plano Legacy com is_paid = false (aguardando pagamento)');
-  } else if (user.plan === 'legacy' && user.is_paid === true) {
-    console.log('❌ ERRO: Plano Legacy com is_paid = true (não deveria estar liberado!)');
+  if (user.plan === 'ink' && user.is_paid === false) {
+    console.log('✅ CORRETO: Plano Ink com is_paid = false (aguardando pagamento)');
+  } else if (user.plan === 'ink' && user.is_paid === true) {
+    console.log('❌ ERRO: Plano Ink com is_paid = true (não deveria estar liberado!)');
   }
 
   if (!payments || payments.length === 0) {

@@ -22,7 +22,7 @@ interface RemarketingFinalProps {
 export const RemarketingFinal = ({
   userName = 'Tatuador',
   userEmail,
-  appUrl = 'https://stencilflow.com.br',
+  appUrl = 'https://Black Line Pro.com.br',
 }: RemarketingFinalProps) => {
   return (
     <Html>
@@ -37,7 +37,7 @@ export const RemarketingFinal = ({
               <Text style={styles.paragraph}>Olá, <strong>{userName}</strong>!</Text>
 
               <Text style={styles.paragraph}>
-                Este é nosso último lembrete sobre como o <strong>StencilFlow</strong> pode
+                Este é nosso último lembrete sobre como o <strong>Black Line Pro</strong> pode
                 simplificar seu trabalho.
               </Text>
 

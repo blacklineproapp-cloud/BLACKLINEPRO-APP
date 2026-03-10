@@ -41,16 +41,16 @@ async function testResendDomain() {
   
   // 3. Enviar email de teste
   console.log('3️⃣ Enviando email de teste...');
-  console.log('   FROM: StencilFlow <noreply@stencilflow.com.br>');
+  console.log('   FROM: Black Line Pro <noreply@blacklinepro.com.br>');
   console.log('   TO: (insira seu email abaixo no código)\n');
   
   const testEmail = 'geanvitor.gonzales@gmail.com'; // ALTERE PARA SEU EMAIL
   
   try {
     const { data, error } = await resend.emails.send({
-      from: 'StencilFlow <noreply@stencilflow.com.br>',
+      from: 'Black Line Pro <noreply@blacklinepro.com.br>',
       to: [testEmail],
-      subject: '✅ Teste de Domínio - StencilFlow',
+      subject: '✅ Teste de Domínio - Black Line Pro',
       html: `
         <!DOCTYPE html>
         <html>
@@ -58,9 +58,9 @@ async function testResendDomain() {
             <style>
               body { font-family: 'Inter', -apple-system, sans-serif; line-height: 1.6; color: #1e293b; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #a855f7 100%); color: white; padding: 40px 20px; text-align: center; border-radius: 12px 12px 0 0; }
+              .header { background: linear-gradient(135deg, #6366F1 0%, #14b8a6 50%, #a855f7 100%); color: white; padding: 40px 20px; text-align: center; border-radius: 12px 12px 0 0; }
               .content { background: #ffffff; padding: 40px; border: 1px solid #e2e8f0; border-top: none; }
-              .success { background: #ecfdf5; border-left: 4px solid #10b981; padding: 16px; margin: 20px 0; border-radius: 8px; }
+              .success { background: #ecfdf5; border-left: 4px solid #6366F1; padding: 16px; margin: 20px 0; border-radius: 8px; }
               .footer { text-align: center; color: #64748b; font-size: 14px; margin-top: 40px; }
             </style>
           </head>
@@ -68,21 +68,21 @@ async function testResendDomain() {
             <div class="container">
               <div class="header">
                 <h1>🎉 Domínio Verificado!</h1>
-                <p>stencilflow.com.br</p>
+                <p>blacklinepro.com.br</p>
               </div>
               <div class="content">
                 <div class="success">
                   <p><strong>✅ Email de teste enviado com sucesso!</strong></p>
-                  <p>O domínio <strong>stencilflow.com.br</strong> está verificado e funcionando corretamente no Resend.</p>
+                  <p>O domínio <strong>blacklinepro.com.br</strong> está verificado e funcionando corretamente no Resend.</p>
                 </div>
                 
                 <h3>📋 Detalhes Técnicos:</h3>
                 <ul>
-                  <li><strong>Domínio:</strong> stencilflow.com.br</li>
+                  <li><strong>Domínio:</strong> blacklinepro.com.br</li>
                   <li><strong>Status:</strong> Verificado ✅</li>
                   <li><strong>DKIM:</strong> Configurado</li>
                   <li><strong>SPF:</strong> Configurado</li>
-                  <li><strong>Remetente:</strong> noreply@stencilflow.com.br</li>
+                  <li><strong>Remetente:</strong> noreply@blacklinepro.com.br</li>
                 </ul>
                 
                 <p style="margin-top: 30px;">
@@ -90,7 +90,7 @@ async function testResendDomain() {
                 </p>
               </div>
               <div class="footer">
-                <p>StencilFlow - A Arte do Estêncil</p>
+                <p>Black Line Pro - A Arte do Estêncil</p>
                 <p>Teste automático de configuração Resend</p>
               </div>
             </div>

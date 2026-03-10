@@ -6,6 +6,7 @@ import {
   User, Database, Terminal, AlertTriangle, CheckCircle, Lock 
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 
 interface AuditLog {
   id: string;
@@ -177,13 +178,15 @@ export default function AuditPage() {
               <p className="text-zinc-400 text-sm">Análise de integridade financeira e ações administrativas</p>
             </div>
           </div>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => loadData(true)}
-            className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg hover:bg-zinc-800 transition flex items-center gap-2 text-sm text-zinc-400"
+            className="gap-2"
           >
             <RefreshCw size={16} />
             Atualizar Análise
-          </button>
+          </Button>
         </div>
 
         {/* RECONCILIAÇÃO CARDS */}
@@ -206,7 +209,7 @@ export default function AuditPage() {
                              <AlertTriangle size={16} />
                              Apenas Stripe (Crítico)
                         </h3>
-                        <p className="text-3xl font-bold text-white mb-2">{reconciliation.stripeOnly.length}</p>
+                        <p className="text-3xl font-bold text-white mb-2">{reconciliation.stripeOnly?.length ?? 0}</p>
                         <p className="text-zinc-500 text-sm">Usuários que pagaram mas não estão ativos no banco.</p>
                     </div>
                 </button>
@@ -215,8 +218,8 @@ export default function AuditPage() {
                 <button
                     onClick={() => setSelectedView('dbOnly')}
                     className={`text-left p-6 rounded-xl relative overflow-hidden group transition-all ${
-                        selectedView === 'dbOnly' 
-                        ? 'bg-amber-900/20 border-2 border-amber-500 ring-2 ring-amber-500/20' 
+                        selectedView === 'dbOnly'
+                        ? 'bg-amber-900/20 border-2 border-amber-500 ring-2 ring-amber-500/20'
                         : 'bg-zinc-900/50 border border-amber-900/50 hover:bg-zinc-900 hover:border-amber-800'
                     }`}
                 >
@@ -228,7 +231,7 @@ export default function AuditPage() {
                              <Lock size={16} />
                              Apenas Banco (Alerta)
                         </h3>
-                        <p className="text-3xl font-bold text-white mb-2">{reconciliation.dbOnly.length}</p>
+                        <p className="text-3xl font-bold text-white mb-2">{reconciliation.dbOnly?.length ?? 0}</p>
                         <p className="text-zinc-500 text-sm">Ativos no banco sem pagamento recente no Stripe.</p>
                     </div>
                 </button>
@@ -237,8 +240,8 @@ export default function AuditPage() {
                 <button
                     onClick={() => setSelectedView('multiPayers')}
                     className={`text-left p-6 rounded-xl relative overflow-hidden group transition-all ${
-                        selectedView === 'multiPayers' 
-                        ? 'bg-blue-900/20 border-2 border-blue-500 ring-2 ring-blue-500/20' 
+                        selectedView === 'multiPayers'
+                        ? 'bg-blue-900/20 border-2 border-blue-500 ring-2 ring-blue-500/20'
                         : 'bg-zinc-900/50 border border-blue-900/50 hover:bg-zinc-900 hover:border-blue-800'
                     }`}
                 >
@@ -250,7 +253,7 @@ export default function AuditPage() {
                              <CheckCircle size={16} />
                              Renovações
                         </h3>
-                        <p className="text-3xl font-bold text-white mb-2">{reconciliation.multiPayers.length}</p>
+                        <p className="text-3xl font-bold text-white mb-2">{reconciliation.multiPayers?.length ?? 0}</p>
                         <p className="text-zinc-500 text-sm">Usuários com múltiplos pagamentos confirmados.</p>
                     </div>
                 </button>
@@ -258,7 +261,7 @@ export default function AuditPage() {
         )}
 
         {/* DETALHES DA SELEÇÃO */}
-        {reconciliation && selectedView === 'stripeOnly' && reconciliation.stripeOnly.length > 0 && (
+        {reconciliation && selectedView === 'stripeOnly' && (reconciliation.stripeOnly?.length ?? 0) > 0 && (
             <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
                 <h2 className="text-xl font-bold mb-4 text-red-400 flex items-center gap-2">
                     <AlertTriangle size={20} />
@@ -276,30 +279,23 @@ export default function AuditPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-zinc-800">
-                            {reconciliation.stripeOnly.map((item: any, idx: number) => (
+                            {(reconciliation.stripeOnly ?? []).map((item: any, idx: number) => (
                                 <tr key={idx} className="hover:bg-zinc-800/30">
                                     <td className="p-4 font-mono text-zinc-300 text-xs">{item.email}</td>
                                     <td className="p-4">
                                         <span className="px-2 py-1 bg-zinc-800 rounded text-xs text-zinc-300 uppercase">{item.suggestedPlan}</span>
                                     </td>
-                                    <td className="p-4 text-emerald-400 font-medium">{item.amountBRL || `R$ ${(item.lastAmount / 100).toFixed(2)}`}</td>
+                                    <td className="p-4 text-indigo-400 font-medium">{item.amountBRL || `R$ ${(item.lastAmount / 100).toFixed(2)}`}</td>
                                     <td className="p-4 text-zinc-500 text-center">{item.count}x</td>
                                     <td className="p-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={() => handleFixStripeOnly(item.email, item.suggestedPlan || 'starter')}
+                                            <Button
+                                                size="sm"
+                                                onClick={() => handleFixStripeOnly(item.email, item.suggestedPlan || 'ink')}
                                                 disabled={fixing === item.email}
-                                                className="px-2 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-white font-medium text-xs transition"
                                             >
-                                                {fixing === item.email ? '...' : `${item.suggestedPlan?.toUpperCase() || 'STARTER'}`}
-                                            </button>
-                                            <button
-                                                onClick={() => handleFixStripeOnly(item.email, 'legacy')}
-                                                disabled={fixing === item.email}
-                                                className="px-2 py-1.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 rounded text-white font-medium text-xs transition"
-                                            >
-                                                LEGACY
-                                            </button>
+                                                {fixing === item.email ? '...' : `${item.suggestedPlan?.toUpperCase() || 'INK'}`}
+                                            </Button>
                                         </div>
                                     </td>
                                 </tr>
@@ -317,7 +313,7 @@ export default function AuditPage() {
                     Apenas no Banco (Possíveis Cortesia ou Erro)
                 </h2>
                 <div className="bg-zinc-900 border border-amber-900/30 rounded-xl overflow-hidden">
-                     {reconciliation.dbOnly.length === 0 ? (
+                     {(reconciliation.dbOnly?.length ?? 0) === 0 ? (
                         <div className="p-8 text-center text-zinc-500">Nenhum registro encontrado nesta categoria.</div>
                      ) : (
                         <table className="w-full text-left text-sm">
@@ -330,12 +326,11 @@ export default function AuditPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-800">
-                                {reconciliation.dbOnly.map((item: any, idx: number) => {
+                                {(reconciliation.dbOnly ?? []).map((item: any, idx: number) => {
                                     const planPrices: Record<string, string> = {
-                                        starter: 'R$ 50',
+                                        ink: 'R$ 50',
                                         pro: 'R$ 100',
                                         studio: 'R$ 300',
-                                        legacy: 'R$ 25',
                                         free: 'Grátis'
                                     };
                                     return (
@@ -348,27 +343,29 @@ export default function AuditPage() {
                                         <td className="p-4 text-amber-400 font-medium">{planPrices[item.plan] || '-'}</td>
                                         <td className="p-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button
+                                                <Button
+                                                    size="sm"
                                                     onClick={() => handleMarkAsBoleto(item.email)}
                                                     disabled={fixing === item.email}
-                                                    className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-white text-xs font-medium"
                                                 >
                                                     {fixing === item.email ? '...' : 'Boleto'}
-                                                </button>
-                                                <button
+                                                </Button>
+                                                <Button
+                                                    size="sm"
                                                     onClick={() => handleMarkAsCourtesy(item.email)}
                                                     disabled={fixing === item.email}
-                                                    className="px-2 py-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded text-white text-xs font-medium"
+                                                    className="bg-blue-600 hover:bg-blue-500"
                                                 >
                                                     Cortesia
-                                                </button>
-                                                <button
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
                                                     onClick={() => handleRevokeAccess(item.email)}
                                                     disabled={fixing === item.email}
-                                                    className="px-2 py-1 bg-red-600/80 hover:bg-red-500 disabled:opacity-50 rounded text-white text-xs font-medium"
                                                 >
                                                     Revogar
-                                                </button>
+                                                </Button>
                                             </div>
                                         </td>
                                     </tr>
@@ -384,10 +381,10 @@ export default function AuditPage() {
              <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
                 <h2 className="text-xl font-bold mb-4 text-blue-400 flex items-center gap-2">
                     <RefreshCw size={20} />
-                    Renovações Recentes ({reconciliation.multiPayers.length})
+                    Renovações Recentes ({reconciliation.multiPayers?.length ?? 0})
                 </h2>
                 <div className="bg-zinc-900 border border-blue-900/30 rounded-xl overflow-hidden">
-                     {reconciliation.multiPayers.length === 0 ? (
+                     {(reconciliation.multiPayers?.length ?? 0) === 0 ? (
                         <div className="p-8 text-center text-zinc-500">Nenhum registro encontrado nesta categoria.</div>
                      ) : (
                         <table className="w-full text-left text-sm">
@@ -399,12 +396,12 @@ export default function AuditPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-800">
-                                {reconciliation.multiPayers.map((item, idx) => (
+                                {(reconciliation.multiPayers ?? []).map((item, idx) => (
                                     <tr key={idx} className="hover:bg-zinc-800/30">
                                         <td className="p-4 font-mono text-zinc-300">{item.email}</td>
                                         <td className="p-4 text-zinc-400 font-medium">{item.count} pagamentos</td>
                                         <td className="p-4 text-right">
-                                            <span className="flex items-center justify-end gap-1 text-emerald-400 text-xs">
+                                            <span className="flex items-center justify-end gap-1 text-indigo-400 text-xs">
                                                 <CheckCircle size={14} />
                                                 Cliente Fiel
                                             </span>
@@ -478,7 +475,7 @@ export default function AuditPage() {
                        </td>
                        <td className="p-4">
                          <div className="flex items-center gap-2">
-                           <ShieldAlert size={14} className="text-emerald-500" />
+                           <ShieldAlert size={14} className="text-indigo-500" />
                            <span className="font-medium text-zinc-300">{log.admin?.email || 'Sistema'}</span>
                          </div>
                        </td>
@@ -486,7 +483,7 @@ export default function AuditPage() {
                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border ${
                            log.action === 'fix_discrepancy' ? 'bg-blue-900/20 text-blue-400 border-blue-800/30' :
                            log.action.includes('DELETE') || log.action.includes('BLOCK') ? 'bg-red-900/20 text-red-400 border-red-800/30' :
-                           log.action.includes('ADD') ? 'bg-emerald-900/20 text-emerald-400 border-emerald-800/30' :
+                           log.action.includes('ADD') ? 'bg-indigo-900/20 text-indigo-400 border-indigo-800/30' :
                            'bg-zinc-800 text-zinc-400 border-zinc-700'
                          }`}>
                            {log.action}
@@ -508,23 +505,25 @@ export default function AuditPage() {
 
             {/* Paginação */}
             <div className="p-4 border-t border-zinc-800 flex items-center justify-between">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-sm disabled:opacity-50 hover:bg-zinc-800 transition"
               >
                 Anterior
-              </button>
+              </Button>
               <span className="text-sm text-zinc-500">
                 Página {page} de {totalPages}
               </span>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-sm disabled:opacity-50 hover:bg-zinc-800 transition"
               >
                 Próxima
-              </button>
+              </Button>
             </div>
           </div>
         )}

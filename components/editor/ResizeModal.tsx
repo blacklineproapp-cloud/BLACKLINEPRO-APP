@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { X, Maximize2, Info, Zap, Loader2 } from 'lucide-react';
+import ModalWrapper from '@/components/ui/ModalWrapper';
 import { resizeImage, calculateDimensions } from '@/lib/image-resize';
+import { Button } from '@/components/ui/button';
 
 /**
  * Converte imagem (URL ou base64) para base64 completo
@@ -228,31 +230,35 @@ export default function ResizeModal({
     setTargetDpi(300);
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="max-w-2xl"
+      preventClose={isProcessing}
+      zIndex="z-[100]"
+    >
         {/* Header */}
         <div className="sticky top-0 bg-zinc-900 border-b border-zinc-800 p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Maximize2 size={20} className="text-emerald-400" />
-            <h2 className="text-white font-semibold text-lg">{t('title')}</h2>
+            <Maximize2 size={20} className="text-indigo-400" />
+            <h2 id="modal-title" className="text-white font-semibold text-lg">{t('title')}</h2>
           </div>
-          <button
+          <Button
             onClick={onClose}
             disabled={isProcessing}
-            className="text-zinc-400 hover:text-white transition-colors disabled:opacity-50"
+            variant="ghost"
+            size="icon"
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
         <div className="p-6 space-y-6">
           {/* Info Atual */}
           <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
             <h3 className="text-white font-medium text-sm mb-3 flex items-center gap-2">
-              <Info size={14} className="text-blue-400" />
+              <Info size={14} className="text-indigo-400" />
               {t('currentInfo')}
             </h3>
             <div className="grid grid-cols-2 gap-3">
@@ -281,12 +287,14 @@ export default function ResizeModal({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-white font-medium text-sm">{t('newSize')}</h3>
-              <button
+              <Button
                 onClick={suggestOptimalSize}
-                className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+                variant="link"
+                size="sm"
+                className="text-xs gap-1"
               >
                 <Zap size={12} /> {t('suggestOptimal')}
-              </button>
+              </Button>
             </div>
 
             {/* Largura */}
@@ -300,7 +308,7 @@ export default function ResizeModal({
                 max="500"
                 step="0.1"
                 disabled={isProcessing}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm focus:border-emerald-500 focus:outline-none disabled:opacity-50"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50"
               />
             </div>
 
@@ -315,7 +323,7 @@ export default function ResizeModal({
                 max="500"
                 step="0.1"
                 disabled={isProcessing || maintainAspect}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm focus:border-emerald-500 focus:outline-none disabled:opacity-50"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50"
               />
             </div>
 
@@ -326,7 +334,7 @@ export default function ResizeModal({
                 onClick={() => setMaintainAspect(!maintainAspect)}
                 disabled={isProcessing}
                 className={`w-12 h-6 rounded-full transition-colors disabled:opacity-50 ${
-                  maintainAspect ? 'bg-emerald-500' : 'bg-zinc-700'
+                  maintainAspect ? 'bg-indigo-500' : 'bg-zinc-700'
                 }`}
               >
                 <div
@@ -344,7 +352,7 @@ export default function ResizeModal({
                 value={targetDpi}
                 onChange={(e) => setTargetDpi(Number(e.target.value))}
                 disabled={isProcessing}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm focus:border-emerald-500 focus:outline-none disabled:opacity-50"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-white text-sm focus:border-indigo-500 focus:outline-none disabled:opacity-50"
               >
                 <option value={150}>{t('dpiOptions.min')}</option>
                 <option value={200}>{t('dpiOptions.good')}</option>
@@ -358,8 +366,8 @@ export default function ResizeModal({
           {previewInfo && (
             <div className={`border rounded-lg p-4 ${
               previewInfo.isUpscaling
-                ? 'bg-blue-900/20 border-blue-800'
-                : 'bg-emerald-900/20 border-emerald-800'
+                ? 'bg-indigo-900/20 border-indigo-800'
+                : 'bg-indigo-900/20 border-indigo-800'
             }`}>
               <h3 className="text-white font-medium text-sm mb-3">{t('preview')}</h3>
 
@@ -373,8 +381,8 @@ export default function ResizeModal({
                 <div>
                   <p className="text-zinc-400 text-xs mb-1">{t('finalDpi')}</p>
                   <p className={`text-sm font-mono font-bold ${
-                    targetDpi >= 300 ? 'text-emerald-400' :
-                    targetDpi >= 200 ? 'text-blue-400' :
+                    targetDpi >= 300 ? 'text-indigo-400' :
+                    targetDpi >= 200 ? 'text-indigo-400' :
                     targetDpi >= 150 ? 'text-yellow-400' :
                     'text-red-400'
                   }`}>
@@ -385,8 +393,8 @@ export default function ResizeModal({
 
               <div className={`text-xs p-2 rounded ${
                 previewInfo.isUpscaling
-                  ? 'bg-blue-900/30 text-blue-300'
-                  : 'bg-emerald-900/30 text-emerald-300'
+                  ? 'bg-indigo-900/30 text-indigo-300'
+                  : 'bg-indigo-900/30 text-indigo-300'
               }`}>
                 <strong>{t('algorithm')}:</strong> {previewInfo.algorithm} (
                 {previewInfo.isUpscaling ? 'Upscale' : 'Downscale'} •{' '}
@@ -398,17 +406,18 @@ export default function ResizeModal({
 
           {/* Botões de Ação */}
           <div className="flex gap-3">
-            <button
+            <Button
               onClick={onClose}
               disabled={isProcessing}
-              className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-3 rounded-xl font-semibold transition-colors disabled:opacity-50"
+              variant="secondary"
+              className="flex-1 py-3 rounded-xl"
             >
               {tCommon('cancel')}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleResize}
               disabled={isProcessing}
-              className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              className="flex-1 py-3 rounded-xl gap-2"
             >
               {isProcessing ? (
                 <>
@@ -421,7 +430,7 @@ export default function ResizeModal({
                   {t('apply')}
                 </>
               )}
-            </button>
+            </Button>
           </div>
 
           {/* Aviso */}
@@ -431,7 +440,6 @@ export default function ResizeModal({
               : t('downscaleSuccess')}
           </p>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
   );
 }

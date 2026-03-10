@@ -9,12 +9,13 @@ import RemarketingInitial from '@/emails/templates/RemarketingInitial';
 import RemarketingReminder from '@/emails/templates/RemarketingReminder';
 import RemarketingFinal from '@/emails/templates/RemarketingFinal';
 import CourtesyPaymentLink from '@/emails/templates/CourtesyPaymentLink';
+import { logger } from '../logger';
 
 // Inicializar Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Email remetente (configurar domínio verificado no Resend)
-const FROM_EMAIL = process.env.FROM_EMAIL || 'StencilFlow <noreply@stencilflow.com.br>';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Black Line Pro <noreply@blacklinepro.com.br>';
 
 // ============================================================================
 // UTILITIES
@@ -50,7 +51,7 @@ function htmlToPlainText(html: string): string {
  */
 export async function sendWelcomeEmail(email: string, nome: string) {
   if (!process.env.RESEND_API_KEY) {
-    console.log('[Email] Resend não configurado, pulando envio');
+    logger.warn('[Email] Resend não configurado, pulando envio');
     return;
   }
 
@@ -58,7 +59,7 @@ export async function sendWelcomeEmail(email: string, nome: string) {
     await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: 'Bem-vindo ao StencilFlow! 🎉',
+      subject: 'Bem-vindo ao Black Line Pro! 🎉',
       html: `
         <!DOCTYPE html>
         <html>
@@ -76,13 +77,13 @@ export async function sendWelcomeEmail(email: string, nome: string) {
           <body>
             <div class="container">
               <div class="header">
-                <h1>🎉 Bem-vindo ao StencilFlow!</h1>
+                <h1>🎉 Bem-vindo ao Black Line Pro!</h1>
                 <p>Sua assinatura está ativa</p>
               </div>
               <div class="content">
                 <p>Olá, <strong>${nome}</strong>!</p>
 
-                <p>Obrigado por assinar o StencilFlow. Agora você tem acesso completo ao editor profissional de stencils.</p>
+                <p>Obrigado por assinar o Black Line Pro. Agora você tem acesso completo ao editor profissional de stencils.</p>
 
                 <div class="features">
                   <h3>🚀 Você já pode usar:</h3>
@@ -105,7 +106,7 @@ export async function sendWelcomeEmail(email: string, nome: string) {
                 <p>Bons stencils! 🎨</p>
               </div>
               <div class="footer">
-                <p>StencilFlow - Editor Profissional de Stencils</p>
+                <p>Black Line Pro - Editor Profissional de Stencils</p>
                 <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/assinatura">Gerenciar Assinatura</a></p>
               </div>
             </div>
@@ -114,9 +115,9 @@ export async function sendWelcomeEmail(email: string, nome: string) {
       `
     });
 
-    console.log(`[Email] Boas-vindas enviado para: ${email}`);
+    logger.info('[Email] Boas-vindas enviado', { email });
   } catch (error: any) {
-    console.error('[Email] Erro ao enviar boas-vindas:', error.message);
+    logger.error('[Email] Erro ao enviar boas-vindas', error);
   }
 }
 
@@ -131,7 +132,7 @@ export async function sendPaymentConfirmationEmail(
   receiptUrl?: string
 ) {
   if (!process.env.RESEND_API_KEY) {
-    console.log('[Email] Resend não configurado, pulando envio');
+    logger.warn('[Email] Resend não configurado, pulando envio');
     return;
   }
 
@@ -139,7 +140,7 @@ export async function sendPaymentConfirmationEmail(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: 'Pagamento Confirmado - StencilFlow ✅',
+      subject: 'Pagamento Confirmado - Black Line Pro ✅',
       html: `
         <!DOCTYPE html>
         <html>
@@ -147,9 +148,9 @@ export async function sendPaymentConfirmationEmail(
             <style>
               body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; line-height: 1.6; color: #1e293b; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-              .header { background: #10b981; color: white; padding: 40px 20px; text-align: center; border-radius: 12px 12px 0 0; }
+              .header { background: #6366F1; color: white; padding: 40px 20px; text-align: center; border-radius: 12px 12px 0 0; }
               .content { background: #ffffff; padding: 40px; border: 1px solid #e2e8f0; border-top: none; }
-              .amount { font-size: 32px; font-weight: bold; color: #10b981; text-align: center; margin: 20px 0; }
+              .amount { font-size: 32px; font-weight: bold; color: #6366F1; text-align: center; margin: 20px 0; }
               .button { display: inline-block; background: #3b82f6; color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; margin: 10px 0; }
               .footer { text-align: center; color: #64748b; font-size: 14px; margin-top: 40px; }
             </style>
@@ -191,7 +192,7 @@ export async function sendPaymentConfirmationEmail(
                 </p>
               </div>
               <div class="footer">
-                <p>StencilFlow - Editor Profissional de Stencils</p>
+                <p>Black Line Pro - Editor Profissional de Stencils</p>
                 <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/assinatura">Gerenciar Assinatura</a></p>
               </div>
             </div>
@@ -200,9 +201,9 @@ export async function sendPaymentConfirmationEmail(
       `
     });
 
-    console.log(`[Email] Confirmação de pagamento enviado para: ${email}`);
+    logger.info('[Email] Confirmação de pagamento enviado', { email });
   } catch (error: any) {
-    console.error('[Email] Erro ao enviar confirmação:', error.message);
+    logger.error('[Email] Erro ao enviar confirmação', error);
   }
 }
 
@@ -216,7 +217,7 @@ export async function sendPaymentFailedEmail(
   reason?: string
 ) {
   if (!process.env.RESEND_API_KEY) {
-    console.log('[Email] Resend não configurado, pulando envio');
+    logger.warn('[Email] Resend não configurado, pulando envio');
     return;
   }
 
@@ -224,7 +225,7 @@ export async function sendPaymentFailedEmail(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: 'Problema com seu Pagamento - StencilFlow ⚠️',
+      subject: 'Problema com seu Pagamento - Black Line Pro ⚠️',
       html: `
         <!DOCTYPE html>
         <html>
@@ -252,7 +253,7 @@ export async function sendPaymentFailedEmail(
                   ${reason ? `<p>Motivo: ${reason}</p>` : ''}
                 </div>
 
-                <p>Para manter o acesso à sua assinatura StencilFlow, por favor atualize seu método de pagamento.</p>
+                <p>Para manter o acesso à sua assinatura Black Line Pro, por favor atualize seu método de pagamento.</p>
 
                 <p style="text-align: center;">
                   <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/assinatura" class="button">
@@ -274,7 +275,7 @@ export async function sendPaymentFailedEmail(
                 </p>
               </div>
               <div class="footer">
-                <p>StencilFlow - Editor Profissional de Stencils</p>
+                <p>Black Line Pro - Editor Profissional de Stencils</p>
               </div>
             </div>
           </body>
@@ -282,9 +283,9 @@ export async function sendPaymentFailedEmail(
       `
     });
 
-    console.log(`[Email] Notificação de falha enviado para: ${email}`);
+    logger.info('[Email] Notificação de falha enviado', { email });
   } catch (error: any) {
-    console.error('[Email] Erro ao enviar notificação:', error.message);
+    logger.error('[Email] Erro ao enviar notificação', error);
   }
 }
 
@@ -298,7 +299,7 @@ export async function sendSubscriptionCanceledEmail(
   endDate?: Date
 ) {
   if (!process.env.RESEND_API_KEY) {
-    console.log('[Email] Resend não configurado, pulando envio');
+    logger.warn('[Email] Resend não configurado, pulando envio');
     return;
   }
 
@@ -306,7 +307,7 @@ export async function sendSubscriptionCanceledEmail(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: 'Assinatura Cancelada - StencilFlow',
+      subject: 'Assinatura Cancelada - Black Line Pro',
       html: `
         <!DOCTYPE html>
         <html>
@@ -329,7 +330,7 @@ export async function sendSubscriptionCanceledEmail(
               <div class="content">
                 <p>Olá, <strong>${nome}</strong>!</p>
 
-                <p>Confirmamos o cancelamento da sua assinatura StencilFlow.</p>
+                <p>Confirmamos o cancelamento da sua assinatura Black Line Pro.</p>
 
                 ${endDate ? `
                   <div class="info">
@@ -358,7 +359,7 @@ export async function sendSubscriptionCanceledEmail(
                 </p>
               </div>
               <div class="footer">
-                <p>StencilFlow - Editor Profissional de Stencils</p>
+                <p>Black Line Pro - Editor Profissional de Stencils</p>
               </div>
             </div>
           </body>
@@ -366,9 +367,9 @@ export async function sendSubscriptionCanceledEmail(
       `
     });
 
-    console.log(`[Email] Cancelamento enviado para: ${email}`);
+    logger.info('[Email] Cancelamento enviado', { email });
   } catch (error: any) {
-    console.error('[Email] Erro ao enviar cancelamento:', error.message);
+    logger.error('[Email] Erro ao enviar cancelamento', error);
   }
 }
 
@@ -382,20 +383,20 @@ export async function sendRemarketingEmail(
   campaignType: 'initial' | 'reminder' | 'final' = 'initial'
 ) {
   if (!process.env.RESEND_API_KEY) {
-    console.log('[Email] Resend não configurado, pulando envio');
+    logger.warn('[Email] Resend não configurado, pulando envio');
     return;
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://stencilflow.com.br';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://blacklinepro.com.br';
 
   // Mapear tipo de campanha para template React e assunto (SEM emojis ou spam words)
   const campaignConfig = {
     initial: {
-      subject: 'Desbloqueie o StencilFlow Completo',
+      subject: 'Desbloqueie o Black Line Pro Completo',
       template: RemarketingInitial,
     },
     reminder: {
-      subject: 'Comparação: StencilFlow vs Ghostline',
+      subject: 'Comparação: Black Line Pro vs Ghostline',
       template: RemarketingReminder,
     },
     final: {
@@ -438,10 +439,10 @@ export async function sendRemarketingEmail(
       ],
     });
 
-    console.log(`[Email] Remarketing (${campaignType}) enviado para: ${email}`);
+    logger.info('[Email] Remarketing enviado', { campaignType, email });
     return { success: true };
   } catch (error: any) {
-    console.error('[Email] Erro ao enviar remarketing:', error.message);
+    logger.error('[Email] Erro ao enviar remarketing', error);
     return { success: false, error: error.message };
   }
 }
@@ -457,11 +458,11 @@ export async function sendCourtesyPaymentEmail(
   paymentLink: string
 ) {
   if (!process.env.RESEND_API_KEY) {
-    console.log('[Email] Resend não configurado, pulando envio');
+    logger.warn('[Email] Resend não configurado, pulando envio');
     return { success: false, error: 'Resend não configurado' };
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://stencilflow.com.br';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://blacklinepro.com.br';
 
   try {
     // Renderizar template React para HTML
@@ -479,14 +480,14 @@ export async function sendCourtesyPaymentEmail(
     await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: 'Migração StencilFlow - Configure sua assinatura recorrente',
+      subject: 'Migração Black Line Pro - Configure sua assinatura recorrente',
       html,
     });
 
-    console.log(`[Email] Link de pagamento (cortesia) enviado para: ${email}`);
+    logger.info('[Email] Link de pagamento (cortesia) enviado', { email });
     return { success: true };
   } catch (error: any) {
-    console.error('[Email] Erro ao enviar link de cortesia:', error.message);
+    logger.error('[Email] Erro ao enviar link de cortesia', error);
     return { success: false, error: error.message };
   }
 }

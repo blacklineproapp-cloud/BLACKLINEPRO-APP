@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Download, FileArchive, FileText, Loader2 } from 'lucide-react';
 import { downloadZip, downloadPdf, downloadSingleTile, TileData } from '@/lib/download-helpers';
+import { Button } from '@/components/ui/button';
 
 interface DownloadControlsProps {
   tiles: TileData[];
@@ -72,10 +73,10 @@ export default function DownloadControls({
       {/* Botões principais de download */}
       <div className="grid grid-cols-2 gap-2">
         {/* Download Todas PNG */}
-        <button
+        <Button
           onClick={handleDownloadAllPng}
           disabled={isDownloading}
-          className="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-blue-600 hover:bg-blue-500 py-3 rounded-xl gap-2 shadow-lg"
         >
           {isDownloading && downloadType === 'all-png' ? (
             <>
@@ -88,13 +89,13 @@ export default function DownloadControls({
               Todas PNG
             </>
           )}
-        </button>
+        </Button>
 
         {/* Download ZIP */}
-        <button
+        <Button
           onClick={handleDownloadZip}
           disabled={isDownloading}
-          className="bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl gap-2 shadow-lg"
         >
           {isDownloading && downloadType === 'zip' ? (
             <>
@@ -107,14 +108,14 @@ export default function DownloadControls({
               ZIP
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       {/* Segunda linha - PDF */}
-      <button
+      <Button
         onClick={handleDownloadPdf}
         disabled={isDownloading}
-        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full py-3 rounded-xl gap-2 shadow-lg"
       >
         {isDownloading && downloadType === 'pdf' ? (
           <>
@@ -127,7 +128,7 @@ export default function DownloadControls({
             PDF ({tiles.length} páginas)
           </>
         )}
-      </button>
+      </Button>
 
       {/* Informações */}
       <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-2.5">

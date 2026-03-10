@@ -1,4 +1,5 @@
 import { Redis } from 'ioredis';
+import { logger } from './logger';
 
 /**
  * Sistema de Cache Híbrido com Redis
@@ -13,46 +14,46 @@ import { Redis } from 'ioredis';
  */
 
 // ============================================
-// CONFIGURAÇÃO DO REDIS
+// CONFIGURAÇÃO DO REDIS (singleton via globalThis para sobreviver HMR)
 // ============================================
 
-let redisClient: Redis | null = null;
+const globalForRedis = globalThis as unknown as { __redisClient?: Redis | null };
 
-// 🚀 Conectar ao Railway Redis (TCP)
-if (process.env.REDIS_URL) {
+let redisClient: Redis | null = globalForRedis.__redisClient ?? null;
+
+if (!redisClient && process.env.REDIS_URL) {
   try {
     redisClient = new Redis(process.env.REDIS_URL, {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
-      commandTimeout: 10000, // Timeout de 10s para comandos (fallback para memória se exceder)
-      connectTimeout: 10000, // Timeout de 10s para conexão
-      // Configurações de reconnection
+      commandTimeout: 10000,
+      connectTimeout: 10000,
       retryStrategy(times) {
         const delay = Math.min(times * 50, 2000);
         return delay;
       },
-      lazyConnect: true, // Conectar apenas quando necessário
+      lazyConnect: true,
     });
 
-    // Conectar imediatamente
     redisClient.connect().then(() => {
-      console.log('[Cache] ✅ Railway Redis conectado');
+      logger.info('[Cache] Railway Redis conectado');
     }).catch((error) => {
-      console.warn('[Cache] Railway Redis falhou, usando memory fallback:', error.message);
+      logger.warn('[Cache] Railway Redis falhou, usando memory fallback', { error: error.message });
       redisClient = null;
+      globalForRedis.__redisClient = null;
     });
 
-    // Event listeners
     redisClient.on('error', (err) => {
-      console.error('[Cache] ❌ Erro Railway Redis:', err.message);
+      logger.error('[Cache] Erro Railway Redis', err);
     });
 
     redisClient.on('reconnecting', () => {
-      console.log('[Cache] 🔄 Reconectando ao Railway Redis...');
+      logger.info('[Cache] Reconectando ao Railway Redis...');
     });
 
+    globalForRedis.__redisClient = redisClient;
   } catch (error) {
-    console.warn('[Cache] Redis setup failed, using memory fallback:', error);
+    logger.warn('[Cache] Redis setup failed, using memory fallback', { error });
     redisClient = null;
   }
 }
@@ -69,6 +70,16 @@ interface CacheEntry<T> {
 
 const memoryCache = new Map<string, CacheEntry<any>>();
 
+// ============================================
+// CACHE METRICS (in-memory counters)
+// ============================================
+
+const cacheMetrics = {
+  hits: 0,
+  misses: 0,
+  errors: 0,
+};
+
 // Limpar cache expirado periodicamente (apenas em memória)
 if (!redisClient) {
   setInterval(() => {
@@ -81,7 +92,7 @@ if (!redisClient) {
       }
     }
     if (cleaned > 0) {
-      console.log(`[Cache] Limpou ${cleaned} entradas expiradas da memória`);
+      logger.debug('[Cache] Limpou entradas expiradas da memória', { cleaned });
     }
   }, 60000); // A cada 1 minuto
 }
@@ -147,11 +158,13 @@ export async function getOrSetCache<T>(
       const cached = await redisClient.get(fullKey);
 
       if (cached) {
-        console.log(`✅ [Redis] Cache HIT: ${fullKey}`);
+        logger.debug('[Cache] Redis HIT', { key: fullKey });
+        cacheMetrics.hits++;
         return JSON.parse(cached) as T;
       }
     } catch (error) {
-      console.error(`[Redis] Erro ao acessar cache (GET):`, error);
+      logger.error('[Cache] Erro ao acessar cache (GET)', error, { key: fullKey });
+      cacheMetrics.errors++;
       // Apenas logar erro do Redis e continuar para fallback/fetcher
       // NÃO chamar fetcher aqui dentro
     }
@@ -160,13 +173,15 @@ export async function getOrSetCache<T>(
   // 2. Tentar buscar da Memória (se Redis falhou ou deu miss)
   const memoryCached = memoryCache.get(fullKey);
   if (memoryCached && memoryCached.expires > Date.now()) {
-    console.log(`✅ [Memory] Cache HIT: ${fullKey}`);
+    logger.debug('[Cache] Memory HIT', { key: fullKey });
+    cacheMetrics.hits++;
     return memoryCached.data as T;
   }
 
   // 3. Cache Miss (ambos): Executar fetcher
   // Se o fetcher falhar, o erro sobe (não é engolido) e não tentamos 2x
-  console.log(`🔄 [Cache] MISS (Redis+Mem): ${fullKey}`);
+  logger.debug('[Cache] MISS (Redis+Mem)', { key: fullKey });
+  cacheMetrics.misses++;
   const data = await fetcher();
 
   // 4. Salvar no Cache (Background - não bloquear resposta)
@@ -184,7 +199,7 @@ export async function getOrSetCache<T>(
       try {
         await redisClient.setex(fullKey, Math.floor(ttl / 1000), JSON.stringify(data));
       } catch (error) {
-        console.error(`[Redis] Erro ao definir cache (SET):`, error);
+        logger.error('[Cache] Erro ao definir cache (SET)', error, { key: fullKey });
       }
     }
   })();
@@ -206,10 +221,10 @@ export async function setCache<T>(
   if (redisClient) {
     try {
       await redisClient.setex(fullKey, Math.floor(ttl / 1000), JSON.stringify(data));
-      console.log(`✅ [Redis] Cache SET: ${fullKey}`);
+      logger.debug('[Cache] Redis SET', { key: fullKey });
       return;
     } catch (error) {
-      console.error(`[Redis] Erro ao definir cache:`, error);
+      logger.error('[Cache] Erro ao definir cache', error, { key: fullKey });
     }
   }
 
@@ -219,7 +234,7 @@ export async function setCache<T>(
     expires: Date.now() + ttl,
     tags: options.tags,
   });
-  console.log(`✅ [Memory] Cache SET: ${fullKey}`);
+  logger.debug('[Cache] Memory SET', { key: fullKey });
 }
 
 
@@ -232,15 +247,15 @@ export async function invalidateCache(key: string, namespace?: string): Promise<
   if (redisClient) {
     try {
       await redisClient.del(fullKey);
-      console.log(`🗑️ [Redis] Cache invalidado: ${fullKey}`);
+      logger.debug('[Cache] Redis invalidado', { key: fullKey });
       return;
     } catch (error) {
-      console.error(`[Redis] Erro ao invalidar cache:`, error);
+      logger.error('[Cache] Erro ao invalidar cache', error, { key: fullKey });
     }
   }
 
   memoryCache.delete(fullKey);
-  console.log(`🗑️ [Memory] Cache invalidado: ${fullKey}`);
+  logger.debug('[Cache] Memory invalidado', { key: fullKey });
 }
 
 /**
@@ -257,12 +272,12 @@ export async function invalidateCacheByPattern(
       const keys = await redisClient.keys(fullPattern);
       if (keys.length > 0) {
         await redisClient.del(...keys);
-        console.log(`🗑️ [Redis] ${keys.length} entradas invalidadas: ${fullPattern}`);
+        logger.info('[Cache] Redis entradas invalidadas por padrão', { count: keys.length, pattern: fullPattern });
         return keys.length;
       }
       return 0;
     } catch (error) {
-      console.error(`[Redis] Erro ao invalidar por padrão:`, error);
+      logger.error('[Cache] Erro ao invalidar por padrão', error, { pattern: fullPattern });
     }
   }
 
@@ -275,7 +290,7 @@ export async function invalidateCacheByPattern(
       count++;
     }
   }
-  console.log(`🗑️ [Memory] ${count} entradas invalidadas: ${fullPattern}`);
+  logger.info('[Cache] Memory entradas invalidadas por padrão', { count, pattern: fullPattern });
   return count;
 }
 
@@ -289,12 +304,12 @@ export async function invalidateCacheByTag(tag: string): Promise<number> {
       if (keys.length > 0) {
         await redisClient.del(...keys);
         await redisClient.del(`tag:${tag}`);
-        console.log(`🗑️ [Redis] ${keys.length} entradas invalidadas por tag: ${tag}`);
+        logger.info('[Cache] Redis entradas invalidadas por tag', { count: keys.length, tag });
         return keys.length;
       }
       return 0;
     } catch (error) {
-      console.error(`[Redis] Erro ao invalidar por tag:`, error);
+      logger.error('[Cache] Erro ao invalidar por tag', error, { tag });
     }
   }
 
@@ -306,7 +321,7 @@ export async function invalidateCacheByTag(tag: string): Promise<number> {
       count++;
     }
   }
-  console.log(`🗑️ [Memory] ${count} entradas invalidadas por tag: ${tag}`);
+  logger.info('[Cache] Memory entradas invalidadas por tag', { count, tag });
   return count;
 }
 
@@ -317,16 +332,16 @@ export async function clearAllCache(): Promise<void> {
   if (redisClient) {
     try {
       await redisClient.flushdb();
-      console.log(`🗑️ [Redis] Todo cache limpo`);
+      logger.info('[Cache] Todo cache Redis limpo');
       return;
     } catch (error) {
-      console.error(`[Redis] Erro ao limpar cache:`, error);
+      logger.error('[Cache] Erro ao limpar cache', error);
     }
   }
 
   const size = memoryCache.size;
   memoryCache.clear();
-  console.log(`🗑️ [Memory] Cache limpo: ${size} entradas`);
+  logger.info('[Cache] Memory cache limpo', { entries: size });
 }
 
 /**
@@ -336,8 +351,9 @@ export async function getCacheStats(): Promise<{
   type: 'redis' | 'memory';
   keys: number;
   memoryUsage?: number;
-  hits?: number;
-  misses?: number;
+  hits: number;
+  misses: number;
+  errors: number;
 }> {
   if (redisClient) {
     try {
@@ -346,9 +362,12 @@ export async function getCacheStats(): Promise<{
       return {
         type: 'redis',
         keys: dbsize,
+        hits: cacheMetrics.hits,
+        misses: cacheMetrics.misses,
+        errors: cacheMetrics.errors,
       };
     } catch (error) {
-      console.error(`[Redis] Erro ao obter stats:`, error);
+      logger.error('[Cache] Erro ao obter stats', error);
     }
   }
 
@@ -368,6 +387,9 @@ export async function getCacheStats(): Promise<{
     type: 'memory',
     keys: memoryCache.size,
     memoryUsage: valid,
+    hits: cacheMetrics.hits,
+    misses: cacheMetrics.misses,
+    errors: cacheMetrics.errors,
   };
 }
 
@@ -382,6 +404,13 @@ export function isRedisConnected(): boolean {
  * Wrapper: getCached (compatibilidade com código antigo)
  * 🚀 OTIMIZAÇÃO: TTL padrão 5min (era 1min)
  */
+/**
+ * Returns current cache hit/miss/error counters
+ */
+export function getCacheMetrics() {
+  return { ...cacheMetrics };
+}
+
 export async function getCached<T>(
   key: string,
   fetcher: () => Promise<T>,

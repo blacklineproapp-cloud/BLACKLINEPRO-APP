@@ -24,18 +24,18 @@ interface CourtesyPaymentLinkProps {
 export const CourtesyPaymentLink = ({
   userName = 'Tatuador',
   userEmail,
-  userPlan = 'starter',
+  userPlan = 'ink',
   paymentLink,
-  appUrl = 'https://stencilflow.com.br',
+  appUrl = 'https://Black Line Pro.com.br',
 }: CourtesyPaymentLinkProps) => {
   const planNames: Record<string, string> = {
-    starter: 'Starter (R$ 50/mês)',
-    pro: 'Pro (R$ 100/mês)',
-    studio: 'Studio (R$ 300/mês)',
+    ink: 'Blackline Ink (R$ 50/mês)',
+    pro: 'Blackline Pro (R$ 100/mês)',
+    studio: 'Blackline Studio (R$ 300/mês)',
   };
 
   const planFeatures: Record<string, string[]> = {
-    starter: [
+    ink: [
       '95 gerações de stencil por mês',
       'Editor completo com todas as ferramentas',
       'Salvar projetos ilimitados',
@@ -58,24 +58,24 @@ export const CourtesyPaymentLink = ({
     ],
   };
 
-  const planName = planNames[userPlan] || planNames.starter;
-  const features = planFeatures[userPlan] || planFeatures.starter;
+  const planName = planNames[userPlan] || planNames.ink;
+  const features = planFeatures[userPlan] || planFeatures.ink;
 
   return (
     <Html>
       <Head />
-      <Preview>Migração StencilFlow - Configure sua assinatura recorrente</Preview>
+      <Preview>Migração Black Line Pro - Configure sua assinatura recorrente</Preview>
       <Body style={styles.body}>
         <div style={styles.wrapper}>
           <Container style={styles.container}>
-            <EmailHeader title="Continue aproveitando o StencilFlow!" />
+            <EmailHeader title="Continue aproveitando o Black Line Pro!" />
 
             <Section style={styles.content}>
               <Text style={styles.paragraph}>Olá, <strong>{userName}</strong>!</Text>
 
               <Text style={styles.paragraph}>
                 Você está recebendo este email porque <strong>migrou do nosso app anterior</strong> e
-                está aproveitando o <strong>StencilFlow</strong> com acesso temporário de cortesia.
+                está aproveitando o <strong>Black Line Pro</strong> com acesso temporário de cortesia.
               </Text>
 
               <HighlightBox title="🎯 Ação Necessária">

@@ -152,4 +152,5 @@ test-*.bat
 # Backup files
 *.backup
 app/page.tsx.backup
+backups/
 

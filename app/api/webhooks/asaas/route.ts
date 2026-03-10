@@ -82,7 +82,7 @@ export async function POST(req: Request) {
       event_type: event,
       source: 'asaas',
       status: 'processing',
-      payload: payload as any,
+      payload: payload as unknown,
     }, {
       onConflict: 'event_id',
     });
@@ -134,7 +134,7 @@ export async function POST(req: Request) {
 
         case 'PAYMENT_AWAITING_RISK_ANALYSIS':
           // Manter como pendente - não faz nada, apenas log
-          console.log(`[Asaas Webhook] 🔍 Pagamento em análise de risco: ${payment?.id}`);
+          logger.info('[Asaas Webhook] Pagamento em análise de risco', { paymentId: payment?.id });
           break;
 
         case 'PAYMENT_DUNNING_RECEIVED':
@@ -146,7 +146,7 @@ export async function POST(req: Request) {
 
         case 'PAYMENT_DUNNING_REQUESTED':
           // Tentativa de recuperação - apenas log
-          console.log(`[Asaas Webhook] 📩 Tentativa de recuperação: ${payment?.id}`);
+          logger.info('[Asaas Webhook] Tentativa de recuperação', { paymentId: payment?.id });
           break;
 
         case 'PAYMENT_CHARGEBACK_REQUESTED':
@@ -187,7 +187,7 @@ export async function POST(req: Request) {
           break;
 
         default:
-          console.log(`[Asaas Webhook] Evento não tratado: ${event}`);
+          logger.info('[Asaas Webhook] Evento não tratado', { event });
       }
 
       // Marcar como concluído
@@ -202,26 +202,28 @@ export async function POST(req: Request) {
       webhookLogger.processed(event, eventId);
       return NextResponse.json({ message: 'OK' });
 
-    } catch (processError: any) {
-      webhookLogger.failed(event, eventId, processError);
+    } catch (processError: unknown) {
+      webhookLogger.failed(event, eventId, processError instanceof Error ? processError : new Error(String(processError)));
+
+      const errorMessage = processError instanceof Error ? processError.message : String(processError);
 
       // Marcar como falha
       await supabaseAdmin
         .from('webhook_events')
         .update({
           status: 'failed',
-          error_message: processError.message,
+          error_message: errorMessage,
         })
         .eq('event_id', eventId);
 
       // Retornar 500 para Asaas tentar novamente
       return NextResponse.json(
-        { error: processError.message },
+        { error: errorMessage },
         { status: 500 }
       );
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Asaas Webhook] Erro geral', error);
     return NextResponse.json(
       { error: 'Internal Server Error' },
@@ -239,13 +241,13 @@ export async function POST(req: Request) {
  * Pagamento confirmado → ativar usuário
  */
 async function handlePaymentReceived(payment: AsaasPayment) {
-  console.log(`[Asaas Webhook] 💰 Pagamento recebido: ${payment.id} - R$ ${payment.value}`);
+  logger.info('[Asaas Webhook] Pagamento recebido', { paymentId: payment.id, value: payment.value });
 
   // 1. Buscar customer no banco
   const dbCustomerResult = await AsaasCustomerService.getDbCustomerByAsaasId(payment.customer);
 
   if (!dbCustomerResult) {
-    console.error(`[AsaasWebhook] Customer não encontrado: ${payment.customer}`);
+    logger.error('[AsaasWebhook] Customer não encontrado', { customerId: payment.customer });
     throw new Error(`Customer not found: ${payment.customer}`);
   }
 
@@ -258,11 +260,11 @@ async function handlePaymentReceived(payment: AsaasPayment) {
   try {
     const result = await activateUserAtomic(dbCustomer.user_id, plan, {
       isPaid: true,
-      toolsUnlocked: plan === 'pro' || plan === 'studio' || plan === 'enterprise',
+      toolsUnlocked: plan === 'pro' || plan === 'studio',
       subscriptionStatus: 'active',
     });
 
-    console.log(`[Asaas Webhook] ✅ Usuário ativado: ${result.message}`);
+    logger.info('[Asaas Webhook] Usuário ativado', { message: result.message });
 
     // Desbloquear e limpar grace period
     await supabaseAdmin.from('users').update({
@@ -272,15 +274,15 @@ async function handlePaymentReceived(payment: AsaasPayment) {
       grace_period_until: null, // Limpar grace period
     }).eq('id', dbCustomer.user_id);
 
-  } catch (activationError: any) {
-    console.error('[Asaas Webhook] Erro na ativação:', activationError);
+  } catch (activationError: unknown) {
+    logger.error('[Asaas Webhook] Erro na ativação', activationError);
 
     // Fallback: atualizar manualmente
     await supabaseAdmin.from('users').update({
       plan,
       is_paid: true,
       subscription_status: 'active',
-      tools_unlocked: plan === 'pro' || plan === 'studio' || plan === 'enterprise',
+      tools_unlocked: plan === 'pro' || plan === 'studio',
       is_blocked: false,
       grace_period_until: null, // Limpar grace period
       asaas_subscription_id: payment.subscription || null,
@@ -300,7 +302,7 @@ async function handlePaymentReceived(payment: AsaasPayment) {
   } else {
     // Pagamento AVULSO (sem subscription) — criar assinatura para evitar cobranca orphan
     // Isso acontece quando o checkout falha parcialmente: cria cobranca mas perde a assinatura
-    console.warn(`[Asaas Webhook] Pagamento avulso detectado: ${payment.id}. Criando assinatura para o usuario.`);
+    logger.warn('[Asaas Webhook] Pagamento avulso detectado. Criando assinatura para o usuario', { paymentId: payment.id });
 
     try {
       // Buscar dados do usuario para determinar plano e ciclo
@@ -312,7 +314,7 @@ async function handlePaymentReceived(payment: AsaasPayment) {
 
       // So criar se o usuario nao tem assinatura ativa
       if (userData && !userData.asaas_subscription_id) {
-        const userPlan = plan !== 'free' ? plan : 'starter';
+        const userPlan = plan !== 'free' ? plan : 'ink';
         const billingType = payment.billingType || 'PIX';
 
         const createMethod = billingType === 'BOLETO'
@@ -331,17 +333,17 @@ async function handlePaymentReceived(payment: AsaasPayment) {
           subscription_expires_at: newSub.nextDueDate,
         }).eq('id', dbCustomer.user_id);
 
-        console.log(`[Asaas Webhook] Assinatura criada para pagamento avulso: ${newSub.id}`);
+        logger.info('[Asaas Webhook] Assinatura criada para pagamento avulso', { subscriptionId: newSub.id });
       }
-    } catch (subError: any) {
+    } catch (subError: unknown) {
       // Nao bloquear o webhook se falhar — o usuario ja foi ativado acima
-      console.error(`[Asaas Webhook] Erro ao criar assinatura para pagamento avulso: ${subError.message}`);
+      logger.error('[Asaas Webhook] Erro ao criar assinatura para pagamento avulso', subError);
     }
   }
 
   // 5. Salvar pagamento no banco
   try {
-    console.log(`[Asaas Webhook] Salvando pagamento no banco...`, {
+    logger.debug('[Asaas Webhook] Salvando pagamento no banco', {
       userId: dbCustomer.user_id,
       customerId: dbCustomer.id,
       paymentId: payment.id,
@@ -356,9 +358,9 @@ async function handlePaymentReceived(payment: AsaasPayment) {
       customerSource: source,
     });
 
-    console.log(`[Asaas Webhook] ✅ Pagamento salvo com sucesso: ${payment.id}`);
-  } catch (saveError: any) {
-    console.error(`[Asaas Webhook] ❌ Erro ao salvar pagamento:`, saveError);
+    logger.info('[Asaas Webhook] Pagamento salvo com sucesso', { paymentId: payment.id });
+  } catch (saveError: unknown) {
+    logger.error('[Asaas Webhook] Erro ao salvar pagamento', saveError);
     // Não lançar erro para não bloquear o webhook
   }
 }
@@ -368,13 +370,13 @@ async function handlePaymentReceived(payment: AsaasPayment) {
  * Cobrança criada (boleto/PIX gerado)
  */
 async function handlePaymentCreated(payment: AsaasPayment) {
-  console.log(`[Asaas Webhook] 📄 Cobrança criada: ${payment.id} - ${payment.billingType}`);
+  logger.info('[Asaas Webhook] Cobrança criada', { paymentId: payment.id, billingType: payment.billingType });
 
   // 1. Buscar customer
   const dbCustomerResult = await AsaasCustomerService.getDbCustomerByAsaasId(payment.customer);
 
   if (!dbCustomerResult) {
-    console.warn(`[Asaas Webhook] Customer não encontrado para cobrança: ${payment.customer}`);
+    logger.warn('[Asaas Webhook] Customer não encontrado para cobrança', { customerId: payment.customer });
     return;
   }
 
@@ -393,7 +395,7 @@ async function handlePaymentCreated(payment: AsaasPayment) {
 
   // TODO: Enviar email com link do boleto/PIX
   if (payment.billingType === 'BOLETO' && payment.bankSlipUrl) {
-    console.log(`[Asaas Webhook] 🎫 Boleto disponível: ${payment.bankSlipUrl}`);
+    logger.info('[Asaas Webhook] Boleto disponível', { bankSlipUrl: payment.bankSlipUrl });
   }
 }
 
@@ -402,7 +404,7 @@ async function handlePaymentCreated(payment: AsaasPayment) {
  * Pagamento vencido → Inicia grace period de 3 dias
  */
 async function handlePaymentOverdue(payment: AsaasPayment) {
-  console.log(`[Asaas Webhook] ⚠️ Pagamento vencido: ${payment.id}`);
+  logger.warn('[Asaas Webhook] Pagamento vencido', { paymentId: payment.id });
 
   const dbCustomerResult = await AsaasCustomerService.getDbCustomerByAsaasId(payment.customer);
 
@@ -425,7 +427,7 @@ async function handlePaymentOverdue(payment: AsaasPayment) {
   // Atualizar pagamento no banco
   await AsaasPaymentService.updateDatabaseStatus(payment.id, 'OVERDUE');
 
-  console.log(`[Asaas Webhook] ⏰ Grace period até: ${gracePeriodUntil.toISOString()}`);
+  logger.info('[Asaas Webhook] Grace period definido', { gracePeriodUntil: gracePeriodUntil.toISOString() });
 
   // TODO: Enviar email de cobrança urgente
   // - Assunto: "Seu pagamento venceu - Regularize em até 24 horas"
@@ -438,7 +440,7 @@ async function handlePaymentOverdue(payment: AsaasPayment) {
  * Pagamento estornado ou removido
  */
 async function handlePaymentRefunded(payment: AsaasPayment) {
-  console.log(`[Asaas Webhook] 💸 Pagamento estornado: ${payment.id}`);
+  logger.info('[Asaas Webhook] Pagamento estornado', { paymentId: payment.id });
 
   const dbCustomerResult = await AsaasCustomerService.getDbCustomerByAsaasId(payment.customer);
 
@@ -473,7 +475,7 @@ async function handlePaymentRefunded(payment: AsaasPayment) {
  * Cartão recusado
  */
 async function handlePaymentFailed(payment: AsaasPayment) {
-  console.log(`[Asaas Webhook] ❌ Pagamento falhou: ${payment.id}`);
+  logger.warn('[Asaas Webhook] Pagamento falhou', { paymentId: payment.id });
 
   const dbCustomerResult = await AsaasCustomerService.getDbCustomerByAsaasId(payment.customer);
 
@@ -500,7 +502,7 @@ async function handlePaymentFailed(payment: AsaasPayment) {
     grace_period_until: gracePeriodUntil.toISOString(),
   }).eq('id', dbCustomer.user_id);
 
-  console.log(`[Asaas Webhook] ⏰ Grace period (falha cartão) até: ${gracePeriodUntil.toISOString()}`);
+  logger.info('[Asaas Webhook] Grace period (falha cartão) definido', { gracePeriodUntil: gracePeriodUntil.toISOString() });
 
   // TODO: Enviar email sobre falha no cartão com link para atualizar método de pagamento
 }
@@ -510,7 +512,7 @@ async function handlePaymentFailed(payment: AsaasPayment) {
  * Chargeback solicitado - bloquear usuário e investigar
  */
 async function handleChargeback(payment: AsaasPayment) {
-  console.log(`[Asaas Webhook] ⚠️ CHARGEBACK: ${payment.id}`);
+  logger.warn('[Asaas Webhook] CHARGEBACK', { paymentId: payment.id });
 
   const dbCustomerResult = await AsaasCustomerService.getDbCustomerByAsaasId(payment.customer);
 
@@ -536,7 +538,7 @@ async function handleChargeback(payment: AsaasPayment) {
     metadata: { chargeback_requested_at: new Date().toISOString() },
   }).eq('asaas_payment_id', payment.id);
 
-  console.log(`[Asaas Webhook] 🚫 Usuário bloqueado por chargeback: ${dbCustomer.user_id}`);
+  logger.warn('[Asaas Webhook] Usuário bloqueado por chargeback', { userId: dbCustomer.user_id });
 
   // TODO: Enviar email de notificação sobre chargeback
   // TODO: Notificar admin sobre chargeback
@@ -551,12 +553,12 @@ async function handleChargeback(payment: AsaasPayment) {
  * Assinatura criada
  */
 async function handleSubscriptionCreated(subscription: AsaasSubscription) {
-  console.log(`[Asaas Webhook] 📦 Assinatura criada: ${subscription.id}`);
+  logger.info('[Asaas Webhook] Assinatura criada', { subscriptionId: subscription.id });
 
   const dbCustomerResult = await AsaasCustomerService.getDbCustomerByAsaasId(subscription.customer);
 
   if (!dbCustomerResult) {
-    console.error(`[Asaas Webhook] Customer não encontrado: ${subscription.customer}`);
+    logger.error('[Asaas Webhook] Customer não encontrado', { customerId: subscription.customer });
     return;
   }
 
@@ -586,7 +588,7 @@ async function handleSubscriptionCreated(subscription: AsaasSubscription) {
  * Assinatura atualizada
  */
 async function handleSubscriptionUpdated(subscription: AsaasSubscription) {
-  console.log(`[Asaas Webhook] 🔄 Assinatura atualizada: ${subscription.id} - ${subscription.status}`);
+  logger.info('[Asaas Webhook] Assinatura atualizada', { subscriptionId: subscription.id, status: subscription.status });
 
   // Sincronizar com banco
   await AsaasSubscriptionService.syncFromAsaas(subscription.id);
@@ -597,7 +599,7 @@ async function handleSubscriptionUpdated(subscription: AsaasSubscription) {
  * Assinatura cancelada
  */
 async function handleSubscriptionCanceled(subscription: AsaasSubscription) {
-  console.log(`[Asaas Webhook] ❌ Assinatura cancelada: ${subscription.id}`);
+  logger.info('[Asaas Webhook] Assinatura cancelada', { subscriptionId: subscription.id });
 
   const dbCustomerResult = await AsaasCustomerService.getDbCustomerByAsaasId(subscription.customer);
 
@@ -607,12 +609,15 @@ async function handleSubscriptionCanceled(subscription: AsaasSubscription) {
 
   const { data: dbCustomer } = dbCustomerResult;
 
-  // Atualizar usuário
+  // Atualizar usuário - APENAS status da assinatura
+  // Mantemos is_paid=true e o plano atual para que o usuário tenha acesso 
+  // até o fim do período já pago (subscription_expires_at). 
+  // O cron job check-grace-period cuidará de remover o acesso na data exata.
   await supabaseAdmin.from('users').update({
     subscription_status: 'canceled',
-    is_paid: false,
-    tools_unlocked: false,
-    plan: 'free',
+    // is_paid: false, // <-- REMOVIDO: Manter acesso até expirar
+    // tools_unlocked: false, // <-- REMOVIDO: Manter acesso até expirar
+    // plan: 'free', // <-- REMOVIDO: Manter acesso até expirar
   }).eq('asaas_subscription_id', subscription.id);
 
   // Atualizar assinatura no banco
@@ -629,7 +634,7 @@ async function handleSubscriptionCanceled(subscription: AsaasSubscription) {
 // ============================================================================
 
 // Planos válidos para validação
-const VALID_PLANS = ['free', 'starter', 'pro', 'studio', 'enterprise', 'legacy'] as const;
+const VALID_PLANS = ['free', 'ink', 'pro', 'studio'] as const;
 type PlanResult = typeof VALID_PLANS[number];
 
 function isValidPlan(value: string): value is PlanResult {
@@ -654,18 +659,16 @@ function parsePlanFromReference(externalReference?: string): PlanResult | null {
 
 /**
  * Extrai o plano da description do Asaas.
- * Formato esperado: "StencilFlow Pro - monthly"
+ * Formato esperado: "Black Line Pro Pro - monthly"
  */
 function parsePlanFromDescription(description?: string): PlanResult | null {
   if (!description) return null;
 
   const desc = description.toLowerCase();
   // Ordem do mais específico para o menos específico
-  if (desc.includes('enterprise')) return 'enterprise';
   if (desc.includes('studio')) return 'studio';
   if (desc.includes('pro')) return 'pro';
-  if (desc.includes('starter')) return 'starter';
-  if (desc.includes('legacy')) return 'legacy';
+  if (desc.includes('ink')) return 'ink';
   return null;
 }
 
@@ -700,27 +703,27 @@ async function getPlanFromPayment(payment: AsaasPayment): Promise<PlanResult> {
   // 1. externalReference (mais confiável - setado no checkout)
   const fromRef = parsePlanFromReference(payment.externalReference);
   if (fromRef) {
-    console.log(`[Asaas Webhook] Plano detectado via externalReference: ${fromRef}`);
+    logger.debug('[Asaas Webhook] Plano detectado via externalReference', { plan: fromRef });
     return fromRef;
   }
 
   // 2. Banco de dados (salvo durante o checkout)
   const fromDb = await getPlanFromDatabase(payment.id);
   if (fromDb) {
-    console.log(`[Asaas Webhook] Plano detectado via banco de dados: ${fromDb}`);
+    logger.debug('[Asaas Webhook] Plano detectado via banco de dados', { plan: fromDb });
     return fromDb;
   }
 
   // 3. Description (fallback textual)
   const fromDesc = parsePlanFromDescription(payment.description);
   if (fromDesc) {
-    console.warn(`[Asaas Webhook] ⚠️ Plano detectado via description (externalReference ausente): ${fromDesc} | Payment: ${payment.id}`);
+    logger.warn('[Asaas Webhook] Plano detectado via description (externalReference ausente)', { plan: fromDesc, paymentId: payment.id });
     return fromDesc;
   }
 
   // Nenhuma fonte encontrou - logar para investigação
-  console.error(`[Asaas Webhook] ❌ Não foi possível determinar plano do pagamento ${payment.id}. Ref: "${payment.externalReference}", Desc: "${payment.description}", Valor: R$${payment.value}. Usando 'starter' como fallback seguro.`);
-  return 'starter';
+  logger.error('[Asaas Webhook] Não foi possível determinar plano do pagamento. Usando ink como fallback', { paymentId: payment.id, externalReference: payment.externalReference, description: payment.description, value: payment.value });
+  return 'ink';
 }
 
 /**
@@ -733,6 +736,6 @@ function getPlanFromSubscription(subscription: AsaasSubscription): PlanResult {
   const fromDesc = parsePlanFromDescription(subscription.description);
   if (fromDesc) return fromDesc;
 
-  console.warn(`[Asaas Webhook] ⚠️ Plano não identificado na assinatura ${subscription.id}. Usando 'starter' como fallback.`);
-  return 'starter';
+  logger.warn('[Asaas Webhook] Plano não identificado na assinatura. Usando ink como fallback', { subscriptionId: subscription.id });
+  return 'ink';
 }

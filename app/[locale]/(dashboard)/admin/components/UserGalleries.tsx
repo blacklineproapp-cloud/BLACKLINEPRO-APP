@@ -181,9 +181,10 @@ export default function UserGalleries({ userId, userEmail }: UserGalleriesProps)
                   {selectedImage.metadata?.width && ` • ${selectedImage.metadata.width}x${selectedImage.metadata.height}cm`}
                 </p>
               </div>
-              <button 
-                onClick={() => setSelectedImage(null)} 
+              <button
+                onClick={() => setSelectedImage(null)}
                 className="text-zinc-400 hover:text-white p-2 shrink-0"
+                aria-label="Fechar"
               >
                 <X size={20} />
               </button>
@@ -194,7 +195,7 @@ export default function UserGalleries({ userId, userEmail }: UserGalleriesProps)
               <button
                 onClick={() => setShowStencil(false)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-                  !showStencil ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                  !showStencil ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'
                 }`}
               >
                 Original
@@ -202,7 +203,7 @@ export default function UserGalleries({ userId, userEmail }: UserGalleriesProps)
               <button
                 onClick={() => setShowStencil(true)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-                  showStencil ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                  showStencil ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'
                 }`}
               >
                 Estêncil

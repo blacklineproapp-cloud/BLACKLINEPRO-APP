@@ -28,9 +28,20 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'img.clerk.com',
       },
+      {
+        // Cloudflare R2 presigned URLs
+        protocol: 'https',
+        hostname: '**.r2.cloudflarestorage.com',
+      },
+      {
+        // R2 custom domain (configurar no futuro)
+        protocol: 'https',
+        hostname: 'images.blacklinepro.com.br',
+      },
     ],
     // Otimizar imagens
     formats: ['image/webp'],
+    qualities: [60, 75, 85],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
@@ -75,12 +86,12 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.stencilflow.com.br https://*.clerk.accounts.dev https://challenges.cloudflare.com https://connect.facebook.net https://www.facebook.com https://www.googletagmanager.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.blacklinepro.com.br https://*.clerk.accounts.dev https://challenges.cloudflare.com https://connect.facebook.net https://www.facebook.com https://www.googletagmanager.com https://pagead2.googlesyndication.com https://partner.googleadservices.com https://tpc.googlesyndication.com https://*.adtrafficquality.google",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co https://clerk.stencilflow.com.br https://*.clerk.accounts.dev https://generativelanguage.googleapis.com https://www.facebook.com https://connect.facebook.net https://graph.facebook.com https://www.google-analytics.com https://*.ingest.us.sentry.io https://capig.madgicx.ai",
-              "frame-src 'self' https://challenges.cloudflare.com",
+              "connect-src 'self' https://*.supabase.co https://clerk.blacklinepro.com.br https://*.clerk.accounts.dev https://generativelanguage.googleapis.com https://www.facebook.com https://connect.facebook.net https://graph.facebook.com https://www.google-analytics.com https://*.ingest.us.sentry.io https://capig.madgicx.ai https://pagead2.googlesyndication.com https://*.google.com https://*.adtrafficquality.google https://*.r2.cloudflarestorage.com",
+              "frame-src 'self' https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://pagead2.googlesyndication.com https://*.google.com https://ep2.adtrafficquality.google",
               "worker-src 'self' blob:",
               "object-src 'none'",
               "base-uri 'self'",

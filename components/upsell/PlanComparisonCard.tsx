@@ -25,13 +25,7 @@ interface PlanComparisonCardProps {
 // Features com descrição detalhada do que cada upgrade oferece
 const UPGRADE_FEATURES: Record<PlanType, { key: string; label: string; description: string; isNew?: boolean }[]> = {
   free: [],
-  legacy: [
-    { key: 'editor', label: 'Editor de Stencil', description: 'Crie stencils profissionais' },
-    { key: 'topographic', label: 'Modo Topográfico', description: 'Máximo detalhe nas linhas' },
-    { key: 'perfectLines', label: 'Linhas Perfeitas', description: 'Contornos precisos' },
-    { key: 'generations', label: '100 gerações/mês', description: 'Limite mensal' },
-  ],
-  starter: [
+  ink: [
     { key: 'editor', label: 'Editor de Stencil', description: 'Crie stencils profissionais' },
     { key: 'topographic', label: 'Modo Topográfico', description: 'Máximo detalhe' },
     { key: 'perfectLines', label: 'Linhas Perfeitas', description: 'Contornos precisos' },
@@ -39,7 +33,7 @@ const UPGRADE_FEATURES: Record<PlanType, { key: string; label: string; descripti
     { key: 'generations', label: '95 gerações/mês', description: 'Limite mensal' },
   ],
   pro: [
-    { key: 'allStarter', label: 'Tudo do Starter', description: 'Todas as features anteriores' },
+    { key: 'allInk', label: 'Tudo do Ink', description: 'Todas as features anteriores' },
     { key: 'ai', label: 'IA Generativa', description: 'Crie designs do zero', isNew: true },
     { key: 'colorMatch', label: 'Color Match IA', description: 'Paleta inteligente', isNew: true },
     { key: 'enhance4K', label: 'Enhance 4K', description: 'Qualidade máxima', isNew: true },
@@ -53,24 +47,14 @@ const UPGRADE_FEATURES: Record<PlanType, { key: string; label: string; descripti
     { key: 'multiUser', label: 'Ideal para Estúdios', description: 'Múltiplos artistas', isNew: true },
     { key: 'reports', label: 'Relatórios de Uso', description: 'Acompanhe consumo', isNew: true },
   ],
-  enterprise: [
-    { key: 'allStudio', label: 'Tudo do Studio', description: 'Todas as features anteriores' },
-    { key: 'unlimited', label: 'USO ILIMITADO', description: 'Sem limites!', isNew: true },
-    { key: 'dedicated', label: 'Suporte Dedicado', description: 'Atendimento 24/7', isNew: true },
-    { key: 'sla', label: 'SLA Garantido', description: '99.9% uptime', isNew: true },
-    { key: 'api', label: 'Acesso API', description: 'Integração total', isNew: true },
-    { key: 'onboarding', label: 'Onboarding VIP', description: 'Setup personalizado', isNew: true },
-  ],
 };
 
 // O que cada upgrade oferece em relação ao plano anterior
 const UPGRADE_HIGHLIGHTS: Record<PlanType, string[]> = {
   free: [],
-  legacy: ['Editor completo', '100 gerações/mês'],
-  starter: ['Editor completo', 'Ferramentas básicas', '95 gerações/mês'],
+  ink: ['Editor completo', 'Ferramentas básicas', '95 gerações/mês'],
   pro: ['+115 gerações/mês', 'IA Generativa', 'Color Match', 'Enhance 4K', 'Dividir A4'],
   studio: ['+470 gerações/mês', 'Suporte prioritário', 'Ideal para estúdios'],
-  enterprise: ['Uso ILIMITADO', 'Suporte 24/7', 'API access', 'SLA garantido'],
 };
 
 export default function PlanComparisonCard({
@@ -102,7 +86,7 @@ export default function PlanComparisonCard({
         border transition-all duration-300
         ${onSelect ? 'cursor-pointer' : ''}
         ${isSelected
-          ? 'bg-blue-600/10 border-blue-500 ring-2 ring-blue-500/30 scale-[1.02]'
+          ? 'bg-indigo-600/10 border-indigo-500 ring-2 ring-indigo-500/30 scale-[1.02]'
           : highlighted || isPopular
             ? 'bg-gradient-to-b from-amber-500/10 to-transparent border-amber-500/50 hover:border-amber-500'
             : 'bg-zinc-800/50 border-zinc-700 hover:border-zinc-600'
@@ -135,8 +119,8 @@ export default function PlanComparisonCard({
           </div>
           {yearlySavings > 0 && (
             <div className="flex items-center gap-1 mt-1">
-              <TrendingUp size={12} className="text-emerald-400" />
-              <span className="text-xs text-emerald-400">
+              <TrendingUp size={12} className="text-indigo-400" />
+              <span className="text-xs text-indigo-400">
                 Economize {yearlySavings}% no anual
               </span>
             </div>
@@ -167,19 +151,19 @@ export default function PlanComparisonCard({
             <div
               key={feature.key}
               className={`flex items-start gap-2 text-sm ${
-                feature.isNew ? 'text-emerald-400' : 'text-zinc-300'
+                feature.isNew ? 'text-indigo-400' : 'text-zinc-300'
               }`}
             >
               <Check
                 size={14}
                 className={`flex-shrink-0 mt-0.5 ${
-                  feature.isNew ? 'text-emerald-400' : 'text-zinc-500'
+                  feature.isNew ? 'text-indigo-400' : 'text-zinc-500'
                 }`}
               />
               <div className="flex-1 min-w-0">
                 <span className="font-medium">{feature.label}</span>
                 {feature.isNew && (
-                  <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-semibold">
+                  <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-semibold">
                     NOVO
                   </span>
                 )}
@@ -198,7 +182,7 @@ export default function PlanComparisonCard({
               w-full py-2.5 rounded-xl font-semibold text-sm
               transition-all duration-200
               ${isSelected
-                ? 'bg-blue-600 text-white'
+                ? 'bg-indigo-600 text-white'
                 : isPopular || highlighted
                   ? 'bg-amber-500 hover:bg-amber-400 text-black'
                   : 'bg-zinc-700 hover:bg-zinc-600 text-white'

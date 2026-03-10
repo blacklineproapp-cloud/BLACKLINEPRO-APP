@@ -6,6 +6,7 @@
  */
 
 import { clerkClient } from '@clerk/nextjs/server';
+import { logger } from './logger';
 
 export interface ClerkUserMetrics {
   totalUsers: number;
@@ -105,7 +106,7 @@ export class ClerkService {
         },
       };
     } catch (error) {
-      console.error('[ClerkService] Erro ao buscar métricas:', error);
+      logger.error('[ClerkService] Erro ao buscar métricas', error);
       throw error;
     }
   }
@@ -136,7 +137,7 @@ export class ClerkService {
         isActive,
       };
     } catch (error) {
-      console.error('[ClerkService] Erro ao buscar atividade do usuário:', error);
+      logger.error('[ClerkService] Erro ao buscar atividade do usuário', error);
       return null;
     }
   }
@@ -177,7 +178,7 @@ export class ClerkService {
 
       return activityMap;
     } catch (error) {
-      console.error('[ClerkService] Erro ao buscar atividade de múltiplos usuários:', error);
+      logger.error('[ClerkService] Erro ao buscar atividade de múltiplos usuários', error);
       return new Map();
     }
   }
@@ -210,7 +211,7 @@ export class ClerkService {
         };
       });
     } catch (error) {
-      console.error('[ClerkService] Erro ao buscar todos os usuários:', error);
+      logger.error('[ClerkService] Erro ao buscar todos os usuários', error);
       return [];
     }
   }

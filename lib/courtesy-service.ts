@@ -4,6 +4,7 @@
  */
 
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger } from './logger';
 
 interface CourtesyCheckResult {
   isExpired: boolean;
@@ -85,7 +86,7 @@ export async function checkAndRevertExpiredCourtesy(
     }
 
     // 6. ⚠️ CORTESIA EXPIRADA - Reverter para FREE
-    console.log(`[Courtesy] ⏰ Cortesia expirada para usuário ${userId} - Revertendo para FREE`);
+    logger.info('[Courtesy] Cortesia expirada - Revertendo para FREE', { userId });
 
     const { error: updateError } = await supabaseAdmin
       .from('users')
@@ -99,7 +100,7 @@ export async function checkAndRevertExpiredCourtesy(
       .eq('id', userId);
 
     if (updateError) {
-      console.error('[Courtesy] ❌ Erro ao reverter usuário:', updateError);
+      logger.error('[Courtesy] Erro ao reverter usuário', updateError);
       return {
         isExpired: true,
         wasReverted: false,
@@ -108,7 +109,7 @@ export async function checkAndRevertExpiredCourtesy(
       };
     }
 
-    console.log(`[Courtesy] ✅ Usuário ${userId} revertido para FREE`);
+    logger.info('[Courtesy] Usuário revertido para FREE', { userId });
 
     return {
       isExpired: true,
@@ -118,7 +119,7 @@ export async function checkAndRevertExpiredCourtesy(
     };
 
   } catch (error: any) {
-    console.error('[Courtesy] ❌ Erro ao verificar cortesia:', error);
+    logger.error('[Courtesy] Erro ao verificar cortesia', error);
     return {
       isExpired: false,
       wasReverted: false,

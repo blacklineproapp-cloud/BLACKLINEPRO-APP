@@ -1,14 +1,14 @@
-import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/auth';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { supabaseAdmin } from '@/lib/supabase';
 import { ClerkService } from '@/lib/clerk-service';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * API de Status Detalhado de Migração
- * 
+ *
  * Retorna informações detalhadas de cada usuário migrado:
  * - Data de primeiro pagamento Stripe
  * - Data de migração
@@ -16,20 +16,8 @@ export const dynamic = 'force-dynamic';
  * - Status atual (ativo, bloqueado, pendente)
  * - Último login (Clerk)
  */
-export async function GET(req: Request) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    const userIsAdmin = await isAdmin(userId);
-    if (!userIsAdmin) {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-    }
-
-    console.log('[MigrationDetailed] Buscando status detalhado de migração...');
+export const GET = withAdminAuth(async (req, { userId, adminId, adminEmail }) => {
+    logger.info('[MigrationDetailed] Buscando status detalhado de migração');
 
     // =========================================================================
     // 1. BUSCAR TODOS OS USUÁRIOS DA FILA DE MIGRAÇÃO
@@ -53,13 +41,13 @@ export async function GET(req: Request) {
       });
     }
 
-    console.log(`[MigrationDetailed] Encontrados ${migrationQueue.length} usuários na fila de migração`);
+    logger.info('[MigrationDetailed] Usuários encontrados na fila de migração', { count: migrationQueue.length });
 
     // =========================================================================
     // 2. BUSCAR DADOS DO SUPABASE
     // =========================================================================
     const emails = migrationQueue.map(m => m.email.toLowerCase());
-    
+
     const { data: supabaseUsers } = await supabaseAdmin
       .from('users')
       .select('email, clerk_id, is_paid, is_blocked, migration_status, asaas_subscription_id, subscription_status, plan, created_at, cpf_cnpj, requires_cpf')
@@ -68,7 +56,7 @@ export async function GET(req: Request) {
     // =========================================================================
     // 3. BUSCAR ATIVIDADE DO CLERK
     // =========================================================================
-    console.log('[MigrationDetailed] Buscando atividade do Clerk...');
+    logger.info('[MigrationDetailed] Buscando atividade do Clerk');
     const clerkActivityMap = await ClerkService.getUsersActivityByEmails(emails);
 
     // =========================================================================
@@ -128,7 +116,7 @@ export async function GET(req: Request) {
       return {
         email: migration.email,
         clerkId: supabaseUser?.clerk_id || null,
-        
+
         // Datas importantes
         stripeFirstPayment: migration.stripe_first_payment_date,
         stripeLastPayment: migration.stripe_last_payment_date,
@@ -136,30 +124,30 @@ export async function GET(req: Request) {
         migrationDate: migration.migrated_at,
         asaasFirstPayment: firstAsaasPayment?.date || null,
         asaasFirstPaymentAmount: firstAsaasPayment?.amount || null,
-        
+
         // Status
         currentStatus,
         migrationStatus: migration.status,
         isPaid: supabaseUser?.is_paid || false,
         isBlocked: supabaseUser?.is_blocked || false,
         plan: migration.current_plan,
-        
+
         // Atividade
         lastLogin: clerkActivity?.lastSignInAt || null,
         isUsingApp: clerkActivity?.isActive || false,
-        
+
         // Validação
         shouldBeBlocked,
         hasCpf: !!supabaseUser?.cpf_cnpj,
         requiresCpf: supabaseUser?.requires_cpf || false,
-        
+
         // Asaas
         asaasSubscriptionId: supabaseUser?.asaas_subscription_id || null,
         asaasCustomerId: migration.asaas_customer_id,
-        
+
         // Gaps
         migrationToPaymentGapDays,
-        
+
         // Metadata
         migrationError: migration.error_message,
       };
@@ -179,7 +167,7 @@ export async function GET(req: Request) {
       blocked: detailedUsers.filter(u => u.isBlocked).length,
       shouldBeBlocked: detailedUsers.filter(u => u.shouldBeBlocked).length,
       requiresCpf: detailedUsers.filter(u => u.requiresCpf).length,
-      
+
       // Gaps médios
       avgMigrationToPaymentGap: calculateAverage(
         detailedUsers
@@ -192,16 +180,16 @@ export async function GET(req: Request) {
     // 7. ALERTAS
     // =========================================================================
     const alerts = {
-      migratedButNotPaying: detailedUsers.filter(u => 
+      migratedButNotPaying: detailedUsers.filter(u =>
         u.migrationStatus === 'migrated' && !u.asaasFirstPayment && u.isUsingApp
       ),
-      usingAppWithoutPayment: detailedUsers.filter(u => 
+      usingAppWithoutPayment: detailedUsers.filter(u =>
         u.isUsingApp && !u.isPaid && !u.isBlocked
       ),
-      blockedButPaying: detailedUsers.filter(u => 
+      blockedButPaying: detailedUsers.filter(u =>
         u.isBlocked && u.isPaid
       ),
-      pendingCpf: detailedUsers.filter(u => 
+      pendingCpf: detailedUsers.filter(u =>
         u.requiresCpf && !u.hasCpf
       ),
     };
@@ -236,15 +224,7 @@ export async function GET(req: Request) {
         },
       },
     });
-
-  } catch (error: any) {
-    console.error('[MigrationDetailed] Erro ao buscar status detalhado:', error);
-    return NextResponse.json(
-      { error: 'Erro ao buscar status detalhado: ' + error.message },
-      { status: 500 }
-    );
-  }
-}
+});
 
 function calculateAverage(numbers: number[]): number {
   if (numbers.length === 0) return 0;

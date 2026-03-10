@@ -1,9 +1,9 @@
 // =====================================================
 // ORGANIZATION TYPES
-// Sistema multi-usuários para Studio e Enterprise
+// Sistema multi-usuários para Blackline Studio
 // =====================================================
 
-export type OrganizationPlan = 'studio' | 'enterprise';
+export type OrganizationPlan = 'studio';
 
 export type OrganizationRole = 'owner' | 'member';
 
@@ -18,7 +18,7 @@ export interface Organization {
   name: string;
   slug: string;
 
-  // Plano (apenas studio ou enterprise)
+  // Plano (apenas studio)
   plan: OrganizationPlan;
 
   // Billing
@@ -146,15 +146,13 @@ export interface RemoveMemberResponse {
 // =====================================================
 
 export const ORGANIZATION_MEMBER_LIMITS: Record<OrganizationPlan, number> = {
-  studio: 3,
-  enterprise: 5,
+  studio: 5,
 };
 
 export const INVITE_EXPIRATION_HOURS = 72; // 3 dias
 
 export const ORGANIZATION_PLAN_NAMES: Record<OrganizationPlan, string> = {
-  studio: 'Studio',
-  enterprise: 'Enterprise',
+  studio: 'Blackline Studio',
 };
 
 export const ORGANIZATION_ROLE_NAMES: Record<OrganizationRole, string> = {

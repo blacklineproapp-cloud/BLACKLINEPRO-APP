@@ -1,23 +1,13 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/auth';
-
 import { supabaseAdmin } from '@/lib/supabase';
-
-
+import { logger } from '@/lib/logger';
 
 /**
  * GET - Listar usuários duplicados
  */
-export async function GET(req: Request) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId || !await isAdmin(userId)) {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-    }
-
-    console.log('[Cleanup] Procurando usuários duplicados...');
+export const GET = withAdminAuth(async (req, { adminId }) => {
+    logger.info('[Cleanup] Procurando usuários duplicados');
 
     // Buscar TODOS os usuários
     const { data: allUsers, error } = await supabaseAdmin
@@ -55,7 +45,7 @@ export async function GET(req: Request) {
         }))
       }));
 
-    console.log(`[Cleanup] Encontrados ${duplicates.length} emails duplicados`);
+    logger.info('[Cleanup] Emails duplicados encontrados', { count: duplicates.length });
 
     return NextResponse.json({
       success: true,
@@ -66,25 +56,13 @@ export async function GET(req: Request) {
         ? 'Use POST /api/admin/cleanup-duplicates para remover automaticamente'
         : 'Nenhum usuário duplicado encontrado'
     });
-
-  } catch (error: any) {
-    console.error('[Cleanup] Erro:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+});
 
 /**
  * POST - Limpar usuários duplicados (mantém o mais antigo)
  */
-export async function POST(req: Request) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId || !await isAdmin(userId)) {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-    }
-
-    console.log('[Cleanup] Iniciando limpeza de duplicados...');
+export const POST = withAdminAuth(async (req, { adminId }) => {
+    logger.info('[Cleanup] Iniciando limpeza de duplicados');
 
     // Buscar TODOS os usuários
     const { data: allUsers, error } = await supabaseAdmin
@@ -128,7 +106,7 @@ export async function POST(req: Request) {
           .eq('id', user.id);
 
         if (deleteError) {
-          console.error(`[Cleanup] Erro ao deletar ${user.email}:`, deleteError);
+          logger.error('[Cleanup] Erro ao deletar duplicado', { email: user.email, error: deleteError });
           results.push({
             email,
             action: 'ERROR',
@@ -137,7 +115,7 @@ export async function POST(req: Request) {
             error: deleteError.message
           });
         } else {
-          console.log(`[Cleanup] ✅ Deletado: ${user.email} (ID: ${user.id})`);
+          logger.info('[Cleanup] Duplicado deletado', { email: user.email, id: user.id });
           totalDeleted++;
           results.push({
             email,
@@ -149,7 +127,7 @@ export async function POST(req: Request) {
       }
     }
 
-    console.log(`[Cleanup] Concluído! ${totalDeleted} usuários deletados`);
+    logger.info('[Cleanup] Limpeza concluída', { totalDeleted });
 
     return NextResponse.json({
       success: true,
@@ -157,9 +135,4 @@ export async function POST(req: Request) {
       totalDeleted,
       details: results
     });
-
-  } catch (error: any) {
-    console.error('[Cleanup] Erro:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+});

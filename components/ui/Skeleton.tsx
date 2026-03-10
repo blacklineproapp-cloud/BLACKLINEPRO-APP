@@ -7,22 +7,20 @@ interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
 export function Skeleton({ className = '', ...props }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse bg-zinc-800/50 rounded ${className}`}
+      className={`animate-pulse bg-zinc-800/60 rounded shimmer ${className}`}
       {...props}
     />
   );
 }
 
-// Skeleton específicos reutilizáveis
-
 export function SkeletonCard() {
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-lg">
+    <div className="bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800">
       {/* Image skeleton */}
-      <Skeleton className="aspect-square w-full" />
+      <Skeleton className="aspect-square w-full rounded-none" />
 
       {/* Info skeleton */}
-      <div className="bg-zinc-900 p-3 space-y-2">
+      <div className="p-3 space-y-2">
         <Skeleton className="h-4 w-3/4" />
         <div className="flex justify-between">
           <Skeleton className="h-3 w-20" />

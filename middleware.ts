@@ -17,9 +17,21 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)',
   '/:locale/sign-in(.*)',
   '/:locale/sign-up(.*)',
+  // BYOK: editor/generator/tools/dashboard acessíveis sem login
+  '/editor',
+  '/generator',
+  '/tools',
+  '/dashboard',
+  '/:locale/editor',
+  '/:locale/generator',
+  '/:locale/tools',
+  '/:locale/dashboard',
   '/api/stats',
   '/api/webhooks/clerk',
   '/api/webhooks/asaas',
+  '/api/byok/(.*)',
+  '/api/stencil/(.*)',
+  '/api/user/status',
   '/manifest.json',
 ]);
 
@@ -37,7 +49,7 @@ export default clerkMiddleware(async (auth, request) => {
   // Executar middleware next-intl apenas para rotas que NÃO são de API
   // Isso evita que o next-intl intercepte APIs e retorne 404 ou redirects
   const response = isApiRequest ? NextResponse.next() : await handleI18nRouting(request);
-  
+
   // Se next-intl retornou redirect (307/308) em uma página, retornar imediatamente
   if (!isApiRequest && (response.status === 307 || response.status === 308)) {
     return response;
@@ -62,9 +74,9 @@ export default clerkMiddleware(async (auth, request) => {
       // Lista de origens permitidas (Otimizado para Produção)
       const allowedOrigins = [
         process.env.NEXT_PUBLIC_APP_URL,
-        'https://www.stencilflow.com.br',
-        'https://stencilflow.com.br',
-        'https://stencilflow-nextjs.vercel.app', // Vercel preview/prod
+        'https://www.blacklinepro.com.br',
+        'https://blacklinepro.com.br',
+        'https://blacklinepro.vercel.app', // Vercel preview/prod
         process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
         'http://localhost:3000',
         'https://localhost:3000'
@@ -107,7 +119,7 @@ export default clerkMiddleware(async (auth, request) => {
   // Verificar rotas de admin PRIMEIRO
   if (isAdminRoute(request)) {
     const { userId } = await auth();
-    
+
     // Não autenticado = bloquear
     if (!userId) {
       if (isApiRequest) {
@@ -129,7 +141,7 @@ export default clerkMiddleware(async (auth, request) => {
 
     if (!isAdminRole && !isEmailAdmin) {
       console.log('[Middleware] ⛔ Acesso admin negado:', { userId, email: maskEmail(userEmail), role });
-      
+
       // API retorna JSON, páginas fazem redirect
       if (isApiRequest) {
         return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
@@ -156,7 +168,7 @@ export const config = {
     // - Arquivos estáticos (.*\\..*) 
     // - Webhooks (já têm validação própria)
     '/((?!_next|_vercel|.*\\..*|api/webhooks).*)',
-    
+
     // Sempre rodar em rotas de API (exceto webhooks)
     '/api/((?!webhooks).*)'
   ],

@@ -68,7 +68,7 @@ export default function BodyAreaSelector({
           hover:border-zinc-600 hover:bg-zinc-800
           transition-all duration-200
           text-left
-          ${isOpen ? 'border-blue-500 ring-1 ring-blue-500/30' : ''}
+          ${isOpen ? 'border-indigo-500 ring-1 ring-indigo-500/30' : ''}
         `}
       >
         <div className="flex items-center gap-2 min-w-0">
@@ -125,7 +125,7 @@ export default function BodyAreaSelector({
                         w-full flex items-center gap-3 px-3 py-2
                         text-left transition-colors duration-150
                         ${isSelected
-                          ? 'bg-blue-600/20 text-blue-400'
+                          ? 'bg-indigo-600/20 text-indigo-400'
                           : 'hover:bg-zinc-800 text-zinc-300'
                         }
                       `}
@@ -140,7 +140,7 @@ export default function BodyAreaSelector({
                         </div>
                       </div>
                       {isSelected && (
-                        <Check size={14} className="text-blue-400 flex-shrink-0" />
+                        <Check size={14} className="text-indigo-400 flex-shrink-0" />
                       )}
                     </button>
                   );
@@ -154,7 +154,7 @@ export default function BodyAreaSelector({
       {/* Selected Area Description */}
       {selectedArea && selectedArea.category !== 'personalizado' && (
         <p className="mt-1.5 text-[10px] text-zinc-500 flex items-center gap-1">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
           {selectedArea.description}
         </p>
       )}

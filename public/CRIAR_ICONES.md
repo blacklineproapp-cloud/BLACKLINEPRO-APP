@@ -30,7 +30,7 @@ O arquivo `icon.svg` é um placeholder. Para produção, você precisa criar íc
 - Safe zone: 40px de margem
 - Fundo: #000000 (preto)
 - Logo: Centralizado, ~112x112px
-- Cor principal: #10b981 (emerald)
+- Cor principal: #6366F1 (indigo)
 
 #### **icon-512.png** (Android / Splash)
 - Tamanho: 512x512px
@@ -38,7 +38,7 @@ O arquivo `icon.svg` é um placeholder. Para produção, você precisa criar íc
 - Safe zone: 100px de margem
 - Fundo: #000000 (preto)
 - Logo: Centralizado, ~312x312px
-- Cor principal: #10b981 (emerald)
+- Cor principal: #6366F1 (indigo)
 
 #### **icon-192-maskable.png** (Adaptive Icon)
 - Tamanho: 192x192px
@@ -123,7 +123,7 @@ Para o StencilFlow, sugiro:
 **Conceito:** Logo de stencil/tattoo minimalista
 **Cores:**
 - Fundo: #000000 (preto)
-- Principal: #10b981 (emerald)
+- Principal: #6366F1 (indigo)
 - Acento: #ffffff (branco)
 
 **Estilo:**

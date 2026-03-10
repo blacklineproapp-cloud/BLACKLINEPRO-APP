@@ -8,9 +8,10 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { Plus, Clock, Upload, Zap, Printer, Crown, X, Download, Edit2, Trash2, Maximize2, Activity, TrendingUp, Infinity as InfinityIcon, Search, Filter, Loader2, Pencil, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { storage } from '@/lib/client-storage';
+import { Button } from '@/components/ui/button';
 import CourtesyBanner from '@/components/CourtesyBanner';
-import LegacyPaymentBanner from '@/components/LegacyPaymentBanner';
-import MigrationNoticeCard from '@/components/MigrationNoticeCard';
+
+import AdSlot from '@/components/AdSlot';
 import IAGenGallery from './HistoryTab';
 
 interface Project {
@@ -43,7 +44,7 @@ interface DashboardClientProps {
   monthlyLimit: number | null;
   userPlan: string;
   courtesyDeadline?: string | null;
-  assignedPlan?: 'legacy' | 'starter' | 'pro' | 'studio' | null;
+  assignedPlan?: 'ink' | 'pro' | 'studio' | null;
   userId: string;
   userEmail: string;
   isPaid: boolean;
@@ -226,17 +227,19 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex items-center gap-3 lg:gap-4">
             <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center shrink-0 ${
-              isUnlimited || isLowUsage
-                ? 'bg-emerald-600/10 border border-emerald-600/20'
+              isUnlimited
+                ? 'bg-indigo-600/10 border border-indigo-600/20'
+                : isLowUsage
+                ? 'bg-indigo-600/10 border border-indigo-600/20'
                 : isMediumUsage
                 ? 'bg-yellow-600/10 border border-yellow-600/20'
                 : 'bg-red-600/10 border border-red-600/20'
             }`}>
               {isUnlimited ? (
-                <InfinityIcon size={20} className="text-emerald-500" />
+                <InfinityIcon size={20} className="text-indigo-400" />
               ) : (
                 <Activity size={20} className={
-                  isLowUsage ? 'text-emerald-500' : isMediumUsage ? 'text-yellow-500' : 'text-red-500'
+                  isLowUsage ? 'text-indigo-500' : isMediumUsage ? 'text-yellow-500' : 'text-red-500'
                 } />
               )}
             </div>
@@ -245,11 +248,11 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
               <p className="text-zinc-400 text-xs lg:text-sm">
                 {isUnlimited ? (
                   <>
-                    <span className="text-emerald-400 font-bold">{t('usage.unlimited')}</span> • {t('usage.noRestrictions')}
+                    <span className="text-indigo-400 font-bold">{t('usage.unlimited')}</span> • {t('usage.noRestrictions')}
                   </>
                 ) : (
                   <>
-                    {isLowUsage && <span className="text-emerald-400 font-medium">{t('usage.low')}</span>}
+                    {isLowUsage && <span className="text-indigo-400 font-medium">{t('usage.low')}</span>}
                     {isMediumUsage && <span className="text-yellow-400 font-medium">{t('usage.medium')}</span>}
                     {isHighUsage && <span className="text-red-400 font-medium">{t('usage.high')}</span>}
                   </>
@@ -270,7 +273,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
               <div
                 className={`h-full transition-all duration-500 ${
                   isLowUsage
-                    ? 'bg-gradient-to-r from-emerald-600 to-emerald-500'
+                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500'
                     : isMediumUsage
                     ? 'bg-gradient-to-r from-yellow-600 to-yellow-500'
                     : 'bg-gradient-to-r from-red-600 to-red-500'
@@ -286,7 +289,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                 })}
               </span>
               {isHighUsage && (
-                <Link href="/pricing" className="text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1">
+                <Link href="/pricing" className="text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1">
                   <TrendingUp size={12} /> {tCommon('upgrade')}
                 </Link>
               )}
@@ -295,27 +298,26 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
         )}
       </div>
 
-      {/* Migration Notice - Aviso sobre novo sistema de pagamentos */}
-      <MigrationNoticeCard />
-
-      {/* Legacy Payment Banner - Aparece quando admin atribui plano legacy */}
-      {userPlan === 'legacy' && !isPaid && (
-        <LegacyPaymentBanner userId={userId} userEmail={userEmail} />
+      {/* AdSense — exibido apenas para usuários free/não assinantes */}
+      {!isSubscribed && (
+        <div className="mb-6">
+          <AdSlot slot="dashboard-top" format="banner" />
+        </div>
       )}
 
       {/* Courtesy Banner */}
       {courtesyDeadline && assignedPlan && (
-        <CourtesyBanner 
-          deadline={courtesyDeadline} 
-          assignedPlan={assignedPlan as 'legacy' | 'starter' | 'pro' | 'studio'} 
+        <CourtesyBanner
+          deadline={courtesyDeadline}
+          assignedPlan={assignedPlan as 'ink' | 'pro' | 'studio'}
         />
       )}
 
       {/* Banner de Assinatura */}
       {!isSubscribed && (
-        <div className="mb-6 lg:mb-8 bg-gradient-to-r from-emerald-900/30 to-purple-900/30 border border-emerald-500/30 rounded-xl p-4 lg:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="mb-6 lg:mb-8 bg-gradient-to-r from-indigo-900/30 to-purple-900/30 border border-indigo-500/30 rounded-xl p-4 lg:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 lg:gap-4">
-            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-600 rounded-full flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-600 rounded-full flex items-center justify-center shrink-0">
               <Crown size={20} className="text-white" />
             </div>
             <div>
@@ -323,7 +325,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
               <p className="text-zinc-400 text-xs lg:text-sm">{t('upgrade.subtitle')}</p>
             </div>
           </div>
-          <Link href="/pricing" className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 lg:px-6 py-2 rounded-lg font-medium text-sm transition shrink-0">
+          <Link href="/pricing" className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 lg:px-6 py-2 rounded-lg font-medium text-sm transition shrink-0">
             {t('upgrade.cta')}
           </Link>
         </div>
@@ -337,11 +339,11 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
             <p className="text-zinc-400 text-sm lg:text-base">{t('headerSubtitle')}</p>
           </div>
           <Link href="/editor">
-            <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 lg:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm lg:text-base">
+            <Button className="px-3 lg:px-4 gap-2 text-sm lg:text-base">
               <Plus size={18} />
               <span className="sm:hidden">{tCommon('new')}</span>
               <span className="hidden sm:inline">{t('gallery.newStencil')}</span>
-            </button>
+            </Button>
           </Link>
         </div>
 
@@ -351,26 +353,26 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
             onClick={() => setActiveTab('projects')}
             className={`px-4 py-2 text-sm font-medium transition-colors relative ${
               activeTab === 'projects'
-                ? 'text-emerald-400'
+                ? 'text-indigo-400'
                 : 'text-zinc-400 hover:text-zinc-300'
             }`}
           >
             {t('tabs.projects')}
             {activeTab === 'projects' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500" />
             )}
           </button>
           <button
             onClick={() => setActiveTab('history')}
             className={`px-4 py-2 text-sm font-medium transition-colors relative ${
               activeTab === 'history'
-                ? 'text-emerald-400'
+                ? 'text-indigo-400'
                 : 'text-zinc-400 hover:text-zinc-300'
             }`}
           >
             {t('tabs.history')}
             {activeTab === 'history' && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-500" />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500" />
             )}
           </button>
         </div>
@@ -390,11 +392,11 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
             </div>
           </div>
 
-          <div className="bg-zinc-900 border border-zinc-800 p-4 lg:p-6 rounded-xl flex flex-col gap-3 lg:gap-4 hover:border-emerald-500/30 transition-colors relative overflow-hidden">
+          <div className="bg-zinc-900 border border-zinc-800 p-4 lg:p-6 rounded-xl flex flex-col gap-3 lg:gap-4 hover:border-indigo-500/30 transition-colors relative overflow-hidden">
             <div className="absolute top-0 right-0 p-3 opacity-10">
               <Zap size={48} />
             </div>
-            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-900/20 rounded-lg flex items-center justify-center text-emerald-500">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-indigo-900/20 rounded-lg flex items-center justify-center text-indigo-500">
               <Zap size={20} />
             </div>
             <div>
@@ -438,7 +440,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                 placeholder={t('gallery.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-48 bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-emerald-500 focus:outline-none"
+                className="w-full sm:w-48 bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
               />
             </div>
             
@@ -448,7 +450,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                 <select
                   value={filterStyle}
                   onChange={(e) => setFilterStyle(e.target.value)}
-                  className="appearance-none bg-zinc-900 border border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none cursor-pointer"
+                  className="appearance-none bg-zinc-900 border border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none cursor-pointer"
                 >
                   <option value="all">{tCommon('all')}</option>
                   {uniqueStyles.map(style => (
@@ -468,7 +470,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                 <div 
                   key={project.id} 
                   onClick={() => setSelectedProject(project)}
-                  className="group bg-white rounded-xl overflow-hidden cursor-pointer relative hover:ring-2 hover:ring-emerald-500 transition-all shadow-lg"
+                  className="group bg-white rounded-xl overflow-hidden cursor-pointer relative hover:ring-2 hover:ring-indigo-500 transition-all shadow-lg"
                 >
                   <div className="aspect-square bg-white p-3 lg:p-4 flex items-center justify-center relative">
                     <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
@@ -495,14 +497,14 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                       <div className="flex gap-2">
                         <button
                           onClick={(e) => handleQuickDownload(project, e)}
-                          className="p-2.5 bg-white/90 hover:bg-white rounded-full text-zinc-800 hover:text-emerald-600 transition shadow-lg"
+                          className="p-2.5 bg-white/90 hover:bg-white rounded-full text-zinc-800 hover:text-indigo-600 transition shadow-lg"
                           title={tCommon('download')}
                         >
                           <Download size={18} />
                         </button>
                         <button
                           onClick={(e) => handleQuickEdit(project, e)}
-                          className="p-2.5 bg-white/90 hover:bg-white rounded-full text-zinc-800 hover:text-emerald-600 transition shadow-lg"
+                          className="p-2.5 bg-white/90 hover:bg-white rounded-full text-zinc-800 hover:text-indigo-600 transition shadow-lg"
                           title={tCommon('edit')}
                         >
                           <Edit2 size={18} />
@@ -549,7 +551,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                             if (e.key === 'Escape') setEditingProjectId(null);
                           }}
                           onBlur={() => setEditingProjectId(null)}
-                          className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-zinc-200 text-xs focus:border-emerald-500 focus:outline-none min-w-0"
+                          className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-zinc-200 text-xs focus:border-indigo-500 focus:outline-none min-w-0"
                           autoFocus
                         />
                       </div>
@@ -562,7 +564,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                             setInlineEditName(project.name);
                             setEditingProjectId(project.id);
                           }}
-                          className="p-0.5 text-zinc-600 hover:text-emerald-400 opacity-0 group-hover/name:opacity-100 transition shrink-0"
+                          className="p-0.5 text-zinc-400 hover:text-indigo-400 opacity-0 group-hover/name:opacity-100 transition shrink-0"
                           title={tCommon('rename')}
                         >
                           <Pencil size={12} />
@@ -574,7 +576,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                         {new Date(project.created_at).toLocaleDateString(locale)}
                       </p>
                       {project.width_cm && (
-                        <span className="text-zinc-600 text-[10px] lg:text-xs">
+                        <span className="text-zinc-400 text-[10px] lg:text-xs">
                           {project.width_cm}x{project.height_cm}cm
                         </span>
                       )}
@@ -587,13 +589,15 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
             {/* Paginação */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-4 mt-6">
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                   disabled={currentPage === 0}
-                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-emerald-400 hover:border-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm"
+                  className="gap-1"
                 >
                   <ChevronLeft size={16} /> {tCommon('previous')}
-                </button>
+                </Button>
 
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1">
@@ -602,7 +606,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                         key={idx}
                         onClick={() => setCurrentPage(idx)}
                         className={`w-2 h-2 rounded-full transition-all ${
-                          idx === currentPage ? 'bg-emerald-500 w-4' : 'bg-zinc-700 hover:bg-zinc-600'
+                          idx === currentPage ? 'bg-indigo-500 w-4' : 'bg-zinc-700 hover:bg-zinc-600'
                         }`}
                       />
                     ))}
@@ -612,40 +616,43 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                   </span>
                 </div>
 
-                <button
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
                   disabled={currentPage >= totalPages - 1}
-                  className="flex items-center gap-1 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-emerald-400 hover:border-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm"
+                  className="gap-1"
                 >
                   {tCommon('next')} <ChevronRight size={16} />
-                </button>
+                </Button>
               </div>
             )}
           </>
         ) : projects.length > 0 ? (
           // Nenhum resultado da busca
           <div className="text-center py-12 bg-zinc-900/50 rounded-xl border border-zinc-800">
-            <Search size={32} className="mx-auto mb-3 text-zinc-600" />
+            <Search size={32} className="mx-auto mb-3 text-zinc-400" />
             <p className="text-zinc-400 font-medium">{t('gallery.noResults')}</p>
-            <p className="text-zinc-600 text-sm mt-1">{t('gallery.noResultsDescription')}</p>
-            <button 
+            <p className="text-zinc-400 text-sm mt-1">{t('gallery.noResultsDescription')}</p>
+            <Button
+              variant="link"
               onClick={() => { setSearchQuery(''); setFilterStyle('all'); }}
-              className="mt-3 text-emerald-400 hover:text-emerald-300 text-sm font-medium"
+              className="mt-3"
             >
               {t('gallery.clearFilters')}
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="text-center py-12 lg:py-20 bg-zinc-900/50 rounded-xl border border-zinc-800">
             <div className="w-16 h-16 lg:w-20 lg:h-20 bg-zinc-800 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <Clock size={28} className="text-zinc-600" />
+              <Clock size={28} className="text-zinc-400" />
             </div>
             <p className="text-zinc-400 font-medium text-sm lg:text-base">{t('gallery.empty')}</p>
-            <p className="text-zinc-600 text-xs lg:text-sm mt-1">{t('gallery.emptyDescription')}</p>
+            <p className="text-zinc-400 text-xs lg:text-sm mt-1">{t('gallery.emptyDescription')}</p>
             <Link href="/editor" className="inline-block mt-4">
-              <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+              <Button>
                 {t('gallery.createNow')}
-              </button>
+              </Button>
             </Link>
           </div>
         )}
@@ -677,33 +684,37 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                         if (e.key === 'Enter') handleRename();
                         if (e.key === 'Escape') setIsEditing(false);
                       }}
-                      className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-sm focus:border-emerald-500 focus:outline-none flex-1 min-w-0"
+                      className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-sm focus:border-indigo-500 focus:outline-none flex-1 min-w-0"
                       autoFocus
                       disabled={isSavingName}
                     />
-                    <button
+                    <Button
+                      size="icon"
                       onClick={handleRename}
                       disabled={isSavingName}
-                      className="p-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white disabled:opacity-50"
+                      className="h-8 w-8 min-h-0 min-w-0"
                       title={tCommon('save')}
                     >
                       {isSavingName ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="icon"
                       onClick={() => setIsEditing(false)}
                       disabled={isSavingName}
-                      className="p-1.5 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-white disabled:opacity-50"
+                      className="h-8 w-8 min-h-0 min-w-0"
                       title={tCommon('cancel')}
+                      aria-label="Fechar"
                     >
                       <X size={16} />
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <h3 className="text-white font-semibold truncate">{selectedProject.name}</h3>
                     <button
                       onClick={startEditing}
-                      className="p-1 text-zinc-500 hover:text-emerald-400 transition shrink-0"
+                      className="p-1 text-zinc-500 hover:text-indigo-400 transition shrink-0"
                       title={tCommon('rename')}
                     >
                       <Pencil size={14} />
@@ -715,9 +726,9 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
                   {selectedProject.width_cm && ` • ${selectedProject.width_cm}x${selectedProject.height_cm}cm`}
                 </p>
               </div>
-              <button onClick={() => { setSelectedProject(null); setIsEditing(false); }} className="text-zinc-400 hover:text-white p-2 shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => { setSelectedProject(null); setIsEditing(false); }} className="shrink-0" aria-label="Fechar">
                 <X size={20} />
-              </button>
+              </Button>
             </div>
 
             {/* Toggle Original/Stencil */}
@@ -725,7 +736,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
               <button
                 onClick={() => setShowStencil(false)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-                  !showStencil ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                  !showStencil ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'
                 }`}
               >
                 {t('gallery.original')}
@@ -733,7 +744,7 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
               <button
                 onClick={() => setShowStencil(true)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-                  showStencil ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                  showStencil ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'
                 }`}
               >
                 {t('gallery.stencil')}
@@ -757,24 +768,26 @@ export default function DashboardClient({ projects, aiGenImages, isSubscribed, c
 
             {/* Actions */}
             <div className="flex gap-2 p-4 border-t border-zinc-800">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => handleDownload(selectedProject)}
-                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 text-sm"
+                className="flex-1 gap-2"
               >
                 <Download size={16} /> {tCommon('download')}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => handleEdit(selectedProject)}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 text-sm"
+                className="flex-1 gap-2"
               >
                 <Edit2 size={16} /> {tCommon('edit')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger-subtle"
                 onClick={() => handleDelete(selectedProject.id)}
-                className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white py-2.5 px-4 rounded-lg transition"
+                className="px-4"
               >
                 <Trash2 size={16} />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

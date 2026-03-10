@@ -4,6 +4,8 @@
  * Verifica se a imagem/stencil está adequada para impressão profissional
  */
 
+import { logger } from './logger';
+
 export interface QualityValidation {
   isValid: boolean;           // Se passou em todas as validações
   score: number;              // Score geral (0-100)
@@ -139,7 +141,7 @@ export async function validateImageQuality(
       }
     };
 
-    console.log('[QualityValidator] Validação concluída:', {
+    logger.info('[QualityValidator] Validação concluída', {
       isValid: validation.isValid,
       score: validation.score,
       errorsCount: errors.length,
@@ -149,7 +151,7 @@ export async function validateImageQuality(
     return validation;
 
   } catch (error: any) {
-    console.error('[QualityValidator] Erro na validação:', error);
+    logger.error('[QualityValidator] Erro na validação', error);
     return {
       isValid: false,
       score: 0,

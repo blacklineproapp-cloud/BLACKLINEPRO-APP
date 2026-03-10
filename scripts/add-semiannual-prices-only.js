@@ -47,7 +47,7 @@ async function addSemiannualPrices() {
           interval: 'month',
           interval_count: 6
         },
-        nickname: `StencilFlow ${plan.charAt(0) + plan.slice(1).toLowerCase()} - Semestral (25% off)`,
+        nickname: `Black Line Pro ${plan.charAt(0) + plan.slice(1).toLowerCase()} - Semestral (25% off)`,
         metadata: {
           plan: plan.toLowerCase(),
           cycle: 'semiannual',

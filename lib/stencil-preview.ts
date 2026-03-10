@@ -82,7 +82,7 @@ function generateWatermarkSvg(
       : '';
 
   // Textos de marca d'água
-  const mainText = 'StencilFlow';
+  const mainText = 'Black Line Pro';
   const subText = 'FREE PREVIEW';
   const idText = userIdentifier;
 

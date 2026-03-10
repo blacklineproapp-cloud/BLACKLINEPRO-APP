@@ -155,7 +155,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
             value={cardNumber}
             onChange={handleCardNumberChange}
             placeholder="0000 0000 0000 0000"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
             <CreditCard className="text-zinc-500" size={20} />
@@ -176,7 +176,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
           value={holderName}
           onChange={handleHolderNameChange}
           placeholder={t('holderNamePlaceholder')}
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
         />
       </div>
 
@@ -190,7 +190,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
           value={email}
           onChange={handleEmailChange}
           placeholder="email@exemplo.com"
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
         />
       </div>
 
@@ -206,7 +206,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
             onChange={handleExpiryMonthChange}
             placeholder="MM"
             maxLength={2}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
           />
         </div>
         <div>
@@ -219,7 +219,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
             onChange={handleExpiryYearChange}
             placeholder="AAAA"
             maxLength={4}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
           />
         </div>
         <div>
@@ -232,7 +232,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
             onChange={handleCcvChange}
             placeholder="123"
             maxLength={4}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
           />
         </div>
       </div>
@@ -247,7 +247,7 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
           value={phone}
           onChange={handlePhoneChange}
           placeholder="(00) 00000-0000"
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
         />
       </div>
 
@@ -261,13 +261,13 @@ export default function CreditCardForm({ onDataChange, cpfCnpj, userEmail = '' }
           value={postalCode}
           onChange={handlePostalCodeChange}
           placeholder="00000-000"
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
         />
       </div>
 
       {/* Aviso de Segurança */}
-      <div className="bg-purple-600/10 border border-purple-500/30 rounded-xl p-3">
-        <p className="text-purple-300 text-xs flex items-start gap-2">
+      <div className="bg-indigo-600/10 border border-indigo-500/30 rounded-xl p-3">
+        <p className="text-indigo-300 text-xs flex items-start gap-2">
           <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
           <span>
             {t('securityAviso')}

@@ -40,7 +40,7 @@ export async function generateZipFromTiles(
 
   // Adicionar README.txt com instruções
   const readme = `
-StencilFlow - Divisão em A4
+Black Line Pro - Divisão em A4
 ============================
 
 Este arquivo contém ${tiles.length} página(s) A4 para montagem.
@@ -52,7 +52,7 @@ INSTRUÇÕES DE MONTAGEM:
 4. Cole as sobreposições para alinhamento perfeito
 
 Gerado em: ${new Date().toLocaleString('pt-BR')}
-www.stencilflow.com.br
+www.blacklinepro.com.br
   `.trim();
 
   zip.file('LEIA-ME.txt', readme);
@@ -191,11 +191,11 @@ export async function generatePdfFromTiles(
 
   // Adicionar metadados
   pdf.setProperties({
-    title: `${filename} - StencilFlow`,
+    title: `${filename} - Black Line Pro`,
     subject: 'Divisão em A4 para tatuagem',
-    author: 'StencilFlow',
+    author: 'Black Line Pro',
     keywords: 'stencil, tattoo, a4',
-    creator: 'www.stencilflow.com.br'
+    creator: 'www.blacklinepro.com.br'
   });
 
   // Retornar como Blob

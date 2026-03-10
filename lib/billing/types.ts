@@ -4,7 +4,7 @@
 
 export type BillingCycle = 'monthly' | 'quarterly' | 'semiannual' | 'yearly';
 
-export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
+export type PlanType = 'free' | 'ink' | 'pro' | 'studio';
 
 export type SubscriptionStatus =
   | 'active'
@@ -49,51 +49,35 @@ export interface PlanPricing {
 
 export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
   free: {
-    name: 'Free',
-    generations: 3,
+    name: 'Blackline Free',
+    generations: -1,  // BYOK: ilimitado
     hasTools: false,
     hasAdvancedEditor: false,
     hasPrioritySupport: false,
     hasAPI: false,
   },
-  starter: {
-    name: 'Starter',
-    generations: 100,
+  ink: {
+    name: 'Blackline Ink',
+    generations: -1,
     hasTools: false,
     hasAdvancedEditor: true,
     hasPrioritySupport: false,
     hasAPI: false,
   },
   pro: {
-    name: 'Pro',
-    generations: 500,
+    name: 'Blackline Pro',
+    generations: -1,
     hasTools: true,
     hasAdvancedEditor: true,
     hasPrioritySupport: true,
     hasAPI: false,
   },
   studio: {
-    name: 'Studio',
-    generations: 2000,
+    name: 'Blackline Studio',
+    generations: -1,
     hasTools: true,
     hasAdvancedEditor: true,
     hasPrioritySupport: true,
     hasAPI: true,
-  },
-  enterprise: {
-    name: 'Enterprise',
-    generations: -1, // Ilimitado
-    hasTools: true,
-    hasAdvancedEditor: true,
-    hasPrioritySupport: true,
-    hasAPI: true,
-  },
-  legacy: {
-    name: 'Legacy',
-    generations: 50,
-    hasTools: false,
-    hasAdvancedEditor: true,
-    hasPrioritySupport: false,
-    hasAPI: false,
   },
 };

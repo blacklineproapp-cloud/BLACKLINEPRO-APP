@@ -14,7 +14,7 @@ export const HighlightBox = ({ title, children }: HighlightBoxProps) => {
         padding: '25px',
         borderRadius: '12px',
         margin: '25px 0',
-        borderLeft: '4px solid #10b981',
+        borderLeft: '4px solid #6366F1',
       }}
     >
       <Row>
@@ -22,7 +22,7 @@ export const HighlightBox = ({ title, children }: HighlightBoxProps) => {
           <Heading
             style={{
               margin: '0 0 15px 0',
-              color: '#10b981',
+              color: '#6366F1',
               fontSize: '18px',
               fontWeight: 700,
             }}

@@ -5,6 +5,8 @@
  * com qualidade profissional (Lanczos3/Mitchell)
  */
 
+import { logger } from './logger';
+
 interface ResizeOptions {
   targetWidthCm?: number;   // Largura desejada em CM
   targetHeightCm?: number;  // Altura desejada em CM
@@ -55,7 +57,7 @@ export async function resizeImage(
     throw new Error('Forneça pelo menos targetWidthCm ou targetHeightCm');
   }
 
-  console.log('[ResizeHelper] Enviando requisição:', {
+  logger.debug('[ResizeHelper] Enviando requisição', {
     hasImage: !!imageBase64,
     imageLength: imageBase64.length,
     options
@@ -74,11 +76,11 @@ export async function resizeImage(
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('[ResizeHelper] Erro da API:', data);
+      logger.error('[ResizeHelper] Erro da API', new Error(data.error || 'Unknown'), data);
       throw new Error(data.error || 'Erro ao redimensionar imagem');
     }
 
-    console.log('[ResizeHelper] ✅ Resize concluído:', {
+    logger.info('[ResizeHelper] Resize concluído', {
       algorithm: data.metadata.algorithm,
       originalSize: `${data.metadata.originalWidthCm}x${data.metadata.originalHeightCm}cm`,
       finalSize: `${data.metadata.finalWidthCm}x${data.metadata.finalHeightCm}cm`,
@@ -88,7 +90,7 @@ export async function resizeImage(
     return data;
 
   } catch (error: any) {
-    console.error('[ResizeHelper] Erro na requisição:', error);
+    logger.error('[ResizeHelper] Erro na requisição', error);
     throw new Error(error.message || 'Erro ao comunicar com servidor');
   }
 }

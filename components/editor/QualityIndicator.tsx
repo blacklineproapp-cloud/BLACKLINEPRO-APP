@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Info, AlertTriangle, CheckCircle2, XCircle, Zap } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
 
 interface QualityIndicatorProps {
   imageBase64: string | null;
@@ -75,17 +76,17 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
   const qualityConfig = {
     excellent: {
       icon: CheckCircle2,
-      color: 'text-emerald-400',
-      bg: 'bg-emerald-900/20',
-      border: 'border-emerald-800',
+      color: 'text-indigo-400',
+      bg: 'bg-indigo-900/20',
+      border: 'border-indigo-800',
       label: t('excellent.label'),
       description: t('excellent.desc')
     },
     good: {
       icon: CheckCircle2,
-      color: 'text-blue-400',
-      bg: 'bg-blue-900/20',
-      border: 'border-blue-800',
+      color: 'text-indigo-400',
+      bg: 'bg-indigo-900/20',
+      border: 'border-indigo-800',
       label: t('good.label'),
       description: t('good.desc')
     },
@@ -185,22 +186,23 @@ export default function QualityIndicator({ imageBase64, widthCm, heightCm, onOpt
 
           {/* Botão Otimizar (se DPI < 300) */}
           {imageInfo.quality !== 'excellent' && onOptimizeClick && (
-            <button
+            <Button
               onClick={onOptimizeClick}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg font-medium text-xs flex items-center justify-center gap-2 transition-colors"
+              size="sm"
+              className="w-full py-2 rounded-lg text-xs gap-2"
             >
               <Zap size={14} />
               {t('optimize')}
-            </button>
+            </Button>
           )}
 
           {/* Indicador de otimização em progresso */}
           {/* isOptimizing is not defined in this scope, assuming it was removed or is meant to be added */}
           {/* {isOptimizing && (
-            <div className="bg-blue-900/20 border border-blue-800 rounded p-2">
+            <div className="bg-indigo-900/20 border border-indigo-800 rounded p-2">
               <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-400"></div>
-                <p className="text-xs text-blue-300">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-indigo-400"></div>
+                <p className="text-xs text-indigo-300">
                   🔄 Otimizando qualidade automaticamente...
                 </p>
               </div>

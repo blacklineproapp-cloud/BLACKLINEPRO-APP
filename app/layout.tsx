@@ -1,16 +1,31 @@
 import './globals.css';
 import Script from 'next/script';
 import type { Metadata, Viewport } from 'next';
+import { Roboto, Roboto_Mono } from 'next/font/google';
+
+const roboto = Roboto({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '700', '900'],
+  display: 'swap',
+});
+
+const robotoMono = Roboto_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.stencilflow.com.br'),
+  metadataBase: new URL('https://www.blacklinepro.com.br'),
   title: {
-    default: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
-    template: '%s | StencilFlow'
+    default: 'Black Line Pro - Editor Profissional de Stencils de Tatuagem',
+    template: '%s | Black Line Pro'
   },
-  description: 'Transforme qualquer imagem em stencil de tatuagem profissional com a Tecnologia StencilFlow. Editor completo, modo topográfico, linhas perfeitas e ferramentas premium. Grátis para começar.',
-  applicationName: 'StencilFlow',
-  authors: [{ name: 'StencilFlow' }],
+  description: 'Transforme qualquer imagem em stencil de tatuagem profissional com a Tecnologia Black Line Pro. Editor completo, modo topográfico, linhas perfeitas e ferramentas premium. Grátis para começar.',
+  applicationName: 'Black Line Pro',
+  authors: [{ name: 'Black Line Pro' }],
   generator: 'Next.js',
   keywords: [
     'stencil tatuagem',
@@ -26,11 +41,11 @@ export const metadata: Metadata = {
     'dividir a4',
     'aprimorar 4k',
     'ferramentas tatuador',
-    'stencilflow'
+    'Black Line Pro'
   ],
   referrer: 'origin-when-cross-origin',
-  creator: 'StencilFlow',
-  publisher: 'StencilFlow',
+  creator: 'Black Line Pro',
+  publisher: 'Black Line Pro',
   manifest: '/site.webmanifest',
   icons: {
     icon: [
@@ -47,7 +62,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     statusBarStyle: 'black-translucent',
-    title: 'StencilFlow',
+    title: 'Black Line Pro',
   },
   other: {
     'mobile-web-app-capable': 'yes',
@@ -56,38 +71,38 @@ export const metadata: Metadata = {
     telephone: false,
   },
   alternates: {
-    canonical: 'https://www.stencilflow.com.br',
+    canonical: 'https://www.blacklinepro.com.br',
     languages: {
-      'pt-BR': 'https://www.stencilflow.com.br',
-      'en': 'https://www.stencilflow.com.br/en',
-      'es': 'https://www.stencilflow.com.br/es',
-      'fr': 'https://www.stencilflow.com.br/fr',
-      'it': 'https://www.stencilflow.com.br/it',
-      'ja': 'https://www.stencilflow.com.br/ja',
+      'pt-BR': 'https://www.blacklinepro.com.br',
+      'en':    'https://www.blacklinepro.com.br/en',
+      'es':    'https://www.blacklinepro.com.br/es',
+      'fr':    'https://www.blacklinepro.com.br/fr',
+      'it':    'https://www.blacklinepro.com.br/it',
+      'ja':    'https://www.blacklinepro.com.br/ja',
     }
   },
   openGraph: {
     type: 'website',
-    url: 'https://www.stencilflow.com.br',
-    siteName: 'StencilFlow',
-    title: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
-    description: 'Editor profissional de stencils com Tecnologia StencilFlow. Modo topográfico, linhas perfeitas, Color Match e mais. Grátis para começar.',
+    url: 'https://www.blacklinepro.com.br',
+    siteName: 'Black Line Pro',
+    title: 'Black Line Pro - Editor Profissional de Stencils de Tatuagem',
+    description: 'Editor profissional de stencils com Tecnologia Black Line Pro. Modo topográfico, linhas perfeitas, Color Match e mais. Grátis para começar.',
     locale: 'pt_BR',
     images: [
       {
-        url: 'https://www.stencilflow.com.br/og-image.png',
+        url: 'https://www.blacklinepro.com.br/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'StencilFlow - Editor Profissional de Stencils de Tatuagem',
+        alt: 'Black Line Pro - Editor Profissional de Stencils de Tatuagem',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'StencilFlow - Editor Profissional de Stencils',
-    description: 'Editor profissional de stencils de tatuagem com Tecnologia StencilFlow e ferramentas premium. Grátis para começar.',
-    images: ['https://www.stencilflow.com.br/og-image.png'],
+    title: 'Black Line Pro - Editor Profissional de Stencils',
+    description: 'Editor profissional de stencils de tatuagem com Tecnologia Black Line Pro e ferramentas premium. Grátis para começar.',
+    images: ['https://www.blacklinepro.com.br/og-image.png'],
   },
   robots: {
     index: true,
@@ -103,7 +118,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#10b981',
+  themeColor: '#6366F1',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -116,7 +131,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
+    <html lang="pt-BR" className={`${roboto.variable} ${robotoMono.variable}`}>
       <head>
         {/* Google Tag Manager */}
         <Script
@@ -151,19 +166,28 @@ export default function RootLayout({
             `,
           }}
         />
+
+        {/* Google AdSense — uses script tag directly to avoid data-nscript warning */}
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT}`}
+            crossOrigin="anonymous"
+          />
+        )}
       </head>
-      <body className="antialiased selection:bg-emerald-500/30">
+      <body className="antialiased selection:bg-indigo-500/30">
         {/* Google Tag Manager (noscript) */}
         <noscript>
-          <iframe 
+          <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-P58Q7C45"
-            height="0" 
-            width="0" 
+            height="0"
+            width="0"
             style={{ display: 'none', visibility: 'hidden' }}
           />
         </noscript>
         {children}
       </body>
-    </>
+    </html>
   );
 }

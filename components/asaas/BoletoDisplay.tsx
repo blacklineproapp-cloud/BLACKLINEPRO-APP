@@ -95,7 +95,7 @@ export default function BoletoDisplay({
             onClick={handleCopy}
             className={`flex items-center justify-center gap-2 font-semibold py-3 px-4 rounded-xl transition-all ${
               copied
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-indigo-600 text-white'
                 : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700'
             }`}
           >

@@ -31,9 +31,9 @@ async function updatePlanConstraint() {
       -- Remover constraint antiga
       ALTER TABLE users DROP CONSTRAINT IF EXISTS check_plan_valid;
 
-      -- Adicionar nova constraint incluindo 'legacy'
-      ALTER TABLE users ADD CONSTRAINT check_plan_valid 
-        CHECK (plan IN ('free', 'starter', 'pro', 'studio', 'enterprise', 'legacy'));
+      -- Adicionar nova constraint com planos atuais
+      ALTER TABLE users ADD CONSTRAINT check_plan_valid
+        CHECK (plan IN ('free', 'ink', 'pro', 'studio'));
     `;
 
     const { error } = await supabase.rpc('exec_sql', { sql_query: sql });
@@ -43,18 +43,16 @@ async function updatePlanConstraint() {
       console.log('\n💡 SOLUÇÃO ALTERNATIVA:');
       console.log('Execute manualmente no Supabase SQL Editor:\n');
       console.log('ALTER TABLE users DROP CONSTRAINT IF EXISTS check_plan_valid;');
-      console.log("ALTER TABLE users ADD CONSTRAINT check_plan_valid CHECK (plan IN ('free', 'starter', 'pro', 'studio', 'enterprise', 'legacy'));\n");
+      console.log("ALTER TABLE users ADD CONSTRAINT check_plan_valid CHECK (plan IN ('free', 'ink', 'pro', 'studio'));\n");
       process.exit(1);
     }
 
     console.log('✅ Constraint atualizada com sucesso!\n');
     console.log('📋 Planos válidos agora:');
     console.log('   - free');
-    console.log('   - starter');
+    console.log('   - ink');
     console.log('   - pro');
-    console.log('   - studio');
-    console.log('   - enterprise');
-    console.log('   - legacy ✨\n');
+    console.log('   - studio\n');
 
     console.log('═══════════════════════════════════════════════════════\n');
 
@@ -64,7 +62,7 @@ async function updatePlanConstraint() {
     console.log('https://supabase.com/dashboard/project/[PROJECT_ID]/sql\n');
     console.log('SQL:');
     console.log('ALTER TABLE users DROP CONSTRAINT IF EXISTS check_plan_valid;');
-    console.log("ALTER TABLE users ADD CONSTRAINT check_plan_valid CHECK (plan IN ('free', 'starter', 'pro', 'studio', 'enterprise', 'legacy'));\n");
+    console.log("ALTER TABLE users ADD CONSTRAINT check_plan_valid CHECK (plan IN ('free', 'ink', 'pro', 'studio'));\n");
     process.exit(1);
   }
 }

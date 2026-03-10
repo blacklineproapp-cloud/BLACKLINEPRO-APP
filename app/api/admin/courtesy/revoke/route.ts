@@ -1,9 +1,9 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { logAdminAction } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // Schema de validação
 const revokeCourtesySchema = z.object({
@@ -11,21 +11,24 @@ const revokeCourtesySchema = z.object({
   reason: z.string().min(10, 'Motivo deve ter no mínimo 10 caracteres').max(500)
 });
 
-export async function POST(req: Request) {
-  try {
-    // 1. 🔒 VERIFICAR ADMIN
-    const { userId } = await auth();
-    
-    if (!userId || !(await isAdmin(userId))) {
-      return NextResponse.json(
-        { error: 'Acesso negado' },
-        { status: 403 }
-      );
-    }
-
+export const POST = withAdminAuth(async (req, { adminId }) => {
     // 2. 🔍 VALIDAR INPUT
-    const body = await req.json();
-    const validated = revokeCourtesySchema.parse(body);
+    let validated;
+    try {
+      const body = await req.json();
+      validated = revokeCourtesySchema.parse(body);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          {
+            error: 'Dados inválidos',
+            details: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`)
+          },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
 
     // 3. 📧 BUSCAR USUÁRIO
     const { data: targetUser, error: userError } = await supabaseAdmin
@@ -44,7 +47,7 @@ export async function POST(req: Request) {
     // 4. ⚠️ VERIFICAR SE TEM SUBSCRIPTION ATIVA
     if (targetUser.subscription_id) {
       return NextResponse.json(
-        { 
+        {
           error: 'Não é possível revogar cortesia de usuário com assinatura ativa',
           details: 'Cancele a assinatura no Stripe primeiro'
         },
@@ -74,7 +77,7 @@ export async function POST(req: Request) {
       .eq('id', targetUser.id);
 
     if (updateError) {
-      console.error('[Courtesy] Erro ao revogar:', updateError);
+      logger.error('[Courtesy] Erro ao revogar', { error: updateError });
       return NextResponse.json(
         { error: 'Erro ao revogar cortesia' },
         { status: 500 }
@@ -83,7 +86,7 @@ export async function POST(req: Request) {
 
     // 7. 📝 REGISTRAR NO AUDIT LOG
     await logAdminAction({
-      adminId: userId,
+      adminId: adminId,
       action: 'revoke_courtesy',
       targetUserId: targetUser.id,
       metadata: {
@@ -103,22 +106,4 @@ export async function POST(req: Request) {
         name: targetUser.name
       }
     });
-
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { 
-          error: 'Dados inválidos',
-          details: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`)
-        },
-        { status: 400 }
-      );
-    }
-
-    console.error('[Courtesy] Erro inesperado:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
-  }
-}
+});

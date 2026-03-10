@@ -2,6 +2,7 @@
 
 import { Project } from '@/lib/supabase';
 import { Trash2, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -56,7 +57,7 @@ export default function ProjectCard({ project }: { project: Project }) {
   return (
     <Link 
       href={`/editor?id=${project.id}`}
-      className="group bg-white rounded-xl overflow-hidden cursor-pointer relative hover:ring-2 hover:ring-emerald-500 transition-all shadow-lg block"
+      className="group bg-white rounded-xl overflow-hidden cursor-pointer relative hover:ring-2 hover:ring-indigo-500 transition-all shadow-lg block"
     >
       {/* Preview */}
       <div className="aspect-square bg-white p-4 flex items-center justify-center relative">
@@ -72,22 +73,25 @@ export default function ProjectCard({ project }: { project: Project }) {
 
         {/* Overlay com ações */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/70 transition flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 z-20">
-          <button
+          <Button
+            size="icon"
             onClick={handleDownload}
-            className="bg-white text-black p-3 rounded-lg hover:bg-zinc-200 transition shadow-lg"
+            className="bg-white text-black p-3 rounded-lg hover:bg-zinc-200 shadow-lg"
             title="Baixar"
           >
             <Download size={20} />
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="destructive"
+            size="icon"
             onClick={handleDeleteClick}
             disabled={isDeleting}
-            className="bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 transition disabled:opacity-50 shadow-lg"
+            className="p-3 rounded-lg shadow-lg"
             title="Deletar"
           >
             <Trash2 size={20} />
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -103,7 +107,7 @@ export default function ProjectCard({ project }: { project: Project }) {
               {project.style === 'standard' ? 'Topo' : 'Linhas'}
             </span>
             {project.width_cm && (
-              <span className="text-zinc-600 text-[10px] bg-zinc-800 px-1.5 py-0.5 rounded">
+              <span className="text-zinc-400 text-[10px] bg-zinc-800 px-1.5 py-0.5 rounded">
                 {project.width_cm}cm
               </span>
             )}

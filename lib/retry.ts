@@ -5,6 +5,8 @@
  * (Gemini, Stripe, Supabase, etc.)
  */
 
+import { logger } from './logger';
+
 export interface RetryOptions {
   /**
    * Número máximo de tentativas (padrão: 3)
@@ -180,10 +182,7 @@ export async function withRetry<T>(
       if (onRetry) {
         onRetry(error, attempt, delay);
       } else {
-        console.warn(
-          `[Retry] Tentativa ${attempt}/${maxRetries} falhou, retry em ${delay}ms:`,
-          (error as any)?.message || error
-        );
+        logger.warn('[Retry] Tentativa falhou', { attempt, maxRetries, delayMs: delay, error: (error as any)?.message || error });
       }
 
       // Aguardar antes de retry
@@ -241,65 +240,62 @@ export async function retryGeminiAPI<T>(
 
       // ❌ NÃO RETRY: Quota excedida (precisa esperar reset ou upgrade)
       if (errorCode === 'RESOURCE_EXHAUSTED' || errorMessage.includes('quota exceeded')) {
-        console.error(`[${operationType}] Quota Gemini excedida - NÃO fará retry`);
+        logger.error(`[${operationType}] Quota Gemini excedida - NÃO fará retry`, error);
         return false;
       }
 
       // ❌ NÃO RETRY: Imagem inválida/muito grande (erro do usuário)
       if (errorCode === 'INVALID_ARGUMENT' || errorMessage.includes('invalid')) {
-        console.error(`[${operationType}] Argumento inválido - NÃO fará retry`);
+        logger.error(`[${operationType}] Argumento inválido - NÃO fará retry`, error);
         return false;
       }
 
       // ❌ NÃO RETRY: API key inválida (configuração)
       if (errorCode === 'PERMISSION_DENIED' || errorMessage.includes('api key')) {
-        console.error(`[${operationType}] Permissão negada - NÃO fará retry`);
+        logger.error(`[${operationType}] Permissão negada - NÃO fará retry`, error);
         return false;
       }
 
       // ✅ RETRY: Timeout do Gemini (pode resolver em nova tentativa)
       if (errorCode === 'DEADLINE_EXCEEDED' || errorMessage.includes('deadline')) {
-        console.warn(`[${operationType}] Timeout Gemini - tentará novamente`);
+        logger.warn(`[${operationType}] Timeout Gemini - tentará novamente`, { attempt });
         return attempt <= 3;
       }
 
       // ✅ RETRY: Gemini temporariamente indisponível
       if (errorCode === 'UNAVAILABLE' || errorMessage.includes('unavailable')) {
-        console.warn(`[${operationType}] Gemini indisponível - tentará novamente`);
+        logger.warn(`[${operationType}] Gemini indisponível - tentará novamente`, { attempt });
         return attempt <= 3;
       }
 
       // ✅ RETRY: Rate limit (429)
       if (error?.status === 429 || errorMessage.includes('rate limit')) {
-        console.warn(`[${operationType}] Rate limit - tentará novamente`);
+        logger.warn(`[${operationType}] Rate limit - tentará novamente`, { attempt });
         return attempt <= 2;
       }
 
       // ✅ RETRY: Timeout HTTP (504)
       if (error?.status === 504 || errorMessage.includes('timeout')) {
-        console.warn(`[${operationType}] HTTP timeout - tentará novamente`);
+        logger.warn(`[${operationType}] HTTP timeout - tentará novamente`, { attempt });
         return true;
       }
 
       // ✅ RETRY: Server errors (500+)
       if (error?.status >= 500) {
-        console.warn(`[${operationType}] Server error ${error.status} - tentará novamente`);
+        logger.warn(`[${operationType}] Server error - tentará novamente`, { status: error.status, attempt });
         return true;
       }
 
       // ✅ RETRY: Modelo bloqueou a resposta (pode ser erro temporário ou falso positivo)
       if (errorMessage.includes('bloqueou a resposta') || errorMessage.includes('other')) {
-        console.warn(`[${operationType}] Resposta bloqueada ou OTHER - tentará novamente`);
+        logger.warn(`[${operationType}] Resposta bloqueada ou OTHER - tentará novamente`, { attempt });
         return attempt <= 2;
       }
 
       return defaultShouldRetry(error, attempt);
     },
     onRetry: (error, attempt, delay) => {
-      console.warn(
-        `[${operationType}] Retry ${attempt} em ${delay}ms:`,
-        error?.message || error
-      );
+      logger.warn(`[${operationType}] Retry`, { attempt, delayMs: delay, error: error?.message || error });
     },
   });
 }
@@ -327,10 +323,7 @@ export async function retryStripeAPI<T>(fn: () => Promise<T>): Promise<T> {
       return defaultShouldRetry(error, attempt);
     },
     onRetry: (error, attempt, delay) => {
-      console.warn(
-        `[Stripe API] Retry ${attempt} em ${delay}ms:`,
-        error?.message || error
-      );
+      logger.warn('[Stripe API] Retry', { attempt, delayMs: delay, error: error?.message || error });
     },
   });
 }
@@ -357,10 +350,7 @@ export async function retrySupabase<T>(fn: () => Promise<T>): Promise<T> {
       return defaultShouldRetry(error, attempt);
     },
     onRetry: (error, attempt, delay) => {
-      console.warn(
-        `[Supabase] Retry ${attempt} em ${delay}ms:`,
-        error?.message || error
-      );
+      logger.warn('[Supabase] Retry', { attempt, delayMs: delay, error: error?.message || error });
     },
   });
 }
@@ -427,11 +417,7 @@ export class CircuitBreaker {
 
       if (this.failures >= this.threshold) {
         this.state = 'open';
-        console.error(
-          `[Circuit Breaker] OPENED after ${this.failures} failures. Will retry in ${
-            this.timeout / 1000
-          }s`
-        );
+        logger.error('[Circuit Breaker] OPENED', new Error('Circuit breaker opened'), { failures: this.failures, retryInSeconds: this.timeout / 1000 });
       }
 
       throw error;

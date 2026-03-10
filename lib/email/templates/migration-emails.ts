@@ -30,7 +30,7 @@ export function getMigrationNoticeEmail(params: EmailTemplateParams): {
   const formattedDate = formatDate(nextDueDate);
 
   return {
-    subject: `Mudança importante no pagamento do StencilFlow`,
+    subject: `Mudança importante no pagamento do Black Line Pro`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -39,9 +39,9 @@ export function getMigrationNoticeEmail(params: EmailTemplateParams): {
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
+    .header { background: linear-gradient(135deg, #6366F1, #059669); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
     .content { background: #f9fafb; padding: 30px; border-radius: 0 0 12px 12px; }
-    .highlight { background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #10b981; }
+    .highlight { background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #6366F1; }
     .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
     h1 { margin: 0; font-size: 24px; }
     .emoji { font-size: 20px; }
@@ -50,7 +50,7 @@ export function getMigrationNoticeEmail(params: EmailTemplateParams): {
 <body>
   <div class="container">
     <div class="header">
-      <h1>StencilFlow</h1>
+      <h1>Black Line Pro</h1>
       <p>Novidades no seu pagamento</p>
     </div>
     <div class="content">
@@ -80,10 +80,10 @@ export function getMigrationNoticeEmail(params: EmailTemplateParams): {
 
       <p>Qualquer dúvida, responda este email ou acesse <strong>/suporte</strong> no app.</p>
 
-      <p>Abraço,<br><strong>Equipe StencilFlow</strong></p>
+      <p>Abraço,<br><strong>Equipe Black Line Pro</strong></p>
     </div>
     <div class="footer">
-      <p>StencilFlow - Transforme suas ideias em stencils profissionais</p>
+      <p>Black Line Pro - Transforme suas ideias em stencils profissionais</p>
     </div>
   </div>
 </body>
@@ -111,7 +111,7 @@ O QUE NÃO MUDA?
 Qualquer dúvida, responda este email ou acesse /suporte no app.
 
 Abraço,
-Equipe StencilFlow
+Equipe Black Line Pro
     `.trim(),
   };
 }
@@ -129,7 +129,7 @@ export function getPaymentDueEmail(params: EmailTemplateParams): {
   const formattedDate = formatDate(nextDueDate);
 
   return {
-    subject: `Sua fatura StencilFlow - ${getMonthName(nextDueDate)}`,
+    subject: `Sua fatura Black Line Pro - ${getMonthName(nextDueDate)}`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -138,11 +138,11 @@ export function getPaymentDueEmail(params: EmailTemplateParams): {
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
+    .header { background: linear-gradient(135deg, #6366F1, #059669); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
     .content { background: #f9fafb; padding: 30px; border-radius: 0 0 12px 12px; }
     .invoice-box { background: white; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
-    .amount { font-size: 32px; font-weight: bold; color: #10b981; }
-    .btn { display: inline-block; background: #10b981; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 10px 5px; }
+    .amount { font-size: 32px; font-weight: bold; color: #6366F1; }
+    .btn { display: inline-block; background: #6366F1; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 10px 5px; }
     .btn-secondary { background: #6b7280; }
     .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
     h1 { margin: 0; font-size: 24px; }
@@ -151,7 +151,7 @@ export function getPaymentDueEmail(params: EmailTemplateParams): {
 <body>
   <div class="container">
     <div class="header">
-      <h1>StencilFlow</h1>
+      <h1>Black Line Pro</h1>
       <p>Sua fatura está disponível</p>
     </div>
     <div class="content">
@@ -179,10 +179,10 @@ export function getPaymentDueEmail(params: EmailTemplateParams): {
 
       <p>Seu acesso continua ativo. Após o pagamento, você recebe a confirmação por email.</p>
 
-      <p>Abraço,<br><strong>Equipe StencilFlow</strong></p>
+      <p>Abraço,<br><strong>Equipe Black Line Pro</strong></p>
     </div>
     <div class="footer">
-      <p>StencilFlow - Transforme suas ideias em stencils profissionais</p>
+      <p>Black Line Pro - Transforme suas ideias em stencils profissionais</p>
     </div>
   </div>
 </body>
@@ -207,7 +207,7 @@ Escolha como pagar:
 Seu acesso continua ativo. Após o pagamento, você recebe a confirmação por email.
 
 Abraço,
-Equipe StencilFlow
+Equipe Black Line Pro
     `.trim(),
   };
 }
@@ -226,8 +226,8 @@ export function getPaymentReminderEmail(params: EmailTemplateParams & { daysOver
 
   return {
     subject: daysOverdue === 1
-      ? `Lembrete: Pagamento pendente - StencilFlow`
-      : `URGENTE: Último dia para regularizar - StencilFlow`,
+      ? `Lembrete: Pagamento pendente - Black Line Pro`
+      : `URGENTE: Último dia para regularizar - Black Line Pro`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -239,7 +239,7 @@ export function getPaymentReminderEmail(params: EmailTemplateParams & { daysOver
     .header { background: ${daysLeft <= 1 ? '#dc2626' : '#f59e0b'}; color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
     .content { background: #f9fafb; padding: 30px; border-radius: 0 0 12px 12px; }
     .warning-box { background: ${daysLeft <= 1 ? '#fef2f2' : '#fffbeb'}; border: 1px solid ${daysLeft <= 1 ? '#fecaca' : '#fde68a'}; border-radius: 8px; padding: 20px; margin: 20px 0; }
-    .btn { display: inline-block; background: #10b981; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+    .btn { display: inline-block; background: #6366F1; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; }
     .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
     h1 { margin: 0; font-size: 24px; }
   </style>
@@ -270,10 +270,10 @@ export function getPaymentReminderEmail(params: EmailTemplateParams & { daysOver
 
       <p>Se já pagou, desconsidere este email - a confirmação pode levar alguns minutos.</p>
 
-      <p>Abraço,<br><strong>Equipe StencilFlow</strong></p>
+      <p>Abraço,<br><strong>Equipe Black Line Pro</strong></p>
     </div>
     <div class="footer">
-      <p>StencilFlow - Transforme suas ideias em stencils profissionais</p>
+      <p>Black Line Pro - Transforme suas ideias em stencils profissionais</p>
     </div>
   </div>
 </body>
@@ -292,7 +292,7 @@ ${paymentUrl ? `PAGAR AGORA: ${paymentUrl}` : ''}
 Se já pagou, desconsidere este email.
 
 Abraço,
-Equipe StencilFlow
+Equipe Black Line Pro
     `.trim(),
   };
 }
@@ -309,7 +309,7 @@ export function getAccountBlockedEmail(params: EmailTemplateParams): {
   const formattedValue = `R$ ${planValue.toFixed(2).replace('.', ',')}`;
 
   return {
-    subject: `Sua conta StencilFlow foi limitada`,
+    subject: `Sua conta Black Line Pro foi limitada`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -321,7 +321,7 @@ export function getAccountBlockedEmail(params: EmailTemplateParams): {
     .header { background: #dc2626; color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
     .content { background: #f9fafb; padding: 30px; border-radius: 0 0 12px 12px; }
     .blocked-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0; }
-    .btn { display: inline-block; background: #10b981; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+    .btn { display: inline-block; background: #6366F1; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; }
     .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
     h1 { margin: 0; font-size: 24px; }
   </style>
@@ -353,10 +353,10 @@ export function getAccountBlockedEmail(params: EmailTemplateParams): {
 
       <p>Dúvidas? Responda este email ou acesse /suporte no app.</p>
 
-      <p>Abraço,<br><strong>Equipe StencilFlow</strong></p>
+      <p>Abraço,<br><strong>Equipe Black Line Pro</strong></p>
     </div>
     <div class="footer">
-      <p>StencilFlow - Transforme suas ideias em stencils profissionais</p>
+      <p>Black Line Pro - Transforme suas ideias em stencils profissionais</p>
     </div>
   </div>
 </body>
@@ -381,7 +381,7 @@ Após o pagamento, seu acesso é liberado automaticamente.
 Dúvidas? Responda este email ou acesse /suporte no app.
 
 Abraço,
-Equipe StencilFlow
+Equipe Black Line Pro
     `.trim(),
   };
 }
@@ -399,7 +399,7 @@ export function getPaymentConfirmedEmail(params: EmailTemplateParams): {
   const formattedDate = formatDate(nextDueDate);
 
   return {
-    subject: `Pagamento confirmado - StencilFlow`,
+    subject: `Pagamento confirmado - Black Line Pro`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -408,11 +408,11 @@ export function getPaymentConfirmedEmail(params: EmailTemplateParams): {
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
+    .header { background: linear-gradient(135deg, #6366F1, #059669); color: white; padding: 30px; border-radius: 12px 12px 0 0; text-align: center; }
     .content { background: #f9fafb; padding: 30px; border-radius: 0 0 12px 12px; }
     .success-box { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
     .checkmark { font-size: 48px; }
-    .btn { display: inline-block; background: #10b981; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+    .btn { display: inline-block; background: #6366F1; color: white; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; }
     .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
     h1 { margin: 0; font-size: 24px; }
   </style>
@@ -437,15 +437,15 @@ export function getPaymentConfirmedEmail(params: EmailTemplateParams): {
       <p><strong>Próxima cobrança:</strong> ${formattedDate}</p>
 
       <div style="text-align: center; margin: 30px 0;">
-        <a href="https://stencilflow.com.br/dashboard" class="btn">ACESSAR STENCILFLOW</a>
+        <a href="https://Black Line Pro.com.br/dashboard" class="btn">ACESSAR Black Line Pro</a>
       </div>
 
-      <p>Obrigado por usar o StencilFlow!</p>
+      <p>Obrigado por usar o Black Line Pro!</p>
 
-      <p>Abraço,<br><strong>Equipe StencilFlow</strong></p>
+      <p>Abraço,<br><strong>Equipe Black Line Pro</strong></p>
     </div>
     <div class="footer">
-      <p>StencilFlow - Transforme suas ideias em stencils profissionais</p>
+      <p>Black Line Pro - Transforme suas ideias em stencils profissionais</p>
     </div>
   </div>
 </body>
@@ -463,12 +463,12 @@ Seu acesso está ativo e todas as funcionalidades estão liberadas.
 
 Próxima cobrança: ${formattedDate}
 
-Acesse: https://stencilflow.com.br/dashboard
+Acesse: https://Black Line Pro.com.br/dashboard
 
-Obrigado por usar o StencilFlow!
+Obrigado por usar o Black Line Pro!
 
 Abraço,
-Equipe StencilFlow
+Equipe Black Line Pro
     `.trim(),
   };
 }

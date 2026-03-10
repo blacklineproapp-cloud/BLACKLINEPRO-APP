@@ -6,6 +6,7 @@ import {
   Zap, Search, Plus, Minus, RefreshCw, X, TrendingUp, Calendar, History
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 
 interface UserStats {
   user: {
@@ -201,7 +202,7 @@ export default function CreditsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl">
+            <div className="p-3 bg-gradient-to-br from-indigo-600 to-teal-600 rounded-xl">
               <Zap size={24} />
             </div>
             <div>
@@ -222,17 +223,18 @@ export default function CreditsPage() {
                 value={searchEmail}
                 onChange={(e) => setSearchEmail(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && loadUserStats()}
-                className="w-full pl-10 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder:text-zinc-500 focus:border-emerald-600 focus:outline-none"
+                className="w-full pl-10 pr-4 py-3 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder:text-zinc-500 focus:border-indigo-600 focus:outline-none"
               />
             </div>
-            <button
+            <Button
               onClick={loadUserStats}
               disabled={loading}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-medium transition flex items-center gap-2"
+              size="lg"
+              className="gap-2"
             >
               {loading ? <RefreshCw size={18} className="animate-spin" /> : <Search size={18} />}
               Buscar
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -249,7 +251,7 @@ export default function CreditsPage() {
                 <span className={`px-3 py-1 rounded-lg text-sm font-medium ${
                   userStats.user.plan === 'pro' ? 'bg-purple-900/30 text-purple-400' :
                   userStats.user.plan === 'studio' ? 'bg-blue-900/30 text-blue-400' :
-                  userStats.user.plan === 'starter' ? 'bg-emerald-900/30 text-emerald-400' :
+                  userStats.user.plan === 'ink' ? 'bg-indigo-900/30 text-indigo-400' :
                   'bg-zinc-800 text-zinc-400'
                 }`}>
                   {userStats.user.plan.toUpperCase()}
@@ -257,46 +259,54 @@ export default function CreditsPage() {
               </div>
 
               {/* Credits Balance */}
-              <div className="bg-zinc-950 border border-emerald-800/30 rounded-lg p-4 mb-4">
+              <div className="bg-zinc-950 border border-indigo-800/30 rounded-lg p-4 mb-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-zinc-400 mb-1">Saldo de Créditos</p>
-                    <p className="text-3xl font-bold text-emerald-400">{userStats.credits.balance}</p>
+                    <p className="text-3xl font-bold text-indigo-400">{userStats.credits.balance}</p>
                   </div>
-                  <Zap size={32} className="text-emerald-400" />
+                  <Zap size={32} className="text-indigo-400" />
                 </div>
               </div>
 
               {/* Actions */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setAddModal(true)}
-                  className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2"
+                  className="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 gap-2"
                 >
                   <Plus size={16} />
                   Adicionar
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="danger-subtle"
+                  size="sm"
                   onClick={() => setRemoveModal(true)}
-                  className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2"
+                  className="gap-2"
                 >
                   <Minus size={16} />
                   Remover
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setResetModal(true)}
-                  className="px-4 py-2 bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2"
+                  className="bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 gap-2"
                 >
                   <RefreshCw size={16} />
                   Resetar Uso
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => { setHistoryModal(true); loadHistory(); }}
-                  className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2"
+                  className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 gap-2"
                 >
                   <History size={16} />
                   Histórico
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -310,7 +320,7 @@ export default function CreditsPage() {
                 <div className="mb-2">
                   <div className="w-full bg-zinc-800 rounded-full h-2">
                     <div 
-                      className="bg-emerald-600 h-2 rounded-full transition-all"
+                      className="bg-indigo-600 h-2 rounded-full transition-all"
                       style={{ width: `${Math.min(userStats.usage.editor.percentage, 100)}%` }}
                     />
                   </div>
@@ -374,9 +384,9 @@ export default function CreditsPage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Adicionar Créditos</h3>
-                <button onClick={() => setAddModal(false)} className="text-zinc-400 hover:text-white">
+                <Button variant="ghost" size="icon" onClick={() => setAddModal(false)} aria-label="Fechar">
                   <X size={20} />
-                </button>
+                </Button>
               </div>
               <div className="space-y-4">
                 <div>
@@ -387,7 +397,7 @@ export default function CreditsPage() {
                     max="10000"
                     value={addAmount}
                     onChange={(e) => setAddAmount(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                     placeholder="Ex: 100"
                   />
                 </div>
@@ -396,19 +406,19 @@ export default function CreditsPage() {
                   <textarea
                     value={addReason}
                     onChange={(e) => setAddReason(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                     rows={3}
                     maxLength={500}
                     placeholder="Ex: Compensação por problema técnico..."
                   />
                 </div>
-                <button
+                <Button
                   onClick={handleAddCredits}
                   disabled={actionLoading}
-                  className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-medium transition"
+                  className="w-full"
                 >
                   {actionLoading ? 'Adicionando...' : 'Adicionar Créditos'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -420,12 +430,12 @@ export default function CreditsPage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Remover Créditos</h3>
-                <button onClick={() => setRemoveModal(false)} className="text-zinc-400 hover:text-white">
+                <Button variant="ghost" size="icon" onClick={() => setRemoveModal(false)} aria-label="Fechar">
                   <X size={20} />
-                </button>
+                </Button>
               </div>
               <p className="text-sm text-zinc-400 mb-4">
-                Saldo atual: <strong className="text-emerald-400">{userStats?.credits.balance}</strong> créditos
+                Saldo atual: <strong className="text-indigo-400">{userStats?.credits.balance}</strong> créditos
               </p>
               <div className="space-y-4">
                 <div>
@@ -436,7 +446,7 @@ export default function CreditsPage() {
                     max={userStats?.credits.balance || 10000}
                     value={removeAmount}
                     onChange={(e) => setRemoveAmount(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                     placeholder="Ex: 50"
                   />
                 </div>
@@ -445,19 +455,20 @@ export default function CreditsPage() {
                   <textarea
                     value={removeReason}
                     onChange={(e) => setRemoveReason(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                     rows={3}
                     maxLength={500}
                     placeholder="Ex: Ajuste por erro de cobrança..."
                   />
                 </div>
-                <button
+                <Button
+                  variant="destructive"
                   onClick={handleRemoveCredits}
                   disabled={actionLoading}
-                  className="w-full px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-lg font-medium transition"
+                  className="w-full"
                 >
                   {actionLoading ? 'Removendo...' : 'Remover Créditos'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -469,9 +480,9 @@ export default function CreditsPage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Resetar Uso Mensal</h3>
-                <button onClick={() => setResetModal(false)} className="text-zinc-400 hover:text-white">
+                <Button variant="ghost" size="icon" onClick={() => setResetModal(false)} aria-label="Fechar">
                   <X size={20} />
-                </button>
+                </Button>
               </div>
               <p className="text-sm text-orange-400 mb-4">
                 ⚠️ Esta ação resetará todo o uso mensal do usuário. Use apenas em emergências!
@@ -482,19 +493,19 @@ export default function CreditsPage() {
                   <textarea
                     value={resetReason}
                     onChange={(e) => setResetReason(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                     rows={3}
                     maxLength={500}
                     placeholder="Ex: Reset emergencial por problema no sistema..."
                   />
                 </div>
-                <button
+                <Button
                   onClick={handleResetUsage}
                   disabled={actionLoading}
-                  className="w-full px-4 py-2 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white rounded-lg font-medium transition"
+                  className="w-full bg-orange-600 hover:bg-orange-500"
                 >
                   {actionLoading ? 'Resetando...' : 'Resetar Uso'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -506,9 +517,9 @@ export default function CreditsPage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-4xl w-full my-8">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Histórico Completo</h3>
-                <button onClick={() => setHistoryModal(false)} className="text-zinc-400 hover:text-white">
+                <Button variant="ghost" size="icon" onClick={() => setHistoryModal(false)} aria-label="Fechar">
                   <X size={20} />
-                </button>
+                </Button>
               </div>
               
               {historyLoading ? (
@@ -527,7 +538,7 @@ export default function CreditsPage() {
                               <p className="text-sm font-medium">{tx.type}</p>
                               <p className="text-xs text-zinc-500">{new Date(tx.created_at).toLocaleString('pt-BR')}</p>
                             </div>
-                            <span className={`text-lg font-bold ${tx.amount > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            <span className={`text-lg font-bold ${tx.amount > 0 ? 'text-indigo-400' : 'text-red-400'}`}>
                               {tx.amount > 0 ? '+' : ''}{tx.amount}
                             </span>
                           </div>

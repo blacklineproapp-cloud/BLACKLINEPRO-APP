@@ -8,6 +8,7 @@ import { auth } from '@clerk/nextjs/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getInviteByToken, acceptInvite } from '@/lib/organizations/invites';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
+import { logger } from '@/lib/logger';
 
 // =====================================================
 // GET /api/invites/[token]
@@ -67,7 +68,7 @@ export async function GET(
       },
     });
   } catch (error: any) {
-    console.error('[GET /api/invites/[token]] Error:', error);
+    logger.error('[GET /api/invites/[token]] Error', { error });
     return NextResponse.json(
       { error: 'Erro ao buscar convite' },
       { status: 500 }
@@ -139,7 +140,7 @@ export async function POST(
       message: 'Convite aceito com sucesso! Você agora é membro da organização.',
     });
   } catch (error: any) {
-    console.error('[POST /api/invites/[token]] Error:', error);
+    logger.error('[POST /api/invites/[token]] Error', { error });
     return NextResponse.json(
       { error: 'Erro ao aceitar convite' },
       { status: 500 }

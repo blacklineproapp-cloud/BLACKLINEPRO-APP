@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
+import { logger } from '@/lib/logger';
 
 /**
  * API Route: Resize Inteligente de Imagens
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
     try {
       body = await req.json();
     } catch (parseError: any) {
-      console.error('[ImageResize] Erro ao fazer parse do JSON:', parseError.message);
+      logger.error('[ImageResize] Erro ao fazer parse do JSON', { error: parseError.message });
       return NextResponse.json({ error: 'JSON inválido no body da requisição' }, { status: 400 });
     }
 
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'DPI deve estar entre 72 e 600' }, { status: 400 });
     }
 
-    console.log('[ImageResize] Iniciando resize:', {
+    logger.info('[ImageResize] Iniciando resize', {
       targetWidthCm,
       targetHeightCm,
       dpi,
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
     const originalWidthCm = pixelsToCm(originalWidth, originalDpi);
     const originalHeightCm = pixelsToCm(originalHeight, originalDpi);
 
-    console.log('[ImageResize] Imagem original:', {
+    logger.debug('[ImageResize] Imagem original', {
       width: originalWidth,
       height: originalHeight,
       widthCm: originalWidthCm,
@@ -150,7 +151,7 @@ export async function POST(req: NextRequest) {
     const kernel = wasUpscaled ? sharp.kernel.lanczos3 : sharp.kernel.mitchell;
     const algorithmName = wasUpscaled ? 'Lanczos3' : 'Mitchell';
 
-    console.log('[ImageResize] Processando:', {
+    logger.debug('[ImageResize] Processando', {
       finalWidth,
       finalHeight,
       wasUpscaled,
@@ -198,7 +199,7 @@ export async function POST(req: NextRequest) {
       }
     };
 
-    console.log('[ImageResize] ✅ Resize concluído:', {
+    logger.info('[ImageResize] Resize concluído', {
       originalSize: `${originalWidth}x${originalHeight} (${originalWidthCm}x${originalHeightCm}cm)`,
       finalSize: `${finalWidth}x${finalHeight} (${finalWidthCm}x${finalHeightCm}cm)`,
       algorithm: algorithmName,
@@ -208,7 +209,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error: any) {
-    console.error('[ImageResize] Erro:', error);
+    logger.error('[ImageResize] Erro', { error });
     return NextResponse.json(
       { error: error.message || 'Erro ao processar imagem' },
       { status: 500 }

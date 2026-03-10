@@ -10,6 +10,7 @@ import {
   Upload, X as XIcon, Image as ImageIcon, Clock, CheckCircle, AlertCircle
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 
 interface Ticket {
   id: string;
@@ -25,15 +26,15 @@ const CATEGORIES = [
   { id: 'billing', label: 'Pagamento', icon: CreditCard, description: 'Dúvidas sobre cobrança, assinatura ou reembolso' },
   { id: 'technical', label: 'Problema Técnico', icon: Wrench, description: 'Erros, bugs ou funcionalidades que não funcionam' },
   { id: 'account', label: 'Minha Conta', icon: User, description: 'Acesso, configurações ou dados da conta' },
-  { id: 'feature', label: 'Sugestão', icon: Lightbulb, description: 'Ideias para melhorar o StencilFlow' },
+  { id: 'feature', label: 'Sugestão', icon: Lightbulb, description: 'Ideias para melhorar o Black Line Pro' },
   { id: 'general', label: 'Outros', icon: MessageSquare, description: 'Outras dúvidas ou assuntos' },
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   open: { label: 'Aguardando', color: 'text-yellow-400 bg-yellow-900/30', icon: Clock },
-  in_progress: { label: 'Em Análise', color: 'text-blue-400 bg-blue-900/30', icon: AlertCircle },
+  in_progress: { label: 'Em Análise', color: 'text-indigo-400 bg-indigo-900/30', icon: AlertCircle },
   waiting_user: { label: 'Respondido', color: 'text-green-400 bg-green-900/30', icon: CheckCircle },
-  resolved: { label: 'Resolvido', color: 'text-emerald-400 bg-emerald-900/30', icon: CheckCircle },
+  resolved: { label: 'Resolvido', color: 'text-indigo-400 bg-indigo-900/30', icon: CheckCircle },
   closed: { label: 'Fechado', color: 'text-zinc-400 bg-zinc-800', icon: CheckCircle }
 };
 
@@ -163,22 +164,22 @@ export default function SuportePage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl">
+            <div className="p-3 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-xl">
               <HelpCircle size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Suporte</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold">Suporte</h1>
               <p className="text-zinc-400 text-sm">Como podemos ajudar?</p>
             </div>
           </div>
           
-          <button
+          <Button
             onClick={() => setShowWizard(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-medium transition"
+            className="gap-2 rounded-xl"
           >
             <Plus size={18} />
             Novo Ticket
-          </button>
+          </Button>
         </div>
 
         {/* Wizard Modal */}
@@ -189,16 +190,16 @@ export default function SuportePage() {
               <div className="p-4 border-b border-zinc-800">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="font-bold">Novo Ticket</h2>
-                  <button onClick={resetWizard} className="p-1 hover:bg-zinc-800 rounded-lg">
+                  <Button variant="ghost" size="icon" onClick={resetWizard} className="h-8 w-8 min-h-0 min-w-0">
                     <XIcon size={20} />
-                  </button>
+                  </Button>
                 </div>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4].map(s => (
                     <div
                       key={s}
                       className={`h-1 flex-1 rounded-full transition-colors ${
-                        s <= step ? 'bg-emerald-500' : 'bg-zinc-700'
+                        s <= step ? 'bg-indigo-500' : 'bg-zinc-700'
                       }`}
                     />
                   ))}
@@ -226,19 +227,19 @@ export default function SuportePage() {
                           onClick={() => setCategory(cat.id)}
                           className={`w-full flex items-center gap-3 p-3 rounded-xl border transition ${
                             category === cat.id
-                              ? 'border-emerald-500 bg-emerald-500/10'
+                              ? 'border-indigo-500 bg-indigo-500/10'
                               : 'border-zinc-700 hover:border-zinc-600'
                           }`}
                         >
-                          <div className={`p-2 rounded-lg ${category === cat.id ? 'bg-emerald-500/20' : 'bg-zinc-800'}`}>
-                            <Icon size={20} className={category === cat.id ? 'text-emerald-400' : 'text-zinc-400'} />
+                          <div className={`p-2 rounded-lg ${category === cat.id ? 'bg-indigo-500/20' : 'bg-zinc-800'}`}>
+                            <Icon size={20} className={category === cat.id ? 'text-indigo-400' : 'text-zinc-400'} />
                           </div>
                           <div className="text-left">
                             <p className="font-medium">{cat.label}</p>
                             <p className="text-xs text-zinc-500">{cat.description}</p>
                           </div>
                           {category === cat.id && (
-                            <Check className="ml-auto text-emerald-400" size={20} />
+                            <Check className="ml-auto text-indigo-400" size={20} />
                           )}
                         </button>
                       );
@@ -256,7 +257,7 @@ export default function SuportePage() {
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
                         placeholder="Resumo do problema"
-                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 focus:border-emerald-500 outline-none"
+                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 focus:border-indigo-500 outline-none"
                         maxLength={100}
                       />
                     </div>
@@ -267,7 +268,7 @@ export default function SuportePage() {
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Descreva o problema em detalhes..."
                         rows={6}
-                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 focus:border-emerald-500 outline-none resize-none"
+                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 focus:border-indigo-500 outline-none resize-none"
                         maxLength={2000}
                       />
                       <p className="text-xs text-zinc-500 text-right mt-1">{description.length}/2000</p>
@@ -372,33 +373,34 @@ export default function SuportePage() {
               {/* Footer */}
               <div className="p-4 border-t border-zinc-800 flex gap-3">
                 {step > 1 && (
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={() => setStep(s => s - 1)}
-                    className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium transition flex items-center gap-2"
+                    className="rounded-xl gap-2"
                   >
                     <ChevronLeft size={18} />
                     Voltar
-                  </button>
+                  </Button>
                 )}
-                
+
                 {step < 4 ? (
-                  <button
+                  <Button
                     onClick={() => setStep(s => s + 1)}
                     disabled={!canProceed()}
-                    className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-medium transition flex items-center justify-center gap-2"
+                    className="flex-1 rounded-xl gap-2"
                   >
                     Continuar
                     <ChevronRight size={18} />
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
                     onClick={handleSubmit}
                     disabled={submitting}
-                    className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-xl font-medium transition flex items-center justify-center gap-2"
+                    className="flex-1 rounded-xl gap-2"
                   >
                     {submitting ? 'Enviando...' : 'Enviar Ticket'}
                     <Check size={18} />
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -411,12 +413,12 @@ export default function SuportePage() {
             <HelpCircle size={48} className="text-zinc-700 mx-auto mb-4" />
             <h3 className="text-lg font-medium mb-2">Nenhum ticket ainda</h3>
             <p className="text-zinc-500 mb-6">Precisa de ajuda? Abra um ticket!</p>
-            <button
+            <Button
               onClick={() => setShowWizard(true)}
-              className="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-medium transition"
+              className="rounded-xl"
             >
               Abrir Primeiro Ticket
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="space-y-3">
@@ -455,7 +457,7 @@ export default function SuportePage() {
                       </p>
                     </div>
 
-                    <ChevronRight size={20} className="text-zinc-600 group-hover:text-zinc-400 transition" />
+                    <ChevronRight size={20} className="text-zinc-400 group-hover:text-zinc-400 transition" />
                   </div>
                 </Link>
               );

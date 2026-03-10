@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Política de Cookies - StencilFlow',
-  description: 'Como o StencilFlow utiliza cookies e tecnologias similares.',
+  title: 'Política de Cookies - Black Line Pro',
+  description: 'Como o Black Line Pro utiliza cookies e tecnologias similares.',
 };
 
 export default function CookiesPage() {
   return (
-    <div className="prose prose-invert prose-emerald max-w-none">
+    <div className="prose prose-invert prose-indigo max-w-none">
       <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
         Política de Cookies
       </h1>
@@ -19,7 +19,7 @@ export default function CookiesPage() {
         {/* Introdução */}
         <section>
           <p className="text-base leading-relaxed">
-            Esta Política de Cookies explica como o <strong className="text-white">StencilFlow</strong> utiliza cookies 
+            Esta Política de Cookies explica como o <strong className="text-white">Black Line Pro</strong> utiliza cookies 
             e tecnologias similares para reconhecer você quando visita nossa plataforma.
           </p>
         </section>
@@ -37,7 +37,7 @@ export default function CookiesPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mt-8 mb-4">2. Tipos de Cookies que Utilizamos</h2>
           
-          <h3 className="text-xl font-semibold text-emerald-400 mt-6 mb-3">2.1. Cookies Essenciais</h3>
+          <h3 className="text-xl font-semibold text-indigo-400 mt-6 mb-3">2.1. Cookies Essenciais</h3>
           <p className="mb-4">
             <strong>Necessários para o funcionamento do site.</strong> Não podem ser desativados.
           </p>
@@ -51,7 +51,7 @@ export default function CookiesPage() {
             <p className="text-xs text-zinc-500 mt-3">Duração: Sessão ou até 1 ano</p>
           </div>
 
-          <h3 className="text-xl font-semibold text-emerald-400 mt-6 mb-3">2.2. Cookies de Analytics</h3>
+          <h3 className="text-xl font-semibold text-indigo-400 mt-6 mb-3">2.2. Cookies de Analytics</h3>
           <p className="mb-4">
             <strong>Ajudam a entender como você usa o site.</strong> Podem ser desativados.
           </p>
@@ -63,7 +63,7 @@ export default function CookiesPage() {
             <p className="text-xs text-zinc-500 mt-3">Duração: Até 2 anos</p>
           </div>
 
-          <h3 className="text-xl font-semibold text-emerald-400 mt-6 mb-3">2.3. Cookies de Funcionalidade</h3>
+          <h3 className="text-xl font-semibold text-indigo-400 mt-6 mb-3">2.3. Cookies de Funcionalidade</h3>
           <p className="mb-4">
             <strong>Melhoram sua experiência.</strong> Podem ser desativados.
           </p>
@@ -86,7 +86,7 @@ export default function CookiesPage() {
               <h4 className="font-semibold text-white mb-2">Clerk (Autenticação)</h4>
               <p className="text-sm">Gerencia login e sessões de usuário</p>
               <p className="text-xs text-zinc-500 mt-2">
-                Política: <a href="https://clerk.com/privacy" target="_blank" rel="noopener" className="text-emerald-400 hover:underline">clerk.com/privacy</a>
+                Política: <a href="https://clerk.com/privacy" target="_blank" rel="noopener" className="text-indigo-400 hover:underline">clerk.com/privacy</a>
               </p>
             </div>
 
@@ -94,7 +94,7 @@ export default function CookiesPage() {
               <h4 className="font-semibold text-white mb-2">Stripe (Pagamentos)</h4>
               <p className="text-sm">Processa pagamentos de forma segura</p>
               <p className="text-xs text-zinc-500 mt-2">
-                Política: <a href="https://stripe.com/privacy" target="_blank" rel="noopener" className="text-emerald-400 hover:underline">stripe.com/privacy</a>
+                Política: <a href="https://stripe.com/privacy" target="_blank" rel="noopener" className="text-indigo-400 hover:underline">stripe.com/privacy</a>
               </p>
             </div>
 
@@ -102,7 +102,7 @@ export default function CookiesPage() {
               <h4 className="font-semibold text-white mb-2">Google Analytics</h4>
               <p className="text-sm">Análise de tráfego e comportamento</p>
               <p className="text-xs text-zinc-500 mt-2">
-                Política: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" className="text-emerald-400 hover:underline">policies.google.com/privacy</a>
+                Política: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" className="text-indigo-400 hover:underline">policies.google.com/privacy</a>
               </p>
             </div>
 
@@ -110,7 +110,7 @@ export default function CookiesPage() {
               <h4 className="font-semibold text-white mb-2">Meta Pixel</h4>
               <p className="text-sm">Rastreamento de conversões e anúncios</p>
               <p className="text-xs text-zinc-500 mt-2">
-                Política: <a href="https://www.facebook.com/privacy/policy" target="_blank" rel="noopener" className="text-emerald-400 hover:underline">facebook.com/privacy/policy</a>
+                Política: <a href="https://www.facebook.com/privacy/policy" target="_blank" rel="noopener" className="text-indigo-400 hover:underline">facebook.com/privacy/policy</a>
               </p>
             </div>
           </div>
@@ -120,7 +120,7 @@ export default function CookiesPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mt-8 mb-4">4. Como Gerenciar Cookies</h2>
           
-          <h3 className="text-xl font-semibold text-emerald-400 mt-6 mb-3">4.1. Configurações do Navegador</h3>
+          <h3 className="text-xl font-semibold text-indigo-400 mt-6 mb-3">4.1. Configurações do Navegador</h3>
           <p className="mb-4">Você pode controlar cookies através do seu navegador:</p>
           <ul className="list-disc list-inside space-y-2 ml-4">
             <li><strong>Chrome:</strong> Configurações → Privacidade e segurança → Cookies</li>
@@ -129,18 +129,18 @@ export default function CookiesPage() {
             <li><strong>Edge:</strong> Configurações → Cookies e permissões de site</li>
           </ul>
 
-          <h3 className="text-xl font-semibold text-emerald-400 mt-6 mb-3">4.2. Banner de Consentimento</h3>
+          <h3 className="text-xl font-semibold text-indigo-400 mt-6 mb-3">4.2. Banner de Consentimento</h3>
           <p>
-            Ao visitar o StencilFlow pela primeira vez, você verá um banner de cookies. 
+            Ao visitar o Black Line Pro pela primeira vez, você verá um banner de cookies. 
             Você pode aceitar todos, rejeitar não essenciais, ou personalizar suas preferências.
           </p>
 
-          <h3 className="text-xl font-semibold text-emerald-400 mt-6 mb-3">4.3. Opt-out de Analytics</h3>
+          <h3 className="text-xl font-semibold text-indigo-400 mt-6 mb-3">4.3. Opt-out de Analytics</h3>
           <p className="mb-4">Para desativar rastreamento de analytics:</p>
           <ul className="list-disc list-inside space-y-2 ml-4">
             <li>
               <strong>Google Analytics:</strong>{' '}
-              <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener" className="text-emerald-400 hover:underline">
+              <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener" className="text-indigo-400 hover:underline">
                 Extensão de Opt-out
               </a>
             </li>
@@ -180,7 +180,7 @@ export default function CookiesPage() {
           <h2 className="text-2xl font-bold text-white mt-8 mb-4">7. Contato</h2>
           <p className="mb-4">Para questões sobre cookies:</p>
           <div className="bg-zinc-800/50 p-6 rounded-lg border border-zinc-700">
-            <p><strong className="text-white">Email:</strong> <a href="mailto:contato@stencilflow.com.br" className="text-emerald-400 hover:underline">contato@stencilflow.com.br</a></p>
+            <p><strong className="text-white">Email:</strong> <a href="mailto:contato@blacklinepro.com.br" className="text-indigo-400 hover:underline">contato@blacklinepro.com.br</a></p>
           </div>
         </section>
       </div>

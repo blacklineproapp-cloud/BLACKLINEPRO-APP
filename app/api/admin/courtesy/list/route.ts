@@ -1,20 +1,9 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
-export async function GET(req: Request) {
-  try {
-    // 1. 🔒 VERIFICAR ADMIN
-    const { userId } = await auth();
-    
-    if (!userId || !(await isAdmin(userId))) {
-      return NextResponse.json(
-        { error: 'Acesso negado' },
-        { status: 403 }
-      );
-    }
-
+export const GET = withAdminAuth(async (req, { adminId }) => {
     // 2. 📊 BUSCAR PARÂMETROS
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -54,7 +43,7 @@ export async function GET(req: Request) {
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('[Courtesy List] Erro:', error);
+      logger.error('[Courtesy List] Erro ao buscar cortesias', { error });
       return NextResponse.json(
         { error: 'Erro ao buscar cortesias' },
         { status: 500 }
@@ -80,12 +69,4 @@ export async function GET(req: Request) {
       },
       stats
     });
-
-  } catch (error: any) {
-    console.error('[Courtesy List] Erro inesperado:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
-  }
-}
+});

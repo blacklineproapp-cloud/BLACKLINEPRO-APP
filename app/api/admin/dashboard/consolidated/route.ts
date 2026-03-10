@@ -1,43 +1,31 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { ClerkService } from '@/lib/clerk-service';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * API de Dashboard Consolidado
- * 
+ *
  * Integra dados de:
  * - Clerk (métricas de usuários, login, retenção)
  * - Supabase (dados de pagamento, status)
  * - Asaas (assinaturas ativas)
  * - Stripe (histórico de pagamentos)
  */
-export async function GET(req: Request) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    const userIsAdmin = await isAdmin(userId);
-    if (!userIsAdmin) {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-    }
-
+export const GET = withAdminAuth(async (req, { adminId }) => {
     // =========================================================================
     // 1. MÉTRICAS DO CLERK
     // =========================================================================
-    console.log('[Consolidated] Buscando métricas do Clerk...');
+    logger.info('[Consolidated] Buscando métricas do Clerk');
     let clerkMetrics;
     try {
       clerkMetrics = await ClerkService.getUserMetrics();
-      console.log(`[Consolidated] Clerk: ${clerkMetrics.totalUsers} usuários, ${clerkMetrics.activeUsers} ativos`);
+      logger.info('[Consolidated] Clerk metrics fetched', { totalUsers: clerkMetrics.totalUsers, activeUsers: clerkMetrics.activeUsers });
     } catch (error) {
-      console.error('[Consolidated] Erro ao buscar métricas do Clerk:', error);
+      logger.error('[Consolidated] Erro ao buscar métricas do Clerk', { error });
       // Fallback: usar valores padrão
       clerkMetrics = {
         totalUsers: 0,
@@ -51,9 +39,9 @@ export async function GET(req: Request) {
     // =========================================================================
     // 2. DADOS DE PAGAMENTO - STRIPE (HISTÓRICO)
     // =========================================================================
-    console.log('[Consolidated] Processando dados Stripe...');
+    logger.info('[Consolidated] Processando dados Stripe');
     const stripeHistoricalRevenue = 7025.00; // Valor confirmado do histórico
-    
+
     const { data: migrationQueue } = await supabaseAdmin
       .from('migration_queue')
       .select('email, stripe_first_payment_date, stripe_last_payment_date, stripe_total_payments, current_plan')
@@ -64,17 +52,15 @@ export async function GET(req: Request) {
     // =========================================================================
     // 3. DADOS DE PAGAMENTO - ASAAS (ATIVO) - DIRETO DA API
     // =========================================================================
-    console.log('[Consolidated] Buscando dados REAIS do Asaas via API...');
-    
+    logger.info('[Consolidated] Buscando dados REAIS do Asaas via API');
+
     // Importar serviço Asaas
-    const { AsaasService } = await import('@/lib/asaas-service');
-    
+    const { AsaasAdminService } = await import('@/lib/asaas');
+
     // Buscar métricas financeiras reais da API do Asaas
-    const asaasMetrics = await AsaasService.getFinancialMetrics();
-    
-    console.log(`[Consolidated] Asaas API: ${asaasMetrics.subscriptions.active} assinaturas ativas`);
-    console.log(`[Consolidated] Asaas API: R$ ${asaasMetrics.payments.receivedValue.toFixed(2)} recebido`);
-    console.log(`[Consolidated] Asaas API: MRR R$ ${asaasMetrics.mrr.toFixed(2)}`);
+    const asaasMetrics = await AsaasAdminService.getFinancialMetrics();
+
+    logger.info('[Consolidated] Asaas API metrics', { activeSubscriptions: asaasMetrics.subscriptions.active, receivedValue: asaasMetrics.payments.receivedValue, mrr: asaasMetrics.mrr });
 
     // Buscar usuários do Supabase para correlacionar com dados do Asaas
     const { data: allPaidUsers } = await supabaseAdmin
@@ -82,7 +68,7 @@ export async function GET(req: Request) {
       .select('id, email, name, plan, subscription_status, asaas_subscription_id, migration_status, is_paid, admin_courtesy, grace_period_until')
       .eq('is_paid', true);
 
-    console.log(`[Consolidated] Usuários pagantes no Supabase: ${allPaidUsers?.length || 0}`);
+    logger.info('[Consolidated] Usuários pagantes no Supabase', { count: allPaidUsers?.length || 0 });
 
     // Separar usuários (para estatísticas adicionais)
     const asaasUsers: any[] = [];
@@ -108,12 +94,12 @@ export async function GET(req: Request) {
       }
     }
 
-    console.log(`[Consolidated] Usuários Asaas no Supabase: ${asaasUsers.length}`);
+    logger.info('[Consolidated] Usuários Asaas no Supabase', { count: asaasUsers.length });
 
     // =========================================================================
     // 4. STATUS DE MIGRAÇÃO
     // =========================================================================
-    console.log('[Consolidated] Analisando status de migração...');
+    logger.info('[Consolidated] Analisando status de migração');
     const { count: totalMigration } = await supabaseAdmin
       .from('migration_queue')
       .select('*', { count: 'exact', head: true });
@@ -152,8 +138,8 @@ export async function GET(req: Request) {
     // =========================================================================
     // 5. VALIDAÇÃO PRELIMINAR
     // =========================================================================
-    console.log('[Consolidated] Executando validação preliminar...');
-    
+    logger.info('[Consolidated] Executando validação preliminar');
+
     // Buscar usuários que estão usando o app (Clerk) mas não têm pagamento (Supabase)
     const allClerkUsers = await ClerkService.getAllUsersActivity();
     const clerkEmails = allClerkUsers.map(u => u.email.toLowerCase());
@@ -168,7 +154,7 @@ export async function GET(req: Request) {
 
     for (const clerkUser of allClerkUsers) {
       const supabaseUser = supabaseUsers?.find(u => u.email.toLowerCase() === clerkUser.email.toLowerCase());
-      
+
       if (!supabaseUser) continue;
 
       const now = new Date();
@@ -259,14 +245,6 @@ export async function GET(req: Request) {
         conversionRate: ((clerkMetrics.totalUsers > 0 ? asaasUsers.length / clerkMetrics.totalUsers : 0) * 100).toFixed(2),
       },
     });
-
-  } catch (error: any) {
-    console.error('[Consolidated] Erro ao buscar dados consolidados:', error);
-    return NextResponse.json(
-      { error: 'Erro ao buscar dados consolidados: ' + error.message },
-      { status: 500 }
-    );
-  }
-}
+});
 
 export const maxDuration = 60;

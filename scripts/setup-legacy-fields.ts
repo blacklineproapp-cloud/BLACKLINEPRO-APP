@@ -60,7 +60,7 @@ async function setupLegacyFields() {
     console.log('   - assigned_plan (VARCHAR)\n');
 
     console.log('💡 Próximos passos:');
-    console.log('   1. Atribuir plano legacy via admin');
+    console.log('   1. Atribuir plano ink via admin');
     console.log('   2. Definir deadline (ex: 2026-01-10)');
     console.log('   3. Banner aparecerá automaticamente no dashboard\n');
 

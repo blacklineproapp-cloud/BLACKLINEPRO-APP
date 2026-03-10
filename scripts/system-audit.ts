@@ -4,12 +4,12 @@ dotenv.config({ path: '.env.local' });
 import { createClient } from '@supabase/supabase-js';
 
 /**
- * ANÁLISE COMPLETA DO SISTEMA STENCILFLOW
+ * ANÁLISE COMPLETA DO SISTEMA BLACK LINE PRO
  * Verifica se todos os componentes estão linkados corretamente
  */
 
 async function systemAudit() {
-  console.log('🔍 ANÁLISE COMPLETA DO SISTEMA STENCILFLOW\n');
+  console.log('🔍 ANÁLISE COMPLETA DO SISTEMA BLACK LINE PRO\n');
   console.log('═══════════════════════════════════════════════════════\n');
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -238,7 +238,7 @@ async function systemAudit() {
     results.passed++;
   }
 
-  console.log(`   FROM_EMAIL: ${fromEmail || 'StencilFlow <noreply@stencilflow.com.br>'}`);
+  console.log(`   FROM_EMAIL: ${fromEmail || 'Black Line Pro <noreply@blacklinepro.com.br>'}`);
 
   // Verificar tabela de unsubscribes
   try {

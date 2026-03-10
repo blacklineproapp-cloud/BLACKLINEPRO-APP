@@ -141,7 +141,7 @@ export default function CpfCnpjInput({
           className={`w-full bg-zinc-800 border rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 transition-all ${
             showError || error
               ? 'border-red-500 focus:ring-red-500/50'
-              : 'border-zinc-700 focus:ring-emerald-500/50'
+              : 'border-zinc-700 focus:ring-indigo-500/50'
           }`}
         />
         

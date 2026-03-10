@@ -7,6 +7,7 @@ import {
   Clock, FileJson, Image as ImageIcon, RefreshCw, Calendar
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 
 interface UserLog {
   id: string;
@@ -152,13 +153,14 @@ export default function UserLogsPage() {
     <div className="min-h-screen bg-[#09090b] text-zinc-100 p-6">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-6">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => router.push('/admin/users')}
-          className="flex items-center gap-2 text-zinc-400 hover:text-white transition mb-4"
+          className="gap-2 mb-4"
         >
           <ArrowLeft size={20} />
           Voltar para Usuários
-        </button>
+        </Button>
 
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
@@ -178,14 +180,15 @@ export default function UserLogsPage() {
             </div>
           </div>
 
-          <button
+          <Button
+            variant="secondary"
             onClick={loadLogs}
             disabled={loading}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+            className="gap-2"
           >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             Atualizar
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -199,9 +202,9 @@ export default function UserLogsPage() {
           <div className="text-sm text-zinc-400 mb-1">Erros</div>
           <div className="text-2xl font-bold text-red-400">{data.stats.totalErrors}</div>
         </div>
-        <div className="bg-zinc-900 border border-emerald-800/30 rounded-lg p-4">
+        <div className="bg-zinc-900 border border-indigo-800/30 rounded-lg p-4">
           <div className="text-sm text-zinc-400 mb-1">Taxa de Sucesso</div>
-          <div className="text-2xl font-bold text-emerald-400">
+          <div className="text-2xl font-bold text-indigo-400">
             {data.stats.totalLogs > 0
               ? Math.round(((data.stats.totalLogs - data.stats.totalErrors) / data.stats.totalLogs) * 100)
               : 100}%
@@ -248,16 +251,16 @@ export default function UserLogsPage() {
             <option value="success">Apenas Sucessos</option>
           </select>
 
-          <button
+          <Button
+            variant="outline"
             onClick={() => {
               setFilterType('all');
               setFilterStatus('all');
               setPage(1);
             }}
-            className="bg-zinc-950 border border-zinc-700 hover:bg-zinc-800 rounded-lg px-4 py-2.5 text-sm transition font-medium"
           >
             Limpar Filtros
-          </button>
+          </Button>
         </div>
 
         <p className="text-sm text-zinc-500 mt-3">
@@ -351,13 +354,15 @@ export default function UserLogsPage() {
 
                   {/* Expand Button */}
                   {Object.keys(log.details || {}).length > 0 && (
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
-                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-xs font-medium transition flex items-center gap-1 flex-shrink-0"
+                      className="gap-1 flex-shrink-0"
                     >
                       {expandedLog === log.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       {expandedLog === log.id ? 'Ocultar' : 'Detalhes'}
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -403,20 +408,22 @@ export default function UserLogsPage() {
               Página {page} de {Math.ceil(data.pagination.total / limit)}
             </div>
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Anterior
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setPage(page + 1)}
                 disabled={!data.pagination.hasMore}
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Próxima
-              </button>
+              </Button>
             </div>
           </div>
         )}

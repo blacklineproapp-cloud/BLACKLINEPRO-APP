@@ -115,7 +115,7 @@ function SummaryRow({ label, value, loading, highlight, negative }: {
         <div className="h-4 w-20 bg-zinc-800 rounded animate-pulse" />
       ) : (
         <span className={`text-sm font-medium ${
-          negative ? 'text-red-400' : highlight ? 'text-emerald-400' : 'text-zinc-300'
+          negative ? 'text-red-400' : highlight ? 'text-indigo-400' : 'text-zinc-300'
         }`}>
           {value}
         </span>

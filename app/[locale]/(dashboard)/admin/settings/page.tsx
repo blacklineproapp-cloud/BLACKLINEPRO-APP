@@ -95,7 +95,7 @@ export default function SettingsPage() {
         {/* Mensagens de Feedback */}
         {message && (
           <div className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
-            message.type === 'success' ? 'bg-emerald-900/30 border border-emerald-800 text-emerald-400' : 
+            message.type === 'success' ? 'bg-indigo-900/30 border border-indigo-800 text-indigo-400' : 
             'bg-red-900/30 border border-red-800 text-red-400'
           }`}>
              {message.type === 'success' ? <Activity size={20} /> : <AlertTriangle size={20} />}
@@ -147,7 +147,7 @@ export default function SettingsPage() {
                     </div>
                     <button 
                       onClick={() => toggleSetting('enable_pix')}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.enable_pix ? 'bg-emerald-600' : 'bg-zinc-700'}`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.enable_pix ? 'bg-indigo-600' : 'bg-zinc-700'}`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.enable_pix ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>

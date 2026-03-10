@@ -263,7 +263,7 @@ Exemplos:
 ⚙️  CONFIGURAÇÃO (Cron Job Sugerido):
   Execute este script diariamente para manter o funil de remarketing ativo:
 
-  0 9 * * * cd /path/to/stencilflow-nextjs && npm run remarketing:auto
+  0 9 * * * cd /path/to/blacklinepro && npm run remarketing:auto
   (Todo dia às 9h da manhã)
     `);
     process.exit(0);

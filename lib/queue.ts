@@ -1,4 +1,7 @@
-import { Queue, Worker, Job, QueueEvents, ConnectionOptions } from 'bullmq';
+import { Queue, Worker, Job, QueueEvents } from 'bullmq';
+import { getRedisConnection } from './redis-utils';
+import { QUEUE_CONFIG, PAGINATION } from './constants/limits';
+import { DURATIONS } from './constants/timeouts';
 
 /**
  * Sistema de Filas com BullMQ + Redis
@@ -7,66 +10,7 @@ import { Queue, Worker, Job, QueueEvents, ConnectionOptions } from 'bullmq';
  * Permite escalar até 5K+ usuários simultâneos
  */
 
-// ============================================
-// CONFIGURAÇÃO DO REDIS
-// ============================================
-
-/**
- * Railway Redis Connection
- *
- * BullMQ precisa de Redis TCP (não REST API como Upstash)
- * Railway fornece REDIS_URL completa: redis://user:pass@host:port
- *
- * 🚀 MIGRAÇÃO: Upstash → Railway Redis
- * - Upstash cobrava US$ 12/mês
- * - Railway Redis é GRÁTIS
- * - BullMQ funciona com TCP nativo (melhor performance)
- *
- * Parser manual para evitar conflito de versões do ioredis
- */
-function parseRedisUrl(url: string): ConnectionOptions {
-  const urlObj = new URL(url);
-  const isTls = urlObj.protocol === 'rediss:';
-
-  return {
-    host: urlObj.hostname,
-    port: parseInt(urlObj.port) || 6379,
-    password: urlObj.password || undefined,
-    username: urlObj.username || undefined,
-    maxRetriesPerRequest: null, // BullMQ exige null
-    enableReadyCheck: false,
-    keepAlive: 30000, // Keep-alive a cada 30s
-    connectTimeout: 15000,
-    // Sem commandTimeout — BullMQ gerencia seus próprios timeouts internamente
-    tls: isTls ? {
-      rejectUnauthorized: false,
-    } : undefined,
-    retryStrategy: (times) => {
-      if (times > 20) {
-        console.error(`[BullMQ] Redis: ${times} tentativas falharam.`);
-        return null; // Parar de reconectar
-      }
-      const delay = Math.min(times * 100, 5000);
-      return delay;
-    },
-    reconnectOnError: (err: Error) => {
-      const targetErrors = ['READONLY', 'ECONNRESET', 'ETIMEDOUT', 'ECONNREFUSED'];
-      return targetErrors.some(e => err.message.includes(e));
-    },
-  };
-}
-
-const redisConnection: ConnectionOptions = process.env.REDIS_URL
-  ? parseRedisUrl(process.env.REDIS_URL)
-  : {
-      host: 'localhost',
-      port: 6379,
-      maxRetriesPerRequest: null,
-    };
-
-console.log('[BullMQ] Configurando filas com Railway Redis:',
-  process.env.REDIS_URL ? '✅ Conectado' : '⚠️ Usando localhost'
-);
+const redisConnection = getRedisConnection();
 
 // ============================================
 // TIPOS DE JOBS
@@ -103,77 +47,48 @@ export type JobData = StencilJobData | EnhanceJobData | IaGenJobData | ColorMatc
 // FILAS
 // ============================================
 
-/**
- * Fila de geração de stencils (topográfico, linhas)
- * Prioridade: ALTA (operação principal do app)
- */
+const SC = QUEUE_CONFIG.stencil;
+const EC = QUEUE_CONFIG.enhance;
+const IC = QUEUE_CONFIG.iaGen;
+const CC = QUEUE_CONFIG.colorMatch;
+
 export const stencilQueue = new Queue('stencil-generation', {
   connection: redisConnection,
   defaultJobOptions: {
-    attempts: 3, // Retry até 3 vezes
-    backoff: {
-      type: 'exponential',
-      delay: 2000, // 2s, 4s, 8s
-    },
-    removeOnComplete: {
-      count: 100, // Manter últimos 100 jobs completados
-      age: 24 * 3600, // Remover após 24h
-    },
-    removeOnFail: {
-      count: 50, // Manter últimos 50 jobs falhados
-      age: 7 * 24 * 3600, // Remover após 7 dias
-    },
+    attempts: SC.attempts,
+    backoff: { type: SC.backoffType, delay: SC.backoffDelay },
+    removeOnComplete: { count: SC.completedKeep, age: SC.completedAge },
+    removeOnFail: { count: SC.failedKeep, age: SC.failedAge },
   },
 });
 
-/**
- * Fila de enhance (upscale 4K)
- * Prioridade: MÉDIA
- */
 export const enhanceQueue = new Queue('enhance', {
   connection: redisConnection,
   defaultJobOptions: {
-    attempts: 2,
-    backoff: {
-      type: 'exponential',
-      delay: 3000,
-    },
-    removeOnComplete: { count: 50, age: 24 * 3600 },
-    removeOnFail: { count: 25, age: 7 * 24 * 3600 },
+    attempts: EC.attempts,
+    backoff: { type: EC.backoffType, delay: EC.backoffDelay },
+    removeOnComplete: { count: EC.completedKeep, age: EC.completedAge },
+    removeOnFail: { count: EC.failedKeep, age: EC.failedAge },
   },
 });
 
-/**
- * Fila de IA Gen (geração de ideias)
- * Prioridade: MÉDIA
- */
 export const iaGenQueue = new Queue('ia-gen', {
   connection: redisConnection,
   defaultJobOptions: {
-    attempts: 2,
-    backoff: {
-      type: 'exponential',
-      delay: 3000,
-    },
-    removeOnComplete: { count: 50, age: 24 * 3600 },
-    removeOnFail: { count: 25, age: 7 * 24 * 3600 },
+    attempts: IC.attempts,
+    backoff: { type: IC.backoffType, delay: IC.backoffDelay },
+    removeOnComplete: { count: IC.completedKeep, age: IC.completedAge },
+    removeOnFail: { count: IC.failedKeep, age: IC.failedAge },
   },
 });
 
-/**
- * Fila de color match (análise de cores)
- * Prioridade: BAIXA (rápido, não precisa de muita fila)
- */
 export const colorMatchQueue = new Queue('color-match', {
   connection: redisConnection,
   defaultJobOptions: {
-    attempts: 2,
-    backoff: {
-      type: 'fixed',
-      delay: 1000,
-    },
-    removeOnComplete: { count: 25, age: 12 * 3600 },
-    removeOnFail: { count: 10, age: 3 * 24 * 3600 },
+    attempts: CC.attempts,
+    backoff: { type: CC.backoffType, delay: CC.backoffDelay },
+    removeOnComplete: { count: CC.completedKeep, age: CC.completedAge },
+    removeOnFail: { count: CC.failedKeep, age: CC.failedAge },
   },
 });
 
@@ -197,9 +112,6 @@ export const iaGenQueueEvents = new QueueEvents('ia-gen', {
 // FUNÇÕES AUXILIARES
 // ============================================
 
-/**
- * Adiciona job de geração de stencil à fila
- */
 export async function addStencilJob(
   data: StencilJobData,
   priority?: number
@@ -208,7 +120,7 @@ export async function addStencilJob(
     'generate-stencil',
     data,
     {
-      priority: priority || 10, // Menor número = maior prioridade
+      priority: priority || SC.priority,
       jobId: `stencil-${data.userId}-${Date.now()}`,
     }
   );
@@ -216,9 +128,6 @@ export async function addStencilJob(
   return job as Job<StencilJobData>;
 }
 
-/**
- * Adiciona job de enhance à fila
- */
 export async function addEnhanceJob(data: EnhanceJobData): Promise<Job<EnhanceJobData>> {
   const job = await enhanceQueue.add('enhance-image', data, {
     jobId: `enhance-${data.userId}-${Date.now()}`,
@@ -227,9 +136,6 @@ export async function addEnhanceJob(data: EnhanceJobData): Promise<Job<EnhanceJo
   return job as Job<EnhanceJobData>;
 }
 
-/**
- * Adiciona job de IA Gen à fila
- */
 export async function addIaGenJob(data: IaGenJobData): Promise<Job<IaGenJobData>> {
   const job = await iaGenQueue.add('generate-idea', data, {
     jobId: `ia-gen-${data.userId}-${Date.now()}`,
@@ -238,9 +144,6 @@ export async function addIaGenJob(data: IaGenJobData): Promise<Job<IaGenJobData>
   return job as Job<IaGenJobData>;
 }
 
-/**
- * Obtém status de um job
- */
 export async function getJobStatus(
   queueName: 'stencil-generation' | 'enhance' | 'ia-gen' | 'color-match',
   jobId: string
@@ -296,9 +199,6 @@ export async function getJobStatus(
   };
 }
 
-/**
- * Obtém jobs de um usuário específico
- */
 export async function getUserJobs(
   userId: string,
   queueName: 'stencil-generation' | 'enhance' | 'ia-gen'
@@ -317,22 +217,16 @@ export async function getUserJobs(
       break;
   }
 
-  // Buscar jobs ativos, aguardando e completados recentes
   const [waiting, active, completed] = await Promise.all([
     queue.getWaiting(),
     queue.getActive(),
-    queue.getCompleted(0, 10), // Últimos 10 completados
+    queue.getCompleted(0, PAGINATION.RECENT_JOBS),
   ]);
 
   const allJobs = [...waiting, ...active, ...completed];
-
-  // Filtrar por userId
   return allJobs.filter((job) => (job.data as any).userId === userId);
 }
 
-/**
- * Estatísticas da fila
- */
 export async function getQueueStats(
   queueName: 'stencil-generation' | 'enhance' | 'ia-gen'
 ): Promise<{
@@ -367,17 +261,13 @@ export async function getQueueStats(
   };
 }
 
-/**
- * Limpa jobs antigos (executar via cron)
- */
 export async function cleanOldJobs(): Promise<void> {
   await Promise.all([
-    stencilQueue.clean(24 * 3600 * 1000, 100, 'completed'), // 24h
-    stencilQueue.clean(7 * 24 * 3600 * 1000, 50, 'failed'), // 7 dias
-    enhanceQueue.clean(24 * 3600 * 1000, 50, 'completed'),
-    iaGenQueue.clean(24 * 3600 * 1000, 50, 'completed'),
+    stencilQueue.clean(DURATIONS.DAY, SC.completedKeep, 'completed'),
+    stencilQueue.clean(DURATIONS.WEEK, SC.failedKeep, 'failed'),
+    enhanceQueue.clean(DURATIONS.DAY, EC.completedKeep, 'completed'),
+    iaGenQueue.clean(DURATIONS.DAY, IC.completedKeep, 'completed'),
   ]);
-
 }
 
 // ============================================

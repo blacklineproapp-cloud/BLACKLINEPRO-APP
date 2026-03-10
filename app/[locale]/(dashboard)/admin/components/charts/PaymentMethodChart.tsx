@@ -57,7 +57,7 @@ export function PaymentMethodChart({ data }: PaymentMethodChartProps) {
           }}
           formatter={(value: any) => [`R$ ${Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, 'Receita']}
         />
-        <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={50} />
+        <Bar dataKey="amount" fill="#6366F1" radius={[4, 4, 0, 0]} maxBarSize={50} />
       </BarChart>
     </ResponsiveContainer>
   );

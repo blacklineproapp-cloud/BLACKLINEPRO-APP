@@ -13,11 +13,11 @@ export default function AdminCheckoutPage() {
   const [loading, setLoading] = useState(true);
   
   const userId = params.userId as string;
-  const plan = params.plan as 'starter' | 'pro' | 'studio';
+  const plan = params.plan as 'ink' | 'pro' | 'studio';
 
   useEffect(() => {
     // Validar plano
-    if (!['starter', 'pro', 'studio'].includes(plan)) {
+    if (!['ink', 'pro', 'studio'].includes(plan)) {
       alert('Plano inválido');
       router.push('/dashboard');
       return;
@@ -66,7 +66,7 @@ export default function AdminCheckoutPage() {
       <div className="max-w-4xl mx-auto p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">
-            Ativar Assinatura StencilFlow
+            Ativar Assinatura Black Line Pro
           </h1>
           <p className="text-zinc-400">
             Complete o pagamento para ativar seu plano {plan.charAt(0).toUpperCase() + plan.slice(1)}

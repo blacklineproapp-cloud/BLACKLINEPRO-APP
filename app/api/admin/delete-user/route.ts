@@ -1,90 +1,77 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/auth';
-
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 
 /**
  * DELETE - Deletar usuário por ID
  * Query param: ?userId=xxx
  */
-export async function DELETE(req: Request) {
-  try {
-    const { userId } = await auth();
+export const DELETE = withAdminAuth(async (req, { userId }) => {
+  const url = new URL(req.url);
+  const userIdToDelete = url.searchParams.get('userId');
 
-    if (!userId || !await isAdmin(userId)) {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-    }
+  if (!userIdToDelete) {
+    return NextResponse.json(
+      { error: 'Forneça o userId como query param' },
+      { status: 400 }
+    );
+  }
 
-    const url = new URL(req.url);
-    const userIdToDelete = url.searchParams.get('userId');
+  logger.info('[Delete] Deletando usuário', { userIdToDelete });
 
-    if (!userIdToDelete) {
-      return NextResponse.json(
-        { error: 'Forneça o userId como query param' },
-        { status: 400 }
-      );
-    }
+  // Buscar usuário antes de deletar (para log)
+  const { data: user } = await supabaseAdmin
+    .from('users')
+    .select('email, clerk_id')
+    .eq('id', userIdToDelete)
+    .single();
 
-    console.log('[Delete] Deletando usuário:', userIdToDelete);
+  if (!user) {
+    return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
+  }
 
-    // Buscar usuário antes de deletar (para log)
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('email, clerk_id')
-      .eq('id', userIdToDelete)
-      .single();
+  // Buscar admin que está executando a ação
+  const { data: adminUser } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('clerk_id', userId)
+    .single();
 
-    if (!user) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
-    }
+  // Deletar
+  const { error } = await supabaseAdmin
+    .from('users')
+    .delete()
+    .eq('id', userIdToDelete);
 
-    // Buscar admin que está executando a ação
-    const { data: adminUser } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .eq('clerk_id', userId)
-      .single();
-
-    // Deletar
-    const { error } = await supabaseAdmin
-      .from('users')
-      .delete()
-      .eq('id', userIdToDelete);
-
-    if (error) {
-      console.error('[Delete] Erro:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // Registrar ação no log de admin (para auditoria)
-    if (adminUser?.id) {
-      await supabaseAdmin.from('admin_logs').insert({
-        admin_user_id: adminUser.id,
-        action: 'delete_user',
-        target_user_id: userIdToDelete,
-        details: { 
-          deleted_email: user.email,
-          deleted_clerk_id: user.clerk_id 
-        },
-      });
-    }
-
-    console.log('[Delete] ✅ Usuário deletado:', user.email);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Usuário deletado com sucesso',
-      deleted: {
-        id: userIdToDelete,
-        email: user.email,
-        clerk_id: user.clerk_id
-      }
-    });
-
-  } catch (error: any) {
-    console.error('[Delete] Erro:', error);
+  if (error) {
+    logger.error('[Delete] Erro ao deletar usuário', { error });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+
+  // Registrar ação no log de admin (para auditoria)
+  if (adminUser?.id) {
+    await supabaseAdmin.from('admin_logs').insert({
+      admin_user_id: adminUser.id,
+      action: 'delete_user',
+      target_user_id: userIdToDelete,
+      details: {
+        deleted_email: user.email,
+        deleted_clerk_id: user.clerk_id
+      },
+    });
+  }
+
+  logger.info('[Delete] Usuário deletado com sucesso', { email: user.email });
+
+  return NextResponse.json({
+    success: true,
+    message: 'Usuário deletado com sucesso',
+    deleted: {
+      id: userIdToDelete,
+      email: user.email,
+      clerk_id: user.clerk_id
+    }
+  });
+});

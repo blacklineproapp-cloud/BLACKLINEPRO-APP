@@ -1,23 +1,19 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 /**
  * ENDPOINT DE BOOTSTRAP - CRIAR PRIMEIRO ADMIN
  *
- * Este endpoint permite criar o primeiro admin do sistema.
- * Por segurança, ele só funciona se NÃO existir nenhum admin na tabela admin_users.
- *
- * Após criar o primeiro admin, este endpoint se auto-desabilita.
+ * Só funciona se NÃO existir nenhum admin na tabela admin_users.
+ * Usa withAuth (não withAdminAuth) pois no bootstrap ainda não há admin.
  */
 export async function POST(req: Request) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+  }
     // 1. Verificar se já existe algum admin
     const { data: existingAdmins, error: checkError } = await supabaseAdmin
       .from('admin_users')
@@ -25,7 +21,7 @@ export async function POST(req: Request) {
       .limit(1);
 
     if (checkError) {
-      console.error('Erro ao verificar admins existentes:', checkError);
+      logger.error('[Bootstrap] Erro ao verificar admins existentes', { error: checkError });
       return NextResponse.json(
         { error: 'Erro ao verificar admins existentes' },
         { status: 500 }
@@ -52,7 +48,7 @@ export async function POST(req: Request) {
       .single();
 
     if (userError || !user) {
-      console.error('Usuário não encontrado:', userError);
+      logger.error('[Bootstrap] Usuário não encontrado', { error: userError });
       return NextResponse.json(
         { error: 'Usuário não encontrado no sistema' },
         { status: 404 }
@@ -74,18 +70,14 @@ export async function POST(req: Request) {
       .single();
 
     if (insertError) {
-      console.error('Erro ao criar admin:', insertError);
+      logger.error('[Bootstrap] Erro ao criar admin', { error: insertError });
       return NextResponse.json(
         { error: 'Erro ao criar admin: ' + insertError.message },
         { status: 500 }
       );
     }
 
-    console.log('✅ PRIMEIRO ADMIN CRIADO:', {
-      email: user.email,
-      clerk_id: user.clerk_id,
-      role: 'superadmin'
-    });
+    logger.info('[Bootstrap] Primeiro admin criado', { email: user.email, clerkId: user.clerk_id, role: 'superadmin' });
 
     return NextResponse.json({
       success: true,
@@ -96,12 +88,4 @@ export async function POST(req: Request) {
         permanent: true
       }
     });
-
-  } catch (error: any) {
-    console.error('❌ Erro no bootstrap:', error);
-    return NextResponse.json(
-      { error: 'Erro no bootstrap: ' + error.message },
-      { status: 500 }
-    );
-  }
 }

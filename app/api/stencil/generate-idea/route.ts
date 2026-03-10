@@ -1,13 +1,34 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
+import { getOrCreateUser } from '@/lib/auth';
 import { generateTattooIdea } from '@/lib/gemini';
-import { supabaseAdmin } from '@/lib/supabase';
-import { checkAILimit, checkGenerateIdeaLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
-import { BRL_COST } from '@/lib/billing/costs';
+import { rateLimit } from '@/lib/ratelimit';
+import { checkPaidAccess } from '@/lib/billing/service';
+import { logger } from '@/lib/logger';
 
 export async function POST(req: Request) {
   try {
+    // ─── BYOK PATH: usuário traz sua própria chave Gemini ───────────────────
+    const userApiKey = req.headers.get('X-User-API-Key');
+    if (userApiKey) {
+      const ip = req.headers.get('cf-connecting-ip')
+        || req.headers.get('x-real-ip')
+        || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || 'unknown';
+      const { success: ipOk } = await rateLimit(`byok-ip:${ip}`, 100, 3600);
+      if (!ipOk) {
+        return NextResponse.json({
+          error: 'Too Many Requests',
+          message: 'Muitas gerações por hora. Aguarde antes de continuar.',
+        }, { status: 429 });
+      }
+      const { prompt, size, referenceImage } = await req.json();
+      if (!prompt) return NextResponse.json({ error: 'Prompt não fornecido' }, { status: 400 });
+      const tattooImage = await generateTattooIdea(prompt, size, referenceImage, userApiKey);
+      return NextResponse.json({ image: tattooImage });
+    }
+
+    // ─── AUTH PATH: fluxo padrão com Clerk ──────────────────────────────────
     const { userId } = await auth();
 
     if (!userId) {
@@ -20,46 +41,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    // 🔓 BYPASS PARA ADMINS
-    const userIsAdmin = await checkIsAdmin(userId);
-
-    if (!userIsAdmin) {
-      // Verificar se tem assinatura ativa
-      const hasFullAccess = (user.is_paid && user.subscription_status === 'active');
-
-      if (hasFullAccess) {
-        // ✅ VERIFICAR LIMITE DE USO DO PLANO
-        const limitCheck = await checkAILimit(user.id);
-        if (!limitCheck.allowed) {
-          const message = getLimitMessage('ai_request', limitCheck.limit, limitCheck.resetDate);
-          return NextResponse.json(
-            {
-              error: 'Limite atingido',
-              message,
-              remaining: limitCheck.remaining,
-              limit: limitCheck.limit,
-              resetDate: limitCheck.resetDate,
-              requiresSubscription: true,
-              subscriptionType: 'subscription',
-            },
-            { status: 429 }
-          );
-        }
-      } else {
-        // 🎁 MODO TRIAL: Usuários Free
-        const trialCheck = await checkGenerateIdeaLimit(user.id);
-        
-        if (!trialCheck.allowed) {
-          const message = 'A criação de artes com IA é exclusiva para assinantes. Comece a criar designs incríveis agora!';
-          return NextResponse.json({
-            error: 'Acesso negado',
-            message,
-            requiresSubscription: true,
-            subscriptionType: 'subscription'
-          }, { status: 403 });
-        }
-      }
-    }
+    // 🔓 BILLING: Admin bypass + check assinatura paga
+    const billing = await checkPaidAccess({
+      userId,
+      user,
+      featureName: 'generate_idea',
+      deniedMessage: 'A criação de artes com IA é exclusiva para assinantes. Comece a criar designs incríveis agora!',
+      usageType: 'ai_request',
+      operationType: 'ia_gen',
+    });
+    if (billing.denied) return billing.response!;
 
     const { prompt, size, referenceImage } = await req.json();
 
@@ -67,33 +58,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Prompt não fornecido' }, { status: 400 });
     }
 
-    // Gerar ideia (com ou sem imagem de referência)
     const tattooImage = await generateTattooIdea(prompt, size, referenceImage);
 
-    // Registrar uso após geração bem-sucedida
-    try {
-      await recordUsage({
-        userId: user.id,
-        type: 'ai_request',
-        operationType: 'generate_idea',
-        cost: BRL_COST.ia_gen,
-        metadata: {
-          tool: 'generate_idea',
-          operation: 'generate_idea',
-          prompt,
-          size,
-          is_admin: userIsAdmin,
-          // 🚀 OTIMIZAÇÃO: Não salvamos mais o base64 no banco de dados
-          // Isso evita o uso excessivo de disco. A imagem já é enviada no return.
-        }
-      });
-    } catch (e) {
-      console.warn('Erro ao registrar uso de IA:', e);
-    }
+    // ✅ REGISTRAR USO após operação bem-sucedida
+    await billing.recordUsage({ prompt, size });
 
     return NextResponse.json({ image: tattooImage });
   } catch (error: any) {
-    console.error('Erro ao gerar ideia:', error);
+    logger.error('[GenerateIdea] Erro ao gerar ideia', { error });
     return NextResponse.json(
       { error: error.message || 'Erro ao gerar ideia' },
       { status: 500 }

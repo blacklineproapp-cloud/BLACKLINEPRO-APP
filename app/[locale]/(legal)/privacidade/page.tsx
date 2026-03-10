@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 import { Link } from '@/i18n/routing';
 
 export const metadata: Metadata = {
-  title: 'Política de Privacidade - StencilFlow',
-  description: 'Política de Privacidade do StencilFlow - Como coletamos, usamos e protegemos seus dados pessoais.',
+  title: 'Política de Privacidade - Black Line Pro',
+  description: 'Política de Privacidade do Black Line Pro - Como coletamos, usamos e protegemos seus dados pessoais.',
 };
 
 export default function PrivacidadePage() {
   return (
-    <div className="prose prose-invert prose-emerald max-w-none">
+    <div className="prose prose-invert prose-indigo max-w-none">
       <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
         Política de Privacidade
       </h1>
@@ -20,11 +20,11 @@ export default function PrivacidadePage() {
         {/* Introdução */}
         <section>
           <p className="text-base leading-relaxed">
-            A <strong className="text-white">StencilFlow</strong> ("nós", "nosso" ou "nossa") está comprometida em proteger sua privacidade. 
+            A <strong className="text-white">Black Line Pro</strong> ("nós", "nosso" ou "nossa") está comprometida em proteger sua privacidade. 
             Esta Política de Privacidade explica como coletamos, usamos, divulgamos e protegemos suas informações pessoais quando você usa nossa plataforma.
           </p>
           <p className="text-base leading-relaxed mt-4">
-            Ao usar o StencilFlow, você concorda com a coleta e uso de informações de acordo com esta política.
+            Ao usar o Black Line Pro, você concorda com a coleta e uso de informações de acordo com esta política.
           </p>
         </section>
 
@@ -32,7 +32,7 @@ export default function PrivacidadePage() {
         <section>
           <h2 className="text-2xl font-bold text-white mt-8 mb-4">1. Dados Coletados</h2>
           
-          <h3 className="text-xl font-semibold text-emerald-400 mt-6 mb-3">1.1. Dados Fornecidos por Você</h3>
+          <h3 className="text-xl font-semibold text-indigo-400 mt-6 mb-3">1.1. Dados Fornecidos por Você</h3>
           <ul className="list-disc list-inside space-y-2 ml-4">
             <li><strong>Informações de Conta:</strong> Nome, email, senha (criptografada)</li>
             <li><strong>Informações de Pagamento:</strong> Processadas via Stripe (não armazenamos dados de cartão)</li>
@@ -40,7 +40,7 @@ export default function PrivacidadePage() {
             <li><strong>Comunicações:</strong> Mensagens de suporte, feedback</li>
           </ul>
 
-          <h3 className="text-xl font-semibold text-emerald-400 mt-6 mb-3">1.2. Dados Coletados Automaticamente</h3>
+          <h3 className="text-xl font-semibold text-indigo-400 mt-6 mb-3">1.2. Dados Coletados Automaticamente</h3>
           <ul className="list-disc list-inside space-y-2 ml-4">
             <li><strong>Dados de Uso:</strong> Páginas visitadas, recursos utilizados, tempo de sessão</li>
             <li><strong>Dados Técnicos:</strong> Endereço IP, tipo de navegador, sistema operacional, dispositivo</li>
@@ -68,7 +68,7 @@ export default function PrivacidadePage() {
           <h2 className="text-2xl font-bold text-white mt-8 mb-4">3. Compartilhamento de Dados</h2>
           <p className="mb-4">Compartilhamos seus dados apenas com:</p>
           
-          <h3 className="text-xl font-semibold text-emerald-400 mt-6 mb-3">3.1. Provedores de Serviço</h3>
+          <h3 className="text-xl font-semibold text-indigo-400 mt-6 mb-3">3.1. Provedores de Serviço</h3>
           <ul className="list-disc list-inside space-y-2 ml-4">
             <li><strong>Clerk:</strong> Autenticação e gerenciamento de usuários</li>
             <li><strong>Stripe:</strong> Processamento de pagamentos</li>
@@ -78,11 +78,11 @@ export default function PrivacidadePage() {
             <li><strong>Railway:</strong> Infraestrutura e cache (Redis)</li>
           </ul>
 
-          <h3 className="text-xl font-semibold text-emerald-400 mt-6 mb-3">3.2. Requisitos Legais</h3>
+          <h3 className="text-xl font-semibold text-indigo-400 mt-6 mb-3">3.2. Requisitos Legais</h3>
           <p>Podemos divulgar seus dados se exigido por lei ou para:</p>
           <ul className="list-disc list-inside space-y-2 ml-4">
             <li>Cumprir obrigações legais</li>
-            <li>Proteger direitos e segurança da StencilFlow</li>
+            <li>Proteger direitos e segurança da Black Line Pro</li>
             <li>Prevenir fraudes ou investigar violações</li>
           </ul>
 
@@ -105,9 +105,9 @@ export default function PrivacidadePage() {
             <li><strong>Informação:</strong> Saber com quem compartilhamos seus dados</li>
           </ul>
 
-          <p className="mt-6 bg-emerald-900/20 p-4 rounded-lg border border-emerald-800">
-            <strong className="text-emerald-400">Como exercer seus direitos:</strong><br />
-            Entre em contato conosco através do email: <a href="mailto:privacidade@stencilflow.com.br" className="text-emerald-400 hover:underline">privacidade@stencilflow.com.br</a>
+          <p className="mt-6 bg-indigo-900/20 p-4 rounded-lg border border-indigo-800">
+            <strong className="text-indigo-400">Como exercer seus direitos:</strong><br />
+            Entre em contato conosco através do email: <a href="mailto:privacidade@blacklinepro.com.br" className="text-indigo-400 hover:underline">privacidade@blacklinepro.com.br</a>
           </p>
         </section>
 
@@ -149,7 +149,7 @@ export default function PrivacidadePage() {
           </ul>
           <p className="mt-4">
             Você pode gerenciar cookies nas configurações do seu navegador. 
-            Consulte nossa <Link href="/cookies" className="text-emerald-400 hover:underline">Política de Cookies</Link> para mais detalhes.
+            Consulte nossa <Link href="/cookies" className="text-indigo-400 hover:underline">Política de Cookies</Link> para mais detalhes.
           </p>
         </section>
 
@@ -171,7 +171,7 @@ export default function PrivacidadePage() {
         <section>
           <h2 className="text-2xl font-bold text-white mt-8 mb-4">9. Menores de Idade</h2>
           <p>
-            O StencilFlow não é destinado a menores de 18 anos. Não coletamos intencionalmente dados de menores. 
+            O Black Line Pro não é destinado a menores de 18 anos. Não coletamos intencionalmente dados de menores. 
             Se você é pai/mãe ou responsável e acredita que seu filho forneceu dados, entre em contato conosco para remoção.
           </p>
         </section>
@@ -193,8 +193,8 @@ export default function PrivacidadePage() {
           <h2 className="text-2xl font-bold text-white mt-8 mb-4">11. Contato</h2>
           <p className="mb-4">Para questões sobre esta Política de Privacidade ou exercer seus direitos, entre em contato:</p>
           <div className="bg-zinc-800/50 p-6 rounded-lg border border-zinc-700">
-            <p><strong className="text-white">Email:</strong> <a href="mailto:contato@stencilflow.com.br" className="text-emerald-400 hover:underline">contato@stencilflow.com.br</a></p>
-            <p className="mt-2"><strong className="text-white">Suporte Geral:</strong> <a href="mailto:contato@stencilflow.com.br" className="text-emerald-400 hover:underline">contato@stencilflow.com.br</a></p>
+            <p><strong className="text-white">Email:</strong> <a href="mailto:contato@blacklinepro.com.br" className="text-indigo-400 hover:underline">contato@blacklinepro.com.br</a></p>
+            <p className="mt-2"><strong className="text-white">Suporte Geral:</strong> <a href="mailto:contato@blacklinepro.com.br" className="text-indigo-400 hover:underline">contato@blacklinepro.com.br</a></p>
             <p className="mt-4 text-sm text-zinc-500">Responderemos sua solicitação em até 15 dias úteis.</p>
           </div>
         </section>

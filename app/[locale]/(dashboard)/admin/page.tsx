@@ -7,6 +7,7 @@ import {
   AlertTriangle, Sparkles, Clock, Eye, Zap
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 import SentryAlertsDashboard from './components/SentryAlertsDashboard';
 import { StatCard } from './components/ui/StatCard';
 import { ChartCard } from './components/ui/ChartCard';
@@ -102,12 +103,13 @@ export default function AdminPage() {
         <div className="text-center">
           <AlertTriangle size={48} className="text-red-500 mx-auto mb-4" />
           <p className="text-red-400 text-lg">{error}</p>
-          <button
+          <Button
+            variant="secondary"
             onClick={() => window.location.reload()}
-            className="mt-4 px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg"
+            className="mt-4"
           >
             Tentar Novamente
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -144,12 +146,13 @@ export default function AdminPage() {
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
               <span className="text-xs text-zinc-400">Live</span>
             </div>
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={loadMetrics}
-              className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition"
             >
               <RefreshCw size={18} className="text-zinc-400" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -266,7 +269,7 @@ export default function AdminPage() {
                     );
                   })}
                 </div>
-                <div className="flex justify-between text-[10px] text-zinc-600 mt-1">
+                <div className="flex justify-between text-[10px] text-zinc-400 mt-1">
                   <span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span>
                 </div>
 
@@ -300,7 +303,7 @@ export default function AdminPage() {
                   <AlertItem
                     label="Receita Total (Asaas + Stripe)"
                     value={formatBRL(metrics.revenue.total)}
-                    color="emerald"
+                    color="indigo"
                   />
                   <AlertItem
                     label="Receita Stripe (histórico)"
@@ -310,12 +313,12 @@ export default function AdminPage() {
                   <AlertItem
                     label="Receita Asaas (real)"
                     value={formatBRL(metrics.revenue.asaasReal)}
-                    color="emerald"
+                    color="indigo"
                   />
                   <AlertItem
                     label="Receita este mês"
                     value={formatBRL(metrics.revenue.thisMonth)}
-                    color="emerald"
+                    color="indigo"
                   />
                   <AlertItem
                     label="Usuários bloqueados"
@@ -342,7 +345,7 @@ export default function AdminPage() {
 
 function AlertItem({ label, value, color }: { label: string; value: string; color: string }) {
   const colorClasses: Record<string, string> = {
-    emerald: 'text-emerald-400',
+    indigo: 'text-indigo-400',
     blue: 'text-blue-400',
     red: 'text-red-400',
     amber: 'text-amber-400',

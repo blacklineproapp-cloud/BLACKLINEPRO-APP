@@ -15,7 +15,7 @@ interface PlanDistributionChartProps {
 const PLAN_COLORS: Record<string, string> = {
   Free: '#71717a',
   Starter: '#3b82f6',
-  Pro: '#10b981',
+  Pro: '#6366F1',
   Studio: '#a855f7',
   Enterprise: '#f43f5e',
 };

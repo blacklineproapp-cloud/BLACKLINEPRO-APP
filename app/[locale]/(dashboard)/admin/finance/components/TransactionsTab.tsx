@@ -76,8 +76,8 @@ export function TransactionsTab() {
 
   const getStatusBadge = (status: string) => {
     const map: Record<string, { bg: string; icon: typeof CheckCircle }> = {
-      succeeded: { bg: 'bg-emerald-900/20 text-emerald-400 border-emerald-800/30', icon: CheckCircle },
-      paid: { bg: 'bg-emerald-900/20 text-emerald-400 border-emerald-800/30', icon: CheckCircle },
+      succeeded: { bg: 'bg-indigo-900/20 text-indigo-400 border-indigo-800/30', icon: CheckCircle },
+      paid: { bg: 'bg-indigo-900/20 text-indigo-400 border-indigo-800/30', icon: CheckCircle },
       pending: { bg: 'bg-amber-900/20 text-amber-400 border-amber-800/30', icon: Clock },
       processing: { bg: 'bg-amber-900/20 text-amber-400 border-amber-800/30', icon: Clock },
       failed: { bg: 'bg-red-900/20 text-red-400 border-red-800/30', icon: XCircle },

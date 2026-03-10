@@ -32,9 +32,10 @@ export type {
 
 export { PLAN_FEATURES } from './types';
 
-// Limits
+// Limits & Access
 export {
   PLAN_LIMITS,
+  checkAccess,
   checkEditorLimit,
   checkAILimit,
   checkToolsLimit,
@@ -50,3 +51,14 @@ export type {
   LimitCheckResult,
   RecordUsageParams
 } from './limits';
+
+// Service (unified billing access checks)
+export {
+  checkToolAccess,
+  checkPaidAccess
+} from './service';
+
+export type {
+  ToolAccessParams,
+  ToolAccessResult
+} from './service';

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 /**
  * API Route: Unsubscribe de Emails de Marketing
@@ -31,11 +32,11 @@ export async function POST(req: Request) {
 
     // Ignora erro de duplicata (email já está na lista)
     if (error && error.code !== '23505') {
-      console.error('[Unsubscribe] Erro ao inserir:', error);
+      logger.error('[Unsubscribe] Erro ao inserir', { error });
       throw error;
     }
 
-    console.log(`[Unsubscribe] Email adicionado à lista: ${email}`);
+    logger.info('[Unsubscribe] Email adicionado à lista', { email });
 
     return NextResponse.json({ 
       success: true,
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error('[Unsubscribe] Erro:', error);
+    logger.error('[Unsubscribe] Erro ao processar cancelamento', { error });
     return NextResponse.json(
       { error: 'Erro ao processar cancelamento' },
       { status: 500 }
@@ -77,7 +78,7 @@ export async function GET(req: Request) {
     });
 
   } catch (error: any) {
-    console.error('[Unsubscribe GET] Erro:', error);
+    logger.error('[Unsubscribe GET] Erro ao verificar status', { error });
     return NextResponse.json(
       { error: 'Erro ao verificar status' },
       { status: 500 }

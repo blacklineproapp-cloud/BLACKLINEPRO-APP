@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { logger } from './logger';
 
 // Reutilizar a string de conexão do ambiente (mesma do Queue Worker)
 // Railway fornece REDIS_URL
@@ -14,7 +15,7 @@ const redis = new Redis(redisUrl, {
 
 redis.on('error', (err) => {
   // Silenciar erros de conexão para não derrubar a aplicação
-  console.warn('[RateLimit] Redis error:', err.message);
+  logger.warn('[RateLimit] Redis error', { error: err.message });
 });
 
 export interface RateLimitResult {
@@ -74,7 +75,7 @@ export async function rateLimit(
     };
 
   } catch (error) {
-    console.error('[RateLimit] Erro ao verificar limite:', error);
+    logger.error('[RateLimit] Erro ao verificar limite', error);
     // Fail safe: Se o Redis cair, liberamos o tráfego para não parar o app
     return { success: true, limit, remaining: 1, reset: 0 };
   }

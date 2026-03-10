@@ -20,7 +20,7 @@ async function simulateRealPayment() {
 
   console.log('\n📝 Criando usuário de teste...');
   
-  const testEmail = `real_payment_${Date.now()}@stencilflow.com`;
+  const testEmail = `real_payment_${Date.now()}@blacklinepro.com`;
   const testClerkId = `real_clerk_${Date.now()}`;
   
   // 1. Criar usuário no banco

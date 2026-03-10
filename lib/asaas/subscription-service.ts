@@ -17,6 +17,7 @@ import type {
   CreditCardHolderInfo,
 } from './types';
 import { BILLING_CYCLE_MAP, ASAAS_PLANS } from './types';
+import { logger } from '../logger';
 
 export class AsaasSubscriptionService {
   /**
@@ -25,7 +26,7 @@ export class AsaasSubscriptionService {
   static async create(params: CreateSubscriptionParams): Promise<AsaasSubscription> {
     const subscription = await asaasPost<AsaasSubscription>('/subscriptions', params);
 
-    console.log(`[AsaasSubscription] Assinatura criada: ${subscription.id} - ${subscription.billingType}`);
+    logger.info('[AsaasSubscription] Assinatura criada', { subscriptionId: subscription.id, billingType: subscription.billingType });
 
     return subscription;
   }
@@ -84,7 +85,7 @@ export class AsaasSubscriptionService {
       params
     );
 
-    console.log(`[AsaasSubscription] Assinatura atualizada: ${subscription.id}`);
+    logger.info('[AsaasSubscription] Assinatura atualizada', { subscriptionId: subscription.id });
 
     return subscription;
   }
@@ -97,7 +98,7 @@ export class AsaasSubscriptionService {
       `/subscriptions/${subscriptionId}`
     );
 
-    console.log(`[AsaasSubscription] Assinatura cancelada: ${subscriptionId}`);
+    logger.info('[AsaasSubscription] Assinatura cancelada', { subscriptionId });
 
     return subscription;
   }
@@ -158,7 +159,7 @@ export class AsaasSubscriptionService {
       value,
       nextDueDate: getDueDate(0), // Vence hoje (gera boleto imediatamente)
       cycle: asaasCycle,
-      description: `StencilFlow ${planConfig.name} - ${cycle}`,
+      description: `Black Line Pro ${planConfig.name} - ${cycle}`,
       externalReference,
     });
   }
@@ -188,7 +189,7 @@ export class AsaasSubscriptionService {
       value,
       nextDueDate: getDueDate(0), // Vence hoje
       cycle: asaasCycle,
-      description: `StencilFlow ${planConfig.name} - ${cycle}`,
+      description: `Black Line Pro ${planConfig.name} - ${cycle}`,
       externalReference,
     });
   }
@@ -220,7 +221,7 @@ export class AsaasSubscriptionService {
       value,
       nextDueDate: getDueDate(0), // Cobra imediatamente
       cycle: asaasCycle,
-      description: `StencilFlow ${planConfig.name} - ${cycle}`,
+      description: `Black Line Pro ${planConfig.name} - ${cycle}`,
       externalReference,
       creditCard,
       creditCardHolderInfo,
@@ -253,7 +254,7 @@ export class AsaasSubscriptionService {
       value,
       nextDueDate: getDueDate(0),
       cycle: asaasCycle,
-      description: `StencilFlow ${planConfig.name} - ${cycle}`,
+      description: `Black Line Pro ${planConfig.name} - ${cycle}`,
       externalReference,
       creditCardToken,
     });
@@ -284,7 +285,7 @@ export class AsaasSubscriptionService {
       value,
       nextDueDate: getDueDate(3), // 3 dias para pagar
       cycle: asaasCycle,
-      description: `StencilFlow ${planConfig.name} - ${cycle}`,
+      description: `Black Line Pro ${planConfig.name} - ${cycle}`,
       externalReference,
     });
   }
@@ -335,7 +336,7 @@ export class AsaasSubscriptionService {
       // Não ativar is_paid ainda - aguardar confirmação de pagamento
     }).eq('id', userId);
 
-    console.log(`[AsaasSubscription] Assinatura salva no banco: ${subscription.id}`);
+    logger.info('[AsaasSubscription] Assinatura salva no banco', { subscriptionId: subscription.id });
   }
 
   /**
@@ -344,7 +345,7 @@ export class AsaasSubscriptionService {
   static async syncFromAsaas(subscriptionId: string): Promise<void> {
     const subscription = await this.getById(subscriptionId);
     if (!subscription) {
-      console.warn(`[AsaasSubscription] Assinatura não encontrada: ${subscriptionId}`);
+      logger.warn('[AsaasSubscription] Assinatura não encontrada', { subscriptionId });
       return;
     }
 
@@ -356,7 +357,7 @@ export class AsaasSubscriptionService {
       .single();
 
     if (!dbCustomer) {
-      console.warn(`[AsaasSubscription] Customer não encontrado no banco: ${subscription.customer}`);
+      logger.warn('[AsaasSubscription] Customer não encontrado no banco', { asaasCustomerId: subscription.customer });
       return;
     }
 
@@ -383,13 +384,13 @@ export class AsaasSubscriptionService {
       is_paid: isActive,
     }).eq('asaas_subscription_id', subscription.id);
 
-    console.log(`[AsaasSubscription] Sincronizado: ${subscription.id} - Status: ${subscription.status}`);
+    logger.info('[AsaasSubscription] Sincronizado', { subscriptionId: subscription.id, status: subscription.status });
   }
 
   /**
    * Busca assinatura do banco por user_id
    */
-  static async getDbSubscriptionByUserId(userId: string): Promise<any | null> {
+  static async getDbSubscriptionByUserId(userId: string): Promise<Record<string, unknown> | null> {
     const { data } = await supabaseAdmin
       .from('users')
       .select('asaas_subscription_id')

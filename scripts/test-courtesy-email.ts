@@ -63,13 +63,13 @@ async function testCourtesyEmail() {
 
     // 2. Obter Price ID do Stripe
     console.log('\n2️⃣ Obtendo Price ID do Stripe...');
-    if (!['starter', 'pro', 'studio'].includes(user.plan)) {
+    if (!['ink', 'pro', 'studio'].includes(user.plan)) {
       console.error('❌ Plano inválido:', user.plan);
       return;
     }
 
     const priceId = getPriceIdFromPlan(
-      user.plan as 'starter' | 'pro' | 'studio',
+      user.plan as 'ink' | 'pro' | 'studio',
       'monthly'
     );
     console.log('✅ Price ID:', priceId);
@@ -80,7 +80,7 @@ async function testCourtesyEmail() {
       userEmail: user.email,
       userName: user.name || user.email,
       priceId,
-      planType: user.plan as 'starter' | 'pro' | 'studio',
+      planType: user.plan as 'ink' | 'pro' | 'studio',
       adminId: user.id, // Usando próprio ID como admin (teste)
       clerkId: user.clerk_id
     });

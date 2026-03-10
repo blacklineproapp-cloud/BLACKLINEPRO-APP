@@ -8,6 +8,7 @@
  */
 
 import { supabaseAdmin } from '../supabase';
+import { logger } from '../logger';
 import type { PlanType } from '../billing/types';
 
 // ============================================================================
@@ -59,7 +60,7 @@ export async function activateUserAtomic(
   }
 ): Promise<ActivateUserResult> {
   const isCourtesy = options.isCourtesy !== false && (!!options.courtesyDurationDays || options.isCourtesy === true);
-  console.log(`[UserActivation] 🔐 Ativando usuário ${userId} → ${newPlan} (ATOMIC) | Cortesia: ${isCourtesy}`);
+  logger.info('[UserActivation] Ativando usuário (ATOMIC)', { userId, newPlan, isCourtesy });
 
   // 1. Executar RPC Atômica (Plano, Pagamento, Limites)
   const { data, error } = await supabaseAdmin
@@ -73,7 +74,7 @@ export async function activateUserAtomic(
     });
 
   if (error) {
-    console.error('[UserActivation] ❌ Erro na ativação atômica:', error);
+    logger.error('[UserActivation] Erro na ativação atômica', error);
     throw error;
   }
 
@@ -112,13 +113,13 @@ export async function activateUserAtomic(
            .eq('id', userId);
 
        if (!courtesyError) {
-         console.log(`[UserActivation] 🎁 Campos de cortesia atualizados:`, courtesyUpdates);
+         logger.info('[UserActivation] Campos de cortesia atualizados', courtesyUpdates);
          lastError = null;
          break;
        }
 
        lastError = courtesyError;
-       console.warn(`[UserActivation] ⚠️ Tentativa ${attempt}/3 falhou ao atualizar cortesia:`, courtesyError.message);
+       logger.warn('[UserActivation] Tentativa falhou ao atualizar cortesia', { attempt, maxAttempts: 3, error: courtesyError.message });
 
        if (attempt < 3) {
          await new Promise(resolve => setTimeout(resolve, 100 * attempt)); // Backoff simples
@@ -127,7 +128,7 @@ export async function activateUserAtomic(
 
      if (lastError) {
        // Log crítico mas não falha a operação principal (plano já foi ativado)
-       console.error(`[UserActivation] ❌ CRÍTICO: Falha ao atualizar campos de cortesia após 3 tentativas. Usuário ${userId} pode precisar de correção manual.`);
+       logger.error('[UserActivation] CRÍTICO: Falha ao atualizar campos de cortesia após 3 tentativas', lastError, { userId });
      }
   }
 
@@ -146,7 +147,7 @@ export async function activateUserAtomic(
       const sub = await AsaasSubscriptionService.getById(userData.asaas_subscription_id);
       
       if (sub && sub.status === 'ACTIVE') {
-        console.log(`[UserActivation] 🔄 Sincronizando mudança de plano com Asaas: ${sub.id}`);
+        logger.info('[UserActivation] Sincronizando mudança de plano com Asaas', { subscriptionId: sub.id });
         
         const cycleKeyMap: Record<string, string> = {
           'MONTHLY': 'monthly',
@@ -166,16 +167,16 @@ export async function activateUserAtomic(
               value: newValue,
               description: `Alteração de plano via Painel Admin: ${newPlan.toUpperCase()}`
             });
-            console.log(`[UserActivation] ✅ Asaas atualizado: ${newPlan} (${cycleKey}) -> R$ ${newValue}`);
+            logger.info('[UserActivation] Asaas atualizado', { newPlan, cycleKey, newValue });
           }
         }
       }
     }
   } catch (syncError: any) {
-    console.warn(`[UserActivation] ⚠️ Falha na sincronização Asaas:`, syncError.message);
+    logger.warn('[UserActivation] Falha na sincronização Asaas', { error: syncError.message });
   }
 
-  console.log(`[UserActivation] ✅ ${result.message}`);
+  logger.info('[UserActivation] Ativação concluída', { message: result.message });
 
   return result;
 }
@@ -200,16 +201,16 @@ export async function resetMonthlyUsageIfNeeded(
   userId: string,
   currentPlan: string | null
 ): Promise<void> {
-  console.warn('[UserActivation] ⚠️ Usando função LEGACY - considere migrar para activateUserAtomic()');
+  logger.warn('[UserActivation] Usando função LEGACY - considere migrar para activateUserAtomic()');
 
   const wasBlocked = !currentPlan || currentPlan === 'free';
 
   if (!wasBlocked) {
-    console.log('[UserActivation] 📊 Usuário já tinha plano pago - histórico preservado');
+    logger.info('[UserActivation] Usuário já tinha plano pago - histórico preservado');
     return;
   }
 
-  console.log('[UserActivation] 🔄 Resetando uso mensal (estava bloqueado)');
+  logger.info('[UserActivation] Resetando uso mensal (estava bloqueado)');
 
   const now = new Date();
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -221,11 +222,11 @@ export async function resetMonthlyUsageIfNeeded(
     .gte('created_at', firstDayOfMonth.toISOString());
 
   if (error) {
-    console.error('[UserActivation] ❌ Erro ao resetar uso:', error);
+    logger.error('[UserActivation] Erro ao resetar uso', error);
     throw error;
   }
 
-  console.log(`[UserActivation] ✅ Resetado: ${count || 0} registros removidos`);
+  logger.info('[UserActivation] Resetado', { deletedRecords: count || 0 });
 }
 
 /**
@@ -256,5 +257,5 @@ export async function verifyPlanUpdate(
     );
   }
 
-  console.log('[UserActivation] ✅ Plano verificado:', user.plan);
+  logger.info('[UserActivation] Plano verificado', { plan: user.plan });
 }

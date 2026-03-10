@@ -39,7 +39,7 @@
       "size": "Ajustement de Taille",
       "saveProjects": "Sauvegarder Projets",
       "downloadHQ": "Téléchargement Haute Qualité",
-      "everythingStarter": "Tout du Starter",
+      "everythingStarter": "Tout du Ink",
       "aiGen": "Génération IA",
       "upscale": "Amélioration 4K",
       "colorMatch": "Color Match",
@@ -65,14 +65,15 @@
   },
   "landing": {
     "hero": {
-      "badge": "Technologie Stencil Flow et Précision",
+      "badge": "Générations illimitées • 100% gratuit",
       "title": "L'Art du",
       "titleHighlight": "Pochoir.",
       "subtitle": "Donnez vie à vos idées avec la technologie la plus avancée du marché. Des lignes fines aux ombrages complexes.",
       "cta": {
         "primary": "S'INSCRIRE",
         "secondary": "TARIFS",
-        "dashboard": "ALLER AU TABLEAU DE BORD"
+        "dashboard": "ALLER AU TABLEAU DE BORD",
+        "tryFree": "ESSAYER GRATUITEMENT"
       },
       "features": {
         "fidelity": {
@@ -80,7 +81,7 @@
           "sub": "Lignes Nettes"
         },
         "technology": {
-          "label": "Stencil Flow",
+          "label": "Black Line Pro",
           "sub": "Technologie Propriétaire"
         },
         "ready": {
@@ -88,6 +89,7 @@
           "sub": "Imprimez instantanément"
         }
       },
+      "dragToCompare": "Glissez pour comparer",
       "socialProof": "+2.500 artistes utilisant aujourd'hui",
       "tabs": {
         "editor": {
@@ -95,7 +97,7 @@
           "description": "Contrôle total sur chaque détail de votre stencil."
         },
         "generator": {
-          "title": "Générateur StencilFlow",
+          "title": "Générateur Black Line Pro",
           "description": "Créez des designs exclusifs à partir de vos idées."
         },
         "topographic": {
@@ -130,7 +132,7 @@
         "title": "Créez des Designs de Tatouage à Partir de Zéro",
         "description": "Décrivez votre idée en mots et notre technologie avancée crée le design. Parfait quand le client a l'idée mais pas l'image.",
         "items": [
-          "Technologie Stencil Flow avancée",
+          "Technologie Black Line Pro avancée",
           "Descriptions intelligentes",
           "Plusieurs variations",
           "Sortie de haute qualité",
@@ -201,17 +203,18 @@
         "after": "Après",
         "original": "Original",
         "topographic": "Topographique",
-        "lines": "Lignes"
+        "lines": "Lignes",
+        "dragToCompare": "Glissez pour comparer"
       }
     },
     "comparison": {
-      "title": "Pourquoi StencilFlow ?",
+      "title": "Pourquoi Black Line Pro ?",
       "subtitle": "Comparez et voyez la différence",
       "feature": "Fonctionnalité",
       "full": "Complet",
       "basic": "Basique",
       "limited": "Limité",
-      "priceStarting": "À partir de 10 €",
+      "priceStarting": "À partir de R$ 29",
       "updateInfo": "Données mises à jour en décembre 2024. Les prix peuvent varier.",
       "features": {
         "editor": "Éditeur de Stencil",
@@ -227,44 +230,90 @@
       }
     },
     "howItWorks": {
+      "badge": "Modèle BYOK — Votre clé, vos générations",
       "title": "Comment ça marche",
-      "subtitle": "Simple, rapide et professionnel",
+      "subtitle": "Utilisez votre clé Gemini gratuite de Google pour générer. Illimité, coût zéro, sans piège.",
       "step1": {
-        "title": "Upload",
-        "description": "Envoyez votre image (photo, dessin ou référence)"
+        "title": "Obtenez votre clé gratuite",
+        "description": "Accédez à Google AI Studio, connectez-vous avec votre compte Google et créez une clé API Gemini. 100% gratuit, prend 2 minutes.",
+        "highlight": "aistudio.google.com",
+        "tag": "Gratuit"
       },
       "step2": {
-        "title": "Stencil Flow Traite",
-        "description": "Notre technologie convertit en stencil parfait en quelques secondes"
+        "title": "Collez dans Black Line Pro",
+        "description": "Dans l'éditeur, cliquez sur \"Configurer la clé Gemini\" et collez la clé. Elle reste enregistrée uniquement dans votre navigateur — nous ne voyons jamais votre clé.",
+        "highlight": "Sécurisé et privé",
+        "tag": "1 clic"
       },
       "step3": {
-        "title": "Download",
-        "description": "Téléchargez le PNG prêt à imprimer et à tatouer"
+        "title": "Envoyez votre référence",
+        "description": "Téléchargez une photo, un dessin ou toute référence. Black Line Pro utilise votre clé Gemini pour traiter avec une technologie exclusive.",
+        "highlight": "JPG, PNG, WEBP",
+        "tag": "Illimité"
+      },
+      "step4": {
+        "title": "Téléchargez et tatouez",
+        "description": "Stencil parfait en PNG haute qualité, prêt pour l'impression thermique. Sans filigrane, sans limitation d'utilisation.",
+        "highlight": "PNG haute qualité",
+        "tag": "Prêt"
+      },
+      "cta": {
+        "noKey": "Pas encore de clé Gemini ?",
+        "noKeyDesc": "Créez la vôtre en 2 minutes sur Google AI Studio. Gratuit, sans carte de crédit.",
+        "createKey": "Créer une clé gratuite"
       }
     },
     "pricing": {
-      "title": "Choisissez Votre Plan",
-      "subtitle": "Prix justes pour tous les tatoueurs",
-      "cta": "Voir les Plans",
+      "badge": "Générations illimitées avec votre clé Gemini gratuite",
+      "title": "Simple et Transparent",
+      "subtitle": "Générez des stencils illimités avec votre clé Gemini gratuite. Payez uniquement pour le stockage et les fonctions premium.",
       "mostPopular": "LE PLUS POPULAIRE",
+      "cta": {
+        "free": "Ouvrir l'Éditeur",
+        "ink": "Obtenir Ink",
+        "pro": "Obtenir Pro",
+        "studio": "Obtenir Studio"
+      },
+      "viewAll": "Voir tous les plans →",
       "features": {
-        "starter": ["Éditeur de Stencil complet", "Mode Topographique", "Mode Lignes Parfaites", "Contrôle total des dépenses"],
-        "pro": ["Tout du plan Starter", "Génération de designs professionnelle", "Color Match + Amélioration 4K", "Division A4"],
-        "studio": ["Tout du plan Pro", "Jusqu'à 680 générations/mois", "Support prioritaire", "Idéal pour les studios"],
-        "enterprise": ["Tout du plan Studio", "Jusqu'à 1 400 générations/mois", "Support dédié 24/7", "SLA garanti 99,9%"]
+        "free": [
+          "Générations illimitées (BYOK)",
+          "Éditeur + Générateur complets",
+          "Stockage local uniquement",
+          "Sans compte nécessaire"
+        ],
+        "ink": [
+          "Générations illimitées (BYOK)",
+          "5 Go stockage cloud",
+          "Sans publicités",
+          "Éditeur complet + modes avancés"
+        ],
+        "pro": [
+          "Tout du Ink",
+          "10 Go stockage cloud",
+          "Outils premium",
+          "Générateur d'art IA",
+          "Support prioritaire"
+        ],
+        "studio": [
+          "Tout du Pro",
+          "25 Go stockage cloud",
+          "Support prioritaire",
+          "Rapports d'utilisation"
+        ]
       }
     },
     "finalCta": {
       "title": "Prêt à révolutionner vos stencils ?",
       "subtitle": "Rejoignez",
-      "subtitleEnd": "tatoueurs qui utilisent déjà StencilFlow",
+      "subtitleEnd": "tatoueurs qui utilisent déjà Black Line Pro",
       "cta": "Commencer maintenant",
       "dashboard": "Aller au tableau de bord",
       "thousands": "des milliers de",
       "checks": {
-        "payAsYouGo": "Payez seulement ce que vous utilisez",
-        "noExpiry": "Les crédits n'expirent jamais",
-        "fullControl": "Contrôle total des dépenses"
+        "byok": "Générations illimitées avec clé Gemini gratuite",
+        "cancel": "Annulez quand vous voulez",
+        "control": "Vous contrôlez votre quota avec Google"
       }
     },
     "footer": {
@@ -302,7 +351,7 @@
     },
     "upgrade": {
       "title": "Débloquez Tout le Potentiel",
-      "subtitle": "Générez des pochoirs illimités pour 10€/mois",
+      "subtitle": "Stockage cloud, outils premium et sans publicité",
       "cta": "Voir les Plans"
     },
     "workflow": {
@@ -369,7 +418,9 @@
       "user": "Utilisateur",
       "myBoletos": "Mes Boletos",
       "myInvoices": "Mes Factures",
-      "mySubscription": "Mon Abonnement"
+      "mySubscription": "Mon Abonnement",
+      "signIn": "Se connecter",
+      "signInCreate": "Se connecter / Créer un compte"
     }
   },
   "PricingPage": {
@@ -378,7 +429,7 @@
     "back": "Retour",
     "howItWorks": {
       "title": "Comment Ça Marche",
-      "desc": "Abonnez-vous et utilisez StencilFlow pendant toute la période choisie. Chaque plan inclut une limite mensuelle de générations.",
+      "desc": "Abonnez-vous et utilisez Black Line Pro pendant toute la période choisie. Chaque plan inclut une limite mensuelle de générations.",
       "recurrent": "Abonnement récurrent - Renouvellement automatique",
       "cancelAnytime": "Annulez à tout moment - Sans frais ni pénalités",
       "limitsRenew": "Les limites se renouvellent chaque mois - Même sur les plans annuels",
@@ -394,8 +445,8 @@
       "save": "Économisez {percent}%"
     },
     "plans": {
-      "starter": {
-        "name": "Starter",
+      "ink": {
+        "name": "Ink",
         "description": "Idéal pour commencer",
         "limit": "{count} générations/mois"
       },
@@ -705,12 +756,30 @@
     },
     "bodyRegion": {
       "label": "Région du Corps",
-      "free": { "name": "Libre", "hint": "Sans restriction de format" },
-      "arm": { "name": "Bras", "hint": "Allongé, design vertical" },
-      "chest": { "name": "Poitrine", "hint": "Design large et centré" },
-      "back": { "name": "Dos", "hint": "Grand canevas, détaillé" },
-      "leg": { "name": "Jambe", "hint": "Long, suit la courbe" },
-      "ribs": { "name": "Côte", "hint": "Vertical allongé" }
+      "free": {
+        "name": "Libre",
+        "hint": "Sans restriction de format"
+      },
+      "arm": {
+        "name": "Bras",
+        "hint": "Allongé, design vertical"
+      },
+      "chest": {
+        "name": "Poitrine",
+        "hint": "Design large et centré"
+      },
+      "back": {
+        "name": "Dos",
+        "hint": "Grand canevas, détaillé"
+      },
+      "leg": {
+        "name": "Jambe",
+        "hint": "Long, suit la courbe"
+      },
+      "ribs": {
+        "name": "Côte",
+        "hint": "Vertical allongé"
+      }
     },
     "negative": {
       "label": "Éviter (optionnel)",
@@ -801,9 +870,18 @@
     "subtitle": "Plus d'options et de sécurité pour vous",
     "closeLabel": "Fermer l'avis",
     "paymentMethods": {
-      "pix": {"name": "PIX", "description": "Instantané"},
-      "boleto": {"name": "Boleto", "description": "Jusqu'à 3 jours"},
-      "card": {"name": "Carte", "description": "Récurrent"}
+      "pix": {
+        "name": "PIX",
+        "description": "Instantané"
+      },
+      "boleto": {
+        "name": "Boleto",
+        "description": "Jusqu'à 3 jours"
+      },
+      "card": {
+        "name": "Carte",
+        "description": "Récurrent"
+      }
     },
     "recurrence": {
       "title": "Comment fonctionne la récurrence :",
@@ -818,7 +896,7 @@
   "installBanner": {
     "title": "Installer l'App",
     "closeLabel": "Fermer",
-    "appName": "StencilFlow",
+    "appName": "Black Line Pro",
     "description": "Accédez plus rapidement depuis votre écran d'accueil",
     "installButton": "Installer l'App",
     "iosButton": "Comment installer",
@@ -834,8 +912,76 @@
       "confirmButton": "Compris"
     }
   },
+  "subscription": {
+    "loading": "Chargement de l'abonnement...",
+    "errorLoading": "Erreur lors du chargement des données",
+    "errorCancelling": "Erreur lors de l'annulation de l'abonnement",
+    "cancelledSuccess": "Abonnement annulé avec succès.",
+    "errorProcessingCancellation": "Erreur lors du traitement de l'annulation",
+    "backToDashboard": "Retour au Tableau de bord",
+    "title": "Mon Abonnement",
+    "subtitle": "Gérez votre plan et vos paiements",
+    "plans": {
+      "free": {
+        "price": "Gratuit",
+        "features": ["Générations illimitées (BYOK)", "Stockage local uniquement"]
+      },
+      "legacy": {
+        "price": "R$ 25/mois",
+        "features": ["Éditeur complet", "2 Go cloud", "Plan spécial"]
+      },
+      "ink": {
+        "price": "R$ 29/mois",
+        "features": ["Générations illimitées (BYOK)", "5 Go cloud", "Sans publicités"]
+      },
+      "pro": {
+        "price": "R$ 69/mois",
+        "features": ["Générations illimitées (BYOK)", "10 Go cloud", "Outils premium"]
+      },
+      "studio": {
+        "price": "R$ 199/mois",
+        "features": ["Générations illimitées (BYOK)", "25 Go cloud", "Support prioritaire"]
+      }
+    },
+    "status": {
+      "courtesy": "Courtoisie",
+      "active": "Actif",
+      "scheduledCancel": "Annulation Programmée",
+      "inactive": "Inactif"
+    },
+    "featuresIncluded": "Fonctionnalités incluses :",
+    "accessUntil": "Accès disponible jusqu'au",
+    "nextBilling": "Prochain prélèvement",
+    "noRenewal": "Votre abonnement ne sera pas renouvelé.",
+    "courtesyPlan": "Plan Courtoisie",
+    "courtesyDescription": "Vous avez un accès courtoisie accordé par l'équipe Black Line Pro.",
+    "validUntil": "Valable jusqu'au : {date}",
+    "paymentInfo": "Paiement via PIX/Boleto/Carte",
+    "changePaymentMethod": "Pour changer de moyen de paiement, annulez et réabonnez-vous",
+    "cancelButton": "Annuler",
+    "subscribeNow": "S'abonner Maintenant",
+    "geminiAndStorage": "Clé Gemini & Stockage",
+    "geminiConfigured": "Clé Gemini configurée",
+    "geminiNotConfigured": "Clé Gemini non configurée",
+    "geminiActiveDescription": "Générations illimitées actives via votre clé Google",
+    "geminiSetupDescription": "Configurez pour générer des pochoirs sans limites",
+    "configure": "Configurer →",
+    "cloudStorage": "Stockage cloud",
+    "storageIncluded": "{amount} Go inclus",
+    "storageNotIncluded": "Non inclus",
+    "upgradeForCloud": "Passez à un plan supérieur pour sauvegarder dans le cloud",
+    "upgrade": "Améliorer →",
+    "paymentViaAsaas": "Paiement via Asaas",
+    "asaasDescription": "Votre abonnement est géré via PIX, Boleto ou Carte via Asaas.",
+    "paymentQuestions": "Pour des questions sur les paiements, contactez le support.",
+    "myInvoices": "Mes Factures",
+    "invoicesDescription": "Consultez votre historique complet de paiements (PIX, Boleto, Carte).",
+    "viewInvoices": "Voir mes factures",
+    "needHelp": "Besoin d'Aide ?",
+    "helpDescription": "Contactez notre support pour des questions sur les plans et les paiements."
+  },
   "metadata": {
-    "title": "StencilFlow - Éditeur Professionnel de Pochoirs de Tatouage",
-    "description": "Transformez n'importe quelle image en pochoir de tatouage professionnel avec la Technologie StencilFlow. Éditeur complet, mode topographique, lignes parfaites et outils premium. Gratuit pour commencer."
+    "title": "Black Line Pro - Éditeur Professionnel de Pochoirs de Tatouage",
+    "description": "Transformez n'importe quelle image en pochoir de tatouage professionnel avec la Technologie Black Line Pro. Éditeur complet, mode topographique, lignes parfaites et outils premium. Gratuit pour commencer."
   }
 }

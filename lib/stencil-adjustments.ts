@@ -1,5 +1,6 @@
 import { AdjustControls, STENCIL_PRESETS } from './stencil-types';
 import { compressIfNeeded } from './image-compress';
+import { logger } from './logger';
 
 /**
  * Helper functions para aplicar ajustes em stencils
@@ -23,7 +24,7 @@ export async function applyAdjustments(
   }
 
   // Log para debug
-  console.log('[Adjustments] Validando imagem:', {
+  logger.debug('[Adjustments] Validando imagem', {
     length: imageBase64.length,
     startsWithData: imageBase64.startsWith('data:'),
     first50chars: imageBase64.substring(0, 50)
@@ -43,7 +44,7 @@ export async function applyAdjustments(
     // ⚡ COMPRIMIR IMAGEM SE NECESSÁRIO (evitar erro 413)
     const compressedImage = await compressIfNeeded(imageBase64);
 
-    console.log('[Adjustments] Enviando requisição:', {
+    logger.debug('[Adjustments] Enviando requisição', {
       imageLength: imageBase64.length,
       compressedLength: compressedImage.length,
       reduction: ((1 - compressedImage.length / imageBase64.length) * 100).toFixed(1) + '%',
@@ -63,15 +64,15 @@ export async function applyAdjustments(
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('[Adjustments] Erro da API:', errorData);
+      logger.error('[Adjustments] Erro da API', new Error(errorData.error || 'Unknown'), errorData);
       throw new Error(errorData.error || 'Erro ao aplicar ajustes');
     }
 
     const data = await response.json();
-    console.log('[Adjustments] Sucesso, imagem ajustada recebida');
+    logger.info('[Adjustments] Sucesso, imagem ajustada recebida');
     return data.image;
   } catch (error: any) {
-    console.error('[Adjustments] Erro ao aplicar ajustes:', error);
+    logger.error('[Adjustments] Erro ao aplicar ajustes', error);
     throw new Error(error.message || 'Erro ao processar ajustes');
   }
 }
@@ -90,7 +91,7 @@ export function applyPreset(
   const preset = STENCIL_PRESETS[presetKey];
 
   if (!preset) {
-    console.warn(`[Adjustments] Preset "${presetKey}" não encontrado`);
+    logger.warn('[Adjustments] Preset não encontrado', { presetKey });
     return currentControls;
   }
 

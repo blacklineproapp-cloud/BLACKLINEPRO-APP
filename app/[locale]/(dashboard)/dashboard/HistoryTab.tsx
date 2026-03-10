@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Clock, Search, Filter, Loader2, Pencil, Download, Trash2, ChevronLeft, ChevronRight, Sparkles, X, Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface AIGenImage {
   id: string;
@@ -128,7 +129,7 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
               placeholder={t('gallery.iaSearch')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-48 bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-emerald-500 focus:outline-none"
+              className="w-full sm:w-48 bg-zinc-900 border border-zinc-800 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none"
             />
           </div>
           
@@ -138,7 +139,7 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
               <select
                 value={filterSize}
                 onChange={(e) => setFilterSize(e.target.value)}
-                className="appearance-none bg-zinc-900 border border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none cursor-pointer"
+                className="appearance-none bg-zinc-900 border border-zinc-800 rounded-lg pl-3 pr-8 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none cursor-pointer"
               >
                 <option value="all">{tCommon('all')}</option>
                 {uniqueSizes.map(size => (
@@ -158,7 +159,7 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
               <div 
                 key={image.id} 
                 onClick={() => setSelectedImage(image)}
-                className="group bg-white rounded-xl overflow-hidden cursor-pointer relative hover:ring-2 hover:ring-emerald-500 transition-all shadow-lg"
+                className="group bg-white rounded-xl overflow-hidden cursor-pointer relative hover:ring-2 hover:ring-indigo-500 transition-all shadow-lg"
               >
                 <div className="aspect-square bg-white p-3 lg:p-4 flex items-center justify-center relative">
                   <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
@@ -184,7 +185,7 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
                     <div className="flex gap-2">
                       <button
                         onClick={(e) => handleQuickDownload(image, e)}
-                        className="p-2.5 bg-white/90 hover:bg-white rounded-full text-zinc-800 hover:text-emerald-600 transition shadow-lg"
+                        className="p-2.5 bg-white/90 hover:bg-white rounded-full text-zinc-800 hover:text-indigo-600 transition shadow-lg"
                         title={tCommon('download')}
                       >
                         <Download size={18} />
@@ -221,7 +222,7 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
                           if (e.key === 'Escape') setEditingImageId(null);
                         }}
                         onBlur={() => setEditingImageId(null)}
-                        className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-zinc-200 text-xs focus:border-emerald-500 focus:outline-none min-w-0"
+                        className="flex-1 bg-zinc-800 border border-zinc-700 rounded px-1.5 py-0.5 text-zinc-200 text-xs focus:border-indigo-500 focus:outline-none min-w-0"
                         autoFocus
                       />
                     </div>
@@ -234,7 +235,7 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
                           setInlineEditPrompt(image.metadata.prompt || '');
                           setEditingImageId(image.id);
                         }}
-                        className="p-0.5 text-zinc-600 hover:text-emerald-400 opacity-0 group-hover/name:opacity-100 transition shrink-0"
+                        className="p-0.5 text-zinc-400 hover:text-indigo-400 opacity-0 group-hover/name:opacity-100 transition shrink-0"
                         title="Editar"
                       >
                         <Pencil size={12} />
@@ -246,7 +247,7 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
                       {new Date(image.created_at).toLocaleDateString(locale)}
                     </p>
                     {image.metadata.size && (
-                      <span className="text-zinc-600 text-[10px] lg:text-xs">{image.metadata.size}</span>
+                      <span className="text-zinc-400 text-[10px] lg:text-xs">{image.metadata.size}</span>
                     )}
                   </div>
                 </div>
@@ -257,13 +258,15 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
           {/* Paginação */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 mt-6">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                 disabled={currentPage === 0}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-emerald-400 hover:border-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm"
+                className="gap-1"
               >
                 <ChevronLeft size={16} /> {tCommon('previous')}
-              </button>
+              </Button>
 
               <div className="flex items-center gap-2">
                 <div className="flex gap-1">
@@ -272,7 +275,7 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
                       key={idx}
                       onClick={() => setCurrentPage(idx)}
                       className={`w-2 h-2 rounded-full transition-all ${
-                        idx === currentPage ? 'bg-emerald-500 w-4' : 'bg-zinc-700 hover:bg-zinc-600'
+                        idx === currentPage ? 'bg-indigo-500 w-4' : 'bg-zinc-700 hover:bg-zinc-600'
                       }`}
                     />
                   ))}
@@ -282,40 +285,43 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
                 </span>
               </div>
 
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
                 disabled={currentPage >= totalPages - 1}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-emerald-400 hover:border-emerald-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-sm"
+                className="gap-1"
               >
                 {tCommon('next')} <ChevronRight size={16} />
-              </button>
+              </Button>
             </div>
           )}
         </>
       ) : images.length > 0 ? (
         // Nenhum resultado da busca
         <div className="text-center py-12 bg-zinc-900/50 rounded-xl border border-zinc-800">
-          <Search size={32} className="mx-auto mb-3 text-zinc-600" />
+          <Search size={32} className="mx-auto mb-3 text-zinc-400" />
           <p className="text-zinc-400 font-medium">{t('gallery.noIAResults')}</p>
-          <p className="text-zinc-600 text-sm mt-1">{t('gallery.noResultsDescription')}</p>
-          <button 
+          <p className="text-zinc-400 text-sm mt-1">{t('gallery.noResultsDescription')}</p>
+          <Button
+            variant="link"
             onClick={() => { setSearchQuery(''); setFilterSize('all'); }}
-            className="mt-3 text-emerald-400 hover:text-emerald-300 text-sm font-medium"
+            className="mt-3"
           >
             {t('gallery.clearFilters')}
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="text-center py-12 lg:py-20 bg-zinc-900/50 rounded-xl border border-zinc-800">
           <div className="w-16 h-16 lg:w-20 lg:h-20 bg-zinc-800 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <Sparkles size={28} className="text-zinc-600" />
+            <Sparkles size={28} className="text-zinc-400" />
           </div>
           <p className="text-zinc-400 font-medium text-sm lg:text-base">{t('gallery.iaEmpty')}</p>
-          <p className="text-zinc-600 text-xs lg:text-sm mt-1">{t('gallery.iaEmptyDescription')}</p>
+          <p className="text-zinc-400 text-xs lg:text-sm mt-1">{t('gallery.iaEmptyDescription')}</p>
           <Link href="/generator" className="inline-block mt-4">
-            <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+            <Button>
               {t('gallery.goToIAGen')}
-            </button>
+            </Button>
           </Link>
         </div>
       )}
@@ -339,9 +345,9 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
                   {selectedImage.metadata.size && ` • ${selectedImage.metadata.size}`}
                 </p>
               </div>
-              <button onClick={() => setSelectedImage(null)} className="text-zinc-400 hover:text-white p-2 shrink-0">
+              <Button variant="ghost" size="icon" onClick={() => setSelectedImage(null)} className="shrink-0" aria-label="Fechar">
                 <X size={20} />
-              </button>
+              </Button>
             </div>
 
             {/* Image */}
@@ -365,18 +371,20 @@ export default function IAGenGallery({ images, userId }: IAGenGalleryProps) {
 
             {/* Actions */}
             <div className="flex gap-2 p-4 border-t border-zinc-800">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => handleQuickDownload(selectedImage, {} as React.MouseEvent)}
-                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 text-sm"
+                className="flex-1 gap-2"
               >
                 <Download size={16} /> {tCommon('download')}
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger-subtle"
                 onClick={() => handleDelete(selectedImage.id)}
-                className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white py-2.5 px-4 rounded-lg transition"
+                className="px-4"
               >
                 <Trash2 size={16} />
-              </button>
+              </Button>
             </div>
           </div>
         </div>

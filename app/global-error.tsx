@@ -12,12 +12,9 @@ export default function GlobalError({
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);
-
   return (
-    <html>
-      <body>
-        <NextError statusCode={0} />
-      </body>
-    </html>
+    <div>
+      <NextError statusCode={0} />
+    </div>
   );
 }

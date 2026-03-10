@@ -9,7 +9,7 @@ export const EmailHeader = ({ title }: EmailHeaderProps) => {
   return (
     <Section
       style={{
-        background: 'linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #a855f7 100%)',
+        background: 'linear-gradient(135deg, #6366F1 0%, #14b8a6 50%, #a855f7 100%)',
         padding: '50px 30px',
         textAlign: 'center',
         position: 'relative',
@@ -29,7 +29,7 @@ export const EmailHeader = ({ title }: EmailHeaderProps) => {
               lineHeight: '1.2',
             }}
           >
-            StencilFlow
+            Black Line Pro
           </Heading>
           <Text
             style={{

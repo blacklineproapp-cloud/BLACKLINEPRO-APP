@@ -1,9 +1,9 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { logAdminAction } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // Schema de validação
 const renewCourtesySchema = z.object({
@@ -11,26 +11,29 @@ const renewCourtesySchema = z.object({
   newExpirationDate: z.string().datetime('Data de expiração inválida')
 });
 
-export async function POST(req: Request) {
-  try {
-    // 1. 🔒 VERIFICAR ADMIN
-    const { userId } = await auth();
-    
-    if (!userId || !(await isAdmin(userId))) {
-      return NextResponse.json(
-        { error: 'Acesso negado' },
-        { status: 403 }
-      );
-    }
-
+export const POST = withAdminAuth(async (req, { adminId }) => {
     // 2. 🔍 VALIDAR INPUT
-    const body = await req.json();
-    const validated = renewCourtesySchema.parse(body);
+    let validated;
+    try {
+      const body = await req.json();
+      validated = renewCourtesySchema.parse(body);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          {
+            error: 'Dados inválidos',
+            details: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`)
+          },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
 
     const newExpiration = new Date(validated.newExpirationDate);
     const now = new Date();
 
-    console.log('[Courtesy Renew] Data recebida:', {
+    logger.debug('[Courtesy Renew] Data recebida', {
       userId: validated.userId,
       newExpirationDate: validated.newExpirationDate,
       parsedDate: newExpiration.toISOString(),
@@ -76,7 +79,7 @@ export async function POST(req: Request) {
       .eq('id', targetUser.id);
 
     if (updateError) {
-      console.error('[Courtesy] Erro ao renovar:', updateError);
+      logger.error('[Courtesy] Erro ao renovar', { error: updateError });
       return NextResponse.json(
         { error: 'Erro ao renovar cortesia' },
         { status: 500 }
@@ -85,7 +88,7 @@ export async function POST(req: Request) {
 
     // 6. 📝 REGISTRAR NO AUDIT LOG
     await logAdminAction({
-      adminId: userId,
+      adminId: adminId,
       action: 'renew_courtesy',
       targetUserId: targetUser.id,
       metadata: {
@@ -108,22 +111,4 @@ export async function POST(req: Request) {
         expires_at: newExpiration.toISOString()
       }
     });
-
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { 
-          error: 'Dados inválidos',
-          details: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`)
-        },
-        { status: 400 }
-      );
-    }
-
-    console.error('[Courtesy] Erro inesperado:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
-  }
-}
+});

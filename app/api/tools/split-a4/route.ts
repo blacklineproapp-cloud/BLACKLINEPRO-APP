@@ -1,11 +1,11 @@
-import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
-import { supabaseAdmin } from '@/lib/supabase';
 import { generateStencilFromImage } from '@/lib/gemini';
-import { checkToolsLimit, checkSplitA4Limit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { recordUsage } from '@/lib/billing/limits';
 import { BRL_COST } from '@/lib/billing/costs';
+import { checkToolAccess } from '@/lib/billing/service';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
+import { withAuth } from '@/lib/api-middleware';
+import { logger } from '@/lib/logger';
 import sharp from 'sharp';
 
 // =============================================================================
@@ -251,7 +251,7 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
         }
       });
     } catch (error) {
-      console.error('❌ Gemini processing failed:', error);
+      logger.error('[Split A4] Gemini processing failed', error);
       throw new Error(`Falha no processamento ${processMode}: ${error}`);
     }
   } else {
@@ -464,92 +464,44 @@ async function splitImageIntoA4Pages(options: SplitOptions) {
   };
 }
 
-export async function POST(req: Request) {
-  try {
-    const { userId } = await auth();
+export const POST = withAuth(async (req, { userId, user }) => {
+  // 🛡️ RATE LIMITING: Prevenir abuso (60 requests/min)
+  const identifier = await getRateLimitIdentifier(userId);
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
+  if (apiLimiter) {
+    const { success, limit, remaining, reset } = await apiLimiter.limit(identifier);
 
-    // 🛡️ RATE LIMITING: Prevenir abuso (60 requests/min)
-    const identifier = await getRateLimitIdentifier(userId);
-
-    if (apiLimiter) {
-      const { success, limit, remaining, reset } = await apiLimiter.limit(identifier);
-
-      if (!success) {
-        return NextResponse.json(
-          {
-            error: 'Muitas requisições',
-            message: 'Você atingiu o limite de requisições. Tente novamente em alguns minutos.',
-            limit,
-            remaining,
-            reset: new Date(reset).toISOString(),
+    if (!success) {
+      return NextResponse.json(
+        {
+          error: 'Muitas requisições',
+          message: 'Você atingiu o limite de requisições. Tente novamente em alguns minutos.',
+          limit,
+          remaining,
+          reset: new Date(reset).toISOString(),
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': limit.toString(),
+            'X-RateLimit-Remaining': remaining.toString(),
+            'X-RateLimit-Reset': reset.toString(),
+            'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
           },
-          {
-            status: 429,
-            headers: {
-              'X-RateLimit-Limit': limit.toString(),
-              'X-RateLimit-Remaining': remaining.toString(),
-              'X-RateLimit-Reset': reset.toString(),
-              'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
-            },
-          }
-        );
-      }
-    }
-
-    // Buscar usuário completo (precisa do UUID user.id)
-    const { data: userData } = await supabaseAdmin
-      .from('users')
-      .select('id, email, is_paid, subscription_status, tools_unlocked')
-      .eq('clerk_id', userId)
-      .single();
-
-    if (!userData) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
-    }
-
-    // 🔓 BYPASS PARA ADMINS - acesso ilimitado
-    const userIsAdmin = await checkIsAdmin(userId);
-
-    if (!userIsAdmin) {
-      // Verificar se tem assinatura ativa OU ferramentas desbloqueadas
-      const hasFullAccess = (userData.is_paid && userData.subscription_status === 'active' && userData.tools_unlocked);
-
-      if (hasFullAccess) {
-        // ✅ VERIFICAR LIMITE DE USO DO PLANO (100/500 por plano)
-        const limitCheck = await checkToolsLimit(userData.id);
-        if (!limitCheck.allowed) {
-          const message = getLimitMessage('tool_usage', limitCheck.limit, limitCheck.resetDate);
-          return NextResponse.json(
-            {
-              error: 'Limite atingido',
-              message,
-              remaining: limitCheck.remaining,
-              limit: limitCheck.limit,
-              resetDate: limitCheck.resetDate,
-              requiresSubscription: true,
-              subscriptionType: 'credits',
-            },
-            { status: 429 }
-          );
         }
-      } else {
-        // 🎁 MODO TRIAL: Usuários Free ou sem ferramentas desbloqueadas
-        const trialCheck = await checkSplitA4Limit(userData.id);
-        
-        if (!trialCheck.allowed) {
-          return NextResponse.json({
-            error: 'Acesso Restrito',
-            message: 'A Impressão em Ladrilhos (Split A4) é exclusiva para assinantes. Facilite seu trabalho agora!',
-            requiresSubscription: true,
-            subscriptionType: 'tools'
-          }, { status: 403 });
-        }
-      }
+      );
     }
+  }
+
+  // 🔓 BILLING: Admin bypass + check acesso + limites
+  const billing = await checkToolAccess({
+    userId,
+    user,
+    toolName: 'split_a4',
+    trialDeniedMessage: 'A Impressão em Ladrilhos (Split A4) é exclusiva para assinantes. Facilite seu trabalho agora!',
+  });
+  if (billing.denied) return billing.response!;
+  const userIsAdmin = billing.isAdmin;
 
     const {
       image,
@@ -583,27 +535,6 @@ export async function POST(req: Request) {
       flip?: FlipTransform;
     } = await req.json();
 
-    // ✅ VERIFICAR LIMITE DE USO se usar Gemini (100/500 por plano)
-    if (!userIsAdmin && processMode !== 'reference') {
-      const limitCheck = await checkToolsLimit(userData.id);
-
-      if (!limitCheck.allowed) {
-        const message = getLimitMessage('tool_usage', limitCheck.limit, limitCheck.resetDate);
-        return NextResponse.json(
-          {
-            error: 'Limite atingido',
-            message,
-            remaining: limitCheck.remaining,
-            limit: limitCheck.limit,
-            resetDate: limitCheck.resetDate,
-            requiresSubscription: true,
-            subscriptionType: 'credits',
-          },
-          { status: 429 }
-        );
-      }
-    }
-
     if (!image || !tattooWidth || !tattooHeight || !paperWidth || !paperHeight) {
       return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 });
     }
@@ -630,21 +561,14 @@ export async function POST(req: Request) {
       processMode,
       forcedCols,
       forcedRows,
-      userUuid: userData.id,
+      userUuid: user.id,
       userIsAdmin,
       croppedArea,
       rotation,
       flip
     });
 
-    return NextResponse.json(result);
-  } catch (error: any) {
-    console.error('Erro ao dividir imagem:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao dividir imagem' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json(result);
+});
 
 export const maxDuration = 60;

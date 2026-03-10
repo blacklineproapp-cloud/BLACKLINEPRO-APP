@@ -4,6 +4,7 @@
  */
 
 import { supabaseAdmin } from './supabase';
+import { logger } from './logger';
 
 export type AdminAction =
   | 'grant_courtesy'
@@ -47,13 +48,13 @@ export async function logAdminAction(entry: AuditLogEntry): Promise<void> {
       });
 
     if (error) {
-      console.error('[Audit] Erro ao registrar ação:', error);
+      logger.error('[Audit] Erro ao registrar ação', error);
       // Não lançar erro para não bloquear a operação principal
     } else {
-      console.log(`[Audit] ✅ ${entry.action} registrado para admin ${entry.adminId}`);
+      logger.info('[Audit] Ação registrada', { action: entry.action, adminId: entry.adminId });
     }
   } catch (err) {
-    console.error('[Audit] Erro inesperado:', err);
+    logger.error('[Audit] Erro inesperado', err);
   }
 }
 
@@ -72,7 +73,7 @@ export async function getAdminHistory(
     .limit(limit);
 
   if (error) {
-    console.error('[Audit] Erro ao buscar histórico:', error);
+    logger.error('[Audit] Erro ao buscar histórico', error);
     return [];
   }
 
@@ -94,7 +95,7 @@ export async function getUserAuditHistory(
     .limit(limit);
 
   if (error) {
-    console.error('[Audit] Erro ao buscar histórico do usuário:', error);
+    logger.error('[Audit] Erro ao buscar histórico do usuário', error);
     return [];
   }
 

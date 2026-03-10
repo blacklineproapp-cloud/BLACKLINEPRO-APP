@@ -117,19 +117,19 @@ async function investigateBlockedUsers() {
       issues.push('❌ stripe_customer_id está NULL (deveria estar preenchido)');
     }
     
-    if (user.plan === 'legacy' && user.is_paid) {
-      issues.push('⚠️  Plano LEGACY com is_paid=true (inconsistência)');
+    if (user.plan === 'ink' && user.is_paid) {
+      issues.push('⚠️  Plano INK com is_paid=true (inconsistência)');
     }
     
     if (!payments || payments.length === 0) {
       issues.push('❌ Nenhum pagamento registrado na tabela payments');
     }
     
-    if (user.stencils_generated_month >= 50 && user.plan === 'starter') {
+    if (user.stencils_generated_month >= 50 && user.plan === 'ink') {
       issues.push('⚠️  Limite mensal de stencils atingido (50/50)');
     }
-    
-    if (user.stencils_generated_today >= 10 && user.plan === 'starter') {
+
+    if (user.stencils_generated_today >= 10 && user.plan === 'ink') {
       issues.push('⚠️  Limite diário de stencils atingido (10/10)');
     }
 
@@ -157,8 +157,8 @@ async function investigateBlockedUsers() {
       console.log(`   3. Resetar limites de uso (stencils_generated_today e stencils_generated_month)`);
     }
     
-    if (user.plan === 'legacy') {
-      console.log(`   4. Migrar de 'legacy' para 'starter' ou plano apropriado`);
+    if (user.plan === 'ink') {
+      console.log(`   4. Verificar plano 'ink' e status de pagamento`);
     }
   }
 

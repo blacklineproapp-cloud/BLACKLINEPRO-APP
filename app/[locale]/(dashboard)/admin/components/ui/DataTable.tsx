@@ -61,7 +61,7 @@ export function DataTable<T extends { id?: string }>({
               placeholder={searchPlaceholder || 'Buscar...'}
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
-              className="bg-transparent border-none focus:outline-none text-sm w-full text-zinc-300 placeholder:text-zinc-600"
+              className="bg-transparent border-none focus:outline-none text-sm w-full text-zinc-300 placeholder:text-zinc-400"
             />
           </div>
         </div>

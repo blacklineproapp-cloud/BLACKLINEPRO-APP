@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Página Principal -->
   <url>
-    <loc>https://www.stencilflow.com.br/</loc>
+    <loc>https://www.blacklinepro.com.br/</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
@@ -10,25 +10,25 @@
   
   <!-- Páginas Legais -->
   <url>
-    <loc>https://www.stencilflow.com.br/privacidade</loc>
+    <loc>https://www.blacklinepro.com.br/privacidade</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.stencilflow.com.br/termos</loc>
+    <loc>https://www.blacklinepro.com.br/termos</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.stencilflow.com.br/cookies</loc>
+    <loc>https://www.blacklinepro.com.br/cookies</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://www.stencilflow.com.br/reembolso</loc>
+    <loc>https://www.blacklinepro.com.br/reembolso</loc>
     <lastmod>2026-01-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>

@@ -9,6 +9,7 @@ import { useRouter } from '@/lib/navigation';
 import { PenTool, Sparkles, Map, Package, ChevronRight } from 'lucide-react';
 import BeforeAfterSlider from './BeforeAfterSlider';
 import LanguageSelector from './LanguageSelector';
+import { Button } from '@/components/ui/button';
 
 export default function HeroSection() {
   const { isSignedIn } = useAuth();
@@ -23,16 +24,16 @@ export default function HeroSection() {
       description: t('tabs.editor.description'),
       image: '/screenshots/editor-screenshot.png',
       icon: PenTool,
-      color: 'text-emerald-500',
-      bg: 'emerald'
+      color: 'text-indigo-400',
+      bg: 'indigo'
     },
     {
       title: t('tabs.generator.title'),
       description: t('tabs.generator.description'),
       image: '/screenshots/generator-result.png',
       icon: Sparkles,
-      color: 'text-purple-500',
-      bg: 'purple'
+      color: 'text-indigo-400',
+      bg: 'indigo'
     },
     {
       title: t('tabs.topographic.title'),
@@ -51,9 +52,9 @@ export default function HeroSection() {
       image: '/screenshots/lines-after.png',
       beforeImage: '/screenshots/lines-before.jpg',
       afterImage: '/screenshots/lines-after.png',
-      color: 'from-violet-500/20 to-purple-500/20',
+      color: 'from-violet-500/20 to-indigo-500/20',
       icon: PenTool,
-      accent: 'text-purple-400',
+      accent: 'text-indigo-400',
       isSlider: true
     }
   ];
@@ -75,28 +76,40 @@ export default function HeroSection() {
 
       {/* Gradient background with more depth */}
       <div className="absolute inset-0 bg-zinc-950" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-emerald-900/10 via-black to-purple-900/5" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-indigo-950/40 via-black to-indigo-950/20" />
 
-      {/* Animated orbs - more subtle and spread out */}
-      <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-emerald-600/5 blur-[120px] rounded-full animate-pulse" />
-      <div className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-purple-600/5 blur-[120px] rounded-full animate-pulse duration-700" />
+      {/* Background grid — Black Line Pro signature */}
+      <div
+        className="absolute inset-0 opacity-[0.025]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(99,102,241,0.8) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(99,102,241,0.8) 1px, transparent 1px)
+          `,
+          backgroundSize: '64px 64px',
+        }}
+      />
+
+      {/* Ambient glow orbs */}
+      <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-indigo-600/8 blur-[140px] rounded-full animate-pulse [animation-duration:4s]" />
+      <div className="absolute bottom-1/4 -right-20 w-[600px] h-[600px] bg-indigo-600/5 blur-[140px] rounded-full animate-pulse [animation-duration:4s]" />
 
       {/* Content - Wider container for larger visual impact */}
-      <div className="max-w-[1400px] mx-auto grid lg:grid-cols-5 gap-12 lg:gap-20 items-center relative z-10 py-24">       
+      <div className="max-w-[1400px] mx-auto grid lg:grid-cols-5 gap-12 lg:gap-16 items-center relative z-10 py-24">       
 
         {/* Texto + CTAs - Occupies 2/5 */}
         <div className="lg:col-span-2 space-y-10">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-[0.2em]">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-[0.2em]">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
               </span>
               {t('badge')}
             </div>
-            <h1 className="text-6xl md:text-8xl font-black text-white leading-[0.9] tracking-tighter">
+            <h1 className="text-6xl md:text-8xl font-black text-white leading-[1.0] md:leading-[0.9] tracking-tighter">
               {t('title')}  <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-400">{t('titleHighlight')}</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-indigo-400 to-indigo-400">{t('titleHighlight')}</span>
             </h1>
             <p className="text-xl md:text-2xl text-zinc-400 max-w-lg leading-relaxed">
               {t('subtitle')}
@@ -111,7 +124,7 @@ export default function HeroSection() {
               { label: t('features.ready.label'), sub: t('features.ready.sub') }
             ].map((item, i) => (
               <div key={i} className={`space-y-1 ${i === 2 ? 'col-span-2 md:col-span-1' : ''}`}>
-                <div className="h-px w-8 bg-emerald-500/50 mb-3" />
+                <div className="h-px w-8 bg-indigo-500/50 mb-3" />
                 <p className="text-white font-bold text-xs md:text-sm tracking-tight">{item.label}</p>
                 <p className="text-zinc-500 text-[9px] md:text-[10px] uppercase font-bold tracking-widest">{item.sub}</p>  
               </div>
@@ -123,36 +136,47 @@ export default function HeroSection() {
             {isMounted && (
               <>
                 {isSignedIn ? (
-                  <button
-                    onClick={() => router.push('/dashboard')}
-                    className="group bg-emerald-500 hover:bg-emerald-400 text-black px-12 py-5 rounded-[20px] text-lg font-bold transition-all shadow-xl shadow-emerald-500/20 hover:-translate-y-1 flex items-center justify-center gap-3"
-                  >
-                    {t('cta.dashboard')}
-                    <ChevronRight className="group-hover:translate-x-1 transition-transform" strokeWidth={2} />
-                  </button>
-                ) : (
-                  <SignInButton mode="modal">
-                    <button className="group bg-emerald-500 hover:bg-emerald-400 text-black px-12 py-5 rounded-[20px] text-lg font-bold transition-all shadow-xl shadow-emerald-500/20 hover:-translate-y-1 flex items-center justify-center gap-3">  
-                      {t('cta.primary')}
+                  <>
+                    <Button
+                      onClick={() => router.push('/dashboard')}
+                      size="xl"
+                      className="group px-12 py-5 text-lg rounded-[20px] shadow-xl shadow-indigo-500/25 hover:-translate-y-1 gap-3"
+                    >
+                      {t('cta.dashboard')}
                       <ChevronRight className="group-hover:translate-x-1 transition-transform" strokeWidth={2} />
-                    </button>
-                  </SignInButton>
+                    </Button>
+                    <Link
+                      href="/pricing"
+                      className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-12 py-5 rounded-[20px] text-lg font-bold transition-all text-center backdrop-blur-xl shadow-xl hover:border-white/20"
+                    >
+                      {t('cta.secondary')}
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => router.push('/editor')}
+                      size="xl"
+                      className="group px-12 py-5 text-lg rounded-[20px] shadow-xl shadow-indigo-500/25 hover:-translate-y-1 gap-3"
+                    >
+                      {t('cta.tryFree')}
+                      <ChevronRight className="group-hover:translate-x-1 transition-transform" strokeWidth={2} />
+                    </Button>
+                    <SignInButton mode="modal">
+                      <button className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-12 py-5 rounded-[20px] text-lg font-bold transition-all backdrop-blur-xl shadow-xl hover:border-white/20">
+                        {t('cta.primary')}
+                      </button>
+                    </SignInButton>
+                  </>
                 )}
               </>
             )}
 
             {!isMounted && (
-              <div className="bg-emerald-500/50 px-12 py-5 rounded-[20px] text-lg font-bold animate-pulse w-full sm:w-[240px] text-center text-transparent">
-                CARREGANDO...
+              <div className="bg-indigo-500/40 px-12 py-5 rounded-[20px] text-lg font-bold animate-pulse w-full sm:w-[240px] text-center text-transparent select-none" aria-hidden="true">
+                &#8206;
               </div>
             )}
-
-            <Link
-              href="/pricing"
-              className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-12 py-5 rounded-[20px] text-lg font-bold transition-all text-center backdrop-blur-xl shadow-xl hover:border-white/20"
-            >
-              {t('cta.secondary')}
-            </Link>
           </div>
 
           <div className="flex items-center gap-3 text-zinc-500">
@@ -171,18 +195,18 @@ export default function HeroSection() {
           {/* Main Showcase Window */}
           <div className="relative z-10">
             {/* Desktop Mac-Style Window Container */}
-            <div className="bg-zinc-900 border border-zinc-700/50 rounded-3xl shadow-[0_0_100px_rgba(16,185,129,0.15)] overflow-hidden transition-all duration-500">
+            <div className="bg-zinc-900 border border-zinc-700/50 rounded-3xl shadow-[0_0_100px_rgba(99,102,241,0.2)] overflow-hidden transition-all duration-500">
 
               {/* Window Header */}
               <div className="bg-zinc-800/50 px-3 md:px-6 py-2 md:py-4 flex items-center justify-between border-b border-zinc-700/50">
                 <div className="flex gap-1.5 md:gap-2 shrink-0">
                   <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-red-500/50" />
                   <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-amber-500/50" />
-                  <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-500" />
+                  <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-indigo-500" />
                 </div>
                 <div className="flex-1 text-center px-4 min-w-0">
                   <div className="inline-block bg-zinc-900 px-3 md:px-4 py-1 rounded-lg text-[9px] md:text-[10px] text-zinc-500 font-mono border border-zinc-700/30 truncate max-w-[150px] md:max-w-none">
-                    stencilflow.com.br / {features[activeFeature].title.toLowerCase().replace(' ', '-')}
+                    Black Line Pro.com.br / {features[activeFeature].title.toLowerCase().replace(' ', '-')}
                   </div>
                 </div>
               </div>
@@ -206,6 +230,7 @@ export default function HeroSection() {
                           className="!aspect-auto !border-0 !rounded-none h-full w-full"
                           beforeLabel={t('features.original')}
                           afterLabel="Stencil"
+                          tooltip={t('dragToCompare')}
                         />
                       </div>
                     ) : (
@@ -233,7 +258,7 @@ export default function HeroSection() {
                     onClick={() => setActiveFeature(idx)}
                     className={`group relative flex items-center gap-2 md:gap-3 px-3.5 md:px-6 py-2.5 md:py-3.5 rounded-full md:rounded-2xl transition-all duration-300 ${
                       activeFeature === idx
-                        ? 'bg-emerald-500 text-black shadow-[0_0_20px_rgba(16,185,129,0.4)]'
+                        ? 'bg-indigo-500 text-white shadow-[0_0_20px_rgba(99,102,241,0.4)]'
                         : 'text-zinc-500 hover:text-white hover:bg-zinc-800/50'
                     }`}
                   >
@@ -257,9 +282,7 @@ export default function HeroSection() {
           </div>
 
           {/* Background Decorative Element - Dynamic Glow */}
-          <div className={`absolute -inset-10 blur-[100px] rounded-full opacity-20 transition-all duration-1000 ${
-            activeFeature === 0 ? 'bg-emerald-500' : activeFeature === 1 ? 'bg-purple-500' : 'bg-blue-500'
-          }`} />
+          <div className="absolute -inset-10 blur-[100px] rounded-full opacity-15 bg-indigo-600 transition-all duration-1000" />
         </div>
       </div>
 

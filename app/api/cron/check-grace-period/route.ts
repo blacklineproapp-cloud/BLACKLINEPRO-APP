@@ -12,7 +12,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
-import { maskEmail } from '@/lib/logger';
+import { logger, maskEmail } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 segundos max
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
 
     // Se CRON_SECRET não estiver configurado, bloquear acesso (fail-secure)
     if (!cronSecret) {
-      console.error('[Cron] CRON_SECRET não configurado - acesso bloqueado');
+      logger.error('[Cron] CRON_SECRET não configurado - acesso bloqueado');
       return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
     }
 
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('[Cron] 🔄 Verificando grace periods...');
+    logger.info('[Cron] Verificando grace periods');
 
     const now = new Date();
     const results = {
@@ -57,13 +57,13 @@ export async function GET(req: Request) {
       .eq('is_blocked', false); // Ainda não bloqueado
 
     if (expiredError) {
-      console.error('[Cron] Erro ao buscar expirados:', expiredError);
+      logger.error('[Cron] Erro ao buscar expirados', expiredError);
       results.errors.push(expiredError.message);
     }
 
     // 2. Bloquear usuários com grace period expirado
     if (expiredUsers && expiredUsers.length > 0) {
-      console.log(`[Cron] ⚠️ ${expiredUsers.length} usuários com grace period expirado`);
+      logger.warn('[Cron] Usuários com grace period expirado', { count: expiredUsers.length });
 
       for (const user of expiredUsers) {
         try {
@@ -76,16 +76,16 @@ export async function GET(req: Request) {
             tools_unlocked: false,
           }).eq('id', user.id);
 
-          console.log(`[Cron] 🚫 Bloqueado: ${maskEmail(user.email)}`);
+          logger.info('[Cron] Usuário bloqueado', { email: maskEmail(user.email) });
           results.blocked++;
 
           // TODO: Enviar email de bloqueio
-          // - Assunto: "Sua conta StencilFlow foi limitada"
+          // - Assunto: "Sua conta Black Line Pro foi limitada"
           // - Explicar que funcionalidades estão bloqueadas
           // - Link para regularizar pagamento
 
         } catch (blockError: any) {
-          console.error(`[Cron] Erro ao bloquear ${maskEmail(user.email)}:`, blockError);
+          logger.error('[Cron] Erro ao bloquear usuário', { email: maskEmail(user.email), error: blockError });
           results.errors.push(`Erro ao bloquear user ${user.id}: ${blockError.message}`);
         }
       }
@@ -104,13 +104,13 @@ export async function GET(req: Request) {
       .eq('is_blocked', false);
 
     if (warningError) {
-      console.error('[Cron] Erro ao buscar avisos:', warningError);
+      logger.error('[Cron] Erro ao buscar avisos', warningError);
       results.errors.push(warningError.message);
     }
 
     // 4. Enviar lembretes (último dia)
     if (warningUsers && warningUsers.length > 0) {
-      console.log(`[Cron] ⏰ ${warningUsers.length} usuários no último dia de grace period`);
+      logger.info('[Cron] Usuários no último dia de grace period', { count: warningUsers.length });
 
       for (const user of warningUsers) {
         // TODO: Enviar email de último aviso
@@ -118,7 +118,7 @@ export async function GET(req: Request) {
         // - Link para pagar
         // - Aviso que será bloqueado amanhã
 
-        console.log(`[Cron] 📧 Lembrete enviado para: ${maskEmail(user.email)}`);
+        logger.info('[Cron] Lembrete enviado', { email: maskEmail(user.email) });
         results.reminded++;
       }
     }
@@ -136,12 +136,12 @@ export async function GET(req: Request) {
       .neq('plan', 'free');
 
     if (expiredSubError) {
-      console.error('[Cron] Erro ao buscar assinaturas expiradas:', expiredSubError);
+      logger.error('[Cron] Erro ao buscar assinaturas expiradas', expiredSubError);
       results.errors.push(expiredSubError.message);
     }
 
     if (expiredSubUsers && expiredSubUsers.length > 0) {
-      console.log(`[Cron] ⚠️ ${expiredSubUsers.length} usuários com assinatura expirada (sweep)`);
+      logger.warn('[Cron] Usuários com assinatura expirada (sweep)', { count: expiredSubUsers.length });
 
       for (const user of expiredSubUsers) {
         try {
@@ -157,7 +157,7 @@ export async function GET(req: Request) {
             courtesyCheck?.admin_courtesy_expires_at &&
             new Date(courtesyCheck.admin_courtesy_expires_at) > now
           ) {
-            console.log(`[Cron] ⏭️ Pulando ${maskEmail(user.email)} - cortesia ativa`);
+            logger.debug('[Cron] Pulando usuário com cortesia ativa', { email: maskEmail(user.email) });
             continue;
           }
 
@@ -170,17 +170,17 @@ export async function GET(req: Request) {
             tools_unlocked: false,
           }).eq('id', user.id);
 
-          console.log(`[Cron] 🚫 Bloqueado (assinatura expirada): ${maskEmail(user.email)} - expirou em ${user.subscription_expires_at}`);
+          logger.info('[Cron] Bloqueado (assinatura expirada)', { email: maskEmail(user.email), expiredAt: user.subscription_expires_at });
           results.expiredSwept++;
         } catch (sweepError: any) {
-          console.error(`[Cron] Erro no sweep ${maskEmail(user.email)}:`, sweepError);
+          logger.error('[Cron] Erro no sweep', { email: maskEmail(user.email), error: sweepError });
           results.errors.push(`Erro no sweep user ${user.id}: ${sweepError.message}`);
         }
       }
     }
 
     // 6. Relatório
-    console.log('[Cron] ✅ Verificação concluída:', results);
+    logger.info('[Cron] Verificação concluída', { results });
 
     return NextResponse.json({
       success: true,
@@ -189,7 +189,7 @@ export async function GET(req: Request) {
     });
 
   } catch (error: any) {
-    console.error('[Cron] Erro geral:', error);
+    logger.error('[Cron] Erro geral', error);
     return NextResponse.json(
       { error: error.message },
       { status: 500 }

@@ -10,6 +10,7 @@ import {
   Image as ImageIcon, ExternalLink
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 
 interface Message {
   id: string;
@@ -45,9 +46,9 @@ const CATEGORIES: Record<string, { label: string; icon: any }> = {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; description: string }> = {
   open: { label: 'Aguardando', color: 'text-yellow-400 bg-yellow-900/30', description: 'Seu ticket está na fila de atendimento' },
-  in_progress: { label: 'Em Análise', color: 'text-blue-400 bg-blue-900/30', description: 'Nossa equipe está analisando seu ticket' },
+  in_progress: { label: 'Em Análise', color: 'text-indigo-400 bg-indigo-900/30', description: 'Nossa equipe está analisando seu ticket' },
   waiting_user: { label: 'Respondido', color: 'text-green-400 bg-green-900/30', description: 'Temos uma resposta para você!' },
-  resolved: { label: 'Resolvido', color: 'text-emerald-400 bg-emerald-900/30', description: 'Este ticket foi resolvido' },
+  resolved: { label: 'Resolvido', color: 'text-indigo-400 bg-indigo-900/30', description: 'Este ticket foi resolvido' },
   closed: { label: 'Fechado', color: 'text-zinc-400 bg-zinc-800', description: 'Este ticket está fechado' }
 };
 
@@ -178,7 +179,7 @@ export default function TicketDetailPage() {
           {/* Corpo - Mensagem do Usuário */}
           <div className="p-4">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
+              <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
                 V
               </div>
               <span className="text-sm font-medium">Você</span>
@@ -220,12 +221,12 @@ export default function TicketDetailPage() {
 
           {/* Resposta do Admin */}
           {adminResponse && (
-            <div className="p-4 bg-emerald-950/30 border-t border-emerald-900/50">
+            <div className="p-4 bg-indigo-950/30 border-t border-indigo-900/50">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center text-xs font-bold">
+                <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
                   S
                 </div>
-                <span className="text-sm font-medium text-emerald-400">Suporte StencilFlow</span>
+                <span className="text-sm font-medium text-indigo-400">Suporte Black Line Pro</span>
                 <span className="text-xs text-zinc-500">
                   {new Date(adminResponse.created_at).toLocaleDateString('pt-BR', {
                     day: '2-digit',
@@ -244,7 +245,7 @@ export default function TicketDetailPage() {
               {adminResponse.action_taken && (
                 <div className={`mt-3 p-3 rounded-lg ${
                   adminResponse.action_taken.result === 'success'
-                    ? 'bg-emerald-900/30 border border-emerald-800/50'
+                    ? 'bg-indigo-900/30 border border-indigo-800/50'
                     : 'bg-red-900/30 border border-red-800/50'
                 }`}>
                   <p className="text-sm">
@@ -260,27 +261,27 @@ export default function TicketDetailPage() {
         {/* Ações */}
         <div className="flex gap-3">
           {isClosed ? (
-            <button
+            <Button
               onClick={handleReopen}
-              className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-medium transition"
+              className="flex-1 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500"
             >
               Ainda preciso de ajuda
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
+              variant="secondary"
               onClick={handleClose}
-              className="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium transition"
+              className="flex-1 px-4 py-3 rounded-xl"
             >
               Fechar Ticket
-            </button>
+            </Button>
           )}
-          
-          <Link
-            href="/suporte"
-            className="px-4 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-medium transition"
-          >
-            Voltar
-          </Link>
+
+          <Button variant="secondary" asChild className="rounded-xl">
+            <Link href="/suporte">
+              Voltar
+            </Link>
+          </Button>
         </div>
 
         {/* Modal de Imagem */}

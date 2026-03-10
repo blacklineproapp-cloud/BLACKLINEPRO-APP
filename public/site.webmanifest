@@ -1,6 +1,6 @@
 {
-  "name": "StencilFlow - Editor Profissional de Stencils",
-  "short_name": "StencilFlow",
+  "name": "Black Line Pro - Editor Profissional de Stencils",
+  "short_name": "Black Line Pro",
   "description": "Editor profissional de stencils de tatuagem com IA",
   "icons": [
     {
@@ -28,7 +28,7 @@
       "purpose": "any"
     }
   ],
-  "theme_color": "#10b981",
+  "theme_color": "#6366F1",
   "background_color": "#09090b",
   "display": "standalone",
   "start_url": "/",

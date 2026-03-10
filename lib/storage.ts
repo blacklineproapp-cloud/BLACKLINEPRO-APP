@@ -1,4 +1,5 @@
 import { supabaseAdmin } from './supabase';
+import { logger } from './logger';
 import sharp from 'sharp';
 
 /**
@@ -68,7 +69,7 @@ export async function uploadImage(
         throw new Error('Buffer processado está vazio');
       }
     } catch (sharpError: any) {
-      console.error('[Storage] Erro ao processar imagem com Sharp:', sharpError);
+      logger.error('[Storage] Erro ao processar imagem com Sharp', sharpError);
       throw new Error(`Imagem inválida ou corrompida: ${sharpError.message}`);
     }
 
@@ -84,7 +85,7 @@ export async function uploadImage(
       });
 
     if (error) {
-      console.error('Erro no upload:', error);
+      logger.error('[Storage] Erro no upload', error);
       throw new Error(`Erro ao fazer upload: ${error.message}`);
     }
 
@@ -93,14 +94,14 @@ export async function uploadImage(
       .from(BUCKET_NAME)
       .getPublicUrl(filePath);
 
-    console.log(`[Storage] Upload sucesso: ${type} (${processedBuffer.length} bytes)`);
+    logger.info('[Storage] Upload sucesso', { type, sizeBytes: processedBuffer.length });
 
     return {
       publicUrl: publicUrlData.publicUrl,
       path: filePath,
     };
   } catch (error) {
-    console.error('Erro ao fazer upload de imagem:', error);
+    logger.error('[Storage] Erro ao fazer upload de imagem', error);
     throw error;
   }
 }
@@ -157,7 +158,7 @@ export async function uploadImageWithThumbnail(
         throw new Error('Buffer thumbnail está vazio');
       }
     } catch (sharpError: any) {
-      console.error('[Storage] Erro ao processar imagem com Sharp:', sharpError);
+      logger.error('[Storage] Erro ao processar imagem com Sharp', sharpError);
       throw new Error(`Imagem inválida ou corrompida: ${sharpError.message}`);
     }
 
@@ -174,7 +175,7 @@ export async function uploadImageWithThumbnail(
       });
 
     if (fullError) {
-      console.error('Erro no upload full:', fullError);
+      logger.error('[Storage] Erro no upload full', fullError);
       throw new Error(`Erro ao fazer upload: ${fullError.message}`);
     }
 
@@ -187,7 +188,7 @@ export async function uploadImageWithThumbnail(
       });
 
     if (thumbError) {
-      console.error('Erro no upload thumbnail:', thumbError);
+      logger.error('[Storage] Erro no upload thumbnail', thumbError);
       // Não falha se thumbnail der erro, continua
     }
 
@@ -200,7 +201,7 @@ export async function uploadImageWithThumbnail(
       .from(BUCKET_NAME)
       .getPublicUrl(thumbPath);
 
-    console.log(`[Storage] Upload com thumb: ${type} (full: ${fullBuffer.length}B, thumb: ${thumbnailBuffer.length}B)`);
+    logger.info('[Storage] Upload com thumb', { type, fullSizeBytes: fullBuffer.length, thumbSizeBytes: thumbnailBuffer.length });
 
     return {
       publicUrl: publicUrlData.publicUrl,
@@ -209,7 +210,7 @@ export async function uploadImageWithThumbnail(
       thumbnailPath: thumbPath,
     };
   } catch (error) {
-    console.error('Erro ao fazer upload com thumbnail:', error);
+    logger.error('[Storage] Erro ao fazer upload com thumbnail', error);
     throw error;
   }
 }
@@ -227,11 +228,11 @@ export async function deleteImage(filePath: string): Promise<void> {
       .remove([filePath]);
 
     if (error) {
-      console.error('Erro ao deletar imagem:', error);
+      logger.error('[Storage] Erro ao deletar imagem', error);
       throw new Error(`Erro ao deletar: ${error.message}`);
     }
   } catch (error) {
-    console.error('Erro ao deletar imagem:', error);
+    logger.error('[Storage] Erro ao deletar imagem', error);
     throw error;
   }
 }
@@ -255,7 +256,7 @@ export async function deleteProjectImages(
       .list(folderPath);
 
     if (listError) {
-      console.error('Erro ao listar arquivos:', listError);
+      logger.error('[Storage] Erro ao listar arquivos', listError);
       throw new Error(`Erro ao listar: ${listError.message}`);
     }
 
@@ -270,11 +271,11 @@ export async function deleteProjectImages(
       .remove(filePaths);
 
     if (deleteError) {
-      console.error('Erro ao deletar arquivos:', deleteError);
+      logger.error('[Storage] Erro ao deletar arquivos', deleteError);
       throw new Error(`Erro ao deletar: ${deleteError.message}`);
     }
   } catch (error) {
-    console.error('Erro ao deletar imagens do projeto:', error);
+    logger.error('[Storage] Erro ao deletar imagens do projeto', error);
     throw error;
   }
 }
@@ -309,7 +310,7 @@ export async function ensureBucketExists(): Promise<void> {
     const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
 
     if (listError) {
-      console.error('Erro ao listar buckets:', listError);
+      logger.error('[Storage] Erro ao listar buckets', listError);
       throw listError;
     }
 
@@ -326,25 +327,25 @@ export async function ensureBucketExists(): Promise<void> {
       const { error: createError } = await supabaseAdmin.storage.createBucket(BUCKET_NAME, bucketOptions);
 
       if (createError) {
-        console.error('Erro ao criar bucket:', createError);
+        logger.error('[Storage] Erro ao criar bucket', createError);
         throw createError;
       }
 
-      console.log('✅ Bucket criado com sucesso!');
+      logger.info('[Storage] Bucket criado com sucesso');
     } else {
       // Atualizar bucket existente para garantir que o limite de tamanho está correto
       const { error: updateError } = await supabaseAdmin.storage.updateBucket(BUCKET_NAME, bucketOptions);
       
       if (updateError) {
-        console.warn('Aviso ao atualizar bucket (pode ser ignorado se não for crítico):', updateError);
+        logger.warn('[Storage] Aviso ao atualizar bucket (pode ser ignorado se não for crítico)', { error: updateError });
       } else {
-        console.log('✅ Configuração do bucket atualizada (limite 50MB)!');
+        logger.info('[Storage] Configuração do bucket atualizada (limite 50MB)');
       }
       
-      console.log('✅ Bucket já existe!');
+      logger.info('[Storage] Bucket já existe');
     }
   } catch (error) {
-    console.error('Erro ao verificar/criar bucket:', error);
+    logger.error('[Storage] Erro ao verificar/criar bucket', error);
     throw error;
   }
 }

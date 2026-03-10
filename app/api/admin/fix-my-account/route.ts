@@ -1,98 +1,80 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 /**
  * GET - Corrige sua própria conta (ativa + deleta duplicados)
  * Acesse: http://localhost:3000/api/admin/fix-my-account
  */
-export async function GET(req: Request) {
-  try {
-    const { userId } = await auth();
+export const GET = withAdminAuth(async (req, { userId }) => {
+  logger.info('[Fix] Corrigindo conta do usuário', { userId });
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
+  // 1. Buscar usuário atual
+  const { data: currentUser } = await supabaseAdmin
+    .from('users')
+    .select('id, email, clerk_id')
+    .eq('clerk_id', userId)
+    .single();
 
-    console.log('[Fix] Corrigindo conta do usuário:', userId);
-
-    // 1. Buscar usuário atual
-    const { data: currentUser } = await supabaseAdmin
-      .from('users')
-      .select('id, email, clerk_id')
-      .eq('clerk_id', userId)
-      .single();
-
-    if (!currentUser) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
-    }
-
-    const userIsAdmin = await isAdmin(userId);
-
-    if (!userIsAdmin) {
-      return NextResponse.json({ error: 'Apenas admins podem usar este endpoint' }, { status: 403 });
-    }
-
-    console.log('[Fix] Usuário atual:', currentUser.email);
-
-    // 2. Ativar conta atual
-    const { error: activateError } = await supabaseAdmin
-      .from('users')
-      .update({
-        is_paid: true,
-        subscription_status: 'active',
-        tools_unlocked: true,
-        plan: 'pro'
-      })
-      .eq('id', currentUser.id);
-
-    if (activateError) {
-      console.error('[Fix] Erro ao ativar:', activateError);
-      return NextResponse.json({ error: activateError.message }, { status: 500 });
-    }
-
-    console.log('[Fix] ✅ Conta ativada');
-
-    // 3. Buscar e deletar duplicados com mesmo email (mas clerk_id diferente)
-    const { data: duplicates } = await supabaseAdmin
-      .from('users')
-      .select('id, email, clerk_id')
-      .eq('email', currentUser.email)
-      .neq('clerk_id', userId);
-
-    let deletedCount = 0;
-
-    if (duplicates && duplicates.length > 0) {
-      console.log('[Fix] Encontrados', duplicates.length, 'duplicados');
-
-      for (const dup of duplicates) {
-        const { error: deleteError } = await supabaseAdmin
-          .from('users')
-          .delete()
-          .eq('id', dup.id);
-
-        if (!deleteError) {
-          deletedCount++;
-          console.log('[Fix] ✅ Deletado:', dup.id);
-        } else {
-          console.error('[Fix] Erro ao deletar:', deleteError);
-        }
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Conta corrigida com sucesso!',
-      user: {
-        email: currentUser.email,
-        activated: true,
-        duplicatesDeleted: deletedCount
-      }
-    });
-
-  } catch (error: any) {
-    console.error('[Fix] Erro:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!currentUser) {
+    return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
   }
-}
+
+  logger.info('[Fix] Usuário atual', { email: currentUser.email });
+
+  // 2. Ativar conta atual
+  const { error: activateError } = await supabaseAdmin
+    .from('users')
+    .update({
+      is_paid: true,
+      subscription_status: 'active',
+      tools_unlocked: true,
+      plan: 'pro'
+    })
+    .eq('id', currentUser.id);
+
+  if (activateError) {
+    logger.error('[Fix] Erro ao ativar', { error: activateError });
+    return NextResponse.json({ error: activateError.message }, { status: 500 });
+  }
+
+  logger.info('[Fix] Conta ativada', { userId });
+
+  // 3. Buscar e deletar duplicados com mesmo email (mas clerk_id diferente)
+  const { data: duplicates } = await supabaseAdmin
+    .from('users')
+    .select('id, email, clerk_id')
+    .eq('email', currentUser.email)
+    .neq('clerk_id', userId);
+
+  let deletedCount = 0;
+
+  if (duplicates && duplicates.length > 0) {
+    logger.info('[Fix] Encontrados duplicados', { count: duplicates.length });
+
+    for (const dup of duplicates) {
+      const { error: deleteError } = await supabaseAdmin
+        .from('users')
+        .delete()
+        .eq('id', dup.id);
+
+      if (!deleteError) {
+        deletedCount++;
+        logger.info('[Fix] Duplicado deletado', { dupId: dup.id });
+      } else {
+        logger.error('[Fix] Erro ao deletar duplicado', { dupId: dup.id, error: deleteError });
+      }
+    }
+  }
+
+  return NextResponse.json({
+    success: true,
+    message: 'Conta corrigida com sucesso!',
+    user: {
+      email: currentUser.email,
+      activated: true,
+      duplicatesDeleted: deletedCount
+    }
+  });
+});

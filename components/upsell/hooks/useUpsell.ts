@@ -114,10 +114,10 @@ export function shouldShowCheckoutUpsell(
   currentPlan: PlanType,
   targetPlan: PlanType
 ): boolean {
-  // Show upsell if user is on free/legacy/starter trying to get starter
+  // Show upsell if user is on free/ink trying to get ink
   // Suggest they consider Pro instead
-  const upsellablePlans: PlanType[] = ['free', 'legacy', 'starter'];
-  const suggestHigherFor: PlanType[] = ['starter'];
+  const upsellablePlans: PlanType[] = ['free', 'ink'];
+  const suggestHigherFor: PlanType[] = ['ink'];
 
   return (
     upsellablePlans.includes(currentPlan) &&
@@ -130,7 +130,7 @@ export function shouldShowCheckoutUpsell(
  */
 export function getRecommendedUpsell(targetPlan: PlanType): PlanType | null {
   const recommendations: Partial<Record<PlanType, PlanType>> = {
-    starter: 'pro',
+    ink: 'pro',
     pro: 'studio',
   };
 
@@ -146,7 +146,7 @@ export function calculateUpsellValue(
   cycle: BillingCycle = 'monthly'
 ): { priceDiff: number; extraFeatures: string[] } {
   const extraFeatures: Record<string, string[]> = {
-    'starter_to_pro': [
+    'ink_to_pro': [
       '115 gerações extras/mês',
       'IA Generativa',
       'Color Match',
@@ -163,7 +163,7 @@ export function calculateUpsellValue(
 
   // Price differences (monthly)
   const priceDiffs: Record<string, number> = {
-    'starter_to_pro': 50, // R$100 - R$50
+    'ink_to_pro': 50, // R$100 - R$50
     'pro_to_studio': 200, // R$300 - R$100
   };
 

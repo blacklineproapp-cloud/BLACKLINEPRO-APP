@@ -4,48 +4,29 @@
  * Lista faturas/cobranças do usuário no Asaas
  */
 
-import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
 import { AsaasPaymentService } from '@/lib/asaas';
+import { withAuth } from '@/lib/api-middleware';
 
-export async function GET(req: Request) {
+export const GET = withAuth(async (req, { userId, user }) => {
+  if (!user.asaas_customer_id) {
+    return NextResponse.json({ invoices: [], total: 0, hasMore: false });
+  }
+
   try {
-    // 1. Autenticação
-    const { userId: clerkId } = await auth();
-
-    if (!clerkId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    // 2. Buscar usuário
-    const { data: user, error: userError } = await supabaseAdmin
-      .from('users')
-      .select('id, asaas_customer_id, asaas_subscription_id')
-      .eq('clerk_id', clerkId)
-      .single();
-
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
-    }
-
-    if (!user.asaas_customer_id) {
-      return NextResponse.json({ invoices: [], message: 'Nenhuma fatura encontrada' });
-    }
-
-    // 3. Buscar pagamentos do cliente no Asaas
+    // Buscar pagamentos do cliente no Asaas
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get('status'); // PENDING, RECEIVED, OVERDUE, etc
+    const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '20');
 
     const payments = await AsaasPaymentService.list({
-      customer: user.asaas_customer_id,
+      customer: user.asaas_customer_id as string,
       status: status || undefined,
       limit,
     });
 
-    // 4. Formatar resposta
-    const invoices = payments.data.map((payment: any) => ({
+    // Formatar resposta
+    const invoices = (payments.data || []).map((payment: any) => ({
       id: payment.id,
       status: payment.status,
       statusLabel: getStatusLabel(payment.status),
@@ -56,12 +37,9 @@ export async function GET(req: Request) {
       dueDate: payment.dueDate,
       paymentDate: payment.paymentDate,
       description: payment.description,
-      // URLs
       invoiceUrl: payment.invoiceUrl,
       bankSlipUrl: payment.bankSlipUrl,
-      // PIX
       pixTransaction: payment.pixTransaction,
-      // Flags
       isPaid: ['RECEIVED', 'CONFIRMED', 'RECEIVED_IN_CASH'].includes(payment.status),
       isOverdue: payment.status === 'OVERDUE',
       isPending: payment.status === 'PENDING',
@@ -72,14 +50,11 @@ export async function GET(req: Request) {
       total: payments.totalCount || invoices.length,
       hasMore: payments.hasMore || false,
     });
-
   } catch (error: any) {
-    console.error('[Asaas Invoices] Erro:', error);
-    return NextResponse.json({
-      error: error.message || 'Erro ao buscar faturas',
-    }, { status: 500 });
+    console.error('[Invoices] Erro ao buscar faturas:', error.message);
+    return NextResponse.json({ invoices: [], total: 0, hasMore: false, error: error.message });
   }
-}
+});
 
 function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {

@@ -37,12 +37,6 @@
   ],
   "exclude": [
     "node_modules",
-    "scripts/**/*",
-    "stencilflow/vite.config.ts",
-    "stencilflow/tsconfig.json",
-    "stencilflow/index.tsx",
-    "stencilflow/App.tsx",
-    "stencilflow/index.html",
-    "stencilflow/package.json"
+    "scripts/**/*"
   ]
 }

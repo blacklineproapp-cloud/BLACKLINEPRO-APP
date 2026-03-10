@@ -5,7 +5,7 @@ import { get, set, del, keys, clear } from 'idb-keyval';
  * Provides asynchronous storage for large objects (images) without blocking the UI
  */
 
-const PREFIX = 'stencilflow_';
+const PREFIX = 'blacklinepro_';
 
 export const storage = {
   /**

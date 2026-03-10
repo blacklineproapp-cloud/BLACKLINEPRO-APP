@@ -22,8 +22,8 @@ export default function FinancePage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-emerald-900/20 border border-emerald-800/30 rounded-xl">
-            <CreditCard size={24} className="text-emerald-400" />
+          <div className="p-3 bg-indigo-900/20 border border-indigo-800/30 rounded-xl">
+            <CreditCard size={24} className="text-indigo-400" />
           </div>
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Financeiro</h1>

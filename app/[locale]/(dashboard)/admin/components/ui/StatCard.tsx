@@ -37,7 +37,7 @@ export function StatCard({ title, value, icon, trend, subtitle, loading }: StatC
         </div>
         {trend && (
           <div className={`flex items-center gap-1 text-xs font-medium ${
-            trendPositive ? 'text-emerald-400' : 'text-red-400'
+            trendPositive ? 'text-indigo-400' : 'text-red-400'
           }`}>
             {trendPositive ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
             {Math.abs(trend.value).toFixed(1)}%
@@ -47,7 +47,7 @@ export function StatCard({ title, value, icon, trend, subtitle, loading }: StatC
       </div>
       <div className="text-2xl font-bold text-white mb-1">{value}</div>
       <div className="text-xs text-zinc-500">{title}</div>
-      {subtitle && <div className="text-xs text-zinc-600 mt-0.5">{subtitle}</div>}
+      {subtitle && <div className="text-xs text-zinc-400 mt-0.5">{subtitle}</div>}
     </div>
   );
 }

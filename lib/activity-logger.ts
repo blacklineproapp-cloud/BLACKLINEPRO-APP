@@ -4,6 +4,7 @@
  */
 
 import { supabaseAdmin } from './supabase';
+import { logger } from './logger';
 
 // Tipos de atividade suportados
 export type ActivityType =
@@ -48,13 +49,13 @@ export async function logUserActivity(params: LogActivityParams): Promise<string
     });
 
     if (error) {
-      console.error('[Activity Logger] Erro ao registrar log:', error);
+      logger.error('[Activity Logger] Erro ao registrar log', error);
       return null;
     }
 
     return data as string;
   } catch (err: any) {
-    console.error('[Activity Logger] Erro fatal:', err);
+    logger.error('[Activity Logger] Erro fatal', err);
     return null;
   }
 }
@@ -98,13 +99,13 @@ export async function logGeneration(params: {
       .single();
 
     if (error) {
-      console.error('[Activity Logger] Erro ao registrar geração:', error);
+      logger.error('[Activity Logger] Erro ao registrar geração', error);
       return null;
     }
 
     return data?.id || null;
   } catch (err: any) {
-    console.error('[Activity Logger] Erro fatal ao registrar geração:', err);
+    logger.error('[Activity Logger] Erro fatal ao registrar geração', err);
     return null;
   }
 }
@@ -134,13 +135,13 @@ export async function updateGenerationStatus(params: {
       .eq('id', params.generationId);
 
     if (error) {
-      console.error('[Activity Logger] Erro ao atualizar geração:', error);
+      logger.error('[Activity Logger] Erro ao atualizar geração', error);
       return false;
     }
 
     return true;
   } catch (err: any) {
-    console.error('[Activity Logger] Erro fatal ao atualizar geração:', err);
+    logger.error('[Activity Logger] Erro fatal ao atualizar geração', err);
     return false;
   }
 }

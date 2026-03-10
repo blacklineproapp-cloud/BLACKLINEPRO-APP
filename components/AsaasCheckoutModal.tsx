@@ -14,9 +14,10 @@ import PixQrCodeDisplay from './asaas/PixQrCodeDisplay';
 import BoletoDisplay from './asaas/BoletoDisplay';
 import CreditCardForm from './asaas/CreditCardForm';
 import CpfCnpjInput from './asaas/CpfCnpjInput';
+import { Button } from '@/components/ui/button';
 
 interface AsaasCheckoutModalProps {
-  plan: 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
+  plan: 'ink' | 'pro' | 'studio';
   cycle?: 'monthly' | 'quarterly' | 'semiannual' | 'yearly';
   isOpen: boolean;
   onClose: () => void;
@@ -51,35 +52,23 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
   const [success, setSuccess] = useState(false);
 
   const planDetails = {
-    legacy: {
-      name: tPricing('plans.legacy.name'),
-      icon: Sparkles,
-      color: 'orange',
-      limit: tPricing('plans.legacy.limit', { count: 100 }),
-    },
-    starter: {
-      name: tPricing('plans.starter.name'),
+    ink: {
+      name: 'Blackline Ink',
       icon: Zap,
-      color: 'emerald',
-      limit: tPricing('plans.starter.limit', { count: 95 }),
+      color: 'indigo',
+      limit: tPricing('plans.ink.limit', { count: 95 }),
     },
     pro: {
-      name: tPricing('plans.pro.name'),
+      name: 'Blackline Pro',
       icon: Crown,
-      color: 'purple',
+      color: 'indigo',
       limit: tPricing('plans.pro.limit', { count: 210 }),
     },
     studio: {
-      name: tPricing('plans.studio.name'),
+      name: 'Blackline Studio',
       icon: Sparkles,
       color: 'amber',
       limit: tPricing('plans.studio.limit', { count: 680 }),
-    },
-    enterprise: {
-      name: tPricing('plans.enterprise.name'),
-      icon: Sparkles,
-      color: 'amber',
-      limit: tPricing('plans.enterprise.limit', { count: 1400 }),
     },
   };
 
@@ -194,16 +183,16 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
             <div
               className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                 details.color === 'orange' ? 'bg-orange-600/10 border border-orange-500/30' :
-                details.color === 'emerald' ? 'bg-emerald-600/10 border border-emerald-500/30' :
-                details.color === 'purple' ? 'bg-purple-600/10 border border-purple-500/30' :
+                details.color === 'indigo' ? 'bg-indigo-600/10 border border-indigo-500/30' :
+                details.color === 'indigo' ? 'bg-indigo-600/10 border border-indigo-500/30' :
                 'bg-amber-600/10 border border-amber-500/30'
               }`}
             >
               <details.icon 
                 className={
                   details.color === 'orange' ? 'text-orange-500' :
-                  details.color === 'emerald' ? 'text-emerald-500' :
-                  details.color === 'purple' ? 'text-purple-500' :
+                  details.color === 'indigo' ? 'text-indigo-500' :
+                  details.color === 'indigo' ? 'text-indigo-500' :
                   'text-amber-500'
                 } 
                 size={20} 
@@ -214,7 +203,7 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
               <p className="text-xs text-zinc-400">
                 {formatPrice(monthlyEquivalent, locale)}/{tPricing('perMonth')}
                 {cycle !== 'monthly' && (
-                  <span className="text-emerald-400 ml-1">
+                  <span className="text-indigo-400 ml-1">
                     ({tPricing(`cycles.${cycle}`)}: {formatPrice(totalPrice, locale)})
                   </span>
                 )}
@@ -222,12 +211,13 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
               </p>
             </div>
           </div>
-          <button
+          <Button
             onClick={onClose}
-            className="text-zinc-400 hover:text-white transition-colors p-1 hover:bg-zinc-800 rounded-lg"
+            variant="ghost"
+            size="icon"
           >
             <X size={20} />
-          </button>
+          </Button>
         </div>
 
         {/* Content */}
@@ -235,8 +225,8 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
           {/* Login Required */}
           {!isSignedIn && !isLoading && isLoaded && (
             <div className="flex flex-col items-center justify-center py-8">
-              <div className="w-16 h-16 bg-emerald-600/10 border border-emerald-500/30 rounded-full flex items-center justify-center mb-4">
-                <LogIn className="text-emerald-500" size={28} />
+              <div className="w-16 h-16 bg-indigo-600/10 border border-indigo-500/30 rounded-full flex items-center justify-center mb-4">
+                <LogIn className="text-indigo-500" size={28} />
               </div>
               <h3 className="text-white font-bold text-lg mb-2">{t('loginRequired.title')}</h3>
               <p className="text-zinc-400 text-sm text-center mb-6 max-w-xs">
@@ -244,8 +234,8 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
               </p>
               <SignInButton mode="modal">
                 <button className={`px-8 py-3 rounded-xl font-bold text-white transition-all shadow-lg ${
-                  details.color === 'emerald' ? 'bg-emerald-600 hover:bg-emerald-500' :
-                  details.color === 'purple' ? 'bg-purple-600 hover:bg-purple-500' :
+                  details.color === 'indigo' ? 'bg-indigo-600 hover:bg-indigo-500' :
+                  details.color === 'indigo' ? 'bg-indigo-600 hover:bg-indigo-500' :
                   'bg-amber-600 hover:bg-amber-500'
                 }`}>
                   {t('loginRequired.button')}
@@ -257,9 +247,9 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
           {/* Success State */}
           {success && (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-16 h-16 bg-emerald-600/10 border border-emerald-500/30 rounded-full flex items-center justify-center mb-4 animate-bounce">
+              <div className="w-16 h-16 bg-indigo-600/10 border border-indigo-500/30 rounded-full flex items-center justify-center mb-4 animate-bounce">
                 <svg
-                  className="w-8 h-8 text-emerald-500"
+                  className="w-8 h-8 text-indigo-500"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -290,12 +280,12 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                     onClick={() => setPaymentMethod('pix')}
                     className={`p-3 rounded-xl border-2 transition-all ${
                       paymentMethod === 'pix'
-                        ? 'border-emerald-500 bg-emerald-600/10'
+                        ? 'border-indigo-500 bg-indigo-600/10'
                         : 'border-zinc-700 bg-zinc-800/50 hover:border-zinc-600'
                     }`}
                   >
-                    <QrCode className={paymentMethod === 'pix' ? 'text-emerald-500' : 'text-zinc-400'} size={24} />
-                    <p className={`text-xs mt-1 ${paymentMethod === 'pix' ? 'text-emerald-400' : 'text-zinc-400'}`}>{t('paymentMethod.pix')}</p>
+                    <QrCode className={paymentMethod === 'pix' ? 'text-indigo-500' : 'text-zinc-400'} size={24} />
+                    <p className={`text-xs mt-1 ${paymentMethod === 'pix' ? 'text-indigo-400' : 'text-zinc-400'}`}>{t('paymentMethod.pix')}</p>
                   </button>
                   
                   <button
@@ -314,12 +304,12 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                     onClick={() => setPaymentMethod('credit_card')}
                     className={`p-3 rounded-xl border-2 transition-all ${
                       paymentMethod === 'credit_card'
-                        ? 'border-purple-500 bg-purple-600/10'
+                        ? 'border-indigo-500 bg-indigo-600/10'
                         : 'border-zinc-700 bg-zinc-800/50 hover:border-zinc-600'
                     }`}
                   >
-                    <CreditCardIcon className={paymentMethod === 'credit_card' ? 'text-purple-500' : 'text-zinc-400'} size={24} />
-                    <p className={`text-xs mt-1 ${paymentMethod === 'credit_card' ? 'text-purple-400' : 'text-zinc-400'}`}>{t('paymentMethod.card')}</p>
+                    <CreditCardIcon className={paymentMethod === 'credit_card' ? 'text-indigo-500' : 'text-zinc-400'} size={24} />
+                    <p className={`text-xs mt-1 ${paymentMethod === 'credit_card' ? 'text-indigo-400' : 'text-zinc-400'}`}>{t('paymentMethod.card')}</p>
                   </button>
                 </div>
               </div>
@@ -374,17 +364,17 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
               )}
 
               {/* Submit Button */}
-              <button
+              <Button
                 onClick={handleSubmit}
                 disabled={!isFormValid() || isLoading}
-                className={`w-full py-3 rounded-xl font-bold text-white transition-all shadow-lg ${
+                className={`w-full py-3 rounded-xl shadow-lg ${
                   !isFormValid() || isLoading
                     ? 'bg-zinc-700 cursor-not-allowed'
                     : paymentMethod === 'pix'
-                    ? 'bg-emerald-600 hover:bg-emerald-500'
+                    ? 'bg-indigo-600 hover:bg-indigo-500'
                     : paymentMethod === 'boleto'
                     ? 'bg-amber-600 hover:bg-amber-500'
-                    : 'bg-purple-600 hover:bg-purple-500'
+                    : 'bg-indigo-600 hover:bg-indigo-500'
                 }`}
               >
                 {isLoading ? (
@@ -395,7 +385,7 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
                 ) : (
                   t('payAmount', { amount: formatPrice(totalPrice, locale) })
                 )}
-              </button>
+              </Button>
             </div>
           )}
 

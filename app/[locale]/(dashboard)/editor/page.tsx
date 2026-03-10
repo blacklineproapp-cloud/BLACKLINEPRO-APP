@@ -4,10 +4,20 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import StencilAdjustControls from '@/components/editor/StencilAdjustControls';
+import { useApiKey } from '@/hooks/useApiKey';
+import ApiKeySetupModal from '@/components/ApiKeySetupModal';
+import AnonymousBanner from '@/components/AnonymousBanner';
+import AdSlot from '@/components/AdSlot';
+import GeneratingAdOverlay from '@/components/GeneratingAdOverlay';
+import { useUser } from '@clerk/nextjs';
 
 import QualityIndicator from '@/components/editor/QualityIndicator';
 import ResizeModal from '@/components/editor/ResizeModal';
-import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Printer, Settings, ChevronUp, Ruler, Undo, Redo, CheckCircle, AlertCircle, XCircle, Copy, Brush, Edit3 } from 'lucide-react';
+import MobileActionBar from '@/components/editor/MobileActionBar';
+import EditorToast from '@/components/editor/EditorToast';
+import type { ToastData } from '@/components/editor/EditorToast';
+import { Button } from '@/components/ui/button';
+import { RotateCcw, Save, Download, Image as ImageIcon, X, Zap, PenTool, Layers, ScanLine, Settings, ChevronUp, Ruler, Undo, Redo, Brush, Edit3 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEditorHistory } from '@/hooks/useEditorHistory';
@@ -31,6 +41,22 @@ export default function EditorPage() {
   const tCommon = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { apiKey, hasKey, isLoaded: apiKeyLoaded } = useApiKey();
+  const { isSignedIn } = useUser();
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [showAds, setShowAds] = useState(false); // false até verificar status do usuário
+
+  // Buscar se deve exibir ads (free logado ou anônimo)
+  useEffect(() => {
+    if (!isSignedIn) {
+      setShowAds(true);
+      return;
+    }
+    fetch('/api/user/status')
+      .then(r => r.json())
+      .then(d => setShowAds(!!d.showAds))
+      .catch(() => setShowAds(false));
+  }, [isSignedIn]);
   
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [generatedStencil, setGeneratedStencil] = useState<string | null>(null);
@@ -72,9 +98,13 @@ export default function EditorPage() {
   const [showBlurPreview, setShowBlurPreview] = useState(false);
   const [blurredPreviewImage, setBlurredPreviewImage] = useState<string | null>(null);
 
+  // Ad overlay para usuários free/anônimos durante geração
+  const [showAdOverlay, setShowAdOverlay] = useState(false);
+  const [pendingStencil, setPendingStencil] = useState<string | null>(null);
+
   // Checkout Modal (pagamento Stripe estilizado)
   const [showCheckout, setShowCheckout] = useState(false);
-  const [checkoutPlan, setCheckoutPlan] = useState<'starter' | 'pro'>('starter');
+  const [checkoutPlan, setCheckoutPlan] = useState<'ink' | 'pro'>('ink');
   const [checkoutCycle, setCheckoutCycle] = useState<BillingCycle>('monthly');
 
   // Drawing Mode (modo de desenho)
@@ -82,7 +112,7 @@ export default function EditorPage() {
   const [drawingDimensions, setDrawingDimensions] = useState({ width: 800, height: 600 });
 
   // Toast notifications
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [toast, setToast] = useState<ToastData | null>(null);
   
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
@@ -387,6 +417,12 @@ export default function EditorPage() {
   const handleGenerate = async () => {
     if (!originalImage) return;
 
+    // Se não está logado e não tem chave API, mostrar modal de setup
+    if (!isSignedIn && !hasKey) {
+      setShowApiKeyModal(true);
+      return;
+    }
+
     // LIMPAR estêncil anterior antes de gerar novo
     setGeneratedStencil(null);
     setAdjustedStencil(null);
@@ -399,16 +435,19 @@ export default function EditorPage() {
     try {
       // 🔥 COMPRESSÃO: Evitar erro 413 (Payload Too Large)
       const compressedImage = await compressIfNeeded(originalImage);
-      
+
       const res = await fetch('/api/stencil/generate', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { 'X-User-API-Key': apiKey } : {}),
+        },
         body: JSON.stringify({
           image: compressedImage,
           style: selectedStyle,
           promptDetails: promptText,
-          widthCm, // Enviar tamanho
+          widthCm,
           heightCm,
         }),
       });
@@ -449,19 +488,19 @@ export default function EditorPage() {
           console.warn('[Editor] Resize falhou, usando stencil original:', resizeError);
         }
 
-        setGeneratedStencil(finalStencil);
-        setSliderPosition(100);
-        setComparisonMode('overlay');
-
-        // Adicionar ao histórico
-        history.clear();
-        history.pushState(finalStencil, DEFAULT_ADJUST_CONTROLS);
-
-        // Resetar controles
-        setAdjustControls(DEFAULT_ADJUST_CONTROLS);
-
-        // AUTO-SAVE após gerar com sucesso
-        autoSaveProject(finalStencil);
+        // Free/anônimos: mostrar overlay de anúncio (15s)
+        if (showAds) {
+          setPendingStencil(finalStencil);
+          setShowAdOverlay(true);
+        } else {
+          setGeneratedStencil(finalStencil);
+          setSliderPosition(100);
+          setComparisonMode('overlay');
+          history.clear();
+          history.pushState(finalStencil, DEFAULT_ADJUST_CONTROLS);
+          setAdjustControls(DEFAULT_ADJUST_CONTROLS);
+          autoSaveProject(finalStencil);
+        }
       } else if (data.requiresSubscription) {
         setShowControls(true);
         showToast(data.message || t('messages.limitReached'), 'error');
@@ -516,7 +555,7 @@ export default function EditorPage() {
   const handleUpsellSubscribe = (plan: PlanType, cycle: BillingCycle) => {
     setShowBlurPreview(false);
     // Abrir o CheckoutModal estilizado com Stripe Elements
-    setCheckoutPlan(plan as 'starter' | 'pro');
+    setCheckoutPlan(plan as 'ink' | 'pro');
     setCheckoutCycle(cycle);
     setShowCheckout(true);
   };
@@ -717,21 +756,39 @@ export default function EditorPage() {
 
   return (
     <div className="min-h-screen bg-[#09090b] flex flex-col">
+      {/* Banner para usuários anônimos */}
+      {!isSignedIn && <AnonymousBanner apiKeySet={hasKey} />}
+
+      {/* Modal de setup da chave API */}
+      <ApiKeySetupModal
+        isOpen={showApiKeyModal}
+        onClose={() => setShowApiKeyModal(false)}
+        onSuccess={() => setShowApiKeyModal(false)}
+      />
+
       <div className="flex-1 flex flex-col lg:flex-row relative overflow-hidden">
-        
-        {/* Canvas Area - Máximo de espaço para a imagem */}
-        <main className="flex-1 bg-zinc-950 flex items-center justify-center p-1 lg:p-2 min-h-[40vh] lg:min-h-0 pb-20 lg:pb-6">
-          
+
+        {/* Canvas Area */}
+        <main className="flex-1 bg-zinc-950 flex items-center justify-center p-2 lg:p-4 min-h-[40vh] lg:min-h-0 pb-20 lg:pb-6">
+
           {/* Upload State */}
           {!originalImage && (
             <div className="text-center">
               <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-              <button 
+              <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-40 h-40 lg:w-64 lg:h-64 border-2 border-dashed border-zinc-700 rounded-2xl flex flex-col items-center justify-center text-zinc-500 hover:text-emerald-500 hover:border-emerald-500 transition-all bg-zinc-900/50"
+                className="group w-56 h-56 lg:w-80 lg:h-80 relative rounded-2xl flex flex-col items-center justify-center text-zinc-500 transition-all duration-300 bg-zinc-900/30 hover:bg-zinc-900/60 border border-zinc-800 hover:border-indigo-500/50 animate-fade-in"
               >
-                <ImageIcon size={40} className="mb-4" />
-                <span className="font-medium text-sm">{t('upload.button')}</span>
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/5 to-purple-500/5 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 transition-all duration-300" />
+                <div className="relative z-10 flex flex-col items-center gap-4">
+                  <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-zinc-800/80 group-hover:bg-indigo-600/20 flex items-center justify-center transition-all duration-300">
+                    <ImageIcon size={28} className="text-zinc-400 group-hover:text-indigo-400 transition-colors duration-300" />
+                  </div>
+                  <div>
+                    <span className="font-semibold text-sm text-zinc-300 group-hover:text-white transition-colors">{t('upload.button')}</span>
+                    <p className="text-xs text-zinc-600 mt-1">PNG, JPG, WEBP</p>
+                  </div>
+                </div>
               </button>
             </div>
           )}
@@ -739,6 +796,28 @@ export default function EditorPage() {
           {/* Processing State */}
           {originalImage && isProcessing && (
             <LoadingSpinner size="lg" showSteps />
+          )}
+
+          {/* Ad Overlay — free/anon users: 15s wait after generation */}
+          {showAdOverlay && (
+            <GeneratingAdOverlay
+              slot="editor-generating"
+              isGenerating={isProcessing}
+              onReady={() => {
+                const stencil = pendingStencil;
+                if (stencil) {
+                  setGeneratedStencil(stencil);
+                  setSliderPosition(100);
+                  setComparisonMode('overlay');
+                  history.clear();
+                  history.pushState(stencil, DEFAULT_ADJUST_CONTROLS);
+                  setAdjustControls(DEFAULT_ADJUST_CONTROLS);
+                  autoSaveProject(stencil);
+                }
+                setPendingStencil(null);
+                setShowAdOverlay(false);
+              }}
+            />
           )}
           
           {/* Original Image (before generation) */}
@@ -766,24 +845,24 @@ export default function EditorPage() {
               style={{ aspectRatio: aspectRatio || 'auto' }}
             >
               {/* Mode Toggle */}
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-zinc-900/95 border border-zinc-700 rounded-full p-0.5 flex gap-0.5 shadow-xl">
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-zinc-900/90 backdrop-blur-md border border-zinc-700 rounded-full p-0.5 flex gap-0.5 shadow-xl">
                 <button
                   onClick={() => setComparisonMode('wipe')}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-colors ${
-                    comparisonMode === 'wipe' ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    comparisonMode === 'wipe' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
                   }`}
                   title={t('comparison.horizontalTooltip')}
                 >
-                  <ScanLine size={10} /> {t('comparison.horizontal')}
+                  <ScanLine size={12} /> {t('comparison.horizontal')}
                 </button>
                 <button
                   onClick={() => setComparisonMode('overlay')}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-colors ${
-                    comparisonMode === 'overlay' ? 'bg-emerald-600 text-white' : 'text-zinc-400 hover:text-white'
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    comparisonMode === 'overlay' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
                   }`}
                   title={t('comparison.blendTooltip')}
                 >
-                  <Layers size={10} /> {t('comparison.blend')}
+                  <Layers size={12} /> {t('comparison.blend')}
                 </button>
               </div>
 
@@ -796,12 +875,11 @@ export default function EditorPage() {
 
               {/* Undo/Redo Buttons */}
               {generatedStencil && (
-                <div className="absolute top-2 right-2 z-50 flex flex-col gap-1">
-                  <div className="flex gap-1">
+                <div className="absolute top-2 right-2 z-50 flex gap-1">
                     <button
                       onClick={handleUndo}
                       disabled={!history.canUndo || isAdjusting}
-                      className="bg-zinc-900/95 border border-zinc-700 rounded-lg p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="bg-zinc-900/80 backdrop-blur-md border border-zinc-700 rounded-lg p-1.5 text-zinc-400 hover:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title={`Desfazer (Ctrl+Z) - ${history.currentIndex}/${history.historySize - 1}`}
                     >
                       <Undo size={14} />
@@ -809,16 +887,11 @@ export default function EditorPage() {
                     <button
                       onClick={handleRedo}
                       disabled={!history.canRedo || isAdjusting}
-                      className="bg-zinc-900/95 border border-zinc-700 rounded-lg p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="bg-zinc-900/80 backdrop-blur-md border border-zinc-700 rounded-lg p-1.5 text-zinc-400 hover:text-indigo-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       title={`Refazer (Ctrl+Y) - ${history.currentIndex}/${history.historySize - 1}`}
                     >
                       <Redo size={14} />
                     </button>
-                  </div>
-                  {/* Debug info */}
-                  <div className="bg-zinc-900/95 border border-zinc-700 rounded px-2 py-0.5 text-[9px] text-zinc-500 font-mono">
-                    {history.currentIndex + 1}/{history.historySize}
-                  </div>
                 </div>
               )}
 
@@ -866,8 +939,8 @@ export default function EditorPage() {
 
               {/* Wipe handle - Horizontal */}
               {comparisonMode === 'wipe' && !showOriginalPreview && (
-                <div className="absolute top-0 bottom-0 w-0.5 bg-emerald-500 z-20" style={{ left: `${sliderPosition}%` }}>
-                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                <div className="absolute top-0 bottom-0 w-0.5 bg-indigo-500 z-20" style={{ left: `${sliderPosition}%` }}>
+                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-6 h-6 bg-indigo-500 rounded-full border-2 border-white flex items-center justify-center">
                     <div className="flex gap-px"><div className="w-px h-2 bg-white/80"></div><div className="w-px h-2 bg-white/80"></div></div>
                   </div>
                 </div>
@@ -875,8 +948,8 @@ export default function EditorPage() {
 
               {/* Split handle - Vertical */}
               {comparisonMode === 'split' && !showOriginalPreview && (
-                <div className="absolute left-0 right-0 h-0.5 bg-emerald-500 z-20" style={{ top: `${sliderPosition}%` }}>
-                  <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                <div className="absolute left-0 right-0 h-0.5 bg-indigo-500 z-20" style={{ top: `${sliderPosition}%` }}>
+                  <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-indigo-500 rounded-full border-2 border-white flex items-center justify-center">
                     <div className="flex flex-col gap-px"><div className="h-px w-2 bg-white/80"></div><div className="h-px w-2 bg-white/80"></div></div>
                   </div>
                 </div>
@@ -908,7 +981,7 @@ export default function EditorPage() {
               {isAdjusting && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-40">
                   <div className="bg-zinc-900/95 border border-zinc-700 rounded-lg px-4 py-2 flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                     <span className="text-white text-sm">Aplicando ajustes...</span>
                   </div>
                 </div>
@@ -919,54 +992,25 @@ export default function EditorPage() {
 
         {/* MOBILE: Botão flutuante para abrir painel quando fechado */}
         {!showControls && !currentStencil && (
-          <button
+          <Button
             onClick={() => setShowControls(true)}
-            className="lg:hidden fixed bottom-20 right-4 w-12 h-12 bg-purple-600 hover:bg-purple-500 text-white rounded-full flex items-center justify-center shadow-lg z-50"
+            size="icon"
+            className="lg:hidden fixed bottom-20 right-4 w-12 h-12 rounded-full shadow-lg z-50 bg-indigo-600 hover:bg-indigo-500"
           >
             <ChevronUp size={20} />
-          </button>
+          </Button>
         )}
 
         {/* MOBILE: Barra de ações fixa quando stencil está gerado */}
         {currentStencil && (
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 p-2 safe-area-pb">
-            {/* Linha 1: Ações principais */}
-            <div className="flex gap-1.5 mb-1.5">
-              <button
-                onClick={() => setShowControls(!showControls)}
-                className="w-11 bg-purple-900/50 hover:bg-purple-800 text-purple-400 hover:text-white py-2.5 rounded-lg flex items-center justify-center border border-purple-800"
-                title="Ajustes"
-              >
-                <Settings size={16} />
-              </button>
-              <button
-                onClick={handleOpenDrawingMode}
-                className="w-11 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white py-2.5 rounded-lg flex items-center justify-center shadow-lg"
-                title="Modo Desenho"
-              >
-                <Edit3 size={16} />
-              </button>
-              <button
-                onClick={handleDownload}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-lg font-semibold flex items-center justify-center gap-1.5 shadow-lg text-sm"
-              >
-                <Download size={16} /> {t('actions.download')}
-              </button>
-              <button
-                onClick={handleSave}
-                className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white py-2.5 rounded-lg font-medium flex items-center justify-center gap-1.5 text-sm"
-              >
-                <Save size={16} /> {t('actions.saveShort')}
-              </button>
-              <button
-                onClick={handleNewUpload}
-                className="w-11 bg-red-900/50 hover:bg-red-800 text-red-400 hover:text-white py-2.5 rounded-lg flex items-center justify-center border border-red-800"
-                title={t('actions.new')}
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
+          <MobileActionBar
+            onToggleControls={() => setShowControls(!showControls)}
+            onOpenDrawingMode={handleOpenDrawingMode}
+            onDownload={handleDownload}
+            onSave={handleSave}
+            onNewUpload={handleNewUpload}
+            t={t}
+          />
         )}
 
         {/* Overlay - Mobile quando painel está aberto */}
@@ -982,7 +1026,7 @@ export default function EditorPage() {
           className={`
             ${showControls ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
             fixed lg:relative bottom-0 left-0 right-0 lg:w-72 xl:w-80
-            bg-zinc-900 border-t lg:border-t-0 lg:border-l border-zinc-800
+            bg-zinc-900/80 backdrop-blur-xl border-t lg:border-t-0 lg:border-l border-zinc-700/50
             transition-transform duration-300 z-40 shadow-2xl lg:shadow-none
             rounded-t-2xl lg:rounded-none
             max-h-[60vh] lg:max-h-none
@@ -1005,12 +1049,13 @@ export default function EditorPage() {
 
             {/* Botão Nova Imagem - Aparece quando tem imagem carregada */}
             {originalImage && !generatedStencil && (
-              <button
+              <Button
                 onClick={handleNewUpload}
-                className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-xl font-medium flex items-center justify-center gap-2 text-sm border border-zinc-700"
+                variant="secondary"
+                className="w-full py-2 rounded-xl gap-2 text-sm"
               >
                 <X size={14} /> {t('actions.new')}
-              </button>
+              </Button>
             )}
 
             {/* TAMANHO - Accordion no mobile */}
@@ -1020,8 +1065,8 @@ export default function EditorPage() {
                   onClick={() => setShowSizeSection(!showSizeSection)}
                   className="w-full p-2 flex items-center justify-between lg:cursor-default"
                 >
-                  <h3 className="text-white font-medium text-[11px] flex items-center gap-1.5">
-                    <Ruler size={11} className="text-amber-400" /> {t('controls.size')}
+                  <h3 className="text-white font-medium text-xs flex items-center gap-1.5">
+                    <Ruler size={11} className="text-indigo-400" /> {t('controls.size')}
                   </h3>
                   <ChevronUp size={14} className={`lg:hidden text-zinc-500 transition-transform ${showSizeSection ? 'rotate-180' : ''}`} />
                 </button>
@@ -1029,18 +1074,18 @@ export default function EditorPage() {
                 <div className={`${showSizeSection ? 'block' : 'hidden'} lg:block px-2 pb-2`}>
                   <div className="grid grid-cols-4 gap-1 mb-2">
                     {['A4', 'A3', 'Portrait', 'Square'].map((preset) => (
-                      <button key={preset} onClick={() => applyPreset(preset)} className="py-1 rounded text-[9px] font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 border border-zinc-800 hover:border-emerald-700">
+                      <button key={preset} onClick={() => applyPreset(preset)} className="py-1 rounded text-xs font-medium bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-indigo-400 border border-zinc-800 hover:border-indigo-700">
                         {t(`controls.presets.${preset}`)}
                       </button>
                     ))}
                   </div>
                   <div className="grid grid-cols-2 gap-1.5">
                     <div>
-                      <label className="text-[9px] text-zinc-500 block mb-0.5">{t('controls.size')} (cm)</label>
-                      <input type="number" value={widthCm} onChange={(e) => setWidthCm(Number(e.target.value))} className="w-full bg-zinc-900 border border-zinc-700 rounded p-1.5 text-white text-xs focus:border-emerald-500 outline-none" />
+                      <label className="text-xs text-zinc-500 block mb-0.5">{t('controls.size')} (cm)</label>
+                      <input type="number" value={widthCm} onChange={(e) => setWidthCm(Number(e.target.value))} className="w-full bg-zinc-900 border border-zinc-700 rounded p-1.5 text-white text-xs focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
-                      <label className="text-[9px] text-zinc-500 block mb-0.5">{tCommon('height')} (cm)</label>
+                      <label className="text-xs text-zinc-500 block mb-0.5">{tCommon('height')} (cm)</label>
                       <input type="number" value={heightCm} readOnly className="w-full bg-zinc-900/50 border border-zinc-700 rounded p-1.5 text-zinc-500 text-xs" />
                     </div>
                   </div>
@@ -1053,42 +1098,36 @@ export default function EditorPage() {
               <>
                 <div className="bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden">
                   <button onClick={() => setShowModeSection(!showModeSection)} className="w-full p-2 flex items-center justify-between lg:cursor-default">
-                    <h3 className="text-white font-medium text-[11px] flex items-center gap-1.5">
-                      <Zap size={11} className="text-emerald-500" /> {t('controls.modes')}
+                    <h3 className="text-white font-medium text-xs flex items-center gap-1.5">
+                      <Zap size={11} className="text-indigo-500" /> {t('controls.modes')}
                     </h3>
                     <ChevronUp size={14} className={`lg:hidden text-zinc-500 transition-transform ${showModeSection ? 'rotate-180' : ''}`} />
                   </button>
                   
                 <div className={`${showModeSection ? 'block' : 'hidden'} lg:block px-2 pb-2`}>
                     <div className="grid grid-cols-3 gap-1.5">
-                      <button onClick={() => setSelectedStyle('perfect_lines')} className={`flex flex-col items-center p-2 rounded-lg border text-xs font-medium ${selectedStyle === 'perfect_lines' ? 'bg-emerald-900/30 border-emerald-500 text-emerald-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`}>
+                      <button onClick={() => setSelectedStyle('perfect_lines')} className={`flex flex-col items-center p-3 rounded-xl border text-xs font-medium transition-all duration-200 hover:scale-[1.02] ${selectedStyle === 'perfect_lines' ? 'bg-indigo-500/15 border-indigo-500/60 text-indigo-300' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`}>
                         <Zap size={16} className="mb-1" /> {t('styles.perfect_lines')}
                       </button>
-                      <button onClick={() => setSelectedStyle('standard')} className={`flex flex-col items-center p-2 rounded-lg border text-xs font-medium ${selectedStyle === 'standard' ? 'bg-purple-900/30 border-purple-500 text-purple-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`}>
+                      <button onClick={() => setSelectedStyle('standard')} className={`flex flex-col items-center p-3 rounded-xl border text-xs font-medium transition-all duration-200 hover:scale-[1.02] ${selectedStyle === 'standard' ? 'bg-indigo-500/15 border-indigo-500/60 text-indigo-300' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`}>
                         <PenTool size={16} className="mb-1" /> {t('styles.standard')}
                       </button>
-                      <button onClick={() => setSelectedStyle('anime')} className={`flex flex-col items-center p-2 rounded-lg border text-xs font-medium ${selectedStyle === 'anime' ? 'bg-pink-900/30 border-pink-500 text-pink-400' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`} title="Para animes, desenhos, Maori, Tribal">
+                      <button onClick={() => setSelectedStyle('anime')} className={`flex flex-col items-center p-3 rounded-xl border text-xs font-medium transition-all duration-200 hover:scale-[1.02] ${selectedStyle === 'anime' ? 'bg-indigo-500/15 border-indigo-500/60 text-indigo-300' : 'bg-zinc-950 border-zinc-800 text-zinc-500'}`} title="Para animes, desenhos, Maori, Tribal">
                         <Brush size={16} className="mb-1" /> {t('styles.anime')}
                       </button>
                     </div>
-                    <p className="text-[9px] text-zinc-600 mt-1 text-center">
+                    <p className="text-xs text-zinc-400 mt-1 text-center">
                       {selectedStyle === 'anime' ? t('styles.animeDesc') : selectedStyle === 'standard' ? t('styles.standardDesc') : t('styles.perfectLinesDesc')}
                     </p>
                   </div>
                 </div>
 
-                <textarea value={promptText} onChange={(e) => setPromptText(e.target.value)} placeholder={t('controls.extraInstructions')} className="w-full h-10 lg:h-14 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs lg:text-sm text-white placeholder-zinc-600 focus:border-emerald-600 outline-none resize-none" />
+                <textarea value={promptText} onChange={(e) => setPromptText(e.target.value)} placeholder={t('controls.extraInstructions')} className="w-full h-10 lg:h-14 bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs lg:text-sm text-white placeholder-zinc-600 focus:border-indigo-600 outline-none resize-none" />
 
                 <button
                   onClick={handleGenerate}
                   disabled={isProcessing || !originalImage}
-                  className={`w-full py-2.5 lg:py-3 rounded-xl font-bold text-sm lg:text-base flex items-center justify-center gap-2 disabled:opacity-50 ${
-                    selectedStyle === 'anime'
-                      ? 'bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-900/30'
-                      : selectedStyle === 'perfect_lines'
-                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30'
-                        : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/30'
-                  }`}
+                  className="w-full py-2.5 lg:py-3 rounded-xl font-bold text-sm lg:text-base flex items-center justify-center gap-2 disabled:opacity-50 bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/30"
                 >
                   {selectedStyle === 'anime' ? <Brush size={14} /> : selectedStyle === 'perfect_lines' ? <Zap size={14} /> : <PenTool size={14} />}
                   {selectedStyle === 'anime' ? t('controls.generateAnime') : t('controls.generateStandard')}
@@ -1101,31 +1140,32 @@ export default function EditorPage() {
               <>
                 {/* Botões de Ação - Desktop */}
                 <div className="hidden lg:grid grid-cols-2 gap-2">
-                  <button
+                  <Button
                     onClick={handleDownload}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm"
+                    className="py-2.5 rounded-xl gap-2 text-sm font-semibold"
                   >
                     <Download size={16} /> {t('actions.download')}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="bg-purple-600 hover:bg-purple-500 text-white py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+                    className="py-2.5 rounded-xl gap-2 text-sm font-semibold"
                   >
                     <Save size={16} /> {isSaving ? t('actions.saving') : t('actions.saveShort')}
-                  </button>
+                  </Button>
                 </div>
 
                 {/* Botão Modo Desenho - Destaque */}
-                <button
+                <Button
                   onClick={handleOpenDrawingMode}
-                  className="hidden lg:flex w-full items-center justify-center gap-2 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white rounded-xl font-semibold text-sm shadow-lg shadow-orange-900/30 transition-all"
+                  variant="gradient"
+                  className="hidden lg:flex w-full py-3 rounded-xl gap-2 text-sm font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-900/30"
                   title="Adicionar traços manualmente"
                 >
                   <Edit3 size={18} />
                   <span>{t('actions.drawing')}</span>
                   <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded">PRO</span>
-                </button>
+                </Button>
 
                 {/* Indicador de Qualidade/DPI */}
                 <QualityIndicator
@@ -1138,7 +1178,7 @@ export default function EditorPage() {
                 <div className="bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden">
                   <button onClick={() => setShowAdjustSection(!showAdjustSection)} className="w-full p-2 flex items-center justify-between">
                     <h3 className="text-white font-medium text-xs flex items-center gap-1.5">
-                      <Settings size={11} className="text-purple-400" /> {t('controls.adjustments')}
+                      <Settings size={11} className="text-indigo-400" /> {t('controls.adjustments')}
                     </h3>
                     <ChevronUp size={14} className={`text-zinc-500 transition-transform ${showAdjustSection ? 'rotate-180' : ''}`} />
                   </button>
@@ -1159,23 +1199,31 @@ export default function EditorPage() {
 
                 {/* Botões de ação */}
                 <div className="flex gap-2 mt-3">
-                  <button 
-                    onClick={handleRegenerate} 
+                  <Button
+                    onClick={handleRegenerate}
                     disabled={isProcessing}
-                    className="flex-1 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 text-white py-2 rounded-xl font-medium flex items-center justify-center gap-2 text-sm transition-colors"
+                    className="flex-1 py-2 rounded-xl gap-2 text-sm bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800"
                     title="Regenerar com mesmas configurações"
                   >
                     <Zap size={14} /> {t('controls.regenerate')}
-                  </button>
-                  <button 
-                    onClick={handleReset} 
-                    className="px-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 py-2 rounded-xl font-medium flex items-center justify-center gap-2 text-sm"
+                  </Button>
+                  <Button
+                    onClick={handleReset}
+                    variant="secondary"
+                    className="px-4 py-2 rounded-xl gap-2 text-sm"
                     title="Limpar e começar novo"
                   >
                     <RotateCcw size={14} />
-                  </button>
+                  </Button>
                 </div>
               </>
+            )}
+
+            {/* AdSense — exibido apenas para usuários anônimos */}
+            {!isSignedIn && (
+              <div className="mt-4 px-1">
+                <AdSlot slot="editor-sidebar" format="rectangle" />
+              </div>
             )}
             </div>
           </div>
@@ -1222,21 +1270,7 @@ export default function EditorPage() {
 
       {/* Toast Notification */}
       {toast && (
-        <div 
-          className={`fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5 fade-in duration-300 ${
-            toast.type === 'success' ? 'bg-emerald-600 text-white' :
-            toast.type === 'error' ? 'bg-red-600 text-white' :
-            'bg-zinc-800 text-white border border-zinc-700'
-          }`}
-        >
-          {toast.type === 'success' && <CheckCircle size={20} />}
-          {toast.type === 'error' && <XCircle size={20} />}
-          {toast.type === 'info' && <AlertCircle size={20} />}
-          <span className="font-medium text-sm">{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 hover:opacity-70">
-            <X size={16} />
-          </button>
-        </div>
+        <EditorToast toast={toast} onDismiss={() => setToast(null)} />
       )}
     </div>
   );

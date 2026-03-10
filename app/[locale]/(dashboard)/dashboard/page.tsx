@@ -1,17 +1,18 @@
 import { auth } from '@clerk/nextjs/server';
-import { redirect } from 'next/navigation';
 import { getOrCreateUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { getPresignedUrl } from '@/lib/r2';
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import DashboardClient from './DashboardClient';
+import AnonymousDashboard from '@/components/AnonymousDashboard';
 
 export default async function DashboardPage() {
   const tDashboard = await getTranslations('dashboard');
   const { userId } = await auth();
 
   if (!userId) {
-    redirect('/');
+    return <AnonymousDashboard />;
   }
 
   const user = await getOrCreateUser(userId);
@@ -20,24 +21,24 @@ export default async function DashboardPage() {
     return (
       <div className="text-center py-20 space-y-4">
         <p className="text-white text-lg">{tDashboard('error.unavailable')}</p>
-        <p className="text-gray-400 text-sm max-w-md mx-auto">
+        <p className="text-zinc-400 text-sm max-w-md mx-auto">
           {tDashboard('error.slowness')}
         </p>
         <div className="flex justify-center gap-4 mt-6">
           <Link
             href="/dashboard"
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition"
           >
             {tDashboard('error.tryAgain')}
           </Link>
           <Link
             href="/"
-            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+            className="px-4 py-2 bg-zinc-700 text-white rounded-lg hover:bg-zinc-600 transition"
           >
             {tDashboard('error.goHome')}
           </Link>
         </div>
-        <p className="text-gray-500 text-xs mt-4">
+        <p className="text-zinc-500 text-xs mt-4">
           {tDashboard('error.support')}
         </p>
       </div>
@@ -50,10 +51,10 @@ export default async function DashboardPage() {
     aiGenImagesResponse,
     usageResponse
   ] = await Promise.all([
-    // 1. Meus Projetos
+    // 1. Meus Projetos (include _key fields for presigned URL regeneration)
     supabaseAdmin
       .from('projects')
-      .select('id, name, original_image, stencil_image, created_at, style, width_cm, height_cm')
+      .select('id, name, original_image, stencil_image, original_image_key, stencil_image_key, created_at, style, width_cm, height_cm')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50),
@@ -75,15 +76,29 @@ export default async function DashboardPage() {
       .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString())
   ]);
 
-  const projects = projectsResponse.data || [];
+  const rawProjects = projectsResponse.data || [];
   const aiGenImages = aiGenImagesResponse.data || [];
   const currentUsage = usageResponse.count || 0; // Usar count retornado do head: true
+
+  // Regenerate presigned URLs for R2 projects (stored URLs expire after 1h)
+  const projects = await Promise.all(
+    rawProjects.map(async (project) => {
+      let { original_image, stencil_image } = project;
+      if (project.original_image_key) {
+        try { original_image = await getPresignedUrl(project.original_image_key); } catch {}
+      }
+      if (project.stencil_image_key) {
+        try { stencil_image = await getPresignedUrl(project.stencil_image_key); } catch {}
+      }
+      return { ...project, original_image, stencil_image };
+    })
+  );
 
   const isSubscribed = user.is_paid && user.subscription_status === 'active';
 
   // Determinar limite baseado no plano
   const limits: Record<string, number | null> = {
-    'starter': 100,
+    'ink': 100,
     'pro': 500,
     'studio': null // ilimitado
   };

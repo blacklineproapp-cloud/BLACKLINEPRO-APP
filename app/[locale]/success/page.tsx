@@ -3,19 +3,20 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Check, Sparkles, Zap, Crown } from 'lucide-react';
 import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function SuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const plan = searchParams?.get('plan') as 'starter' | 'pro' | 'studio' | null;
+  const plan = searchParams?.get('plan') as 'ink' | 'pro' | 'studio' | null;
 
   const planDetails = {
-    starter: {
-      name: 'Starter',
+    ink: {
+      name: 'Blackline Ink',
       price: 'R$ 50/mês',
       value: 50,
       icon: Zap,
-      color: 'emerald',
+      color: 'indigo',
       features: [
         'Editor de Stencil completo',
         'Modo Topográfico',
@@ -24,42 +25,29 @@ export default function SuccessPage() {
       ],
     },
     pro: {
-      name: 'Pro',
+      name: 'Blackline Pro',
       price: 'R$ 100/mês',
       value: 100,
       icon: Crown,
-      color: 'purple',
+      color: 'indigo',
       features: [
-        'Tudo do plano Starter',
+        'Tudo do plano Ink',
         'IA GEN (geração de imagens)',
         'Aprimorar imagem (4K)',
         'Color Match + Dividir A4',
       ],
     },
     studio: {
-      name: 'Studio',
+      name: 'Blackline Studio',
       price: 'R$ 300/mês',
       value: 300,
       icon: Sparkles,
-      color: 'amber',
+      color: 'indigo',
       features: [
         'Tudo do plano Pro',
         'Uso ilimitado',
         'Suporte prioritário',
         'Ideal para estúdios',
-      ],
-    },
-    enterprise: {
-      name: 'Enterprise',
-      price: 'R$ 600/mês',
-      value: 600,
-      icon: Crown,
-      color: 'blue',
-      features: [
-        'Tudo do plano Studio',
-        'Uso ILIMITADO',
-        'Suporte dedicado 24/7',
-        'API + Onboarding',
       ],
     },
   };
@@ -80,7 +68,7 @@ export default function SuccessPage() {
       <div className="max-w-2xl mx-auto">
         {/* Success Icon */}
         <div className="flex justify-center mb-8">
-          <div className="w-24 h-24 bg-gradient-to-br from-emerald-600 to-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-900/50 animate-pulse">
+          <div className="w-24 h-24 bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-full flex items-center justify-center shadow-lg shadow-indigo-900/50 animate-pulse">
             <Check size={48} className="text-white" />
           </div>
         </div>
@@ -88,7 +76,7 @@ export default function SuccessPage() {
         {/* Main Content */}
         <div className="text-center mb-8">
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-            Bem-vindo ao StencilFlow! 🎉
+            Bem-vindo ao Black Line Pro! 🎉
           </h1>
 
           <p className="text-lg text-zinc-400 mb-2">
@@ -109,15 +97,15 @@ export default function SuccessPage() {
         {details && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 mb-8">
             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <Sparkles className="text-emerald-500" size={24} />
+              <Sparkles className="text-indigo-500" size={24} />
               Agora você tem acesso a:
             </h2>
 
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {details.features.map((feature, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-emerald-600/10 rounded-full flex items-center justify-center shrink-0 mt-0.5">
-                    <Check className="text-emerald-500" size={12} />
+                  <div className="w-5 h-5 bg-indigo-600/10 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="text-indigo-500" size={12} />
                   </div>
                   <span className="text-zinc-300">{feature}</span>
                 </li>
@@ -128,19 +116,21 @@ export default function SuccessPage() {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
+          <Button
+            variant="gradient"
             onClick={() => router.push('/dashboard')}
-            className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-bold rounded-xl transition-all shadow-lg"
+            className="px-8 py-4 font-bold rounded-xl shadow-lg"
           >
             Começar a Criar →
-          </button>
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
             onClick={() => router.push('/editor')}
-            className="px-8 py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl transition-all border border-zinc-700"
+            className="px-8 py-4 font-semibold rounded-xl border border-zinc-700"
           >
             Ir para Editor
-          </button>
+          </Button>
         </div>
 
         {/* Auto-redirect Info */}
@@ -154,10 +144,10 @@ export default function SuccessPage() {
             Precisa de ajuda? Estamos aqui para você!
           </p>
           <a
-            href="mailto:suporte@stencilflow.com"
-            className="text-emerald-500 hover:text-emerald-400 text-sm font-semibold"
+            href="mailto:suporte@blacklinepro.com"
+            className="text-indigo-500 hover:text-indigo-400 text-sm font-semibold"
           >
-            suporte@stencilflow.com
+            suporte@blacklinepro.com
           </a>
         </div>
       </div>

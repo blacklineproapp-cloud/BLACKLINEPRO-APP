@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { AlertTriangle, X, CreditCard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 interface CourtesyBannerProps {
   deadline: string; // ISO date string
-  assignedPlan: 'legacy' | 'starter' | 'pro' | 'studio';
+  assignedPlan: 'ink' | 'pro' | 'studio';
 }
 
 export default function CourtesyBanner({ deadline, assignedPlan }: CourtesyBannerProps) {
@@ -36,13 +37,15 @@ export default function CourtesyBanner({ deadline, assignedPlan }: CourtesyBanne
         : 'bg-amber-900/20 border-amber-500'
     }`}>
       {/* Close Button */}
-      <button
+      <Button
         onClick={() => setIsDismissed(true)}
-        className="absolute top-3 right-3 text-zinc-400 hover:text-white transition-colors"
+        variant="ghost"
+        size="icon"
+        className="absolute top-3 right-3"
         aria-label="Fechar aviso"
       >
         <X size={18} />
-      </button>
+      </Button>
 
       {/* Content */}
       <div className="flex items-start gap-4 pr-8">
@@ -70,22 +73,19 @@ export default function CourtesyBanner({ deadline, assignedPlan }: CourtesyBanne
           </p>
 
           <p className="text-zinc-400 text-sm mb-4">
-            Para continuar usando o StencilFlow após esta data, você precisa assinar o plano{' '}
+            Para continuar usando o Black Line Pro após esta data, você precisa assinar o plano{' '}
             <strong className="text-white">{assignedPlan.toUpperCase()}</strong>.
           </p>
 
           {/* CTA Button */}
-          <button
+          <Button
             onClick={handlePayment}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-white transition-all shadow-lg ${
-              isUrgent
-                ? 'bg-red-600 hover:bg-red-500'
-                : 'bg-emerald-600 hover:bg-emerald-500'
-            }`}
+            variant={isUrgent ? 'destructive' : 'default'}
+            className="gap-2 px-4 py-2 rounded-lg shadow-lg"
           >
             <CreditCard size={18} />
             Assinar Agora
-          </button>
+          </Button>
         </div>
       </div>
     </div>

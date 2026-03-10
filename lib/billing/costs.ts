@@ -7,6 +7,8 @@
  * - Usado apenas para registro de custo em BRL/USD no ai_usage
  */
 
+import { logger } from '../logger';
+
 // Tipos de operação suportados
 export type OperationType =
   | 'topographic'
@@ -80,7 +82,7 @@ export function calculateGeminiCost(usageMetadata?: {
   totalTokenCount?: number;
 }): number {
   if (!usageMetadata) {
-    console.warn('[Cost] usageMetadata não fornecido, retornando 0');
+    logger.warn('[Cost] usageMetadata não fornecido, retornando 0');
     return 0;
   }
 
@@ -92,7 +94,7 @@ export function calculateGeminiCost(usageMetadata?: {
   
   const totalCost = inputCost + outputCost;
   
-  console.log(`[Cost] 💰 Tokens: ${inputTokens} in + ${outputTokens} out = $${totalCost.toFixed(6)} USD`);
+  logger.debug('[Cost] Token usage calculated', { inputTokens, outputTokens, totalCostUSD: totalCost.toFixed(6) });
   
   return totalCost;
 }
@@ -109,13 +111,13 @@ export function calculateCostWithFallback(
     const realCost = calculateGeminiCost(usageMetadata);
     const estimatedCost = USD_COST[operationType];
     
-    console.log(`[Cost] Estimado: $${estimatedCost} | Real: $${realCost.toFixed(6)}`);
+    logger.debug('[Cost] Cost comparison', { estimatedCost, realCost: realCost.toFixed(6) });
     
     return realCost;
   }
   
   // Fallback para estimativa hardcoded
-  console.warn(`[Cost] ⚠️ usageMetadata indisponível, usando estimativa: $${USD_COST[operationType]}`);
+  logger.warn('[Cost] usageMetadata indisponível, usando estimativa', { operationType, estimatedCost: USD_COST[operationType] });
   return USD_COST[operationType];
 }
 

@@ -23,9 +23,9 @@ const variantStyles: Record<BadgeVariant, {
     icon: <Star size={10} className="fill-current" />,
   },
   savings: {
-    bg: 'bg-gradient-to-r from-emerald-500/20 to-green-500/20',
-    text: 'text-emerald-400',
-    border: 'border-emerald-500/30',
+    bg: 'bg-gradient-to-r from-indigo-500/20 to-green-500/20',
+    text: 'text-indigo-400',
+    border: 'border-indigo-500/30',
     icon: <Zap size={10} />,
   },
   recommended: {
@@ -35,9 +35,9 @@ const variantStyles: Record<BadgeVariant, {
     icon: <Sparkles size={10} />,
   },
   best: {
-    bg: 'bg-gradient-to-r from-purple-500/20 to-pink-500/20',
-    text: 'text-purple-400',
-    border: 'border-purple-500/30',
+    bg: 'bg-gradient-to-r from-indigo-500/20 to-pink-500/20',
+    text: 'text-indigo-400',
+    border: 'border-indigo-500/30',
     icon: <Trophy size={10} />,
   },
   new: {

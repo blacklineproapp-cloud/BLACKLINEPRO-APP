@@ -22,12 +22,12 @@ interface RemarketingInitialProps {
 export const RemarketingInitial = ({
   userName = 'Tatuador',
   userEmail,
-  appUrl = 'https://stencilflow.com.br',
+  appUrl = 'https://Black Line Pro.com.br',
 }: RemarketingInitialProps) => {
   return (
     <Html>
       <Head />
-      <Preview>Desbloqueie todo o potencial do StencilFlow - Editor profissional de stencils</Preview>
+      <Preview>Desbloqueie todo o potencial do Black Line Pro - Editor profissional de stencils</Preview>
       <Body style={styles.body}>
         <div style={styles.wrapper}>
           <Container style={styles.container}>
@@ -37,11 +37,11 @@ export const RemarketingInitial = ({
               <Text style={styles.paragraph}>Olá, <strong>{userName}</strong>!</Text>
 
               <Text style={styles.paragraph}>
-                Vimos que você criou sua conta no <strong>StencilFlow</strong>, a plataforma que
+                Vimos que você criou sua conta no <strong>Black Line Pro</strong>, a plataforma que
                 está transformando o trabalho de mais de <strong>2.500 tatuadores</strong> no Brasil.
               </Text>
 
-              <HighlightBox title="🎨 Com a Tecnologia Stencil Flow você tem:">
+              <HighlightBox title="🎨 Com a Tecnologia Black Line Pro você tem:">
                 <ul style={styles.list}>
                   <li style={styles.listItem}>
                     <strong>Modo Topográfico</strong> - Sombreamentos 3D com curvas de nível perfeitas
@@ -171,7 +171,7 @@ const styles = {
   priceSavings: {
     margin: '10px 0 0 0',
     fontSize: '12px',
-    color: '#10b981',
+    color: '#6366F1',
   },
   disclaimer: {
     textAlign: 'center' as const,

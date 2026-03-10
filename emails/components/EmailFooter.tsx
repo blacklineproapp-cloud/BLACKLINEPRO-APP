@@ -27,14 +27,14 @@ export const EmailFooter = ({ unsubscribeEmail, appUrl }: EmailFooterProps) => {
               color: '#71717a',
             }}
           >
-            <strong style={{ color: '#18181b' }}>StencilFlow</strong> - A Arte do Estêncil
+            <strong style={{ color: '#18181b' }}>Black Line Pro</strong> - A Arte do Estêncil
           </Text>
 
           <Text style={{ margin: '15px 0', fontSize: '13px' }}>
             <Link
               href={appUrl}
               style={{
-                color: '#10b981',
+                color: '#6366F1',
                 textDecoration: 'none',
                 fontWeight: 600,
                 margin: '0 8px',
@@ -46,7 +46,7 @@ export const EmailFooter = ({ unsubscribeEmail, appUrl }: EmailFooterProps) => {
             <Link
               href={`${appUrl}/pricing`}
               style={{
-                color: '#10b981',
+                color: '#6366F1',
                 textDecoration: 'none',
                 fontWeight: 600,
                 margin: '0 8px',
@@ -58,7 +58,7 @@ export const EmailFooter = ({ unsubscribeEmail, appUrl }: EmailFooterProps) => {
             <Link
               href={`${appUrl}/dashboard`}
               style={{
-                color: '#10b981',
+                color: '#6366F1',
                 textDecoration: 'none',
                 fontWeight: 600,
                 margin: '0 8px',
@@ -78,12 +78,12 @@ export const EmailFooter = ({ unsubscribeEmail, appUrl }: EmailFooterProps) => {
               lineHeight: '1.6',
             }}
           >
-            Você está recebendo este email porque se cadastrou no StencilFlow.
+            Você está recebendo este email porque se cadastrou no Black Line Pro.
             <br />
             <Link
               href={`${appUrl}/unsubscribe?email=${encodeURIComponent(unsubscribeEmail)}`}
               style={{
-                color: '#10b981',
+                color: '#6366F1',
                 textDecoration: 'none',
                 fontWeight: 600,
               }}

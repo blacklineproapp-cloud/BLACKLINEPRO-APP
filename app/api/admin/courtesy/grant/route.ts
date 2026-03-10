@@ -1,44 +1,39 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { logAdminAction } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // Schema de validação
 const grantCourtesySchema = z.object({
   userEmail: z.string().email('Email inválido'),
-  plan: z.enum(['starter', 'pro', 'studio'], {
-    message: 'Plano deve ser starter, pro ou studio'
+  plan: z.enum(['ink', 'pro', 'studio'], {
+    message: 'Plano deve ser ink, pro ou studio'
   }),
   expirationDate: z.string().datetime('Data de expiração inválida'),
   sendEmail: z.boolean().default(false),
   notes: z.string().max(500, 'Notas muito longas (máximo 500 caracteres)').optional()
 });
 
-export async function POST(req: Request) {
-  try {
-    // 1. 🔒 VERIFICAR AUTENTICAÇÃO E PERMISSÃO ADMIN
-    const { userId } = await auth();
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Não autenticado' },
-        { status: 401 }
-      );
-    }
-
-    const userIsAdmin = await isAdmin(userId);
-    if (!userIsAdmin) {
-      return NextResponse.json(
-        { error: 'Acesso negado - apenas administradores' },
-        { status: 403 }
-      );
-    }
-
+export const POST = withAdminAuth(async (req, { adminId }) => {
     // 2. 🔍 VALIDAR INPUT COM ZOD
-    const body = await req.json();
-    const validated = grantCourtesySchema.parse(body);
+    let validated;
+    try {
+      const body = await req.json();
+      validated = grantCourtesySchema.parse(body);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          {
+            error: 'Dados inválidos',
+            details: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`)
+          },
+          { status: 400 }
+        );
+      }
+      throw error;
+    }
 
     // 3. 📧 BUSCAR USUÁRIO PELO EMAIL (case-insensitive)
     const { data: targetUser, error: userError } = await supabaseAdmin
@@ -57,7 +52,7 @@ export async function POST(req: Request) {
     // 4. ⚠️ VERIFICAR SE JÁ TEM SUBSCRIPTION ATIVA (Stripe ou Asaas)
     if (targetUser.subscription_id || targetUser.asaas_subscription_id) {
       return NextResponse.json(
-        { 
+        {
           error: 'Usuário já possui assinatura ativa',
           details: 'Não é possível conceder cortesia para usuários com pagamento recorrente ativo'
         },
@@ -67,14 +62,14 @@ export async function POST(req: Request) {
 
     // 5. ✅ CONCEDER CORTESIA
     const expirationDate = new Date(validated.expirationDate);
-    
+
     const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({
         admin_courtesy: true,
         admin_courtesy_expires_at: expirationDate.toISOString(),
         admin_courtesy_granted_at: new Date().toISOString(),
-        admin_courtesy_granted_by: userId,
+        admin_courtesy_granted_by: adminId,
         plan: validated.plan,
         is_paid: true,
         tools_unlocked: true,
@@ -83,7 +78,7 @@ export async function POST(req: Request) {
       .eq('id', targetUser.id);
 
     if (updateError) {
-      console.error('[Courtesy] Erro ao conceder:', updateError);
+      logger.error('[Courtesy] Erro ao conceder', { error: updateError });
       return NextResponse.json(
         { error: 'Erro ao conceder cortesia' },
         { status: 500 }
@@ -92,7 +87,7 @@ export async function POST(req: Request) {
 
     // 6. 📝 REGISTRAR NO AUDIT LOG
     await logAdminAction({
-      adminId: userId,
+      adminId: adminId,
       action: 'grant_courtesy',
       targetUserId: targetUser.id,
       metadata: {
@@ -107,9 +102,9 @@ export async function POST(req: Request) {
     if (validated.sendEmail) {
       try {
         // TODO: Implementar envio de email
-        console.log('[Courtesy] Email de cortesia será enviado para:', targetUser.email);
+        logger.info('[Courtesy] Email de cortesia será enviado', { email: targetUser.email });
       } catch (emailError) {
-        console.error('[Courtesy] Erro ao enviar email:', emailError);
+        logger.error('[Courtesy] Erro ao enviar email', { error: emailError });
         // Não falhar a operação por causa do email
       }
     }
@@ -126,23 +121,4 @@ export async function POST(req: Request) {
         expires_at: expirationDate.toISOString()
       }
     });
-
-  } catch (error: any) {
-    // Erro de validação Zod
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { 
-          error: 'Dados inválidos',
-          details: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`)
-        },
-        { status: 400 }
-      );
-    }
-
-    console.error('[Courtesy] Erro inesperado:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
-  }
-}
+});

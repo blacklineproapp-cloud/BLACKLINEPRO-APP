@@ -4,6 +4,7 @@
 // =====================================================
 
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger } from '../logger';
 import type {
   Organization,
   OrganizationPlan,
@@ -49,7 +50,7 @@ export async function createOrganization(
       .single();
 
     if (orgError) {
-      console.error('[createOrganization] Error creating organization:', orgError);
+      logger.error('[createOrganization] Error creating organization', orgError);
       throw orgError;
     }
 
@@ -63,7 +64,7 @@ export async function createOrganization(
       });
 
     if (memberError) {
-      console.error('[createOrganization] Error adding owner as member:', memberError);
+      logger.error('[createOrganization] Error adding owner as member', memberError);
       // Rollback: deletar organização criada
       await supabaseAdmin.from('organizations').delete().eq('id', organization.id);
       throw memberError;
@@ -75,11 +76,11 @@ export async function createOrganization(
       success: true,
       organization,
     };
-  } catch (error: any) {
-    console.error('[createOrganization] Fatal error:', error);
+  } catch (error: unknown) {
+    logger.error('[createOrganization] Fatal error', error);
     return {
       success: false,
-      error: error.message || 'Erro ao criar organização',
+      error: error instanceof Error ? error.message : 'Erro ao criar organização',
     };
   }
 }
@@ -96,13 +97,13 @@ export async function getOrganizationById(organizationId: string): Promise<Organ
       .single();
 
     if (error) {
-      console.error('[getOrganizationById] Error:', error);
+      logger.error('[getOrganizationById] Error', error);
       return null;
     }
 
     return data;
   } catch (error) {
-    console.error('[getOrganizationById] Fatal error:', error);
+    logger.error('[getOrganizationById] Fatal error', error);
     return null;
   }
 }
@@ -122,13 +123,13 @@ export async function getOrganizationBySubscriptionId(
       .single();
 
     if (error) {
-      console.error('[getOrganizationBySubscriptionId] Error:', error);
+      logger.error('[getOrganizationBySubscriptionId] Error', error);
       return null;
     }
 
     return data;
   } catch (error) {
-    console.error('[getOrganizationBySubscriptionId] Fatal error:', error);
+    logger.error('[getOrganizationBySubscriptionId] Fatal error', error);
     return null;
   }
 }
@@ -150,7 +151,7 @@ export async function getUserOrganizations(userId: string): Promise<Organization
       .eq('user_id', userId);
 
     if (error) {
-      console.error('[getUserOrganizations] Error:', error);
+      logger.error('[getUserOrganizations] Error', error);
       return [];
     }
 
@@ -158,12 +159,12 @@ export async function getUserOrganizations(userId: string): Promise<Organization
 
     // Extrair organizações do join
     const organizations = data
-      .map((item: any) => item.organizations)
+      .map((item: Record<string, unknown>) => item.organizations)
       .filter((org): org is Organization => org !== null);
 
     return organizations;
   } catch (error) {
-    console.error('[getUserOrganizations] Fatal error:', error);
+    logger.error('[getUserOrganizations] Fatal error', error);
     return [];
   }
 }
@@ -190,7 +191,7 @@ export async function getActiveOrganization(userId: string): Promise<Organizatio
 
     return activeOrg || null;
   } catch (error) {
-    console.error('[getActiveOrganization] Error:', error);
+    logger.error('[getActiveOrganization] Error', error);
     return null;
   }
 }
@@ -210,13 +211,13 @@ export async function updateOrganization(
       .eq('id', organizationId);
 
     if (error) {
-      console.error('[updateOrganization] Error:', error);
+      logger.error('[updateOrganization] Error', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('[updateOrganization] Fatal error:', error);
+    logger.error('[updateOrganization] Fatal error', error);
     return false;
   }
 }
@@ -232,7 +233,7 @@ export async function incrementOrganizationUsage(
   try {
     const org = await getOrganizationById(organizationId);
     if (!org) {
-      console.error('[incrementOrganizationUsage] Organization not found');
+      logger.error('[incrementOrganizationUsage] Organization not found', { organizationId });
       return false;
     }
 
@@ -245,13 +246,13 @@ export async function incrementOrganizationUsage(
       .eq('id', organizationId);
 
     if (error) {
-      console.error('[incrementOrganizationUsage] Error:', error);
+      logger.error('[incrementOrganizationUsage] Error', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('[incrementOrganizationUsage] Fatal error:', error);
+    logger.error('[incrementOrganizationUsage] Fatal error', error);
     return false;
   }
 }
@@ -264,12 +265,12 @@ export async function decrementOrganizationCredits(organizationId: string): Prom
   try {
     const org = await getOrganizationById(organizationId);
     if (!org) {
-      console.error('[decrementOrganizationCredits] Organization not found');
+      logger.error('[decrementOrganizationCredits] Organization not found', { organizationId });
       return false;
     }
 
     if (org.credits <= 0) {
-      console.error('[decrementOrganizationCredits] No credits available');
+      logger.warn('[decrementOrganizationCredits] No credits available', { organizationId });
       return false;
     }
 
@@ -279,13 +280,13 @@ export async function decrementOrganizationCredits(organizationId: string): Prom
       .eq('id', organizationId);
 
     if (error) {
-      console.error('[decrementOrganizationCredits] Error:', error);
+      logger.error('[decrementOrganizationCredits] Error', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('[decrementOrganizationCredits] Fatal error:', error);
+    logger.error('[decrementOrganizationCredits] Fatal error', error);
     return false;
   }
 }
@@ -308,13 +309,13 @@ export async function updateOrganizationSubscription(
       .eq('subscription_id', subscriptionId);
 
     if (error) {
-      console.error('[updateOrganizationSubscription] Error:', error);
+      logger.error('[updateOrganizationSubscription] Error', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('[updateOrganizationSubscription] Fatal error:', error);
+    logger.error('[updateOrganizationSubscription] Fatal error', error);
     return false;
   }
 }
@@ -331,13 +332,13 @@ export async function deleteOrganization(organizationId: string): Promise<boolea
       .eq('id', organizationId);
 
     if (error) {
-      console.error('[deleteOrganization] Error:', error);
+      logger.error('[deleteOrganization] Error', error);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('[deleteOrganization] Fatal error:', error);
+    logger.error('[deleteOrganization] Fatal error', error);
     return false;
   }
 }

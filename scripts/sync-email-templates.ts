@@ -38,36 +38,36 @@ interface TemplateConfig {
 
 const templates: TemplateConfig[] = [
   {
-    name: 'stencilflow-remarketing-initial',
+    name: 'blacklinepro-remarketing-initial',
     component: RemarketingInitial,
-    subject: 'A Arte do Estêncil - Desbloqueie o StencilFlow Completo',
+    subject: 'A Arte do Estêncil - Desbloqueie o Black Line Pro Completo',
     description: 'Email de remarketing Dia 1 - Apresentação de recursos e benefícios',
     variables: [
       { key: 'userName', type: 'string', fallbackValue: 'Tatuador' },
       { key: 'userEmail', type: 'string', fallbackValue: 'user@example.com' },
-      { key: 'appUrl', type: 'string', fallbackValue: 'https://stencilflow.com.br' },
+      { key: 'appUrl', type: 'string', fallbackValue: 'https://blacklinepro.com.br' },
     ],
   },
   {
-    name: 'stencilflow-remarketing-reminder',
+    name: 'blacklinepro-remarketing-reminder',
     component: RemarketingReminder,
-    subject: '48% mais barato que Ghostline - StencilFlow',
+    subject: '48% mais barato que Ghostline - Black Line Pro',
     description: 'Email de remarketing Dia 7 - Comparação com concorrentes',
     variables: [
       { key: 'userName', type: 'string', fallbackValue: 'Tatuador' },
       { key: 'userEmail', type: 'string', fallbackValue: 'user@example.com' },
-      { key: 'appUrl', type: 'string', fallbackValue: 'https://stencilflow.com.br' },
+      { key: 'appUrl', type: 'string', fallbackValue: 'https://blacklinepro.com.br' },
     ],
   },
   {
-    name: 'stencilflow-remarketing-final',
+    name: 'blacklinepro-remarketing-final',
     component: RemarketingFinal,
     subject: 'Upload → IA → Download - Simples assim',
     description: 'Email de remarketing Dia 14 - Última chamada com foco em simplicidade',
     variables: [
       { key: 'userName', type: 'string', fallbackValue: 'Tatuador' },
       { key: 'userEmail', type: 'string', fallbackValue: 'user@example.com' },
-      { key: 'appUrl', type: 'string', fallbackValue: 'https://stencilflow.com.br' },
+      { key: 'appUrl', type: 'string', fallbackValue: 'https://blacklinepro.com.br' },
     ],
   },
 ];
@@ -161,13 +161,13 @@ async function syncTemplates() {
   try {
     const finalList = await resend.templates.list();
     const finalData = Array.isArray(finalList.data) ? finalList.data : (finalList.data ? [finalList.data] : []);
-    const stencilflowTemplates = finalData.filter((t: any) =>
-      t.name.startsWith('stencilflow-')
+    const blacklineproTemplates = finalData.filter((t: any) =>
+      t.name.startsWith('blacklinepro-')
     );
 
-    console.log(`\n✅ Templates StencilFlow no Resend: ${stencilflowTemplates.length}\n`);
+    console.log(`\n✅ Templates Black Line Pro no Resend: ${blacklineproTemplates.length}\n`);
 
-    stencilflowTemplates.forEach((t: any, index: number) => {
+    blacklineproTemplates.forEach((t: any, index: number) => {
       console.log(`${index + 1}. ${t.name}`);
       console.log(`   ID: ${t.id}`);
       console.log(`   Status: ${t.published ? '✅ Publicado' : '⏳ Rascunho'}`);
@@ -184,31 +184,31 @@ async function syncTemplates() {
 }
 
 // Função auxiliar para deletar templates antigos (use com cuidado!)
-async function deleteStencilflowTemplates() {
-  console.log('🗑️  DELETANDO TEMPLATES STENCILFLOW DO RESEND');
+async function deleteBlacklineproTemplates() {
+  console.log('🗑️  DELETANDO TEMPLATES BLACK LINE PRO DO RESEND');
   console.log('⚠️  ATENÇÃO: Esta ação não pode ser desfeita!\n');
 
   try {
     const list = await resend.templates.list();
     const listData = Array.isArray(list.data) ? list.data : (list.data ? [list.data] : []);
-    const stencilflowTemplates = listData.filter((t: any) =>
-      t.name.startsWith('stencilflow-')
+    const blacklineproTemplates = listData.filter((t: any) =>
+      t.name.startsWith('blacklinepro-')
     );
 
-    if (stencilflowTemplates.length === 0) {
-      console.log('ℹ️  Nenhum template StencilFlow encontrado.');
+    if (blacklineproTemplates.length === 0) {
+      console.log('ℹ️  Nenhum template Black Line Pro encontrado.');
       return;
     }
 
-    console.log(`Encontrados ${stencilflowTemplates.length} templates para deletar:\n`);
+    console.log(`Encontrados ${blacklineproTemplates.length} templates para deletar:\n`);
 
-    for (const template of stencilflowTemplates) {
+    for (const template of blacklineproTemplates) {
       console.log(`🗑️  Deletando: ${template.name} (${template.id})`);
       await resend.templates.remove(template.id);
       console.log(`   ✅ Deletado\n`);
     }
 
-    console.log('✅ Todos os templates StencilFlow foram deletados.');
+    console.log('✅ Todos os templates Black Line Pro foram deletados.');
   } catch (error: any) {
     console.error('❌ Erro ao deletar templates:', error.message);
   }
@@ -219,7 +219,7 @@ const args = process.argv.slice(2);
 
 if (args.includes('--delete') || args.includes('-d')) {
   // Modo deletar
-  deleteStencilflowTemplates().catch(console.error);
+  deleteBlacklineproTemplates().catch(console.error);
 } else if (args.includes('--help') || args.includes('-h')) {
   console.log(`
 📧 Script de Sincronização de Templates com Resend
@@ -228,7 +228,7 @@ Sincroniza os templates React Email locais com o Resend Dashboard.
 
 Uso:
   npm run email:sync              # Criar/atualizar templates no Resend
-  npm run email:sync -- --delete  # Deletar todos templates StencilFlow
+  npm run email:sync -- --delete  # Deletar todos templates Black Line Pro
   npm run email:sync -- --help    # Mostra esta ajuda
 
 O que faz:
@@ -238,9 +238,9 @@ O que faz:
   4. Lista todos os templates criados
 
 Templates sincronizados:
-  - stencilflow-remarketing-initial   (Dia 1)
-  - stencilflow-remarketing-reminder  (Dia 7)
-  - stencilflow-remarketing-final     (Dia 14)
+  - blacklinepro-remarketing-initial   (Dia 1)
+  - blacklinepro-remarketing-reminder  (Dia 7)
+  - blacklinepro-remarketing-final     (Dia 14)
 
 Variáveis disponíveis:
   - {{{userName}}}   - Nome do usuário

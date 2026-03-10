@@ -1,10 +1,7 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/auth';
-
 import { supabaseAdmin } from '@/lib/supabase';
-
-
+import { logger } from '@/lib/logger';
 
 /**
  * POST - Mesclar dados de usuários duplicados
@@ -15,14 +12,7 @@ import { supabaseAdmin } from '@/lib/supabase';
  *   "deleteUserId": "id-do-usuario-para-deletar"
  * }
  */
-export async function POST(req: Request) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId || !await isAdmin(userId)) {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-    }
-
+export const POST = withAdminAuth(async (req, { adminId }) => {
     const body = await req.json();
     const { keepUserId, deleteUserId } = body;
 
@@ -33,9 +23,7 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log('[Merge] Iniciando mesclagem...');
-    console.log('[Merge] Manter:', keepUserId);
-    console.log('[Merge] Deletar:', deleteUserId);
+    logger.info('[Merge] Iniciando mesclagem', { keepUserId, deleteUserId });
 
     // 1. Buscar dados de ambos os usuários
     const { data: keepUser } = await supabaseAdmin
@@ -87,7 +75,7 @@ export async function POST(req: Request) {
         : deleteUser.created_at,
     };
 
-    console.log('[Merge] Dados mesclados:', mergedData);
+    logger.debug('[Merge] Dados mesclados', { mergedData });
 
     // 3. Atualizar usuário que será mantido
     const { error: updateError } = await supabaseAdmin
@@ -96,11 +84,11 @@ export async function POST(req: Request) {
       .eq('id', keepUserId);
 
     if (updateError) {
-      console.error('[Merge] Erro ao atualizar:', updateError);
+      logger.error('[Merge] Erro ao atualizar', { error: updateError });
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
-    console.log('[Merge] ✅ Usuário atualizado');
+    logger.info('[Merge] Usuário atualizado', { keepUserId });
 
     // 4. Deletar usuário antigo
     const { error: deleteError } = await supabaseAdmin
@@ -109,11 +97,11 @@ export async function POST(req: Request) {
       .eq('id', deleteUserId);
 
     if (deleteError) {
-      console.error('[Merge] Erro ao deletar:', deleteError);
+      logger.error('[Merge] Erro ao deletar', { error: deleteError });
       return NextResponse.json({ error: deleteError.message }, { status: 500 });
     }
 
-    console.log('[Merge] ✅ Usuário antigo deletado');
+    logger.info('[Merge] Usuário antigo deletado', { deleteUserId });
 
     return NextResponse.json({
       success: true,
@@ -129,9 +117,4 @@ export async function POST(req: Request) {
         email: deleteUser.email
       }
     });
-
-  } catch (error: any) {
-    console.error('[Merge] Erro:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+});

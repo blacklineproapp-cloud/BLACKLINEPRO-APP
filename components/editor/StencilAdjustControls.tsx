@@ -62,13 +62,13 @@ function StencilAdjustControls({
       {/* Header com Reset */}
       <div className="flex items-center justify-between">
         <h3 className="text-white font-semibold text-sm flex items-center gap-2">
-          <Sliders size={16} className="text-emerald-500" />
+          <Sliders size={16} className="text-indigo-500" />
           {t('title')}
         </h3>
         <button
           onClick={onReset}
           disabled={isProcessing}
-          className="text-xs text-zinc-400 hover:text-emerald-400 flex items-center gap-1 disabled:opacity-50"
+          className="text-xs text-zinc-400 hover:text-indigo-400 flex items-center gap-1 disabled:opacity-50"
           title={t('resetTooltip')}
         >
           <RefreshCw size={12} /> {t('reset')}
@@ -78,7 +78,7 @@ function StencilAdjustControls({
       {/* Seção: Ajustes Essenciais (sempre visível) */}
       <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-1.5 lg:p-3 space-y-1.5 lg:space-y-3">
         <div className="flex items-center gap-2 mb-1">
-          <Sliders size={13} className="text-purple-400" />
+          <Sliders size={13} className="text-indigo-400" />
           <span className="text-white font-medium text-[11px] lg:text-xs">{t('essential')}</span>
         </div>
 
@@ -86,7 +86,7 @@ function StencilAdjustControls({
         <div>
           <div className="flex justify-between items-center mb-1">
             <label className="text-[10px] lg:text-[11px] text-zinc-400">{t('intensity')}</label>
-            <span className="text-[10px] lg:text-[11px] text-emerald-400 font-mono">
+            <span className="text-[10px] lg:text-[11px] text-indigo-400 font-mono">
               {controls.brightness > 0 ? '+' : ''}{controls.brightness}
             </span>
           </div>
@@ -97,9 +97,9 @@ function StencilAdjustControls({
             value={controls.brightness}
             onChange={(e) => handleChange('brightness', Number(e.target.value))}
             disabled={isProcessing}
-            className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
+            className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 disabled:opacity-50"
           />
-          <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-600 mt-0.5">
+          <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-400 mt-0.5">
             <span>{t('dark')}</span>
             <span>{t('light')}</span>
           </div>
@@ -109,7 +109,7 @@ function StencilAdjustControls({
         <div>
           <div className="flex justify-between items-center mb-1">
             <label className="text-[10px] lg:text-[11px] text-zinc-400">{t('contrast')}</label>
-            <span className="text-[10px] lg:text-[11px] text-emerald-400 font-mono">
+            <span className="text-[10px] lg:text-[11px] text-indigo-400 font-mono">
               {controls.contrast > 0 ? '+' : ''}{controls.contrast}
             </span>
           </div>
@@ -120,9 +120,9 @@ function StencilAdjustControls({
             value={controls.contrast}
             onChange={(e) => handleChange('contrast', Number(e.target.value))}
             disabled={isProcessing}
-            className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
+            className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 disabled:opacity-50"
           />
-          <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-600 mt-0.5">
+          <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-400 mt-0.5">
             <span>{t('soft')}</span>
             <span>{t('strong')}</span>
           </div>
@@ -132,7 +132,7 @@ function StencilAdjustControls({
         <div>
           <div className="flex justify-between items-center mb-1">
             <label className="text-[10px] lg:text-[11px] text-zinc-400">{t('threshold')}</label>
-            <span className="text-[10px] lg:text-[11px] text-emerald-400 font-mono">
+            <span className="text-[10px] lg:text-[11px] text-indigo-400 font-mono">
               {controls.threshold}
             </span>
           </div>
@@ -143,9 +143,9 @@ function StencilAdjustControls({
             value={controls.threshold}
             onChange={(e) => handleChange('threshold', Number(e.target.value))}
             disabled={isProcessing}
-            className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
+            className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 disabled:opacity-50"
           />
-          <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-600 mt-0.5">
+          <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-400 mt-0.5">
             <span>{t('moreBlack')}</span>
             <span>{t('moreWhite')}</span>
           </div>
@@ -155,7 +155,7 @@ function StencilAdjustControls({
         <div>
           <div className="flex justify-between items-center mb-1">
             <label className="text-[10px] lg:text-[11px] text-zinc-400">{t('gamma')}</label>
-            <span className="text-[10px] lg:text-[11px] text-emerald-400 font-mono">
+            <span className="text-[10px] lg:text-[11px] text-indigo-400 font-mono">
               {controls.gamma.toFixed(2)}
             </span>
           </div>
@@ -167,9 +167,9 @@ function StencilAdjustControls({
             value={controls.gamma}
             onChange={(e) => handleChange('gamma', Number(e.target.value))}
             disabled={isProcessing}
-            className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
+            className="w-full h-1.5 lg:h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 disabled:opacity-50"
           />
-          <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-600 mt-0.5">
+          <div className="flex justify-between text-[8px] lg:text-[9px] text-zinc-400 mt-0.5">
             <span>{t('dark')}</span>
             <span>{t('light')}</span>
           </div>
@@ -183,7 +183,7 @@ function StencilAdjustControls({
               onClick={() => handleChange('sharpen', !controls.sharpen)}
               disabled={isProcessing}
               className={`w-9 h-4.5 lg:w-10 lg:h-5 rounded-full transition-colors disabled:opacity-50 ${
-                controls.sharpen ? 'bg-emerald-500' : 'bg-zinc-700'
+                controls.sharpen ? 'bg-indigo-500' : 'bg-zinc-700'
               }`}
             >
               <div
@@ -198,7 +198,7 @@ function StencilAdjustControls({
             <div className="animate-in fade-in slide-in-from-top-1 duration-200">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-[9px] lg:text-[10px] text-zinc-500">{t('amount')}</span>
-                <span className="text-[9px] lg:text-[10px] text-emerald-400 font-mono">
+                <span className="text-[9px] lg:text-[10px] text-indigo-400 font-mono">
                   {controls.sharpenAmount.toFixed(1)}
                 </span>
               </div>
@@ -210,7 +210,7 @@ function StencilAdjustControls({
                 value={controls.sharpenAmount}
                 onChange={(e) => handleChange('sharpenAmount', Number(e.target.value))}
                 disabled={isProcessing}
-                className="w-full h-1 lg:h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
+                className="w-full h-1 lg:h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 disabled:opacity-50"
               />
             </div>
           )}
@@ -250,7 +250,7 @@ function StencilAdjustControls({
             disabled={isProcessing}
             className={`flex flex-col items-center justify-center py-2 lg:py-2.5 rounded text-[9px] lg:text-[10px] font-medium border transition-colors disabled:opacity-50 ${
               controls.flipHorizontal
-                ? 'bg-blue-900/30 border-blue-500 text-blue-400'
+                ? 'bg-indigo-900/30 border-indigo-500 text-indigo-400'
                 : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
             }`}
           >
@@ -262,7 +262,7 @@ function StencilAdjustControls({
             disabled={isProcessing}
             className={`flex flex-col items-center justify-center py-2 lg:py-2.5 rounded text-[9px] lg:text-[10px] font-medium border transition-colors disabled:opacity-50 ${
               controls.flipVertical
-                ? 'bg-blue-900/30 border-blue-500 text-blue-400'
+                ? 'bg-indigo-900/30 border-indigo-500 text-indigo-400'
                 : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
             }`}
           >
@@ -274,7 +274,7 @@ function StencilAdjustControls({
             disabled={isProcessing}
             className={`flex flex-col items-center justify-center py-2 lg:py-2.5 rounded text-[9px] lg:text-[10px] font-medium border transition-colors disabled:opacity-50 ${
               controls.invert
-                ? 'bg-purple-900/30 border-purple-500 text-purple-400'
+                ? 'bg-indigo-900/30 border-indigo-500 text-indigo-400'
                 : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:border-zinc-700'
             }`}
           >
@@ -301,7 +301,7 @@ function StencilAdjustControls({
               title={t(`colors.${preset.key}`)}
               className={`w-full aspect-square rounded-md border-2 transition-all disabled:opacity-50 ${
                 controls.lineColor === preset.color
-                  ? 'border-emerald-500 ring-2 ring-emerald-500/30 scale-110'
+                  ? 'border-indigo-500 ring-2 ring-indigo-500/30 scale-110'
                   : 'border-zinc-700 hover:border-zinc-500'
               }`}
               style={{ backgroundColor: preset.color }}
@@ -327,7 +327,7 @@ function StencilAdjustControls({
           <div className="animate-in fade-in slide-in-from-top-1 duration-200">
             <div className="flex justify-between items-center mb-1">
               <label className="text-[10px] text-zinc-400">{t('sensitivity')}</label>
-              <span className="text-[10px] text-emerald-400 font-mono">
+              <span className="text-[10px] text-indigo-400 font-mono">
                 {controls.colorThreshold || 250}
               </span>
             </div>
@@ -338,25 +338,25 @@ function StencilAdjustControls({
               value={controls.colorThreshold || 250}
               onChange={(e) => handleChange('colorThreshold', Number(e.target.value))}
               disabled={isProcessing}
-              className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50"
+              className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 disabled:opacity-50"
             />
-            <div className="flex justify-between text-[8px] text-zinc-600 mt-0.5">
+            <div className="flex justify-between text-[8px] text-zinc-400 mt-0.5">
               <span>{t('moreColor')}</span>
               <span>{t('lessColor')}</span>
             </div>
           </div>
         )}
 
-        <p className="text-[9px] text-zinc-600 leading-tight">
+        <p className="text-[9px] text-zinc-400 leading-tight">
           {t('colorHint')}
         </p>
       </div>
 
       {/* Indicador de processamento */}
       {isProcessing && (
-        <div className="bg-emerald-900/20 border border-emerald-800 rounded-lg p-2.5">
-          <div className="text-[11px] text-emerald-300 text-center flex items-center justify-center gap-2">
-            <div className="w-3 h-3 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+        <div className="bg-indigo-900/20 border border-indigo-800 rounded-lg p-2.5">
+          <div className="text-[11px] text-indigo-300 text-center flex items-center justify-center gap-2">
+            <div className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
             {tMsg('applyingAdjustments')}
           </div>
         </div>

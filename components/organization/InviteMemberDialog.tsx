@@ -6,6 +6,8 @@
  */
 
 import { useState } from 'react';
+import ModalWrapper from '@/components/ui/ModalWrapper';
+import { Button } from '@/components/ui/button';
 
 interface InviteMemberDialogProps {
   organizationId: string;
@@ -66,95 +68,91 @@ export default function InviteMemberDialog({
 
   if (!isOpen) {
     return (
-      <button
+      <Button
+        variant={canAddMore ? 'default' : 'secondary'}
         onClick={() => setIsOpen(true)}
         disabled={!canAddMore}
-        className={`
-          px-4 py-2 rounded-lg font-medium transition-colors
-          ${
-            canAddMore
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-              : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-          }
-        `}
+        className={`px-4 py-2 rounded-lg font-medium ${
+          canAddMore
+            ? 'bg-indigo-600 hover:bg-indigo-700'
+            : 'bg-zinc-700 text-zinc-400'
+        }`}
       >
         {canAddMore ? 'Convidar Membro' : 'Limite Atingido'}
-      </button>
+      </Button>
     );
   }
 
   return (
-    <>
-      {/* Overlay */}
-      <div
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={() => setIsOpen(false)}
-      />
+    <ModalWrapper
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      maxWidth="max-w-md"
+      preventClose={loading}
+    >
+      <div className="p-6">
+        <h2 id="modal-title" className="text-2xl font-bold text-white mb-4">
+          Convidar Membro
+        </h2>
 
-      {/* Dialog */}
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Convidar Membro
-          </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-zinc-300 mb-2"
+            >
+              Email do novo membro
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="exemplo@email.com"
+              className="w-full px-4 py-2 border border-zinc-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-zinc-800 text-white"
+              disabled={loading}
+            />
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Email do novo membro
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="exemplo@email.com"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                disabled={loading}
-              />
+          {error && (
+            <div className="p-3 bg-red-900/20 border border-red-800 rounded-lg">
+              <p className="text-sm text-red-400">{error}</p>
             </div>
+          )}
 
-            {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-              </div>
-            )}
-
-            {success && (
-              <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                <p className="text-sm text-green-600 dark:text-green-400">
-                  Convite enviado com sucesso!
-                </p>
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                disabled={loading}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={loading || !email}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Enviando...' : 'Enviar Convite'}
-              </button>
+          {success && (
+            <div className="p-3 bg-green-900/20 border border-green-800 rounded-lg">
+              <p className="text-sm text-green-400">
+                Convite enviado com sucesso!
+              </p>
             </div>
-          </form>
+          )}
 
-          <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-            Um email será enviado com o link para aceitar o convite. O convite expira em 72 horas.
-          </p>
-        </div>
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              className="flex-1 px-4 py-2 min-h-[44px] rounded-lg font-medium text-zinc-300"
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="default"
+              disabled={loading || !email}
+              className="flex-1 px-4 py-2 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium"
+            >
+              {loading ? 'Enviando...' : 'Enviar Convite'}
+            </Button>
+          </div>
+        </form>
+
+        <p className="mt-4 text-xs text-zinc-400">
+          Um email será enviado com o link para aceitar o convite. O convite expira em 72 horas.
+        </p>
       </div>
-    </>
+    </ModalWrapper>
   );
 }

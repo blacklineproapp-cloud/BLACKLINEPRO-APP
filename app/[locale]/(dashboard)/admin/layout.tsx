@@ -33,7 +33,7 @@ const NavItem = ({
     className={[
       'p-2 md:p-3 rounded-2xl transition-all flex flex-col items-center justify-center gap-1.5 min-w-[64px] relative group',
       active
-        ? 'bg-emerald-600/10 text-emerald-500'
+        ? 'bg-indigo-600/10 text-indigo-500'
         : 'text-zinc-500 hover:text-white',
       className
     ].filter(Boolean).join(' ')}
@@ -45,7 +45,7 @@ const NavItem = ({
       {label}
     </span>
     {active && (
-      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-500 rounded-full md:hidden" />
+      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-500 rounded-full md:hidden" />
     )}
   </Link>
 );
@@ -95,7 +95,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-indigo-500/30">
       
       {/* 📱 Mobile Menu - Expanded Drawer */}
       {isMenuOpen && (
@@ -131,45 +131,45 @@ export default function AdminLayout({
                <Link 
                  href="/admin/courtesy" 
                  onClick={() => setIsMenuOpen(false)} 
-                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/courtesy') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/courtesy') ? 'bg-indigo-900/20 text-indigo-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
                >
-                  <Gift size={16} className={pathname?.startsWith('/admin/courtesy') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <Gift size={16} className={pathname?.startsWith('/admin/courtesy') ? 'text-indigo-500' : 'text-zinc-400'} />
                   <span className="text-xs font-medium">Cortesia</span>
                </Link>
 
                <Link 
                  href="/admin/audit" 
                  onClick={() => setIsMenuOpen(false)} 
-                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/audit') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/audit') ? 'bg-indigo-900/20 text-indigo-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
                >
-                  <Shield size={16} className={pathname?.startsWith('/admin/audit') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <Shield size={16} className={pathname?.startsWith('/admin/audit') ? 'text-indigo-500' : 'text-zinc-400'} />
                   <span className="text-xs font-medium">Auditoria</span>
                </Link>
 
                <Link 
                  href="/admin/generations" 
                  onClick={() => setIsMenuOpen(false)} 
-                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/generations') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/generations') ? 'bg-indigo-900/20 text-indigo-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
                >
-                  <ImageIcon size={16} className={pathname?.startsWith('/admin/generations') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <ImageIcon size={16} className={pathname?.startsWith('/admin/generations') ? 'text-indigo-500' : 'text-zinc-400'} />
                   <span className="text-xs font-medium">Galeria</span>
                </Link>
 
                <Link 
                  href="/admin/settings" 
                  onClick={() => setIsMenuOpen(false)} 
-                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/settings') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/settings') ? 'bg-indigo-900/20 text-indigo-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
                >
-                  <Settings size={16} className={pathname?.startsWith('/admin/settings') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <Settings size={16} className={pathname?.startsWith('/admin/settings') ? 'text-indigo-500' : 'text-zinc-400'} />
                   <span className="text-xs font-medium">Configurações</span>
                </Link>
 
                <Link 
                  href="/admin/suporte" 
                  onClick={() => setIsMenuOpen(false)} 
-                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/suporte') ? 'bg-emerald-900/20 text-emerald-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
+                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${pathname?.startsWith('/admin/suporte') ? 'bg-indigo-900/20 text-indigo-400' : 'text-zinc-300 hover:bg-zinc-800'}`}
                >
-                  <HelpCircle size={16} className={pathname?.startsWith('/admin/suporte') ? 'text-emerald-500' : 'text-zinc-400'} />
+                  <HelpCircle size={16} className={pathname?.startsWith('/admin/suporte') ? 'text-indigo-500' : 'text-zinc-400'} />
                   <span className="text-xs font-medium">Suporte</span>
                </Link>
 
@@ -277,7 +277,7 @@ export default function AdminLayout({
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className={`md:hidden p-2 md:p-3 rounded-2xl transition-all flex flex-col items-center justify-center gap-1.5 min-w-[64px] relative group ${
-            isMenuOpen ? 'text-emerald-500 bg-emerald-500/10' : 'text-zinc-500 hover:text-white'
+            isMenuOpen ? 'text-indigo-500 bg-indigo-500/10' : 'text-zinc-500 hover:text-white'
           }`}
         >
           <div className={`transition-transform duration-300 ${isMenuOpen ? 'scale-110' : 'group-hover:scale-110'}`}>

@@ -9,6 +9,7 @@ import {
   Loader2, ExternalLink, Receipt, CreditCard, QrCode
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 
 interface Invoice {
   id: string;
@@ -129,8 +130,8 @@ export default function FaturasPage() {
       case 'PIX':
         return {
           icon: QrCode,
-          bgColor: 'bg-emerald-500/20',
-          textColor: 'text-emerald-400'
+          bgColor: 'bg-indigo-500/20',
+          textColor: 'text-indigo-400'
         };
       case 'BOLETO':
         return {
@@ -141,8 +142,8 @@ export default function FaturasPage() {
       case 'CREDIT_CARD':
         return {
           icon: CreditCard,
-          bgColor: 'bg-purple-500/20',
-          textColor: 'text-purple-400'
+          bgColor: 'bg-indigo-500/20',
+          textColor: 'text-indigo-400'
         };
       default:
         return {
@@ -166,16 +167,17 @@ export default function FaturasPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => router.push('/assinatura')}
-            className="flex items-center gap-2 text-zinc-400 hover:text-white transition mb-4"
+            className="gap-2 mb-4"
           >
             <ArrowLeft size={20} />
             Voltar
-          </button>
+          </Button>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-emerald-600/10 border border-emerald-500/30 rounded-xl flex items-center justify-center">
-              <Receipt className="text-emerald-500" size={24} />
+            <div className="w-12 h-12 bg-indigo-600/10 border border-indigo-500/30 rounded-xl flex items-center justify-center">
+              <Receipt className="text-indigo-500" size={24} />
             </div>
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold">Minhas Faturas</h1>
@@ -279,16 +281,17 @@ export default function FaturasPage() {
                           href={invoice.bankSlipUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition"
+                          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-sm font-medium transition"
                         >
                           <ExternalLink size={16} />
                           <span className="hidden sm:inline">Pagar Boleto</span>
                           <span className="sm:hidden">Pagar</span>
                         </a>
 
-                        <button
+                        <Button
+                          variant="secondary"
                           onClick={() => handleCopyLink(invoice.bankSlipUrl!, invoice.id)}
-                          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg text-sm font-medium transition"
+                          className="gap-2"
                         >
                           {copiedId === invoice.id ? (
                             <>
@@ -301,7 +304,7 @@ export default function FaturasPage() {
                               <span className="hidden sm:inline">Copiar Link</span>
                             </>
                           )}
-                        </button>
+                        </Button>
                       </>
                     )}
 

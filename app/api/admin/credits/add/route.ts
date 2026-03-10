@@ -1,9 +1,9 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { logAdminAction } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // Schema de validação
 const addCreditsSchema = z.object({
@@ -12,23 +12,13 @@ const addCreditsSchema = z.object({
   reason: z.string().min(10, 'Motivo deve ter no mínimo 10 caracteres').max(500)
 });
 
-export async function POST(req: Request) {
+export const POST = withAdminAuth(async (req, { userId }) => {
   try {
-    // 1. 🔒 VERIFICAR ADMIN
-    const { userId } = await auth();
-    
-    if (!userId || !(await isAdmin(userId))) {
-      return NextResponse.json(
-        { error: 'Acesso negado' },
-        { status: 403 }
-      );
-    }
-
-    // 2. 🔍 VALIDAR INPUT
+    // 1. 🔍 VALIDAR INPUT
     const body = await req.json();
     const validated = addCreditsSchema.parse(body);
 
-    // 3. 📧 BUSCAR USUÁRIO (case-insensitive)
+    // 2. 📧 BUSCAR USUÁRIO (case-insensitive)
     const { data: targetUser, error: userError } = await supabaseAdmin
       .from('users')
       .select('id, email, name, credits, plan')
@@ -42,7 +32,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. ➕ ADICIONAR CRÉDITOS
+    // 3. ➕ ADICIONAR CRÉDITOS
     const currentCredits = targetUser.credits || 0;
     const newCredits = currentCredits + validated.amount;
 
@@ -52,14 +42,14 @@ export async function POST(req: Request) {
       .eq('id', targetUser.id);
 
     if (updateError) {
-      console.error('[Credits] Erro ao adicionar:', updateError);
+      logger.error('[Credits] Erro ao adicionar', { error: updateError });
       return NextResponse.json(
         { error: 'Erro ao adicionar créditos' },
         { status: 500 }
       );
     }
 
-    // 5. 📝 REGISTRAR TRANSAÇÃO
+    // 4. 📝 REGISTRAR TRANSAÇÃO
     await supabaseAdmin.from('credit_transactions').insert({
       user_id: targetUser.id,
       amount: validated.amount,
@@ -72,7 +62,7 @@ export async function POST(req: Request) {
       }
     });
 
-    // 6. 📝 AUDIT LOG
+    // 5. 📝 AUDIT LOG
     await logAdminAction({
       adminId: userId,
       action: 'add_credits',
@@ -86,7 +76,7 @@ export async function POST(req: Request) {
       }
     });
 
-    // 7. ✅ RETORNAR SUCESSO
+    // 6. ✅ RETORNAR SUCESSO
     return NextResponse.json({
       success: true,
       message: `${validated.amount} créditos adicionados com sucesso`,
@@ -98,22 +88,16 @@ export async function POST(req: Request) {
         new_credits: newCredits
       }
     });
-
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { 
+        {
           error: 'Dados inválidos',
           details: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`)
         },
         { status: 400 }
       );
     }
-
-    console.error('[Credits] Erro inesperado:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    throw error;
   }
-}
+});

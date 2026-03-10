@@ -22,24 +22,24 @@ interface RemarketingReminderProps {
 export const RemarketingReminder = ({
   userName = 'Tatuador',
   userEmail,
-  appUrl = 'https://stencilflow.com.br',
+  appUrl = 'https://Black Line Pro.com.br',
 }: RemarketingReminderProps) => {
   return (
     <Html>
       <Head />
       <Preview>
-        48% mais barato que Ghostline - StencilFlow com recursos exclusivos
+        48% mais barato que Ghostline - Black Line Pro com recursos exclusivos
       </Preview>
       <Body style={styles.body}>
         <div style={styles.wrapper}>
           <Container style={styles.container}>
-            <EmailHeader title="Por que tatuadores estão migrando para o StencilFlow?" />
+            <EmailHeader title="Por que tatuadores estão migrando para o Black Line Pro?" />
 
             <Section style={styles.content}>
               <Text style={styles.paragraph}>Olá, <strong>{userName}</strong>!</Text>
 
               <Text style={styles.paragraph}>
-                Você sabia que o <strong>StencilFlow é 48% mais barato</strong> que o Ghostline e
+                Você sabia que o <strong>Black Line Pro é 48% mais barato</strong> que o Ghostline e
                 oferece recursos que a concorrência não tem?
               </Text>
 
@@ -48,7 +48,7 @@ export const RemarketingReminder = ({
                   <thead>
                     <tr style={{ background: '#fafafa' }}>
                       <th style={styles.th}>Recurso</th>
-                      <th style={{ ...styles.th, textAlign: 'center' }}>StencilFlow</th>
+                      <th style={{ ...styles.th, textAlign: 'center' }}>Black Line Pro</th>
                       <th style={{ ...styles.th, textAlign: 'center' }}>Ghostline</th>
                     </tr>
                   </thead>
@@ -75,7 +75,7 @@ export const RemarketingReminder = ({
                           ...styles.td,
                           textAlign: 'center',
                           fontWeight: 'bold',
-                          color: '#10b981',
+                          color: '#6366F1',
                         }}
                       >
                         R$ 50/mês
@@ -103,7 +103,7 @@ export const RemarketingReminder = ({
                     <strong>Ferramentas exclusivas</strong> - Color Match, Dividir A4, Geração IA
                   </li>
                   <li style={styles.listItem}>
-                    <strong>Fidelidade total</strong> - Nossa tecnologia Stencil Flow captura 100%
+                    <strong>Fidelidade total</strong> - Nossa tecnologia Black Line Pro captura 100%
                     dos detalhes
                   </li>
                   <li style={styles.listItem}>

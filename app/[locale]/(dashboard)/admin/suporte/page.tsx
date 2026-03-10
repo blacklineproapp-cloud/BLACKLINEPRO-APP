@@ -7,6 +7,7 @@ import {
   Clock, CheckCircle, User, ChevronRight, AlertTriangle
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 
 interface TicketUser {
   id: string;
@@ -132,17 +133,18 @@ export default function AdminSuportePage() {
               <MessageSquare size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Suporte</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold">Suporte</h1>
               <p className="text-zinc-400 text-sm">Gerenciamento de tickets</p>
             </div>
           </div>
           
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => loadTickets()}
-            className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition"
           >
             <RefreshCw size={18} className="text-zinc-400" />
-          </button>
+          </Button>
         </div>
 
         {/* Status Cards */}
@@ -220,16 +222,16 @@ export default function AdminSuportePage() {
               <option value="low">Baixa</option>
             </select>
 
-            <button
+            <Button
+              variant="secondary"
               onClick={() => {
                 setSearch('');
                 setStatus('all');
                 setPriority('all');
               }}
-              className="bg-zinc-800 hover:bg-zinc-700 px-4 py-2.5 rounded-lg text-sm font-medium transition"
             >
               Limpar Filtros
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -313,20 +315,22 @@ export default function AdminSuportePage() {
               <div className="p-4 border-t border-zinc-800 flex items-center justify-between">
                 <p className="text-sm text-zinc-400">Página {page} de {totalPages}</p>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setPage(Math.max(1, page - 1))}
                     disabled={page === 1}
-                    className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 rounded text-sm transition"
                   >
                     Anterior
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setPage(Math.min(totalPages, page + 1))}
                     disabled={page === totalPages}
-                    className="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 rounded text-sm transition"
                   >
                     Próximo
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

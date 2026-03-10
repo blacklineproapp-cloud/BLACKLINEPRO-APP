@@ -12,7 +12,7 @@ export const EmailButton = ({ href, children }: EmailButtonProps) => {
       href={href}
       style={{
         display: 'inline-block',
-        background: 'linear-gradient(135deg, #10b981 0%, #a855f7 100%)',
+        background: 'linear-gradient(135deg, #6366F1 0%, #a855f7 100%)',
         color: '#ffffff',
         padding: '18px 48px',
         textDecoration: 'none',

@@ -73,7 +73,7 @@ export function SubscriptionsTab() {
             placeholder="Buscar por email, nome..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent border-none focus:outline-none text-sm w-full text-zinc-300 placeholder:text-zinc-600"
+            className="bg-transparent border-none focus:outline-none text-sm w-full text-zinc-300 placeholder:text-zinc-400"
           />
         </div>
         <select
@@ -82,10 +82,9 @@ export function SubscriptionsTab() {
           className="bg-zinc-950 border border-zinc-800 px-3 py-2 rounded-lg text-sm text-zinc-300 focus:outline-none"
         >
           <option value="">Todos planos</option>
-          <option value="starter">Starter</option>
-          <option value="pro">Pro</option>
-          <option value="studio">Studio</option>
-          <option value="enterprise">Enterprise</option>
+          <option value="ink">Blackline Ink</option>
+          <option value="pro">Blackline Pro</option>
+          <option value="studio">Blackline Studio</option>
         </select>
       </div>
 
@@ -127,8 +126,8 @@ export function SubscriptionsTab() {
                     </td>
                     <td className="p-4">
                       <span className={`text-xs px-2 py-1 rounded font-medium ${
-                        sub.user?.plan === 'pro' ? 'bg-emerald-900/30 text-emerald-400' :
-                        sub.user?.plan === 'starter' ? 'bg-blue-900/30 text-blue-400' :
+                        sub.user?.plan === 'pro' ? 'bg-indigo-900/30 text-indigo-400' :
+                        sub.user?.plan === 'ink' ? 'bg-blue-900/30 text-blue-400' :
                         sub.user?.plan === 'studio' ? 'bg-purple-900/30 text-purple-400' :
                         'bg-zinc-800 text-zinc-400'
                       }`}>
@@ -148,7 +147,7 @@ export function SubscriptionsTab() {
                       {new Date(sub.nextDueDate).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="p-4">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-900/20 text-emerald-400 border border-emerald-800/30">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-indigo-900/20 text-indigo-400 border border-indigo-800/30">
                         {sub.status}
                       </span>
                     </td>

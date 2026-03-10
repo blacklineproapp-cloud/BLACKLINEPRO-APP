@@ -1,17 +1,17 @@
 /**
  * Plans Configuration
  * Definição centralizada de todos os planos e features
- * 
- * ATUALIZADO: Dezembro 2025
- * - Removida terminologia de "créditos"
- * - Novos preços: Starter R$50, Pro R$100, Studio R$300
- * - Modelo: Assinatura mensal recorrente
+ *
+ * ATUALIZADO: Março 2026
+ * - Modelo BYOK: gerações ilimitadas (usuário usa sua chave Gemini gratuita)
+ * - Monetização por armazenamento em nuvem + recursos premium + sem ads
+ * - Planos: Blackline Free, Blackline Ink (R$29), Blackline Pro (R$69), Blackline Studio (R$199)
  */
 
 import type { BillingCycle } from '../billing/types';
 
 // Tipos de plano
-export type PlanType = 'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
+export type PlanType = 'free' | 'ink' | 'pro' | 'studio';
 
 // ============================================================================
 // CICLOS DE PAGAMENTO
@@ -30,18 +30,15 @@ export const BILLING_CYCLES: Record<BillingCycle, CycleInfo> = {
   },
   quarterly: {
     label: 'Trimestral',
-    discount: 10,
-    badge: 'Economize 10%'
+    discount: 0
   },
   semiannual: {
     label: 'Semestral',
-    discount: 25,
-    badge: 'Economize 25%'
+    discount: 0
   },
   yearly: {
     label: 'Anual',
-    discount: 40,
-    badge: 'Melhor Oferta! Economize 40%'
+    discount: 0
   }
 };
 
@@ -63,35 +60,23 @@ export const PLAN_PRICING: Record<PlanType, PlanPricing> = {
     semiannual: 0,
     yearly: 0
   },
-  legacy: {
-    monthly: 25.00,      // 🎁 LEGACY: R$ 25/mês fixo
-    quarterly: 75.00,    // R$ 25/mês (sem desconto)
-    semiannual: 150.00,  // R$ 25/mês (sem desconto)
-    yearly: 300.00       // R$ 25/mês (sem desconto)
-  },
-  starter: {
-    monthly: 50.00,
-    quarterly: 135.00,   // R$ 45/mês (10% off)
-    semiannual: 225.00,  // R$ 37.50/mês (25% off)
-    yearly: 360.00       // R$ 30/mês (40% off)
+  ink: {
+    monthly: 29.00,
+    quarterly: 87.00,    // 3x R$ 29
+    semiannual: 174.00,  // 6x R$ 29
+    yearly: 348.00       // 12x R$ 29
   },
   pro: {
-    monthly: 100.00,
-    quarterly: 270.00,   // R$ 90/mês (10% off)
-    semiannual: 450.00,  // R$ 75/mês (25% off)
-    yearly: 720.00       // R$ 60/mês (40% off)
+    monthly: 69.00,
+    quarterly: 207.00,   // 3x R$ 69
+    semiannual: 414.00,  // 6x R$ 69
+    yearly: 828.00       // 12x R$ 69
   },
   studio: {
-    monthly: 300.00,
-    quarterly: 810.00,   // R$ 270/mês (10% off)
-    semiannual: 1350.00, // R$ 225/mês (25% off)
-    yearly: 2160.00      // R$ 180/mês (40% off)
-  },
-  enterprise: {
-    monthly: 600.00,      // 🏢 ENTERPRISE: Verdadeiramente ilimitado
-    quarterly: 1620.00,   // R$ 540/mês (10% off)
-    semiannual: 2700.00,  // R$ 450/mês (25% off)
-    yearly: 4320.00       // R$ 360/mês (40% off)
+    monthly: 199.00,
+    quarterly: 597.00,   // 3x R$ 199
+    semiannual: 1194.00, // 6x R$ 199
+    yearly: 2388.00      // 12x R$ 199
   }
 };
 
@@ -100,15 +85,12 @@ export const PLAN_PRICING: Record<PlanType, PlanPricing> = {
 // ✅ FONTE ÚNICA DE VERDADE: Importado de limits.ts
 // ============================================================================
 
-// Importar limites reais de limits.ts para evitar inconsistências
-// Os valores são: free=3, legacy=100, starter=95, pro=210, studio=680, enterprise=-1 (ilimitado)
+// BYOK: Todos os planos têm gerações ilimitadas (null = sem limite)
 export const PLAN_GENERATION_LIMITS: Record<PlanType, number | null> = {
-  free: 3,         // 🎣 ISCA: 3 previews com blur
-  legacy: 100,     // 🎁 LEGACY: Apenas editor
-  starter: 95,     // 95 gerações/mês
-  pro: 210,        // 210 gerações/mês
-  studio: 680,     // 🛡️ Limite justo: 680 gerações/mês
-  enterprise: 1400 // 🏢 ENTERPRISE: Limite alto para uso profissional
+  free: null,
+  ink: null,
+  pro: null,
+  studio: null
 };
 
 // ============================================================================
@@ -125,7 +107,12 @@ export interface PlanInfo {
   name: string;
   description: string;
   price: PlanPricing;
-  generationLimit: number | null;
+  generationLimit: number | null; // mantido para compatibilidade; null = ilimitado (BYOK)
+  storageGB: number | null;        // GB de armazenamento em nuvem; null = sem limite
+  hasCloudStorage: boolean;        // armazenamento R2 incluído
+  showAds: boolean;                // exibe anúncios Google AdSense
+  hasWatermark: boolean;           // stencils gerados com marca d'água
+  premiumTools: boolean;           // ferramentas premium (Split A4, Color Match, etc.)
   features: PlanFeature[];
   popular?: boolean;
   cta: string;
@@ -133,165 +120,161 @@ export interface PlanInfo {
 
 export const PLANS: Record<PlanType, PlanInfo> = {
   free: {
-    name: 'Free',
-    description: 'Acesso limitado',
+    name: 'Blackline Free',
+    description: 'Gere stencils com sua chave Gemini gratuita',
     price: PLAN_PRICING.free,
-    generationLimit: 3,
+    generationLimit: null,
+    storageGB: 0,
+    hasCloudStorage: false,
+    showAds: true,
+    hasWatermark: false,
+    premiumTools: false,
     cta: 'Começar Grátis',
     features: [
       {
-        name: 'Visualizar exemplos',
+        name: 'Gerações ilimitadas (BYOK)',
         included: true,
-        description: 'Explore a plataforma'
+        description: 'Use sua chave Gemini gratuita do Google'
       },
       {
-        name: 'Editor de Stencil',
-        included: false,
-        description: 'Apenas para assinantes'
+        name: 'Editor e Generator completos',
+        included: true,
+        description: 'Acesso total às ferramentas de geração'
       },
       {
-        name: 'Ferramentas IA',
+        name: 'Salvar somente local (IndexedDB)',
+        included: true,
+        description: 'Seus stencils ficam no seu navegador'
+      },
+      {
+        name: 'Anúncios',
+        included: true,
+        description: 'Exibe anúncios Google AdSense'
+      },
+      {
+        name: 'Armazenamento em nuvem',
         included: false,
-        description: 'Apenas para assinantes'
+        description: 'Disponível no Blackline Ink e acima'
+      },
+      {
+        name: 'Ferramentas premium (Split A4, Color Match)',
+        included: false,
+        description: 'Disponível no Blackline Pro e acima'
       }
     ]
   },
 
-  legacy: {
-    name: 'Legacy',
-    description: 'Apenas Editor - Plano especial',
-    price: PLAN_PRICING.legacy,
-    generationLimit: 100,
-    cta: 'Assinar Legacy',
+  ink: {
+    name: 'Blackline Ink',
+    description: 'Nuvem + sem anúncios',
+    price: PLAN_PRICING.ink,
+    generationLimit: null,
+    storageGB: 5,
+    hasCloudStorage: true,
+    showAds: false,
+    hasWatermark: false,
+    premiumTools: false,
+    cta: 'Assinar Ink',
     features: [
       {
-        name: 'Editor de Stencil completo',
+        name: 'Gerações ilimitadas (BYOK)',
         included: true,
-        description: 'Edição profissional de stencils'
+        description: 'Use sua chave Gemini gratuita do Google'
       },
       {
-        name: 'Modo Topográfico',
+        name: '5 GB de armazenamento em nuvem',
         included: true,
-        description: 'Visualize camadas de profundidade'
+        description: 'Salve e acesse de qualquer dispositivo'
       },
       {
-        name: 'Linhas Perfeitas',
+        name: 'Sem anúncios',
         included: true,
-        description: 'Ajuste automático de contornos'
+        description: 'Experiência limpa e profissional'
       },
       {
-        name: 'Download PNG',
+        name: 'Editor completo + modos avançados',
         included: true,
-        description: 'Exporte em alta qualidade'
+        description: 'Topográfico, Linhas Perfeitas, Anime'
       },
       {
-        name: 'Ferramentas Premium',
+        name: 'Ferramentas premium (Split A4, Color Match)',
         included: false,
-        description: 'Não incluídas (upgrade para Starter)'
-      },
-      {
-        name: 'IA Generativa',
-        included: false,
-        description: 'Não incluída (upgrade para Pro)'
-      }
-    ]
-  },
-
-  starter: {
-    name: 'Starter',
-    description: 'Ideal para começar',
-    price: PLAN_PRICING.starter,
-    generationLimit: 95,
-    cta: 'Assinar Starter',
-    features: [
-      {
-        name: 'Editor de Stencil completo',
-        included: true,
-        description: 'Edição profissional de stencils'
-      },
-      {
-        name: 'Modo Topográfico',
-        included: true,
-        description: 'Visualize camadas de profundidade'
-      },
-      {
-        name: 'Linhas Perfeitas',
-        included: true,
-        description: 'Ajuste automático de contornos'
-      },
-      {
-        name: 'Controle de intensidade',
-        included: true,
-        description: 'Ajuste fino das linhas'
-      },
-      {
-        name: 'Download PNG/SVG',
-        included: true,
-        description: 'Exporte em alta qualidade'
-      },
-      {
-        name: 'Ferramentas IA avançadas',
-        included: false,
-        description: 'Apenas no plano Pro'
+        description: 'Disponível no Blackline Pro'
       }
     ]
   },
 
   pro: {
-    name: 'Pro',
+    name: 'Blackline Pro',
     description: 'Para tatuadores profissionais',
     price: PLAN_PRICING.pro,
-    generationLimit: 210,
+    generationLimit: null,
+    storageGB: 10,
+    hasCloudStorage: true,
+    showAds: false,
+    hasWatermark: false,
+    premiumTools: true,
     cta: 'Assinar Pro',
     popular: true,
     features: [
       {
-        name: 'Tudo do Starter',
-        included: true
+        name: 'Gerações ilimitadas (BYOK)',
+        included: true,
+        description: 'Use sua chave Gemini gratuita do Google'
       },
       {
-        name: 'Geração IA de designs',
+        name: '10 GB de armazenamento em nuvem',
         included: true,
-        description: 'Crie stencils do zero com IA'
+        description: 'Galeria profissional completa'
       },
       {
-        name: 'Aprimorar imagem (4K)',
+        name: 'Sem anúncios',
         included: true,
-        description: 'Melhore qualidade automaticamente'
+        description: 'Experiência limpa e profissional'
       },
       {
-        name: 'Color Match IA',
+        name: 'Todas as ferramentas premium',
         included: true,
-        description: 'Paleta de cores inteligente'
+        description: 'Split A4, Color Match IA, Aprimorar 4K'
       },
       {
-        name: 'Dividir A4',
+        name: 'Generator de artes com IA',
         included: true,
-        description: 'Otimize para impressão'
+        description: 'Crie designs do zero com IA'
       },
       {
-        name: 'Preview interativo',
+        name: 'Suporte prioritário',
         included: true,
-        description: 'Visualize antes de exportar'
+        description: 'Atendimento preferencial'
       }
     ]
   },
 
   studio: {
-    name: 'Studio',
-    description: 'Para estúdios e uso intensivo',
+    name: 'Blackline Studio',
+    description: 'Para estúdios e times',
     price: PLAN_PRICING.studio,
-    generationLimit: 680, // 🛡️ Limite justo
+    generationLimit: null,
+    storageGB: 25,
+    hasCloudStorage: true,
+    showAds: false,
+    hasWatermark: false,
+    premiumTools: true,
     cta: 'Assinar Studio',
     features: [
       {
-        name: 'Tudo do Pro',
+        name: 'Tudo do Blackline Pro',
         included: true
       },
       {
-        name: 'Até 680 gerações/mês',
+        name: '25 GB de armazenamento em nuvem',
         included: true,
-        description: 'Limite justo para uso profissional'
+        description: 'Para toda a equipe do estúdio'
+      },
+      {
+        name: 'Múltiplos usuários (team)',
+        included: true,
+        description: 'Compartilhe com toda a equipe'
       },
       {
         name: 'Suporte prioritário',
@@ -299,53 +282,9 @@ export const PLANS: Record<PlanType, PlanInfo> = {
         description: 'Atendimento preferencial'
       },
       {
-        name: 'Ideal para estúdios',
-        included: true,
-        description: 'Múltiplos tatuadores'
-      },
-      {
         name: 'Relatórios de uso',
         included: true,
-        description: 'Acompanhe o consumo'
-      }
-    ]
-  },
-
-  enterprise: {
-    name: 'Enterprise',
-    description: 'Para grandes operações',
-    price: PLAN_PRICING.enterprise,
-    generationLimit: 1400, // 🏢 ENTERPRISE: Limite alto
-    cta: 'Assinar Enterprise',
-    features: [
-      {
-        name: 'Tudo do Studio',
-        included: true
-      },
-      {
-        name: 'Até 1.400 gerações/mês',
-        included: true,
-        description: 'Limite alto para grandes operações'
-      },
-      {
-        name: 'Suporte dedicado',
-        included: true,
-        description: 'Atendimento exclusivo 24/7'
-      },
-      {
-        name: 'SLA garantido',
-        included: true,
-        description: '99.9% de uptime'
-      },
-      {
-        name: 'Onboarding personalizado',
-        included: true,
-        description: 'Setup e treinamento incluídos'
-      },
-      {
-        name: 'API access',
-        included: true,
-        description: 'Integração com seus sistemas'
+        description: 'Acompanhe o consumo da equipe'
       }
     ]
   }
@@ -354,10 +293,10 @@ export const PLANS: Record<PlanType, PlanInfo> = {
 /**
  * Formata preço para exibição
  */
-export function formatPrice(value: number, locale: string = 'pt-BR'): string {
-  return new Intl.NumberFormat(locale, {
+export function formatPrice(value: number, _locale?: string): string {
+  return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: locale === 'pt-BR' ? 'BRL' : 'USD' // Asaas is usually BRL, but for other locales we might show USD equivalent or just keep BRL
+    currency: 'BRL',
   }).format(value);
 }
 

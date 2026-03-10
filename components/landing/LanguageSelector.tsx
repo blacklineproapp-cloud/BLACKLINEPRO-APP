@@ -88,12 +88,12 @@ export default function LanguageSelector() {
       >
         <Globe size={16} />
         <span className="hidden sm:inline font-medium">{currentLanguage.code.toUpperCase()}</span>
-        <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute top-full right-0 mt-2 w-56 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full right-0 mt-2 w-56 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="p-1">
             {languages.map((lang) => (
               <button
@@ -101,7 +101,7 @@ export default function LanguageSelector() {
                 onClick={() => handleLanguageChange(lang.code)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                   lang.code === currentLocale
-                    ? 'bg-emerald-600/20 text-emerald-400'
+                    ? 'bg-indigo-600/20 text-indigo-400'
                     : 'text-zinc-300 hover:bg-zinc-800 hover:text-white'
                 }`}
               >
@@ -111,7 +111,7 @@ export default function LanguageSelector() {
                   <div className="text-xs text-zinc-500">{lang.name}</div>
                 </div>
                 {lang.code === currentLocale && (
-                  <Check size={16} className="text-emerald-500" />
+                  <Check size={16} className="text-indigo-500" />
                 )}
               </button>
             ))}

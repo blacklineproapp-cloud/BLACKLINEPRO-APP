@@ -10,6 +10,7 @@ import { X, Maximize2, Minimize2, Info } from 'lucide-react';
 import DrawingCanvas, { DrawingCanvasRef } from './DrawingCanvas';
 import DrawingToolbar from './DrawingToolbar';
 import type { DrawingTool, Stroke } from '@/lib/drawing/types';
+import { Button } from '@/components/ui/button';
 
 interface DrawingEditorProps {
   originalImage: string;       // Imagem original (referência visual)
@@ -194,7 +195,7 @@ export default function DrawingEditor({
               onClick={() => setShowTips(!showTips)}
               className={`p-2 rounded-lg transition-all ${
                 showTips
-                  ? 'bg-blue-600/20 text-blue-400'
+                  ? 'bg-indigo-600/20 text-indigo-400'
                   : 'bg-zinc-800 text-zinc-500 hover:text-zinc-300'
               }`}
               title="Mostrar dicas"
@@ -212,33 +213,37 @@ export default function DrawingEditor({
             </button>
 
             {/* Close */}
-            <button
+            <Button
               onClick={onClose}
-              className="p-2 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-red-900/50 hover:text-red-400 transition-all"
+              variant="secondary"
+              size="icon"
+              className="hover:bg-red-900/50 hover:text-red-400"
               title="Fechar (Esc)"
             >
               <X size={18} />
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Tips banner */}
         {showTips && (
-          <div className="bg-blue-900/20 border-b border-blue-800/30 px-4 py-2">
-            <div className="flex items-center gap-2 text-blue-300 text-xs">
+          <div className="bg-indigo-900/20 border-b border-indigo-800/30 px-4 py-2">
+            <div className="flex items-center gap-2 text-indigo-300 text-xs">
               <Info size={14} />
               <span>
                 Use <strong>Apple Pencil</strong> ou <strong>caneta</strong> para desenhar com pressão.
-                Atalhos: <kbd className="bg-blue-800/30 px-1 rounded">P</kbd> Caneta,{' '}
-                <kbd className="bg-blue-800/30 px-1 rounded">E</kbd> Borracha,{' '}
-                <kbd className="bg-blue-800/30 px-1 rounded">[ ]</kbd> Tamanho
+                Atalhos: <kbd className="bg-indigo-800/30 px-1 rounded">P</kbd> Caneta,{' '}
+                <kbd className="bg-indigo-800/30 px-1 rounded">E</kbd> Borracha,{' '}
+                <kbd className="bg-indigo-800/30 px-1 rounded">[ ]</kbd> Tamanho
               </span>
-              <button
+              <Button
                 onClick={() => setShowTips(false)}
-                className="ml-auto text-blue-400 hover:text-blue-300"
+                variant="ghost"
+                size="icon"
+                className="ml-auto text-indigo-400 hover:text-indigo-300 h-auto w-auto min-h-0 min-w-0"
               >
                 <X size={14} />
-              </button>
+              </Button>
             </div>
           </div>
         )}
@@ -313,27 +318,29 @@ export default function DrawingEditor({
 
         {/* Footer actions */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-800 bg-zinc-950">
-          <button
+          <Button
             onClick={onClose}
-            className="px-4 py-2 text-zinc-400 hover:text-white transition-colors"
+            variant="ghost"
+            className="px-4 py-2"
           >
             Cancelar
-          </button>
+          </Button>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               onClick={handleDownload}
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors"
+              variant="secondary"
+              className="px-4 py-2 rounded-lg"
             >
               Baixar PNG
-            </button>
+            </Button>
 
-            <button
+            <Button
               onClick={handleSave}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
+              className="px-4 py-2 rounded-lg"
             >
               Salvar e Fechar
-            </button>
+            </Button>
           </div>
         </div>
       </div>

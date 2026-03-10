@@ -69,7 +69,7 @@ export default function PixQrCodeDisplay({
             onClick={handleCopy}
             className={`p-3 rounded-lg transition-all ${
               copied
-                ? 'bg-emerald-600 text-white'
+                ? 'bg-indigo-600 text-white'
                 : 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
             }`}
           >
@@ -77,15 +77,15 @@ export default function PixQrCodeDisplay({
           </button>
         </div>
         {copied && (
-          <p className="text-emerald-400 text-xs mt-2 animate-fade-in">
+          <p className="text-indigo-400 text-xs mt-2 animate-fade-in">
             ✓ {t('copied')}
           </p>
         )}
       </div>
 
       {/* Instruções */}
-      <div className="bg-emerald-600/10 border border-emerald-500/30 rounded-xl p-4">
-        <h4 className="text-emerald-400 font-semibold text-sm mb-2">
+      <div className="bg-indigo-600/10 border border-indigo-500/30 rounded-xl p-4">
+        <h4 className="text-indigo-400 font-semibold text-sm mb-2">
           {t('instructionsTitle')}
         </h4>
         <ol className="text-zinc-300 text-xs space-y-1.5 list-decimal list-inside">

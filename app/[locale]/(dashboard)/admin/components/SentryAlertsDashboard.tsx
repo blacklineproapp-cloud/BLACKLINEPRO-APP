@@ -184,7 +184,7 @@ export default function SentryAlertsDashboard() {
     return (
       <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-xl p-6">
         <div className="flex items-center justify-center py-8">
-          <RefreshCw className="animate-spin text-emerald-400 mr-2" size={20} />
+          <RefreshCw className="animate-spin text-indigo-400 mr-2" size={20} />
           <span className="text-zinc-400">Carregando alertas...</span>
         </div>
       </div>
@@ -269,9 +269,9 @@ export default function SentryAlertsDashboard() {
 
       {/* Issues List */}
       {issues.length === 0 ? (
-        <div className="bg-emerald-900/20 border border-emerald-800/30 rounded-lg p-6 text-center">
-          <CheckCircle size={32} className="mx-auto mb-2 text-emerald-400" />
-          <p className="text-emerald-400 font-medium">Tudo certo!</p>
+        <div className="bg-indigo-900/20 border border-indigo-800/30 rounded-lg p-6 text-center">
+          <CheckCircle size={32} className="mx-auto mb-2 text-indigo-400" />
+          <p className="text-indigo-400 font-medium">Tudo certo!</p>
           <p className="text-xs text-zinc-500 mt-1">Nenhum erro não resolvido</p>
         </div>
       ) : (
@@ -303,9 +303,9 @@ export default function SentryAlertsDashboard() {
                           <CategoryIcon size={12} />
                           {CATEGORY_LABELS[issue.translation.category]}
                         </span>
-                        <span className="text-xs text-zinc-600">•</span>
+                        <span className="text-xs text-zinc-400">•</span>
                         <span className="text-xs text-zinc-500">{issue.count}x</span>
-                        <span className="text-xs text-zinc-600">•</span>
+                        <span className="text-xs text-zinc-400">•</span>
                         <span className="text-xs text-zinc-500">{formatRelativeTime(issue.lastSeen)}</span>
                       </div>
                       <h4 className="text-white font-medium mt-1">{issue.translation.description}</h4>
@@ -340,7 +340,7 @@ export default function SentryAlertsDashboard() {
                     {/* Suggested Action */}
                     <div className="bg-zinc-900/50 rounded-lg p-3 mb-4">
                       <p className="text-xs text-zinc-500 mb-1">💡 Ação Sugerida</p>
-                      <p className="text-sm text-emerald-400">{issue.translation.suggestedAction}</p>
+                      <p className="text-sm text-indigo-400">{issue.translation.suggestedAction}</p>
                     </div>
 
                     {/* Actions */}
@@ -351,7 +351,7 @@ export default function SentryAlertsDashboard() {
                           handleResolve(issue.id);
                         }}
                         disabled={resolvingId === issue.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
                       >
                         {resolvingId === issue.id ? (
                           <RefreshCw size={14} className="animate-spin" />
@@ -361,7 +361,7 @@ export default function SentryAlertsDashboard() {
                         Marcar Resolvido
                       </button>
                       <a
-                        href={`https://sentry.io/organizations/${data.sentryOrg || 'stencilflow'}/issues/${issue.id}/`}
+                        href={`https://sentry.io/organizations/${data.sentryOrg || 'blacklinepro'}/issues/${issue.id}/`}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}

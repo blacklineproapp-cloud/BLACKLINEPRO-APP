@@ -39,7 +39,7 @@ async function analyzeRevenue() {
   // Calcular receita potencial (assumindo R$ 25 starter, R$ 50 pro)
   let potentialRevenue = 0;
   courtesyUsers?.forEach(u => {
-    if (u.plan === 'starter') potentialRevenue += 25;
+    if (u.plan === 'ink') potentialRevenue += 25;
     else if (u.plan === 'pro') potentialRevenue += 50;
     else if (u.plan === 'studio') potentialRevenue += 100;
   });

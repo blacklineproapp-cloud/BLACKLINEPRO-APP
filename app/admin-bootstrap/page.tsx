@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, CheckCircle, XCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function AdminBootstrapPage() {
   const router = useRouter();
@@ -70,7 +71,7 @@ export default function AdminBootstrapPage() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <Loader2 size={48} className="text-emerald-500 animate-spin mx-auto mb-4" />
+          <Loader2 size={48} className="text-indigo-500 animate-spin mx-auto mb-4" />
           <p className="text-zinc-400">Verificando status...</p>
         </div>
       </div>
@@ -82,7 +83,7 @@ export default function AdminBootstrapPage() {
       <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-2xl mb-4">
             <Shield size={32} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold mb-2">Bootstrap Admin</h1>
@@ -102,9 +103,9 @@ export default function AdminBootstrapPage() {
                   <div className="font-medium">{status.user.email}</div>
                 </div>
                 {status.user.isAdmin ? (
-                  <CheckCircle size={20} className="text-emerald-500" />
+                  <CheckCircle size={20} className="text-indigo-500" />
                 ) : (
-                  <XCircle size={20} className="text-zinc-600" />
+                  <XCircle size={20} className="text-zinc-400" />
                 )}
               </div>
 
@@ -114,7 +115,7 @@ export default function AdminBootstrapPage() {
                   <div className="text-sm text-zinc-400">Você é admin?</div>
                   <div className="font-medium">
                     {status.user.isAdmin ? (
-                      <span className="text-emerald-500">Sim</span>
+                      <span className="text-indigo-500">Sim</span>
                     ) : (
                       <span className="text-zinc-500">Não</span>
                     )}
@@ -128,7 +129,7 @@ export default function AdminBootstrapPage() {
                   <div className="text-sm text-zinc-400">Bootstrap disponível?</div>
                   <div className="font-medium">
                     {status.bootstrap.available ? (
-                      <span className="text-emerald-500">Sim - Nenhum admin existe</span>
+                      <span className="text-indigo-500">Sim - Nenhum admin existe</span>
                     ) : (
                       <span className="text-amber-500">Não - {status.bootstrap.adminCount} admin(s) existem</span>
                     )}
@@ -144,14 +145,14 @@ export default function AdminBootstrapPage() {
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             {result.success ? (
               <div className="text-center">
-                <CheckCircle size={48} className="text-emerald-500 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-2 text-emerald-500">Sucesso!</h3>
+                <CheckCircle size={48} className="text-indigo-500 mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2 text-indigo-500">Sucesso!</h3>
                 <p className="text-zinc-400 mb-4">{result.message}</p>
                 <div className="bg-zinc-950 rounded-lg p-4 mb-4">
                   <div className="text-sm text-zinc-500 mb-1">Email</div>
                   <div className="font-medium">{result.admin.email}</div>
                   <div className="text-sm text-zinc-500 mb-1 mt-2">Role</div>
-                  <div className="font-medium text-emerald-500">{result.admin.role}</div>
+                  <div className="font-medium text-indigo-500">{result.admin.role}</div>
                 </div>
                 <p className="text-sm text-zinc-500">Redirecionando para o painel admin...</p>
               </div>
@@ -160,19 +161,20 @@ export default function AdminBootstrapPage() {
                 <XCircle size={48} className="text-red-500 mx-auto mb-4" />
                 <h3 className="text-xl font-bold mb-2 text-red-500">Erro</h3>
                 <p className="text-zinc-400 mb-4">{result.error}</p>
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => setResult(null)}
-                  className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition"
+                  className="px-6 py-2 rounded-lg"
                 >
                   Tentar Novamente
-                </button>
+                </Button>
               </div>
             )}
           </div>
         ) : status?.user.isAdmin ? (
-          <div className="bg-emerald-900/20 border border-emerald-800/30 rounded-xl p-6 text-center">
-            <CheckCircle size={48} className="text-emerald-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2 text-emerald-500">Você já é admin!</h3>
+          <div className="bg-indigo-900/20 border border-indigo-800/30 rounded-xl p-6 text-center">
+            <CheckCircle size={48} className="text-indigo-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold mb-2 text-indigo-500">Você já é admin!</h3>
             <p className="text-zinc-400 mb-4">Redirecionando para o painel administrativo...</p>
           </div>
         ) : status?.bootstrap.available ? (
@@ -191,10 +193,11 @@ export default function AdminBootstrapPage() {
               </div>
             </div>
 
-            <button
+            <Button
+              variant="default"
               onClick={handleBootstrap}
               disabled={bootstrapping}
-              className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-2"
             >
               {bootstrapping ? (
                 <>
@@ -207,7 +210,7 @@ export default function AdminBootstrapPage() {
                   Tornar-me Superadmin
                 </>
               )}
-            </button>
+            </Button>
           </div>
         ) : (
           <div className="bg-red-900/20 border border-red-800/30 rounded-xl p-6 text-center">
@@ -224,12 +227,13 @@ export default function AdminBootstrapPage() {
 
         {/* Back Button */}
         <div className="text-center mt-6">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => router.push('/dashboard')}
-            className="text-zinc-400 hover:text-white transition"
+            className="text-zinc-400 hover:text-white"
           >
             ← Voltar ao Dashboard
-          </button>
+          </Button>
         </div>
       </div>
     </div>

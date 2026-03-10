@@ -17,6 +17,7 @@ import type {
   TokenizeCardParams,
 } from './types';
 import { ASAAS_PLANS } from './types';
+import { logger } from '../logger';
 
 export class AsaasPaymentService {
   /**
@@ -25,7 +26,7 @@ export class AsaasPaymentService {
   static async create(params: CreatePaymentParams): Promise<AsaasPayment> {
     const payment = await asaasPost<AsaasPayment>('/payments', params);
 
-    console.log(`[AsaasPayment] Cobrança criada: ${payment.id} - ${payment.billingType} - R$ ${payment.value}`);
+    logger.info('[AsaasPayment] Cobrança criada', { paymentId: payment.id, billingType: payment.billingType, value: payment.value });
 
     return payment;
   }
@@ -50,7 +51,7 @@ export class AsaasPaymentService {
   ): Promise<AsaasPayment> {
     const payment = await asaasPut<AsaasPayment>(`/payments/${paymentId}`, params);
 
-    console.log(`[AsaasPayment] Cobrança atualizada: ${payment.id}`);
+    logger.info('[AsaasPayment] Cobrança atualizada', { paymentId: payment.id });
 
     return payment;
   }
@@ -63,7 +64,7 @@ export class AsaasPaymentService {
       `/payments/${paymentId}`
     );
 
-    console.log(`[AsaasPayment] Cobrança removida: ${paymentId}`);
+    logger.info('[AsaasPayment] Cobrança removida', { paymentId });
 
     return result;
   }
@@ -143,7 +144,7 @@ export class AsaasPaymentService {
     return this.createPixPayment({
       customerId,
       value,
-      description: `StencilFlow ${planConfig.name} - ${cycle}`,
+      description: `Black Line Pro ${planConfig.name} - ${cycle}`,
       externalReference,
       dueDate: getDueDate(1),
     });
@@ -273,7 +274,7 @@ export class AsaasPaymentService {
       params || {}
     );
 
-    console.log(`[AsaasPayment] Estorno realizado: ${paymentId}`);
+    logger.info('[AsaasPayment] Estorno realizado', { paymentId });
 
     return payment;
   }
@@ -294,7 +295,7 @@ export class AsaasPaymentService {
   }): Promise<void> {
     const { userId, customerId, payment, plan, customerSource } = params;
 
-    console.log(`[AsaasPayment] 🔍 Preparando para salvar: asaas_id=${payment.id}, user=${userId}, customer=${customerId}, source=${customerSource}`);
+    logger.debug('[AsaasPayment] Preparando para salvar', { asaasPaymentId: payment.id, userId, customerId, customerSource });
 
     // Mapear status do Asaas para nosso sistema
     const statusMap: Record<string, string> = {
@@ -314,7 +315,7 @@ export class AsaasPaymentService {
       'AWAITING_RISK_ANALYSIS': 'pending',
     };
 
-    const paymentData: any = {
+    const paymentData: Record<string, unknown> = {
       user_id: userId,
       // CRITICO: Só passamos customer_id se tivermos CERTEZA que ele pertence à tabela customers (legado)
       // Se for nulo ou de asaas_customers, ignoramos para evitar erro de FK constraint
@@ -342,20 +343,19 @@ export class AsaasPaymentService {
       },
     };
 
-    console.log('[AsaasPayment] 🚀 Payload final para o Supabase:', JSON.stringify(paymentData, null, 2));
+    logger.debug('[AsaasPayment] Payload final para o Supabase', { paymentData });
 
     const { data, error } = await supabaseAdmin.from('payments').upsert(paymentData, {
       onConflict: 'asaas_payment_id',
     }).select();
 
     if (error) {
-      console.error('[AsaasPayment] ❌ ERRO de constraint ou banco:', error);
-      console.error('[AsaasPayment] Detalhes do erro:', JSON.stringify(error, null, 2));
+      logger.error('[AsaasPayment] ERRO de constraint ou banco', error);
       throw error;
     }
 
     if (data && data.length > 0) {
-      console.log(`[AsaasPayment] ✅ Sucesso! Pagamento ${payment.id} salvo ID=${data[0].id}`);
+      logger.info('[AsaasPayment] Pagamento salvo com sucesso', { asaasPaymentId: payment.id, dbId: data[0].id });
     }
   }
 
@@ -375,7 +375,7 @@ export class AsaasPaymentService {
       'REFUNDED': 'refunded',
     };
 
-    const updates: any = {
+    const updates: Record<string, unknown> = {
       status: statusMap[status] || status.toLowerCase(),
       updated_at: new Date().toISOString(),
     };
@@ -393,13 +393,13 @@ export class AsaasPaymentService {
       .update(updates)
       .eq('asaas_payment_id', asaasPaymentId);
 
-    console.log(`[AsaasPayment] Status atualizado: ${asaasPaymentId} -> ${status}`);
+    logger.info('[AsaasPayment] Status atualizado', { asaasPaymentId, status });
   }
 
   /**
    * Busca pagamento do banco por asaas_payment_id
    */
-  static async getDbPaymentByAsaasId(asaasPaymentId: string): Promise<any | null> {
+  static async getDbPaymentByAsaasId(asaasPaymentId: string): Promise<Record<string, unknown> | null> {
     const { data } = await supabaseAdmin
       .from('payments')
       .select('*')

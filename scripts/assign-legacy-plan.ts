@@ -59,7 +59,7 @@ async function assignLegacyPlan() {
     const { error: updateError } = await supabase
       .from('users')
       .update({
-        plan: 'legacy',
+        plan: 'ink',
         // NÃO definir courtesy_deadline - usuário paga na hora
       })
       .eq('id', user.id);
@@ -73,7 +73,7 @@ async function assignLegacyPlan() {
 
     // 3. Gerar URL de checkout
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const checkoutUrl = `${appUrl}/api/payments/create-checkout?plan=legacy&cycle=monthly`;
+    const checkoutUrl = `${appUrl}/api/payments/create-checkout?plan=ink&cycle=monthly`;
 
     console.log('═══════════════════════════════════════════════════════');
     console.log('📋 PRÓXIMOS PASSOS\n');

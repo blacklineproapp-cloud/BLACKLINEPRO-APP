@@ -20,6 +20,7 @@ import {
   Layers,
 } from 'lucide-react';
 import type { DrawingTool } from '@/lib/drawing/types';
+import { Button } from '@/components/ui/button';
 
 interface DrawingToolbarProps {
   tool: DrawingTool;
@@ -92,7 +93,7 @@ export default function DrawingToolbar({
             onClick={() => onToolChange('pen')}
             className={`p-2.5 rounded-lg transition-all ${
               tool === 'pen'
-                ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                 : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
             }`}
             title="Caneta (P)"
@@ -118,7 +119,7 @@ export default function DrawingToolbar({
             onClick={() => onToolChange('line')}
             className={`p-2.5 rounded-lg transition-all ${
               tool === 'line'
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                 : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
             }`}
             title="Linha Reta (L)"
@@ -167,7 +168,7 @@ export default function DrawingToolbar({
                     }}
                     className={`flex-1 py-1.5 rounded text-xs font-medium transition-all ${
                       brushSize === size.value
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-indigo-600 text-white'
                         : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                     }`}
                   >
@@ -183,10 +184,10 @@ export default function DrawingToolbar({
                 max="10"
                 value={brushSize}
                 onChange={(e) => onBrushSizeChange(Number(e.target.value))}
-                className="w-full accent-emerald-500"
+                className="w-full accent-indigo-500"
               />
 
-              <div className="flex justify-between text-[10px] text-zinc-600 mt-1">
+              <div className="flex justify-between text-[10px] text-zinc-400 mt-1">
                 <span>1px</span>
                 <span>10px</span>
               </div>
@@ -232,7 +233,7 @@ export default function DrawingToolbar({
                       }}
                       className={`w-7 h-7 rounded-full border-2 transition-all ${
                         brushColor === color
-                          ? 'border-emerald-500 scale-110'
+                          ? 'border-indigo-500 scale-110'
                           : 'border-zinc-600 hover:border-zinc-400'
                       }`}
                       style={{ backgroundColor: color }}
@@ -268,7 +269,7 @@ export default function DrawingToolbar({
               }}
               className="flex items-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all"
             >
-              <Layers size={16} className="text-purple-400" />
+              <Layers size={16} className="text-indigo-400" />
               <span className="text-xs text-zinc-400">{stencilOpacity}%</span>
               {showBlendPanel ? (
                 <ChevronUp size={14} className="text-zinc-500" />
@@ -289,7 +290,7 @@ export default function DrawingToolbar({
                       onClick={() => onStencilOpacityChange(opacity)}
                       className={`flex-1 py-1.5 rounded text-xs font-medium transition-all ${
                         stencilOpacity === opacity
-                          ? 'bg-purple-600 text-white'
+                          ? 'bg-indigo-600 text-white'
                           : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                       }`}
                     >
@@ -305,10 +306,10 @@ export default function DrawingToolbar({
                   max="100"
                   value={stencilOpacity}
                   onChange={(e) => onStencilOpacityChange(Number(e.target.value))}
-                  className="w-full accent-purple-500"
+                  className="w-full accent-indigo-500"
                 />
 
-                <p className="text-[10px] text-zinc-600 mt-2 text-center">
+                <p className="text-[10px] text-zinc-400 mt-2 text-center">
                   Ajuste para ver mais da imagem original
                 </p>
               </div>
@@ -320,31 +321,37 @@ export default function DrawingToolbar({
 
         {/* Undo/Redo */}
         <div className="flex items-center gap-1">
-          <button
+          <Button
             onClick={onUndo}
             disabled={!canUndo}
-            className="p-2.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            variant="secondary"
+            size="icon"
+            className="p-2.5 disabled:opacity-30"
             title="Desfazer (Ctrl+Z)"
           >
             <Undo2 size={18} />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={onRedo}
             disabled={!canRedo}
-            className="p-2.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            variant="secondary"
+            size="icon"
+            className="p-2.5 disabled:opacity-30"
             title="Refazer (Ctrl+Y)"
           >
             <Redo2 size={18} />
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={onClear}
-            className="p-2.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-red-900/50 hover:text-red-400 transition-all"
+            variant="secondary"
+            size="icon"
+            className="p-2.5 hover:bg-red-900/50 hover:text-red-400"
             title="Limpar tudo"
           >
             <Trash2 size={18} />
-          </button>
+          </Button>
         </div>
 
         {!compact && <div className="w-full h-px bg-zinc-800" />}
@@ -352,13 +359,13 @@ export default function DrawingToolbar({
         {/* Ações */}
         <div className="flex flex-col gap-2">
           {/* Baixar */}
-          <button
+          <Button
             onClick={onDownload}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-all"
+            className="gap-2 px-4 py-2.5 rounded-lg"
           >
             <Download size={16} />
             <span className="text-sm">Baixar</span>
-          </button>
+          </Button>
 
         </div>
       </div>
@@ -366,7 +373,7 @@ export default function DrawingToolbar({
       {/* Dica de atalhos */}
       {!compact && (
         <div className="mt-3 pt-3 border-t border-zinc-800">
-          <p className="text-[10px] text-zinc-600 text-center">
+          <p className="text-[10px] text-zinc-400 text-center">
             Atalhos: P (Caneta) • E (Borracha) • L (Linha) • Ctrl+Z/Y (Desfazer/Refazer)
           </p>
         </div>

@@ -1,9 +1,9 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { logAdminAction } from '@/lib/admin-audit';
+import { logger } from '@/lib/logger';
 
 // Schema de validação
 const removeCreditsSchema = z.object({
@@ -12,23 +12,13 @@ const removeCreditsSchema = z.object({
   reason: z.string().min(10, 'Motivo deve ter no mínimo 10 caracteres').max(500)
 });
 
-export async function POST(req: Request) {
+export const POST = withAdminAuth(async (req, { userId }) => {
   try {
-    // 1. 🔒 VERIFICAR ADMIN
-    const { userId } = await auth();
-    
-    if (!userId || !(await isAdmin(userId))) {
-      return NextResponse.json(
-        { error: 'Acesso negado' },
-        { status: 403 }
-      );
-    }
-
-    // 2. 🔍 VALIDAR INPUT
+    // 1. 🔍 VALIDAR INPUT
     const body = await req.json();
     const validated = removeCreditsSchema.parse(body);
 
-    // 3. 📧 BUSCAR USUÁRIO (case-insensitive)
+    // 2. 📧 BUSCAR USUÁRIO (case-insensitive)
     const { data: targetUser, error: userError } = await supabaseAdmin
       .from('users')
       .select('id, email, name, credits, plan')
@@ -42,11 +32,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // 4. ⚠️ VERIFICAR SALDO
+    // 3. ⚠️ VERIFICAR SALDO
     const currentCredits = targetUser.credits || 0;
     if (currentCredits < validated.amount) {
       return NextResponse.json(
-        { 
+        {
           error: 'Saldo insuficiente',
           details: `Usuário tem apenas ${currentCredits} créditos`
         },
@@ -54,7 +44,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 5. ➖ REMOVER CRÉDITOS
+    // 4. ➖ REMOVER CRÉDITOS
     const newCredits = currentCredits - validated.amount;
 
     const { error: updateError } = await supabaseAdmin
@@ -63,14 +53,14 @@ export async function POST(req: Request) {
       .eq('id', targetUser.id);
 
     if (updateError) {
-      console.error('[Credits] Erro ao remover:', updateError);
+      logger.error('[Credits] Erro ao remover', { error: updateError });
       return NextResponse.json(
         { error: 'Erro ao remover créditos' },
         { status: 500 }
       );
     }
 
-    // 6. 📝 REGISTRAR TRANSAÇÃO
+    // 5. 📝 REGISTRAR TRANSAÇÃO
     await supabaseAdmin.from('credit_transactions').insert({
       user_id: targetUser.id,
       amount: -validated.amount, // Negativo para remoção
@@ -83,7 +73,7 @@ export async function POST(req: Request) {
       }
     });
 
-    // 7. 📝 AUDIT LOG
+    // 6. 📝 AUDIT LOG
     await logAdminAction({
       adminId: userId,
       action: 'remove_credits',
@@ -97,7 +87,7 @@ export async function POST(req: Request) {
       }
     });
 
-    // 8. ✅ RETORNAR SUCESSO
+    // 7. ✅ RETORNAR SUCESSO
     return NextResponse.json({
       success: true,
       message: `${validated.amount} créditos removidos com sucesso`,
@@ -109,22 +99,16 @@ export async function POST(req: Request) {
         new_credits: newCredits
       }
     });
-
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { 
+        {
           error: 'Dados inválidos',
           details: error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`)
         },
         { status: 400 }
       );
     }
-
-    console.error('[Credits] Erro inesperado:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    throw error;
   }
-}
+});

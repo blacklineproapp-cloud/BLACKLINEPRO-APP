@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { auth } from '@clerk/nextjs/server';
 import { isAdmin } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic'; // Não cachear estaticamente
 
@@ -46,7 +47,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Erro ao buscar stats:', error);
+    logger.error('[Stats] Erro ao buscar stats', { error });
     // Retornar valores default em caso de erro
     return NextResponse.json({
       totalUsers: 0,

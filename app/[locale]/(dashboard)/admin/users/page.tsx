@@ -7,6 +7,7 @@ import {
   Activity, DollarSign, Sparkles, Calendar, CreditCard
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 import UserGalleries from '../components/UserGalleries';
 
 interface User {
@@ -56,7 +57,7 @@ export default function UsersManagementPage() {
   const [blockModal, setBlockModal] = useState<{ show: boolean; userId: string; email: string } | null>(null);
   const [blockReason, setBlockReason] = useState('');
   const [planChangeModal, setPlanChangeModal] = useState<{ userId: string; email: string; currentPlan: string } | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy'>('starter');
+  const [selectedPlan, setSelectedPlan] = useState<'free' | 'ink' | 'pro' | 'studio'>('ink');
   const [planChangeMode, setPlanChangeMode] = useState<'courtesy' | 'recurring'>('courtesy');
   const [sendEmail, setSendEmail] = useState(false);
   const [planChangeLoading, setPlanChangeLoading] = useState(false);
@@ -205,17 +206,7 @@ export default function UsersManagementPage() {
     setPlanChangeLoading(true);
 
     try {
-      if (selectedPlan === 'legacy') {
-        const success = await handleUserAction('change_plan', planChangeModal.userId, {
-          newPlan: 'legacy',
-          isCourtesy: false
-        });
-
-        if (success) {
-          alert(`✅ Plano Legacy atribuído!\n\n📱 O usuário verá um banner no dashboard para pagar R$ 25/mês.\n\n💡 Após o pagamento, o acesso será liberado automaticamente.`);
-          setPlanChangeModal(null);
-        }
-      } else if (planChangeMode === 'courtesy') {
+      if (planChangeMode === 'courtesy') {
         const success = await handleUserAction('change_plan', planChangeModal.userId, {
           newPlan: selectedPlan,
           isCourtesy: true
@@ -277,12 +268,13 @@ export default function UsersManagementPage() {
               <p className="text-zinc-400 text-sm">Gerenciar, bloquear e visualizar todos os usuários</p>
             </div>
           </div>
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => loadUsers()}
-            className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition"
           >
             <RefreshCw size={18} className="text-zinc-400" />
-          </button>
+          </Button>
         </div>
 
         {/* Stats */}
@@ -291,9 +283,9 @@ export default function UsersManagementPage() {
             <div className="text-sm text-zinc-400 mb-1">Total</div>
             <div className="text-2xl font-bold">{loading ? '-' : stats.total}</div>
           </div>
-          <div className="bg-zinc-950 border border-emerald-800/30 rounded-lg p-4">
+          <div className="bg-zinc-950 border border-indigo-800/30 rounded-lg p-4">
             <div className="text-sm text-zinc-400 mb-1">Pagos</div>
-            <div className="text-2xl font-bold text-emerald-400">{loading ? '-' : stats.paid}</div>
+            <div className="text-2xl font-bold text-indigo-400">{loading ? '-' : stats.paid}</div>
           </div>
           <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-zinc-400 mb-1">Gratuitos</div>
@@ -329,12 +321,10 @@ export default function UsersManagementPage() {
                 className="bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm focus:border-blue-500 outline-none transition"
               >
                 <option value="all">Todos os planos</option>
-                <option value="free">Free</option>
-                <option value="starter">Starter</option>
-                <option value="pro">Pro</option>
-                <option value="studio">Studio</option>
-                <option value="enterprise">Enterprise</option>
-                <option value="legacy">Legacy</option>
+                <option value="free">Blackline Free</option>
+                <option value="ink">Blackline Ink</option>
+                <option value="pro">Blackline Pro</option>
+                <option value="studio">Blackline Studio</option>
               </select>
 
               <select
@@ -348,16 +338,16 @@ export default function UsersManagementPage() {
                 <option value="courtesy">🎁 Cortesia</option>
               </select>
 
-              <button
+              <Button
+                variant="outline"
                 onClick={() => {
                   setSearch('');
                   setFilterPlan('all');
                   setFilterStatus('all');
                 }}
-                className="bg-zinc-950 border border-zinc-700 hover:bg-zinc-800 rounded-lg px-4 py-2.5 text-sm transition font-medium"
               >
                 Limpar Filtros
-              </button>
+              </Button>
             </div>
 
             <p className="text-sm text-zinc-500 mt-3">
@@ -415,30 +405,22 @@ export default function UsersManagementPage() {
                         <td className="px-6 py-4">
                           <span
                             className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
-                              u.plan === 'enterprise'
-                                ? 'bg-blue-900/30 text-blue-400 border border-blue-800/30'
-                                : u.plan === 'studio'
+                              u.plan === 'studio'
                                 ? 'bg-amber-900/30 text-amber-400 border border-amber-800/30'
                                 : u.plan === 'pro'
                                 ? 'bg-purple-900/30 text-purple-400 border border-purple-800/30'
-                                : u.plan === 'starter'
-                                ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800/30'
-                                : u.plan === 'legacy'
-                                ? 'bg-orange-900/30 text-orange-400 border border-orange-800/30'
+                                : u.plan === 'ink'
+                                ? 'bg-indigo-900/30 text-indigo-400 border border-indigo-800/30'
                                 : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
                             }`}
                           >
-                            {u.plan === 'enterprise'
-                              ? '🏢 Enterprise'
-                              : u.plan === 'studio'
-                              ? 'Studio'
+                            {u.plan === 'studio'
+                              ? 'Blackline Studio'
                               : u.plan === 'pro'
-                              ? 'Pro'
-                              : u.plan === 'starter'
-                              ? 'Starter'
-                              : u.plan === 'legacy'
-                              ? '🎁 Legacy'
-                              : 'Free'}
+                              ? 'Blackline Pro'
+                              : u.plan === 'ink'
+                              ? 'Blackline Ink'
+                              : 'Blackline Free'}
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -478,55 +460,61 @@ export default function UsersManagementPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 justify-end">
                             {u.is_blocked ? (
-                              <button
+                              <Button
+                                size="sm"
                                 onClick={() => handleUserAction('unblock', u.id)}
-                                className="px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg text-xs font-medium transition"
+                                className="bg-green-600 hover:bg-green-500"
                               >
                                 Desbloquear
-                              </button>
+                              </Button>
                             ) : (
-                              <button
+                              <Button
+                                variant="destructive"
+                                size="sm"
                                 onClick={() =>
                                   setBlockModal({ show: true, userId: u.id, email: u.email })
                                 }
-                                className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-xs font-medium transition"
                               >
                                 Bloquear
-                              </button>
+                              </Button>
                             )}
 
-                            <button
+                            <Button
+                              size="sm"
                               onClick={() => {
                                 setPlanChangeModal({
                                   userId: u.id,
                                   email: u.email,
                                   currentPlan: u.plan
                                 });
-                                setSelectedPlan(u.plan as any || 'starter');
+                                setSelectedPlan(u.plan as any || 'ink');
                                 setPlanChangeMode('courtesy');
                                 setSendEmail(false);
                               }}
-                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-medium transition"
+                              className="bg-blue-600 hover:bg-blue-500"
                             >
                               Mudar Plano
-                            </button>
+                            </Button>
 
-                            <button
+                            <Button
+                              size="sm"
                               onClick={() => router.push(`/admin/users/${u.id}/logs`)}
-                              className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded-lg text-xs font-medium transition flex items-center gap-1"
+                              className="bg-purple-600 hover:bg-purple-500 gap-1"
                               title="Ver logs de atividade"
                             >
                               <Activity size={14} />
                               Logs
-                            </button>
+                            </Button>
 
-                            <button
+                            <Button
+                              variant="secondary"
+                              size="sm"
                               onClick={() => loadUserActivity(u.id)}
-                              className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 rounded-lg text-xs font-medium transition flex items-center gap-1"
+                              className="gap-1"
                             >
                               {expandedUser === u.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                               {expandedUser === u.id ? 'Ocultar' : 'Ver Detalhes'}
-                            </button>
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -555,7 +543,7 @@ export default function UsersManagementPage() {
                                       <span>IA: {userActivities[u.id]?.stats?.byType.ai}</span>
                                     </span>
                                     <span className="flex items-center gap-1">
-                                      <span className="text-emerald-400">●</span>
+                                      <span className="text-indigo-400">●</span>
                                       <span>Tools: {userActivities[u.id]?.stats?.byType.tools}</span>
                                     </span>
                                     <span className="flex items-center gap-1">
@@ -568,7 +556,7 @@ export default function UsersManagementPage() {
                                 {/* Loading */}
                                 {userActivities[u.id]?.loading && (
                                   <div className="flex items-center justify-center py-8">
-                                    <RefreshCw className="animate-spin text-emerald-400" size={20} />
+                                    <RefreshCw className="animate-spin text-indigo-400" size={20} />
                                     <span className="ml-2 text-sm text-zinc-400">Carregando histórico...</span>
                                   </div>
                                 )}
@@ -602,7 +590,7 @@ export default function UsersManagementPage() {
                                                   ? 'bg-blue-500/20 text-blue-400'
                                                   : activity.usage_type === 'ai_request'
                                                   ? 'bg-purple-500/20 text-purple-400'
-                                                  : 'bg-emerald-500/20 text-emerald-400'
+                                                  : 'bg-indigo-500/20 text-indigo-400'
                                               }`}>
                                                 {activity.usage_type === 'editor_generation' ? 'Editor' :
                                                  activity.usage_type === 'ai_request' ? 'IA Gen' : 'Tool'}
@@ -650,20 +638,22 @@ export default function UsersManagementPage() {
                 Página {page} de {totalPages}
               </p>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm transition font-medium"
                 >
                   Anterior
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setPage(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}
-                  className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm transition font-medium"
                 >
                   Próxima
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -679,15 +669,16 @@ export default function UsersManagementPage() {
                 <Ban size={24} className="text-red-500" />
                 Bloquear Usuário
               </h3>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => {
                   setBlockModal(null);
                   setBlockReason('');
                 }}
-                className="p-1 hover:bg-zinc-800 rounded-lg transition"
               >
                 <XIcon size={20} />
-              </button>
+              </Button>
             </div>
 
             <p className="text-zinc-400 mb-4">
@@ -706,21 +697,23 @@ export default function UsersManagementPage() {
             />
 
             <div className="flex gap-3 mt-6">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => {
                   setBlockModal(null);
                   setBlockReason('');
                 }}
-                className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-medium transition"
+                className="flex-1"
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="destructive"
                 onClick={handleBlock}
-                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 rounded-lg font-medium transition"
+                className="flex-1"
               >
                 Bloquear
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -735,12 +728,13 @@ export default function UsersManagementPage() {
                 <CreditCard size={24} className="text-blue-500" />
                 Mudar Plano
               </h3>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setPlanChangeModal(null)}
-                className="p-1 hover:bg-zinc-800 rounded-lg transition"
               >
                 <XIcon size={20} />
-              </button>
+              </Button>
             </div>
 
             <p className="text-zinc-400 mb-4">
@@ -757,12 +751,10 @@ export default function UsersManagementPage() {
                   onChange={(e) => setSelectedPlan(e.target.value as any)}
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2.5 text-sm focus:border-blue-500 outline-none"
                 >
-                  <option value="free">Free</option>
-                  <option value="starter">Starter</option>
-                  <option value="pro">Pro</option>
-                  <option value="studio">Studio</option>
-                  <option value="enterprise">Enterprise</option>
-                  <option value="legacy">Legacy</option>
+                  <option value="free">Blackline Free</option>
+                  <option value="ink">Blackline Ink</option>
+                  <option value="pro">Blackline Pro</option>
+                  <option value="studio">Blackline Studio</option>
                 </select>
               </div>
 
@@ -785,7 +777,7 @@ export default function UsersManagementPage() {
                     onClick={() => setPlanChangeMode('recurring')}
                     className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition ${
                       planChangeMode === 'recurring'
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-indigo-600 text-white'
                         : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                     }`}
                   >
@@ -794,7 +786,7 @@ export default function UsersManagementPage() {
                 </div>
               </div>
 
-              {planChangeMode === 'recurring' && selectedPlan !== 'legacy' && (
+              {planChangeMode === 'recurring' && (
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -810,19 +802,20 @@ export default function UsersManagementPage() {
               )}
 
               <div className="flex gap-3 mt-6">
-                <button
+                <Button
+                  variant="secondary"
                   onClick={() => setPlanChangeModal(null)}
-                  className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg font-medium transition"
+                  className="flex-1"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handlePlanChange}
                   disabled={planChangeLoading}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded-lg font-medium transition"
+                  className="flex-1 bg-blue-600 hover:bg-blue-500"
                 >
                   {planChangeLoading ? 'Processando...' : 'Confirmar'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

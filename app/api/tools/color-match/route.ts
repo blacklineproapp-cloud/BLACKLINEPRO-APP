@@ -1,130 +1,62 @@
-import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { analyzeImageColors } from '@/lib/gemini';
-import { supabaseAdmin } from '@/lib/supabase';
-import { checkToolsLimit, checkColorMatchLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
-import { BRL_COST } from '@/lib/billing/costs';
+import { checkToolAccess } from '@/lib/billing/service';
 import { apiLimiter, getRateLimitIdentifier } from '@/lib/ratelimit';
+import { logger } from '@/lib/logger';
+import { withAuth } from '@/lib/api-middleware';
 
 
-export async function POST(req: Request) {
-  try {
-    const { userId } = await auth();
+export const POST = withAuth(async (req, { userId, user }) => {
+  // 🛡️ RATE LIMITING: Prevenir abuso (60 requests/min)
+  const identifier = await getRateLimitIdentifier(userId);
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
+  if (apiLimiter) {
+    const { success, limit, remaining, reset } = await apiLimiter.limit(identifier);
 
-    // 🛡️ RATE LIMITING: Prevenir abuso (60 requests/min)
-    const identifier = await getRateLimitIdentifier(userId);
-
-    if (apiLimiter) {
-      const { success, limit, remaining, reset } = await apiLimiter.limit(identifier);
-
-      if (!success) {
-        return NextResponse.json(
-          {
-            error: 'Muitas requisições',
-            message: 'Você atingiu o limite de requisições. Tente novamente em alguns minutos.',
-            limit,
-            remaining,
-            reset: new Date(reset).toISOString(),
+    if (!success) {
+      return NextResponse.json(
+        {
+          error: 'Muitas requisições',
+          message: 'Você atingiu o limite de requisições. Tente novamente em alguns minutos.',
+          limit,
+          remaining,
+          reset: new Date(reset).toISOString(),
+        },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': limit.toString(),
+            'X-RateLimit-Remaining': remaining.toString(),
+            'X-RateLimit-Reset': reset.toString(),
+            'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
           },
-          {
-            status: 429,
-            headers: {
-              'X-RateLimit-Limit': limit.toString(),
-              'X-RateLimit-Remaining': remaining.toString(),
-              'X-RateLimit-Reset': reset.toString(),
-              'Retry-After': Math.ceil((reset - Date.now()) / 1000).toString(),
-            },
-          }
-        );
-      }
-    }
-
-    const user = await getOrCreateUser(userId);
-
-    if (!user) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
-    }
-
-    // 🔓 BYPASS PARA ADMINS - acesso ilimitado
-    const userIsAdmin = await checkIsAdmin(userId);
-
-    if (!userIsAdmin) {
-      // Verificar se tem assinatura ativa OU ferramentas desbloqueadas
-      const hasFullAccess = (user.is_paid && user.subscription_status === 'active' && user.tools_unlocked);
-
-      if (hasFullAccess) {
-        // ✅ VERIFICAR LIMITE DE USO DO PLANO (100/500 por plano)
-        const limitCheck = await checkToolsLimit(user.id);
-        if (!limitCheck.allowed) {
-          const message = getLimitMessage('tool_usage', limitCheck.limit, limitCheck.resetDate);
-          return NextResponse.json(
-            {
-              error: 'Limite atingido',
-              message,
-              remaining: limitCheck.remaining,
-              limit: limitCheck.limit,
-              resetDate: limitCheck.resetDate,
-              requiresSubscription: true,
-              subscriptionType: 'credits',
-            },
-            { status: 429 }
-          );
         }
-      } else {
-        // 🎁 MODO TRIAL: Usuários Free ou sem ferramentas desbloqueadas
-        const trialCheck = await checkColorMatchLimit(user.id);
-        
-        if (!trialCheck.allowed) {
-          return NextResponse.json({
-            error: 'Acesso Restrito',
-            message: 'A Harmonização de Cores é exclusiva para assinantes. Escolha um plano para usar!',
-            requiresSubscription: true,
-            subscriptionType: 'tools'
-          }, { status: 403 });
-        }
-      }
+      );
     }
-
-    const { image, brand } = await req.json();
-
-    if (!image || !brand) {
-      return NextResponse.json({ error: 'Imagem e marca são obrigatórios' }, { status: 400 });
-    }
-
-    // Analisar cores
-    const colorPalette = await analyzeImageColors(image, brand);
-
-    // Registrar uso (ignorar erros)
-    // Registrar uso (ignorar erros)
-    try {
-      await recordUsage({
-        userId: user.id,
-        type: 'tool_usage',
-        operationType: 'color_match',
-        cost: BRL_COST.color_match,
-        metadata: {
-          tool: 'color_match',
-          brand,
-          is_admin: userIsAdmin
-        }
-      });
-    } catch (e) {
-      console.warn('Erro ao registrar uso de IA:', e);
-    }
-
-    return NextResponse.json(colorPalette);
-  } catch (error: any) {
-    console.error('Erro ao analisar cores:', error);
-    return NextResponse.json(
-      { error: error.message || 'Erro ao analisar cores' },
-      { status: 500 }
-    );
   }
-}
+
+  // 🔓 BILLING: Admin bypass + check acesso + limites
+  const billing = await checkToolAccess({
+    userId,
+    user,
+    toolName: 'color_match',
+    trialDeniedMessage: 'A Harmonização de Cores é exclusiva para assinantes. Escolha um plano para usar!',
+  });
+  if (billing.denied) return billing.response!;
+
+  const { image, brand } = await req.json();
+
+  if (!image || !brand) {
+    return NextResponse.json({ error: 'Imagem e marca são obrigatórios' }, { status: 400 });
+  }
+
+  // Analisar cores
+  const colorPalette = await analyzeImageColors(image, brand);
+
+  // ✅ REGISTRAR USO após operação bem-sucedida
+  await billing.recordUsage({ brand });
+
+  return NextResponse.json(colorPalette);
+});
 
 export const maxDuration = 60;

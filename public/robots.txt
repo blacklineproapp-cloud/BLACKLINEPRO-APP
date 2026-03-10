@@ -8,4 +8,4 @@ Disallow: /admin
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://www.stencilflow.com.br/sitemap.xml
+Sitemap: https://www.blacklinepro.com.br/sitemap.xml

@@ -7,6 +7,8 @@
  * - Events: https://docs.sentry.io/api/events/retrieve-an-event-for-a-project/
  */
 
+import { logger } from './logger';
+
 // Tipos para a API do Sentry
 export interface SentryIssue {
   id: string;
@@ -95,14 +97,14 @@ export async function fetchSentryIssues(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[Sentry Service] Erro na API:', response.status, errorText);
+      logger.error('[Sentry Service] Erro na API', new Error(errorText), { status: response.status });
       throw new Error(`Sentry API retornou ${response.status}`);
     }
 
     const issues: SentryIssue[] = await response.json();
     return issues;
   } catch (error: any) {
-    console.error('[Sentry Service] Erro ao buscar issues:', error);
+    logger.error('[Sentry Service] Erro ao buscar issues', error);
     throw error;
   }
 }
@@ -131,7 +133,7 @@ export async function fetchSentryIssueDetails(issueId: string): Promise<SentryIs
 
     return await response.json();
   } catch (error: any) {
-    console.error('[Sentry Service] Erro ao buscar detalhes da issue:', error);
+    logger.error('[Sentry Service] Erro ao buscar detalhes da issue', error);
     throw error;
   }
 }
@@ -164,7 +166,7 @@ export async function fetchIssueEvents(
 
     return await response.json();
   } catch (error: any) {
-    console.error('[Sentry Service] Erro ao buscar eventos:', error);
+    logger.error('[Sentry Service] Erro ao buscar eventos', error);
     throw error;
   }
 }
@@ -191,7 +193,7 @@ export async function resolveIssue(issueId: string): Promise<boolean> {
 
     return response.ok;
   } catch (error: any) {
-    console.error('[Sentry Service] Erro ao resolver issue:', error);
+    logger.error('[Sentry Service] Erro ao resolver issue', error);
     return false;
   }
 }
@@ -242,7 +244,7 @@ export async function fetchProjectStats(): Promise<{
       warningCount24h: warnings,
     };
   } catch (error: any) {
-    console.error('[Sentry Service] Erro ao buscar estatísticas:', error);
+    logger.error('[Sentry Service] Erro ao buscar estatísticas', error);
     return {
       issueCount: 0,
       errorCount24h: 0,

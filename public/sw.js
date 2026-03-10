@@ -1,11 +1,11 @@
 /**
- * Service Worker do StencilFlow PWA
+ * Service Worker do Black Line Pro PWA
  * Estratégia: Network-first com fallback para cache
  */
 
 // ⚡ VERSÃO DO CACHE - Mudar a cada deploy para forçar atualização!
 const CACHE_VERSION = '5.2.3'; // Incrementar a cada deploy
-const CACHE_NAME = `stencilflow-v${CACHE_VERSION}`;
+const CACHE_NAME = `blacklinepro-v${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
 // ⚡ OTIMIZAÇÃO CRÍTICA: Cachear APENAS o mínimo no install
@@ -221,7 +221,7 @@ async function offlineFallback(request) {
         <head>
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Offline - StencilFlow</title>
+          <title>Offline - Black Line Pro</title>
           <style>
             body {
               background: #000;
@@ -265,7 +265,7 @@ async function offlineFallback(request) {
           <div class="container">
             <h1>Sem Conexão</h1>
             <p>Você está offline. Algumas funcionalidades podem estar limitadas.</p>
-            <p>Conecte-se à internet para acessar todos os recursos do StencilFlow.</p>
+            <p>Conecte-se à internet para acessar todos os recursos do Black Line Pro.</p>
             <button onclick="location.reload()">Tentar Novamente</button>
           </div>
         </body>

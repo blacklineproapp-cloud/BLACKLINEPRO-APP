@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useState, Suspense } from 'react';
 import { Link } from '@/i18n/routing';
+import { Button } from '@/components/ui/button';
 
 function UnsubscribeContent() {
   const searchParams = useSearchParams();
@@ -38,13 +39,13 @@ function UnsubscribeContent() {
           <h1 className="text-2xl font-bold text-white mb-2">
             Cancelar Emails de Marketing
           </h1>
-          <p className="text-sm text-zinc-500">StencilFlow</p>
+          <p className="text-sm text-zinc-500">Black Line Pro</p>
         </div>
         
         {status === 'idle' && (
           <>
             <p className="text-zinc-400 mb-6">
-              Tem certeza que deseja parar de receber emails de marketing do StencilFlow?
+              Tem certeza que deseja parar de receber emails de marketing do Black Line Pro?
             </p>
             {email && (
               <p className="text-sm text-zinc-500 mb-6 bg-zinc-800 rounded-lg p-3">
@@ -52,12 +53,13 @@ function UnsubscribeContent() {
               </p>
             )}
             <div className="space-y-3">
-              <button
+              <Button
+                variant="destructive"
                 onClick={handleUnsubscribe}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition"
+                className="w-full font-semibold py-3 px-6 rounded-lg"
               >
                 Confirmar Cancelamento
-              </button>
+              </Button>
               <Link
                 href="/"
                 className="block w-full bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-3 px-6 rounded-lg transition text-center"
@@ -70,20 +72,20 @@ function UnsubscribeContent() {
         
         {status === 'loading' && (
           <div className="py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
             <p className="text-zinc-400">Processando...</p>
           </div>
         )}
         
         {status === 'success' && (
           <div className="py-4">
-            <div className="text-emerald-400 mb-4">
+            <div className="text-indigo-400 mb-4">
               <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <p className="text-xl font-semibold mb-2">Cancelamento Confirmado</p>
               <p className="text-sm text-zinc-400">
-                Você não receberá mais emails de marketing do StencilFlow.
+                Você não receberá mais emails de marketing do Black Line Pro.
               </p>
             </div>
             <p className="text-xs text-zinc-500 mt-6">
@@ -91,7 +93,7 @@ function UnsubscribeContent() {
             </p>
             <Link
               href="/"
-              className="mt-6 inline-block text-emerald-400 hover:text-emerald-300 text-sm font-medium"
+              className="mt-6 inline-block text-indigo-400 hover:text-indigo-300 text-sm font-medium"
             >
               Voltar ao Site →
             </Link>
@@ -109,12 +111,13 @@ function UnsubscribeContent() {
                 Por favor, tente novamente ou entre em contato com o suporte.
               </p>
             </div>
-            <button
+            <Button
+              variant="link"
               onClick={() => setStatus('idle')}
               className="mt-6 text-red-400 hover:text-red-300 text-sm font-medium"
             >
               ← Tentar Novamente
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -126,7 +129,7 @@ export default function UnsubscribePage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
       </div>
     }>
       <UnsubscribeContent />

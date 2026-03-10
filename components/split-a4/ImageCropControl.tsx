@@ -136,7 +136,7 @@ function ImageCropControl({
         {/* 🔧 APRIMORADO: Mostra áreas de overlap visualmente */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           <div
-            className="relative bg-transparent border-2 border-purple-500/30 rounded-lg"
+            className="relative bg-transparent border-2 border-indigo-500/30 rounded-lg"
             style={{
               // Manter aspect ratio EXATO do grid
               aspectRatio: `${gridWidth} / ${gridHeight}`,
@@ -161,7 +161,7 @@ function ImageCropControl({
                 return (
                   <div
                     key={`page-${row}-${col}`}
-                    className="absolute border-2 border-purple-500/70"
+                    className="absolute border-2 border-indigo-500/70"
                     style={{
                       left: `${left}%`,
                       top: `${top}%`,
@@ -172,7 +172,7 @@ function ImageCropControl({
                   >
                     {/* Número da página centralizado */}
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-purple-600/90 text-white text-sm font-bold px-3 py-1.5 rounded-full shadow-lg border-2 border-purple-400/50">
+                      <div className="bg-indigo-600/90 text-white text-sm font-bold px-3 py-1.5 rounded-full shadow-lg border-2 border-indigo-400/50">
                         {pageNum}
                       </div>
                     </div>
@@ -228,7 +228,7 @@ function ImageCropControl({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs text-zinc-400 font-medium">Zoom</label>
-              <span className="text-xs text-purple-400 font-mono">{(zoom * 100).toFixed(0)}%</span>
+              <span className="text-xs text-indigo-400 font-mono">{(zoom * 100).toFixed(0)}%</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -246,7 +246,7 @@ function ImageCropControl({
                 step={0.1}
                 value={zoom}
                 onChange={(e) => setZoom(Number(e.target.value))}
-                className="flex-1 accent-purple-500"
+                className="flex-1 accent-indigo-500"
               />
               <button
                 onClick={handleZoomIn}
@@ -270,7 +270,7 @@ function ImageCropControl({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs text-zinc-400 font-medium">Rotação</label>
-              <span className="text-xs text-emerald-400 font-mono">{rotation}°</span>
+              <span className="text-xs text-indigo-400 font-mono">{rotation}°</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -287,7 +287,7 @@ function ImageCropControl({
                 step={1}
                 value={rotation}
                 onChange={(e) => setRotation(Number(e.target.value))}
-                className="flex-1 accent-emerald-500"
+                className="flex-1 accent-indigo-500"
               />
               <button
                 onClick={() => setRotation(prev => prev + 90)}
@@ -334,7 +334,7 @@ function ImageCropControl({
         </button>
         <button
           onClick={handleCenter}
-          className="flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 bg-emerald-900/20 border-emerald-700 text-emerald-400 hover:bg-emerald-900/30 hover:border-emerald-600 transition-all"
+          className="flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 bg-indigo-900/20 border-indigo-700 text-indigo-400 hover:bg-indigo-900/30 hover:border-indigo-600 transition-all"
         >
           <Maximize2 size={16} />
           <span className="text-xs font-medium">Centralizar</span>
@@ -349,15 +349,15 @@ function ImageCropControl({
       </div>
 
       {/* Dica de uso */}
-      <div className="bg-purple-900/10 border border-purple-800/30 rounded-lg p-3">
-        <p className="text-xs text-purple-300/70">
-          <strong className="text-purple-400">💡 Manipule a imagem:</strong> Use a <strong>roda do mouse</strong> para zoom,
+      <div className="bg-indigo-900/10 border border-indigo-800/30 rounded-lg p-3">
+        <p className="text-xs text-indigo-300/70">
+          <strong className="text-indigo-400">💡 Manipule a imagem:</strong> Use a <strong>roda do mouse</strong> para zoom,
           <strong> arraste</strong> para posicionar, e ajuste <strong>rotação/flip</strong> conforme necessário.
-          Os <strong className="text-purple-400">números</strong> mostram as páginas do grid.
+          Os <strong className="text-indigo-400">números</strong> mostram as páginas do grid.
           {overlapCm > 0 && (
             <> As <strong className="text-amber-400">áreas amarelas</strong> indicam as zonas de sobreposição ({overlapCm}cm) entre as folhas.</>
           )}
-          {' '}Clique em <strong className="text-emerald-400">Centralizar</strong> para resetar.
+          {' '}Clique em <strong className="text-indigo-400">Centralizar</strong> para resetar.
         </p>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { getOrCreateUser, isAdmin as checkIsAdmin } from '@/lib/auth';
 import { generateStencilWithCost } from '@/lib/gemini';
 import { supabaseAdmin } from '@/lib/supabase';
 import { rateLimit } from '@/lib/ratelimit';
-import { checkEditorLimit, recordUsage, getLimitMessage } from '@/lib/billing/limits';
+import { recordUsage } from '@/lib/billing/limits';
 import { calculateCostWithFallback, type OperationType } from '@/lib/billing/costs';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
@@ -12,6 +12,25 @@ import { applyPreviewProtection } from '@/lib/stencil-preview';
 
 export async function POST(req: Request) {
   try {
+    // ─── BYOK PATH: usuário traz sua própria chave Gemini ───────────────────
+    const userApiKey = req.headers.get('X-User-API-Key');
+    if (userApiKey) {
+      // Rate limit por IP para evitar abuso (100 req/hora por IP)
+      const ip = req.headers.get('cf-connecting-ip')
+        || req.headers.get('x-real-ip')
+        || req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || 'unknown';
+      const { success: ipOk } = await rateLimit(`byok-ip:${ip}`, 100, 3600);
+      if (!ipOk) {
+        return NextResponse.json({
+          error: 'Too Many Requests',
+          message: 'Muitas gerações por hora. Aguarde antes de continuar.',
+        }, { status: 429 });
+      }
+      return await processGeneration(req, null, null, false, false, userApiKey);
+    }
+
+    // ─── AUTH PATH: fluxo padrão com Clerk ──────────────────────────────────
     const { userId } = await auth();
 
     if (!userId) {
@@ -19,9 +38,8 @@ export async function POST(req: Request) {
     }
 
     // 🛡️ RATE LIMIT: 10 requisições por minuto por usuário
-    // Protege contra scripts e abuso de GPU
     const { success, limit, remaining, reset } = await rateLimit(`stencil-gen:${userId}`, 10, 60);
-    
+
     if (!success) {
       return NextResponse.json({
         error: 'Too Many Requests',
@@ -31,8 +49,6 @@ export async function POST(req: Request) {
       }, { status: 429 });
     }
 
-    // 1. Buscar usuário completo (precisa do UUID user.id)
-    // 🚀 OTIMIZADO: Usar o helper getOrCreateUser que já tem retry e cache
     const userData = await getOrCreateUser(userId);
 
     if (!userData) {
@@ -43,43 +59,20 @@ export async function POST(req: Request) {
     const userIsAdmin = await checkIsAdmin(userId);
 
     if (userIsAdmin) {
-      // Admin: processar diretamente sem limitações
       return await processGeneration(req, userId, userData.id, true);
     }
 
-    // Verificar se é usuário gratuito (para preview com blur)
     const hasActiveCourtesy = userData.admin_courtesy &&
       userData.admin_courtesy_expires_at &&
       new Date(userData.admin_courtesy_expires_at) > new Date();
 
     const isFreePlan = !userData.is_paid && !hasActiveCourtesy;
 
-    // 2. VERIFICAR LIMITE DE USO
-    const limitCheck = await checkEditorLimit(userData.id);
-
-    if (!limitCheck.allowed) {
-      const message = limitCheck.warningMessage || (isFreePlan
-        ? 'Você já usou seus previews gratuitos! Assine para desbloquear stencils em alta qualidade.'
-        : getLimitMessage('editor_generation', limitCheck.limit, limitCheck.resetDate));
-
-      return NextResponse.json(
-        {
-          error: isFreePlan ? 'Previews esgotados' : 'Limite atingido',
-          message,
-          remaining: limitCheck.remaining,
-          limit: limitCheck.limit,
-          resetDate: limitCheck.resetDate,
-          requiresSubscription: true,
-          subscriptionType: 'subscription',
-        },
-        { status: 429 }
-      );
-    }
-
-    // 3. Processar geração (free users recebem preview degradado)
+    // BYOK: Gerações ilimitadas para todos os planos (usuário usa sua chave Gemini)
+    // Free users recebem preview com blur (upsell)
     return await processGeneration(req, userId, userData.id, false, isFreePlan);
   } catch (error: any) {
-    console.error('Erro ao gerar estêncil:', error);
+    logger.error('[Generate] Erro ao gerar estêncil', { error });
     return NextResponse.json(
       { error: error.message || 'Erro ao gerar estêncil' },
       { status: 500 }
@@ -88,7 +81,14 @@ export async function POST(req: Request) {
 }
 
 // Função auxiliar para processar geração
-async function processGeneration(req: Request, clerkUserId: string, userUuid: string, isAdmin: boolean, isPreview: boolean = false) {
+async function processGeneration(
+  req: Request,
+  clerkUserId: string | null,
+  userUuid: string | null,
+  isAdmin: boolean,
+  isPreview: boolean = false,
+  userApiKey?: string
+) {
   // Validar e parsear JSON
   let body;
   try {
@@ -131,37 +131,34 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
     isAdmin,
   });
 
-  // Gerar stencil no modo selecionado pelo usuário
-  const { image: stencilImage, usageMetadata } = await generateStencilWithCost(image, promptDetails, selectedStyle);
+  // Gerar stencil (BYOK usa chave do usuário, path normal usa chave do sistema)
+  const { image: stencilImage, usageMetadata } = await generateStencilWithCost(image, promptDetails, selectedStyle, userApiKey);
 
-  // 💰 CALCULAR CUSTO REAL baseado em tokens usados
-  // Mapear estilo para tipo de operação
-  const operationType: OperationType = selectedStyle === 'anime' 
-    ? 'anime' 
-    : selectedStyle === 'perfect_lines' 
-      ? 'topographic' 
-      : 'lines';
-  
-  const realCostUSD = calculateCostWithFallback(operationType, usageMetadata);
-  
-  // ✅ REGISTRAR USO após geração bem-sucedida com custo REAL
-  await recordUsage({
-    userId: userUuid,
-    type: 'editor_generation',
-    operationType: 'generate_stencil',
-    cost: realCostUSD,  // 💰 Custo real em USD da API Gemini
-    metadata: {
-      style: selectedStyle,
-      operation: 'generate_stencil',
-      is_admin: isAdmin,
-      tokens: usageMetadata  // Guardar tokens para auditoria
-    }
-  });
+  // 💰 Registrar uso apenas para usuários autenticados (não BYOK anônimo)
+  if (userUuid) {
+    const operationType: OperationType = selectedStyle === 'anime'
+      ? 'anime'
+      : selectedStyle === 'perfect_lines'
+        ? 'topographic'
+        : 'lines';
+    const realCostUSD = calculateCostWithFallback(operationType, usageMetadata);
+    await recordUsage({
+      userId: userUuid,
+      type: 'editor_generation',
+      operationType: 'generate_stencil',
+      cost: realCostUSD,
+      metadata: {
+        style: selectedStyle,
+        operation: 'generate_stencil',
+        is_admin: isAdmin,
+        tokens: usageMetadata
+      }
+    });
+  }
 
-  // 🎣 FREE USERS: Aplicar proteção de preview (blur + watermark + resolução capada)
-  if (isPreview) {
+  // 🎣 FREE USERS (auth path only): Aplicar proteção de preview
+  if (isPreview && userUuid && clerkUserId) {
     try {
-      // Buscar email do usuário para watermark personalizada
       const { data: userInfo } = await supabaseAdmin
         .from('users')
         .select('email')
@@ -177,11 +174,10 @@ async function processGeneration(req: Request, clerkUserId: string, userUuid: st
         image: previewImage,
         isPreview: true,
         message: 'Este é um preview. Assine para desbloquear o stencil em alta qualidade!',
-        remaining: 0, // Será atualizado pelo front
+        remaining: 0,
       });
     } catch (previewError: any) {
       logger.error('[Generate] Erro ao aplicar preview protection:', previewError);
-      // Fallback: retorna com flag de preview mesmo sem blur
       return NextResponse.json({
         image: stencilImage,
         isPreview: true,

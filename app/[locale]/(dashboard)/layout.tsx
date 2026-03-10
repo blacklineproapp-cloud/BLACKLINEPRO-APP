@@ -4,11 +4,12 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, PenTool, Sparkles, Package, CreditCard, Menu, X, Rocket, HelpCircle } from 'lucide-react';
+import { LayoutGrid, PenTool, Sparkles, Package, CreditCard, Menu, X, Rocket, HelpCircle, LogIn } from 'lucide-react';
 import { useState } from 'react';
+import Image from 'next/image';
 import { InstallBanner } from '@/components/InstallBanner';
-import MigrationChecker from '@/components/migration/MigrationChecker';
-import SecurityNoticeModal from '@/components/SecurityNoticeModal';
+import { SignInButton } from '@clerk/nextjs';
+import { Button } from '@/components/ui/button';
 
 // Carregar UserButton apenas no cliente para evitar hydration mismatch
 const UserButton = dynamic(
@@ -35,7 +36,7 @@ const NavItem = ({
     className={[
       'p-2 md:p-3 rounded-2xl transition-all flex flex-col items-center justify-center gap-1.5 min-w-[64px] relative group',
       active
-        ? 'bg-emerald-600/10 text-emerald-500'
+        ? 'bg-indigo-600/10 text-indigo-400'
         : 'text-zinc-500 hover:text-white',
       className
     ].filter(Boolean).join(' ')}
@@ -47,7 +48,7 @@ const NavItem = ({
       {label}
     </span>
     {active && (
-      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-500 rounded-full md:hidden" />
+      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-500 rounded-full md:hidden" />
     )}
   </Link>
 );
@@ -79,7 +80,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-indigo-500/25">
       
       {/* 📱 Compact Mobile Menu - Popover Style */}
       {isMenuOpen && (
@@ -90,15 +91,24 @@ export default function DashboardLayout({
           <div className="md:hidden fixed bottom-[88px] right-2 w-56 bg-zinc-900/95 backdrop-blur-xl border border-zinc-700/50 rounded-2xl shadow-2xl shadow-black/80 z-[60] overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-200 origin-bottom-right">
             {/* Profile Section */}
             <div className="p-3 border-b border-zinc-800/50 bg-zinc-800/30 flex items-center gap-3">
-               {user && (
-                 <div className="scale-90">
-                   <UserButton afterSignOutUrl="/" />
-                 </div>
+               {user ? (
+                 <>
+                   <div className="scale-90">
+                     <UserButton afterSignOutUrl="/" />
+                   </div>
+                   <div className="overflow-hidden">
+                     <p className="text-xs font-bold text-white truncate">{user.firstName || t('user')}</p>
+                     <p className="text-[10px] text-zinc-500 truncate">{t('settings')}</p>
+                   </div>
+                 </>
+               ) : (
+                 <SignInButton mode="modal">
+                   <Button variant="link" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-2 font-bold text-sm">
+                     <LogIn size={16} />
+                     {t('signInCreate')}
+                   </Button>
+                 </SignInButton>
                )}
-               <div className="overflow-hidden">
-                  <p className="text-xs font-bold text-white truncate">{user?.firstName || t('user')}</p>
-                  <p className="text-[10px] text-zinc-500 truncate">{t('settings')}</p>
-               </div>
             </div>
 
             {/* Menu Links */}
@@ -133,25 +143,26 @@ export default function DashboardLayout({
                <Link 
                  href="/pricing" 
                  onClick={() => setIsMenuOpen(false)} 
-                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors border border-emerald-500/10"
+                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 transition-colors border border-indigo-500/15"
                >
-                  <Rocket size={16} className="text-emerald-500" />
-                  <span className="text-xs text-emerald-400 font-bold">{t('upgrade')}</span>
+                  <Rocket size={16} className="text-indigo-400" />
+                  <span className="text-xs text-indigo-300 font-bold">{t('upgrade')}</span>
                </Link>
 
                {/* Divider */}
                <div className="h-px bg-zinc-800 my-1" />
 
                {/* Logout Button - Visível e claro */}
-               <button
+               <Button
+                 variant="ghost"
                  onClick={handleLogout}
-                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-500/10 transition-colors text-left w-full"
+                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-500/10 text-left w-full justify-start h-auto"
                >
                   <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
                   <span className="text-xs text-red-400 font-medium">{t('logout')}</span>
-               </button>
+               </Button>
             </div>
           </div>
         </>
@@ -161,10 +172,15 @@ export default function DashboardLayout({
       <nav className="fixed bottom-0 left-0 w-full md:w-20 md:h-screen bg-zinc-900/80 backdrop-blur-xl border-t md:border-t-0 md:border-r border-zinc-800/50 z-40 flex md:flex-col items-center justify-between px-2 md:px-0 pb-safe md:pt-6 md:pb-4 md:gap-4 md:overflow-y-auto md:overflow-x-hidden">
         
         {/* Logo - Desktop only */}
-        <div className="hidden md:flex items-center justify-center w-12 h-12 bg-emerald-600 rounded-xl mb-4 shadow-lg shadow-emerald-900/50">
-          <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-          </svg>
+        <div className="hidden md:flex items-center justify-center w-12 h-12 rounded-xl mb-4 shadow-lg shadow-indigo-900/50 overflow-hidden">
+          <Image
+            src="/models/blackline-logo.jpg"
+            alt="BlacklinePRO"
+            width={48}
+            height={48}
+            className="w-full h-full object-cover"
+            priority
+          />
         </div>
 
         <NavItem 
@@ -221,36 +237,43 @@ export default function DashboardLayout({
             active={pathname === '/pricing'}
             icon={<Rocket size={24} />}
             label={t('upgrade')}
-            className="!bg-gradient-to-r !from-emerald-600 !to-emerald-500 !text-white hover:!from-emerald-500 hover:!to-emerald-400"
+            className="!bg-gradient-to-br !from-indigo-600 !to-indigo-500 !text-white hover:!from-indigo-500 hover:!to-indigo-400"
           />
         </div>
 
-        {/* 🖥️ Desktop User Section - Photo + Logout */}
+        {/* 🖥️ Desktop User Section - Photo + Logout / Sign In */}
         <div className="hidden md:flex md:flex-col md:items-center md:gap-3 md:mb-4">
-          {/* User Photo */}
-          {user && (
-            <div className="scale-90">
-              <UserButton afterSignOutUrl="/" />
-            </div>
+          {user ? (
+            <>
+              <div className="scale-90">
+                <UserButton afterSignOutUrl="/" />
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="rounded-xl hover:bg-red-500/10 group"
+                title={t('logout')}
+              >
+                <svg className="w-5 h-5 text-zinc-500 group-hover:text-red-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </Button>
+            </>
+          ) : (
+            <SignInButton mode="modal">
+              <Button variant="ghost" size="icon" className="rounded-xl hover:bg-indigo-500/10 group" title={t('signIn')}>
+                <LogIn size={20} className="text-zinc-500 group-hover:text-indigo-400 transition-colors" />
+              </Button>
+            </SignInButton>
           )}
-
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="p-2 rounded-xl hover:bg-red-500/10 transition-colors group"
-            title={t('logout')}
-          >
-            <svg className="w-5 h-5 text-zinc-500 group-hover:text-red-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-          </button>
         </div>
 
         {/* 📱 Mobile Menu Button - THE SMART WAY */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           className={`md:hidden p-2 md:p-3 rounded-2xl transition-all flex flex-col items-center justify-center gap-1.5 min-w-[64px] relative group ${
-            isMenuOpen ? 'text-emerald-500 bg-emerald-500/10' : 'text-zinc-500 hover:text-white'
+            isMenuOpen ? 'text-indigo-400 bg-indigo-500/10' : 'text-zinc-500 hover:text-white'
           }`}
         >
           <div className={`transition-transform duration-300 ${isMenuOpen ? 'scale-110' : 'group-hover:scale-110'}`}>
@@ -267,11 +290,6 @@ export default function DashboardLayout({
 
       <InstallBanner delay={5000} />
 
-      {/* Modal de migração Stripe → Asaas (solicita CPF se necessário) */}
-      <MigrationChecker />
-
-      {/* Comunicado Oficial de Segurança */}
-      <SecurityNoticeModal />
     </div>
   );
 }

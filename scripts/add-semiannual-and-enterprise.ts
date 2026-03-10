@@ -19,13 +19,13 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 // ============================================================================
 
 const SEMIANNUAL_PRICES = {
-  starter: 22500,  // R$ 225,00 (6 meses = R$ 37,50/mês - 25% off)
+  ink: 22500,      // R$ 225,00 (6 meses = R$ 37,50/mês - 25% off)
   pro: 45000,      // R$ 450,00 (6 meses = R$ 75,00/mês - 25% off)
   studio: 135000   // R$ 1.350,00 (6 meses = R$ 225,00/mês - 25% off)
 };
 
 const EXISTING_PRODUCT_IDS = {
-  starter: process.env.STRIPE_PRODUCT_STARTER,
+  ink: process.env.STRIPE_PRODUCT_INK,
   pro: process.env.STRIPE_PRODUCT_PRO,
   studio: process.env.STRIPE_PRODUCT_STUDIO
 };
@@ -34,12 +34,7 @@ const EXISTING_PRODUCT_IDS = {
 // 2. PRODUTO E PRICES ENTERPRISE (Novo)
 // ============================================================================
 
-const ENTERPRISE_PRICES = {
-  monthly: 60000,      // R$ 600,00/mês
-  quarterly: 162000,   // R$ 1.620,00 (3 meses = R$ 540/mês - 10% off)
-  semiannual: 270000,  // R$ 2.700,00 (6 meses = R$ 450/mês - 25% off)
-  yearly: 432000       // R$ 4.320,00 (12 meses = R$ 360/mês - 40% off)
-};
+// Enterprise plan has been removed
 
 // ============================================================================
 // FUNÇÕES PRINCIPAIS
@@ -95,119 +90,12 @@ async function addSemiannualPrices() {
   return results;
 }
 
-/**
- * Cria produto Enterprise e todos os seus prices
- */
-async function createEnterpriseProduct() {
-  console.log('\n🏢 ETAPA 2: Criando produto ENTERPRISE...\n');
-  console.log('='.repeat(70));
-
-  let productId: string;
-  const priceResults: Record<string, string> = {};
-
-  // 1. Criar produto Enterprise
-  console.log('\n📦 Criando produto Enterprise...');
-
-  try {
-    const product = await stripe.products.create({
-      name: 'Enterprise',
-      description: 'Plano Enterprise - Uso verdadeiramente ilimitado para empresas',
-      metadata: {
-        plan: 'enterprise',
-        features: JSON.stringify([
-          'Uso ILIMITADO',
-          'Suporte dedicado 24/7',
-          'SLA garantido 99.9%',
-          'Onboarding personalizado',
-          'API access',
-          'Integração com sistemas'
-        ])
-      }
-    });
-
-    productId = product.id;
-    console.log(`   ✅ Produto criado: ${productId}`);
-    console.log(`   Nome: ${product.name}`);
-  } catch (error: any) {
-    console.error(`   ❌ Erro ao criar produto: ${error.message}`);
-    throw error;
-  }
-
-  // 2. Criar todos os 4 prices do Enterprise
-  console.log('\n💰 Criando prices do Enterprise...\n');
-
-  const pricesToCreate = [
-    {
-      cycle: 'monthly',
-      amount: ENTERPRISE_PRICES.monthly,
-      interval: 'month',
-      interval_count: 1,
-      discount: '0%'
-    },
-    {
-      cycle: 'quarterly',
-      amount: ENTERPRISE_PRICES.quarterly,
-      interval: 'month',
-      interval_count: 3,
-      discount: '10%'
-    },
-    {
-      cycle: 'semiannual',
-      amount: ENTERPRISE_PRICES.semiannual,
-      interval: 'month',
-      interval_count: 6,
-      discount: '25%'
-    },
-    {
-      cycle: 'yearly',
-      amount: ENTERPRISE_PRICES.yearly,
-      interval: 'month',
-      interval_count: 12,
-      discount: '40%'
-    }
-  ];
-
-  for (const priceConfig of pricesToCreate) {
-    const priceInReais = priceConfig.amount / 100;
-    const intervalLabel = priceConfig.interval_count === 1
-      ? 'mensal'
-      : `${priceConfig.interval_count} meses`;
-
-    console.log(`\n📌 ENTERPRISE ${priceConfig.cycle.toUpperCase()}:`);
-    console.log(`   Preço: R$ ${priceInReais.toFixed(2)} (${intervalLabel})`);
-    console.log(`   Desconto: ${priceConfig.discount}`);
-
-    try {
-      const price = await stripe.prices.create({
-        product: productId,
-        unit_amount: priceConfig.amount,
-        currency: 'brl',
-        recurring: {
-          interval: priceConfig.interval as 'month',
-          interval_count: priceConfig.interval_count
-        },
-        metadata: {
-          plan: 'enterprise',
-          cycle: priceConfig.cycle,
-          discount: priceConfig.discount
-        }
-      });
-
-      priceResults[priceConfig.cycle] = price.id;
-      console.log(`   ✅ Price criado: ${price.id}`);
-    } catch (error: any) {
-      console.error(`   ❌ Erro: ${error.message}`);
-    }
-  }
-
-  console.log('\n' + '='.repeat(70));
-  return { productId, prices: priceResults };
-}
+// Enterprise product creation has been removed
 
 /**
  * Exibe resumo final e variáveis de ambiente
  */
-function displayResults(semiannual: Record<string, string>, enterprise: { productId: string; prices: Record<string, string> }) {
+function displayResults(semiannual: Record<string, string>) {
   console.log('\n' + '='.repeat(70));
   console.log('✅ TODOS OS PRICES CRIADOS COM SUCESSO!');
   console.log('='.repeat(70));
@@ -217,14 +105,6 @@ function displayResults(semiannual: Record<string, string>, enterprise: { produc
 
   for (const [planName, priceId] of Object.entries(semiannual)) {
     const envVarName = `STRIPE_PRICE_${planName.toUpperCase()}_SEMIANNUAL`;
-    console.log(`${envVarName}=${priceId}`);
-  }
-
-  console.log('\n# ───── ENTERPRISE (Novo Produto) ─────');
-  console.log(`STRIPE_PRODUCT_ENTERPRISE=${enterprise.productId}`);
-
-  for (const [cycle, priceId] of Object.entries(enterprise.prices)) {
-    const envVarName = `STRIPE_PRICE_ENTERPRISE_${cycle.toUpperCase()}`;
     console.log(`${envVarName}=${priceId}`);
   }
 
@@ -240,9 +120,6 @@ function displayResults(semiannual: Record<string, string>, enterprise: { produc
 
   console.log('\n📊 RESUMO:');
   console.log(`   Prices semestrais criados: ${Object.keys(semiannual).length}`);
-  console.log(`   Produto Enterprise criado: 1`);
-  console.log(`   Prices Enterprise criados: ${Object.keys(enterprise.prices).length}`);
-  console.log(`   Total de prices: ${Object.keys(semiannual).length + Object.keys(enterprise.prices).length}`);
   console.log('\n');
 }
 
@@ -252,23 +129,18 @@ function displayResults(semiannual: Record<string, string>, enterprise: { produc
 
 async function runSemiannualSetup() {
   console.log('\n' + '='.repeat(70));
-  console.log('🚀 SETUP CONSOLIDADO: SEMESTRAIS + ENTERPRISE');
+  console.log('🚀 SETUP CONSOLIDADO: SEMESTRAIS');
   console.log('='.repeat(70));
   console.log('\nEste script vai:');
-  console.log('  1️⃣  Adicionar prices SEMESTRAIS aos planos existentes');
-  console.log('  2️⃣  Criar produto ENTERPRISE no Stripe');
-  console.log('  3️⃣  Criar TODOS os 4 prices do Enterprise\n');
+  console.log('  1️⃣  Adicionar prices SEMESTRAIS aos planos existentes\n');
   console.log('⏳ Aguarde...\n');
 
   try {
     // Etapa 1: Prices semestrais
     const semiannualResults = await addSemiannualPrices();
 
-    // Etapa 2: Produto e prices Enterprise
-    const enterpriseResults = await createEnterpriseProduct();
-
     // Exibir resumo
-    displayResults(semiannualResults, enterpriseResults);
+    displayResults(semiannualResults);
 
     console.log('✨ Script finalizado com sucesso!\n');
     process.exit(0);

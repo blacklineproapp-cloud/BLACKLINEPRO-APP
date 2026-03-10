@@ -4,6 +4,7 @@
 // =====================================================
 
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger } from '../logger';
 import { canAddMoreMembers, addMember } from './members';
 import type {
   OrganizationInvite,
@@ -91,7 +92,7 @@ export async function createInvite(params: {
       .single();
 
     if (error) {
-      console.error('[createInvite] Error:', error);
+      logger.error('[createInvite] Error', error);
       return { success: false, error: 'Erro ao criar convite' };
     }
 
@@ -101,9 +102,9 @@ export async function createInvite(params: {
       success: true,
       invite,
     };
-  } catch (error: any) {
-    console.error('[createInvite] Fatal error:', error);
-    return { success: false, error: error.message || 'Erro ao criar convite' };
+  } catch (error: unknown) {
+    logger.error('[createInvite] Fatal error', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Erro ao criar convite' };
   }
 }
 
@@ -120,7 +121,7 @@ export async function getInviteByToken(token: string): Promise<OrganizationInvit
       .single();
 
     if (error || !data) {
-      console.error('[getInviteByToken] Error:', error);
+      logger.error('[getInviteByToken] Error', error);
       return null;
     }
 
@@ -132,7 +133,7 @@ export async function getInviteByToken(token: string): Promise<OrganizationInvit
 
     return data;
   } catch (error) {
-    console.error('[getInviteByToken] Fatal error:', error);
+    logger.error('[getInviteByToken] Fatal error', error);
     return null;
   }
 }
@@ -153,13 +154,13 @@ export async function getOrganizationInvites(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('[getOrganizationInvites] Error:', error);
+      logger.error('[getOrganizationInvites] Error', error);
       return [];
     }
 
     return data || [];
   } catch (error) {
-    console.error('[getOrganizationInvites] Fatal error:', error);
+    logger.error('[getOrganizationInvites] Fatal error', error);
     return [];
   }
 }
@@ -191,13 +192,13 @@ export async function getUserPendingInvites(email: string): Promise<Organization
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('[getUserPendingInvites] Error:', error);
+      logger.error('[getUserPendingInvites] Error', error);
       return [];
     }
 
-    return (data as any[]) || [];
+    return (data as OrganizationInvite[]) || [];
   } catch (error) {
-    console.error('[getUserPendingInvites] Fatal error:', error);
+    logger.error('[getUserPendingInvites] Fatal error', error);
     return [];
   }
 }
@@ -254,9 +255,9 @@ export async function acceptInvite(
       success: true,
       organization: organization || undefined,
     };
-  } catch (error: any) {
-    console.error('[acceptInvite] Fatal error:', error);
-    return { success: false, error: error.message || 'Erro ao aceitar convite' };
+  } catch (error: unknown) {
+    logger.error('[acceptInvite] Fatal error', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Erro ao aceitar convite' };
   }
 }
 
@@ -300,15 +301,15 @@ export async function cancelInvite(
       .eq('id', inviteId);
 
     if (error) {
-      console.error('[cancelInvite] Error:', error);
+      logger.error('[cancelInvite] Error', error);
       return { success: false, error: 'Erro ao cancelar convite' };
     }
 
     // console.log(`[cancelInvite] ✅ Invite canceled: ${inviteId}`);
     return { success: true };
-  } catch (error: any) {
-    console.error('[cancelInvite] Fatal error:', error);
-    return { success: false, error: error.message || 'Erro ao cancelar convite' };
+  } catch (error: unknown) {
+    logger.error('[cancelInvite] Fatal error', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Erro ao cancelar convite' };
   }
 }
 
@@ -325,7 +326,7 @@ export async function cleanupExpiredInvites(): Promise<number> {
       .select('id');
 
     if (error) {
-      console.error('[cleanupExpiredInvites] Error:', error);
+      logger.error('[cleanupExpiredInvites] Error', error);
       return 0;
     }
 
@@ -336,7 +337,7 @@ export async function cleanupExpiredInvites(): Promise<number> {
 
     return deletedCount;
   } catch (error) {
-    console.error('[cleanupExpiredInvites] Fatal error:', error);
+    logger.error('[cleanupExpiredInvites] Fatal error', error);
     return 0;
   }
 }

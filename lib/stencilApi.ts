@@ -1,5 +1,5 @@
 /**
- * StencilFlow API Client
+ * Black Line Pro API Client
  * Integração com Python API para processamento de stencils
  */
 

@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import OrganizationCard from '@/components/organization/OrganizationCard';
 import MembersList from '@/components/organization/MembersList';
 import InviteMemberDialog from '@/components/organization/InviteMemberDialog';
+import { Button } from '@/components/ui/button';
 import type { Organization, OrganizationMemberWithUser } from '@/lib/types/organization';
 
 export default function OrganizationPage() {
@@ -120,8 +121,8 @@ export default function OrganizationPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Carregando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-zinc-400">Carregando...</p>
         </div>
       </div>
     );
@@ -131,28 +132,30 @@ export default function OrganizationPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-2xl font-bold text-white mb-4">
             {error || 'Organização não encontrada'}
           </h1>
-          <button
+          <Button
+            variant="link"
             onClick={() => router.push('/dashboard')}
-            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+            className="text-indigo-400 hover:text-indigo-300"
           >
             Voltar ao Dashboard
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-black py-8">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => router.push('/dashboard')}
-            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 mb-4 flex items-center gap-2"
+            className="text-indigo-400 hover:text-indigo-300 mb-4 gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -163,10 +166,10 @@ export default function OrganizationPage() {
               />
             </svg>
             Voltar ao Dashboard
-          </button>
+          </Button>
 
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl lg:text-3xl font-bold text-white">
               Gerenciar Organização
             </h1>
 

@@ -6,12 +6,21 @@
 
 import { asaasGet, asaasPost, asaasPut, asaasDelete } from './client';
 import { supabaseAdmin } from '../supabase';
-import { maskEmail } from '../logger';
+import { logger, maskEmail } from '../logger';
 import type {
   AsaasCustomer,
   CreateCustomerParams,
   AsaasListResponse,
 } from './types';
+
+/** Database customer record with essential fields */
+export interface DbCustomerRecord {
+  id: string;
+  user_id: string;
+  asaas_customer_id?: string;
+  email?: string;
+  [key: string]: unknown;
+}
 
 export class AsaasCustomerService {
   /**
@@ -20,7 +29,7 @@ export class AsaasCustomerService {
   static async create(params: CreateCustomerParams): Promise<AsaasCustomer> {
     const customer = await asaasPost<AsaasCustomer>('/customers', params);
 
-    console.log(`[AsaasCustomer] Cliente criado: ${customer.id} - ${maskEmail(customer.email)}`);
+    logger.info('[AsaasCustomer] Cliente criado', { customerId: customer.id, email: maskEmail(customer.email) });
 
     return customer;
   }
@@ -90,7 +99,7 @@ export class AsaasCustomerService {
   ): Promise<AsaasCustomer> {
     const customer = await asaasPut<AsaasCustomer>(`/customers/${customerId}`, params);
 
-    console.log(`[AsaasCustomer] Cliente atualizado: ${customer.id}`);
+    logger.info('[AsaasCustomer] Cliente atualizado', { customerId: customer.id });
 
     return customer;
   }
@@ -103,7 +112,7 @@ export class AsaasCustomerService {
       `/customers/${customerId}`
     );
 
-    console.log(`[AsaasCustomer] Cliente removido: ${customerId}`);
+    logger.info('[AsaasCustomer] Cliente removido', { customerId });
 
     return result;
   }
@@ -137,7 +146,7 @@ export class AsaasCustomerService {
     name: string;
     cpfCnpj?: string;
     phone?: string;
-  }): Promise<{ asaasCustomer: AsaasCustomer; dbCustomer: any }> {
+  }): Promise<{ asaasCustomer: AsaasCustomer; dbCustomer: DbCustomerRecord | null }> {
     const { userId, clerkId, email, name, cpfCnpj, phone } = params;
 
     // 1. Verificar se já existe no banco com asaas_customer_id
@@ -199,7 +208,7 @@ export class AsaasCustomerService {
       .single();
 
     if (error) {
-      console.error('[AsaasCustomer] Erro ao salvar no banco:', error);
+      logger.error('[AsaasCustomer] Erro ao salvar no banco', error);
     }
 
     return { asaasCustomer, dbCustomer };
@@ -208,7 +217,7 @@ export class AsaasCustomerService {
   /**
    * Busca cliente do banco por user_id
    */
-  static async getDbCustomerByUserId(userId: string): Promise<any | null> {
+  static async getDbCustomerByUserId(userId: string): Promise<DbCustomerRecord | null> {
     const { data } = await supabaseAdmin
       .from('customers')
       .select('*')
@@ -224,7 +233,7 @@ export class AsaasCustomerService {
    * Depois tenta customers (legado)
    * 🚀 OTIMIZADO: Se não encontrar no banco, tenta buscar no Asaas e sinkronizar
    */
-  static async getDbCustomerByAsaasId(asaasCustomerId: string): Promise<{ data: any, source: 'asaas_customers' | 'customers' } | null> {
+  static async getDbCustomerByAsaasId(asaasCustomerId: string): Promise<{ data: DbCustomerRecord, source: 'asaas_customers' | 'customers' } | null> {
     // 1. Tentar na tabela asaas_customers (nova migração)
     const { data: asaasCustomer } = await supabaseAdmin
       .from('asaas_customers')
@@ -248,13 +257,13 @@ export class AsaasCustomerService {
     }
 
     // 3. 🔍 DESCOBERTA AUTOMÁTICA: Não está no banco, buscar no Asaas
-    console.log(`[AsaasCustomer] 🔍 Cliente ${asaasCustomerId} não encontrado no banco. Tentando descoberta via API...`);
+    logger.info('[AsaasCustomer] Cliente não encontrado no banco. Tentando descoberta via API', { asaasCustomerId });
     
     try {
       const externalCustomer = await this.getById(asaasCustomerId);
       
       if (externalCustomer) {
-        console.log(`[AsaasCustomer] ✅ Cliente encontrado no Asaas: ${externalCustomer.email}`);
+        logger.info('[AsaasCustomer] Cliente encontrado no Asaas', { email: externalCustomer.email });
         
         // Tentar encontrar usuário no banco por externalReference (clerk_id) ou email
         // Busca separada para evitar PostgREST filter injection
@@ -282,7 +291,7 @@ export class AsaasCustomerService {
         }
           
         if (user) {
-          console.log(`[AsaasCustomer] 🔗 Linkando cliente ${asaasCustomerId} ao usuário ${user.id}`);
+          logger.info('[AsaasCustomer] Linkando cliente ao usuário', { asaasCustomerId, userId: user.id });
           
           // Criar registro na tabela customers (legado ou nova, aqui usaremos asaas_customers por ser mais moderna)
           const { data: newEntry, error: insertError } = await supabaseAdmin
@@ -301,11 +310,11 @@ export class AsaasCustomerService {
             return { data: newEntry, source: 'asaas_customers' };
           }
         } else {
-          console.warn(`[AsaasCustomer] ⚠️ Cliente ${asaasCustomerId} encontrado no Asaas mas nenhum usuário correspondente no banco (Ref: ${searchId}, Email: ${searchEmail})`);
+          logger.warn('[AsaasCustomer] Cliente encontrado no Asaas mas nenhum usuário correspondente no banco', { asaasCustomerId, externalReference: searchId, email: searchEmail });
         }
       }
     } catch (apiError) {
-      console.error(`[AsaasCustomer] ❌ Erro na descoberta do cliente ${asaasCustomerId}:`, apiError);
+      logger.error('[AsaasCustomer] Erro na descoberta do cliente', { asaasCustomerId, error: apiError });
     }
 
     return null;

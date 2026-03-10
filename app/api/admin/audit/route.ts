@@ -1,20 +1,9 @@
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
-export async function GET(req: Request) {
-  try {
-    // 1. 🔒 VERIFICAR ADMIN
-    const { userId } = await auth();
-
-    if (!userId || !(await isAdmin(userId))) {
-      return NextResponse.json(
-        { error: 'Acesso negado' },
-        { status: 403 }
-      );
-    }
-
+export const GET = withAdminAuth(async (req, { adminId }) => {
     // 2. 🔍 PARÂMETROS DE BUSCA
     const { searchParams } = new URL(req.url);
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -23,7 +12,7 @@ export async function GET(req: Request) {
 
     // Filtros opcionais
     const action = searchParams.get('action');
-    const adminId = searchParams.get('adminId');
+    const filterAdminId = searchParams.get('adminId');
 
     // 3. 📊 CONSULTAR LOGS
     let query = supabaseAdmin
@@ -38,8 +27,8 @@ export async function GET(req: Request) {
       query = query.eq('action', action);
     }
 
-    if (adminId) {
-      query = query.eq('admin_user_id', adminId);
+    if (filterAdminId) {
+      query = query.eq('admin_user_id', filterAdminId);
     }
 
     // Ordenação e Paginação
@@ -48,7 +37,7 @@ export async function GET(req: Request) {
       .range(offset, offset + limit - 1);
 
     if (error) {
-      console.error('Erro ao buscar logs:', error);
+      logger.error('[Audit] Erro ao buscar logs', { error });
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -57,7 +46,7 @@ export async function GET(req: Request) {
     let reconciliationData = null;
 
     if (shouldReconcile) {
-      console.log('[Audit] Iniciando reconciliação...');
+      logger.info('[Audit] Iniciando reconciliação');
 
       // Buscar usuários pagos do banco
       const { data: dbPaidUsers, error: dbError } = await supabaseAdmin
@@ -66,7 +55,7 @@ export async function GET(req: Request) {
         .eq('is_paid', true);
 
       if (dbError) {
-        console.error('[Audit] Erro ao buscar usuários pagos:', dbError);
+        logger.error('[Audit] Erro ao buscar usuários pagos', { error: dbError });
       }
 
       // Buscar pagamentos confirmados
@@ -120,22 +109,10 @@ export async function GET(req: Request) {
         totalPages: Math.ceil((count || 0) / limit)
       }
     });
-
-  } catch (error: any) {
-    console.error('Erro interno:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
-  }
-}
+});
 
 // POST - Corrigir discrepâncias
-export async function POST(req: Request) {
-    try {
-        const { userId } = await auth();
-        if (!userId || !(await isAdmin(userId))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-
+export const POST = withAdminAuth(async (req, { adminId }) => {
         const body = await req.json();
         const { action, email, plan } = body;
 
@@ -143,7 +120,7 @@ export async function POST(req: Request) {
         const { data: adminUser } = await supabaseAdmin
             .from('users')
             .select('id')
-            .eq('clerk_id', userId)
+            .eq('clerk_id', adminId)
             .single();
 
         if (action === 'fix_discrepancy') {
@@ -245,8 +222,4 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ error: 'Ação inválida' }, { status: 400 });
-
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-}
+});

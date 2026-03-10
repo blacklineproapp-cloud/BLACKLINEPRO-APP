@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { Button } from '@/components/ui/button';
 import { OrganizationMemberWithUser } from '@/lib/types/organization';
 
 interface MembersListProps {
@@ -38,23 +39,23 @@ export default function MembersList({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+    <div className="bg-zinc-900 rounded-lg shadow-sm border border-zinc-800">
+      <div className="px-6 py-4 border-b border-zinc-800">
+        <h3 className="text-lg font-semibold text-white">
           Membros ({members.length})
         </h3>
       </div>
 
-      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="divide-y divide-zinc-800">
         {members.length === 0 ? (
-          <div className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+          <div className="px-6 py-8 text-center text-zinc-400">
             Nenhum membro na organização
           </div>
         ) : (
           members.map((member) => (
             <div
               key={member.id}
-              className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              className="px-6 py-4 flex items-center justify-between hover:bg-zinc-800 transition-colors"
             >
               <div className="flex items-center gap-4">
                 {/* Avatar */}
@@ -69,7 +70,7 @@ export default function MembersList({
                       unoptimized
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                    <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-semibold">
                       {(member.user.name || member.user.email)
                         .charAt(0)
                         .toUpperCase()}
@@ -80,19 +81,19 @@ export default function MembersList({
                 {/* Info */}
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="font-medium text-white">
                       {member.user.name || member.user.email}
                     </p>
                     {member.role === 'owner' && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-900 text-indigo-200">
                         Proprietário
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-zinc-400">
                     {member.user.email}
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-xs text-zinc-500 mt-1">
                     Entrou em{' '}
                     {new Date(member.joined_at).toLocaleDateString('pt-BR')}
                   </p>
@@ -101,13 +102,14 @@ export default function MembersList({
 
               {/* Actions */}
               {isOwner && member.role !== 'owner' && (
-                <button
+                <Button
+                  variant="link"
                   onClick={() => handleRemove(member.user_id)}
                   disabled={removingId === member.user_id}
-                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-red-400 hover:text-red-300 text-sm font-medium"
                 >
                   {removingId === member.user_id ? 'Removendo...' : 'Remover'}
-                </button>
+                </Button>
               )}
             </div>
           ))

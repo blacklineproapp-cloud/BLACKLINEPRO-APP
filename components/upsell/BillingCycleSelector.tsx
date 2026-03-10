@@ -64,7 +64,7 @@ export default function BillingCycleSelector({
                 flex-1 min-w-[80px] px-3 py-2 rounded-lg
                 border transition-all duration-200
                 ${isSelected
-                  ? 'bg-blue-600/20 border-blue-500 text-blue-400'
+                  ? 'bg-indigo-600/20 border-indigo-500 text-indigo-400'
                   : 'bg-zinc-800/50 border-zinc-700 text-zinc-400 hover:border-zinc-600'
                 }
               `}
@@ -74,7 +74,7 @@ export default function BillingCycleSelector({
                 {formatPrice(monthlyEq)}<span className="text-[10px] font-normal">/mês</span>
               </div>
               {cycleInfo.discount > 0 && (
-                <div className="text-[9px] text-emerald-400">-{cycleInfo.discount}%</div>
+                <div className="text-[9px] text-indigo-400">-{cycleInfo.discount}%</div>
               )}
             </button>
           );
@@ -103,10 +103,10 @@ export default function BillingCycleSelector({
               border transition-all duration-200
               text-left relative
               ${isSelected
-                ? 'bg-blue-600/10 border-blue-500 ring-1 ring-blue-500/30'
+                ? 'bg-indigo-600/10 border-indigo-500 ring-1 ring-indigo-500/30'
                 : 'bg-zinc-800/50 border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800'
               }
-              ${isBestValue && !isSelected ? 'border-emerald-500/50' : ''}
+              ${isBestValue && !isSelected ? 'border-indigo-500/50' : ''}
             `}
           >
             {/* Radio indicator */}
@@ -115,7 +115,7 @@ export default function BillingCycleSelector({
                 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0
                 transition-colors duration-200
                 ${isSelected
-                  ? 'border-blue-500 bg-blue-500'
+                  ? 'border-indigo-500 bg-indigo-500'
                   : 'border-zinc-600 bg-transparent'
                 }
               `}
@@ -150,10 +150,10 @@ export default function BillingCycleSelector({
             {/* Savings */}
             {savings > 0 && (
               <div className="text-right flex-shrink-0">
-                <div className="text-xs text-emerald-400 font-medium">
+                <div className="text-xs text-indigo-400 font-medium">
                   Economize
                 </div>
-                <div className="text-sm font-bold text-emerald-400">
+                <div className="text-sm font-bold text-indigo-400">
                   {formatPrice(savings)}
                 </div>
               </div>

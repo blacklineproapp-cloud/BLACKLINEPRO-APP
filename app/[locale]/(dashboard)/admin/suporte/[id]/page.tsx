@@ -10,6 +10,7 @@ import {
   RefreshCw, Ban, Trash2, ExternalLink
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 
 interface Message {
   id: string;
@@ -239,13 +240,13 @@ export default function AdminTicketDetailPage() {
 
             {/* Resposta Anterior */}
             {hasResponded && messages.filter(m => m.sender_type === 'admin').map(msg => (
-              <div key={msg.id} className="bg-emerald-950/30 border border-emerald-900/50 rounded-xl p-4">
+              <div key={msg.id} className="bg-indigo-950/30 border border-indigo-900/50 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-sm font-bold">
+                  <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-sm font-bold">
                     S
                   </div>
                   <div>
-                    <p className="font-medium text-sm text-emerald-400">Suporte</p>
+                    <p className="font-medium text-sm text-indigo-400">Suporte</p>
                     <p className="text-xs text-zinc-500">
                       {new Date(msg.created_at).toLocaleString('pt-BR')}
                     </p>
@@ -268,7 +269,7 @@ export default function AdminTicketDetailPage() {
                 onChange={(e) => setResponse(e.target.value)}
                 placeholder="Escreva sua resposta..."
                 rows={4}
-                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-3 focus:border-emerald-500 outline-none resize-none mb-3"
+                className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-3 focus:border-indigo-500 outline-none resize-none mb-3"
               />
 
               {/* Ações */}
@@ -282,7 +283,7 @@ export default function AdminTicketDetailPage() {
                       onClick={() => setSelectedAction(selectedAction === action.id ? '' : action.id)}
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition ${
                         selectedAction === action.id
-                          ? 'bg-emerald-600 text-white'
+                          ? 'bg-indigo-600 text-white'
                           : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                       }`}
                     >
@@ -301,17 +302,18 @@ export default function AdminTicketDetailPage() {
                   className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 mb-3"
                 >
                   <option value="">Selecione o plano...</option>
-                  <option value="free">Free</option>
-                  <option value="starter">Starter</option>
-                  <option value="pro">Pro</option>
-                  <option value="studio">Studio</option>
+                  <option value="free">Blackline Free</option>
+                  <option value="ink">Blackline Ink</option>
+                  <option value="pro">Blackline Pro</option>
+                  <option value="studio">Blackline Studio</option>
                 </select>
               )}
 
-              <button
+              <Button
                 type="submit"
                 disabled={submitting || !response.trim()}
-                className="w-full px-4 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-xl font-medium transition flex items-center justify-center gap-2"
+                size="lg"
+                className="w-full rounded-xl gap-2"
               >
                 {submitting ? 'Enviando...' : (
                   <>
@@ -319,7 +321,7 @@ export default function AdminTicketDetailPage() {
                     Enviar Resposta
                   </>
                 )}
-              </button>
+              </Button>
             </form>
           </div>
 

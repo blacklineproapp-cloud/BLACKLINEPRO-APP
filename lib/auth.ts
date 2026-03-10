@@ -2,7 +2,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { supabaseAdmin } from './supabase';
 import { getOrSetCache, invalidateCache } from './cache';
 import { checkAndRevertExpiredCourtesy } from './courtesy-service';
-import { maskEmail } from './logger';
+import { logger, maskEmail } from './logger';
 
 /**
  * Atualiza o timestamp de última atividade do usuário
@@ -40,7 +40,7 @@ export async function updateUserActivity(userId: string) {
       }
     }
   } catch (err) {
-    console.error('[Auth] Erro ao atualizar atividade do usuário:', err);
+    logger.error('[Auth] Erro ao atualizar atividade do usuário:', err);
   }
 }
 
@@ -51,23 +51,24 @@ async function retryWithBackoff<T>(
   maxRetries: number = 2, // Reduzido de 3 para 2
   baseDelay: number = 500 // Reduzido de 1000 para 500
 ): Promise<T> {
-  let lastError: any;
+  let lastError: unknown;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn();
-    } catch (error: any) {
+    } catch (error: unknown) {
       lastError = error;
 
       // Verificar se é um erro de rede/timeout/521
+      const errorMessage = error instanceof Error ? error.message : String(error);
       const isNetworkError =
-        error.message?.includes('fetch') ||
-        error.message?.includes('timeout') ||
-        error.message?.includes('TimeoutError') ||
-        error.message?.includes('aborted') ||
-        error.message?.includes('521') ||
-        error.message?.includes('ECONNREFUSED') ||
-        error.message?.includes('ETIMEDOUT');
+        errorMessage.includes('fetch') ||
+        errorMessage.includes('timeout') ||
+        errorMessage.includes('TimeoutError') ||
+        errorMessage.includes('aborted') ||
+        errorMessage.includes('521') ||
+        errorMessage.includes('ECONNREFUSED') ||
+        errorMessage.includes('ETIMEDOUT');
 
       // Se não for erro de rede, não retry
       if (!isNetworkError) {
@@ -81,7 +82,7 @@ async function retryWithBackoff<T>(
 
       // Backoff rápido: 500ms, 1s
       const delay = baseDelay * Math.pow(2, attempt);
-      console.log(`⚠️ Tentativa ${attempt + 1}/${maxRetries} falhou. Tentando novamente em ${delay}ms...`);
+      logger.debug('[Auth] Retry', { attempt: attempt + 1, maxRetries, delay });
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -121,7 +122,7 @@ export async function getOrCreateUser(clerkId: string) {
         const clerkUser = await currentUser();
 
         if (!clerkUser) {
-          console.error('❌ Usuário não autenticado no Clerk');
+          logger.error('[Auth] Usuário não autenticado no Clerk');
           throw new Error('Usuário não autenticado');
         }
 
@@ -138,7 +139,7 @@ export async function getOrCreateUser(clerkId: string) {
           .maybeSingle();
 
         if (emailUser) {
-          console.log(`⚠️ Usuário com email ${maskEmail(normalizedEmail)} já existe, atualizando clerk_id...`);
+          logger.info('[Auth] Usuário existente encontrado, atualizando clerk_id', { email: maskEmail(normalizedEmail) });
 
           // Atualizar clerk_id do usuário existente
           const { data: updated, error: updateError } = await supabaseAdmin
@@ -153,11 +154,11 @@ export async function getOrCreateUser(clerkId: string) {
             .single();
 
           if (updateError) {
-            console.error('Erro ao atualizar usuário existente:', updateError);
+            logger.error('[Auth] Erro ao atualizar usuário existente:', updateError);
             throw updateError;
           }
 
-          console.log(`✅ Usuário existente atualizado: ${maskEmail(normalizedEmail)}`);
+          logger.info('[Auth] Usuário existente atualizado', { email: maskEmail(normalizedEmail) });
           return updated;
         }
 
@@ -184,7 +185,7 @@ export async function getOrCreateUser(clerkId: string) {
           if (error) {
             // Se for erro de duplicação, tentar buscar o usuário
             if (error.code === '23505') {
-              console.log('⚠️ Duplicate key error, tentando buscar usuário...');
+              logger.warn('[Auth] Duplicate key error, tentando buscar usuário...');
               const { data: existingByEmail } = await supabaseAdmin
                 .from('users')
                 .select('*')
@@ -196,7 +197,7 @@ export async function getOrCreateUser(clerkId: string) {
               }
             }
 
-            console.error('Erro ao criar usuário:', {
+            logger.error('[Auth] Erro ao criar usuário:', {
               message: error.message,
               details: error.details || 'Sem detalhes',
               hint: error.hint || 'Sem dica',
@@ -208,7 +209,7 @@ export async function getOrCreateUser(clerkId: string) {
           return data;
         });
 
-        console.log(`✅ Usuário criado automaticamente: ${maskEmail(normalizedEmail)}`);
+        logger.info('[Auth] Usuário criado', { email: maskEmail(normalizedEmail) });
         return newUser;
       },
       {
@@ -224,7 +225,7 @@ export async function getOrCreateUser(clerkId: string) {
         const courtesyCheck = await checkAndRevertExpiredCourtesy(user.id);
         
         if (courtesyCheck.wasReverted) {
-          console.log(`[Auth] ⏰ Cortesia expirada - usuário ${user.id} revertido para FREE`);
+          logger.info('[Auth] Cortesia expirada, revertido para FREE', { userId: user.id });
           // Invalidar cache para forçar reload dos dados atualizados
           await invalidateCache(clerkId, 'users');
           
@@ -239,16 +240,17 @@ export async function getOrCreateUser(clerkId: string) {
         }
       } catch (courtesyError) {
         // Não bloquear login se verificação de cortesia falhar
-        console.error('[Auth] ⚠️ Erro ao verificar cortesia (não bloqueante):', courtesyError);
+        logger.error('[Auth] ⚠️ Erro ao verificar cortesia (não bloqueante):', courtesyError);
       }
     }
 
     return user;
-  } catch (err: any) {
-    console.error('❌ Erro fatal ao criar/buscar usuário após múltiplas tentativas:', {
-      message: err.message || 'Erro desconhecido',
-      details: err.toString(),
-      stack: err.stack,
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    logger.error('[Auth] Erro fatal ao criar/buscar usuário após múltiplas tentativas:', {
+      message: error.message || 'Erro desconhecido',
+      details: String(err),
+      stack: error.stack,
     });
     return null;
   }
@@ -288,7 +290,7 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     const isAdminRole = role === 'admin' || role === 'superadmin';
 
     if (isAdminRole) {
-      console.log('[Auth] ✅ Admin verificado (Clerk metadata):', maskEmail(user.emailAddresses[0]?.emailAddress), 'role:', role);
+      logger.info('[Auth] ✅ Admin verificado (Clerk metadata):', maskEmail(user.emailAddresses[0]?.emailAddress), 'role:', role);
       return true;
     }
 
@@ -298,13 +300,13 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     const userEmail = user.emailAddresses[0]?.emailAddress?.toLowerCase() || '';
 
     if (isAdminEmail(userEmail)) {
-      console.log('[Auth] ✅ Admin verificado (email):', maskEmail(userEmail));
+      logger.info('[Auth] ✅ Admin verificado (email):', maskEmail(userEmail));
       return true;
     }
 
     return false;
   } catch (error) {
-    console.error('❌ Erro ao verificar admin:', error);
+    logger.error('[Auth] Erro ao verificar admin:', error);
     return false;
   }
 }
@@ -330,7 +332,7 @@ export async function isSuperAdmin(userId?: string): Promise<boolean> {
     const role = user.publicMetadata?.role as string | undefined;
     return role === 'superadmin';
   } catch (error) {
-    console.error('❌ Erro ao verificar superadmin:', error);
+    logger.error('[Auth] Erro ao verificar superadmin:', error);
     return false;
   }
 }

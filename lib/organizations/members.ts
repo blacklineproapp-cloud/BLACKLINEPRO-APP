@@ -4,6 +4,7 @@
 // =====================================================
 
 import { supabaseAdmin } from '@/lib/supabase';
+import { logger } from '../logger';
 import { getOrganizationById } from './index';
 import type {
   OrganizationMember,
@@ -38,13 +39,13 @@ export async function getOrganizationMembers(
       .order('joined_at', { ascending: true });
 
     if (error) {
-      console.error('[getOrganizationMembers] Error:', error);
+      logger.error('[getOrganizationMembers] Error', error);
       return [];
     }
 
-    return (data as any[]) || [];
+    return (data as OrganizationMemberWithUser[]) || [];
   } catch (error) {
-    console.error('[getOrganizationMembers] Fatal error:', error);
+    logger.error('[getOrganizationMembers] Fatal error', error);
     return [];
   }
 }
@@ -61,13 +62,13 @@ export async function getMemberCount(organizationId: string): Promise<number> {
       .eq('organization_id', organizationId);
 
     if (error) {
-      console.error('[getMemberCount] Error:', error);
+      logger.error('[getMemberCount] Error', error);
       return 0;
     }
 
     return count || 0;
   } catch (error) {
-    console.error('[getMemberCount] Fatal error:', error);
+    logger.error('[getMemberCount] Fatal error', error);
     return 0;
   }
 }
@@ -150,7 +151,7 @@ export async function canAddMoreMembers(organizationId: string): Promise<boolean
   try {
     const org = await getOrganizationById(organizationId);
     if (!org) {
-      console.error('[canAddMoreMembers] Organization not found');
+      logger.error('[canAddMoreMembers] Organization not found', { organizationId });
       return false;
     }
 
@@ -159,7 +160,7 @@ export async function canAddMoreMembers(organizationId: string): Promise<boolean
 
     return currentCount < maxMembers;
   } catch (error) {
-    console.error('[canAddMoreMembers] Error:', error);
+    logger.error('[canAddMoreMembers] Error', error);
     return false;
   }
 }
@@ -189,7 +190,7 @@ export async function addMember(
     });
 
     if (error) {
-      console.error('[addMember] Error:', error);
+      logger.error('[addMember] Error', error);
 
       // Se erro menciona limite, retornar mensagem específica
       if (error.message.includes('Limite de')) {
@@ -201,9 +202,9 @@ export async function addMember(
 
     // console.log(`[addMember] ✅ Member added: ${userId} to org ${organizationId} as ${role}`);
     return { success: true };
-  } catch (error: any) {
-    console.error('[addMember] Fatal error:', error);
-    return { success: false, error: error.message || 'Erro ao adicionar membro' };
+  } catch (error: unknown) {
+    logger.error('[addMember] Fatal error', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Erro ao adicionar membro' };
   }
 }
 
@@ -246,15 +247,15 @@ export async function removeMember(
       .eq('user_id', userId);
 
     if (error) {
-      console.error('[removeMember] Error:', error);
+      logger.error('[removeMember] Error', error);
       return { success: false, error: 'Erro ao remover membro' };
     }
 
     // console.log(`[removeMember] ✅ Member removed: ${userId} from org ${organizationId}`);
     return { success: true };
-  } catch (error: any) {
-    console.error('[removeMember] Fatal error:', error);
-    return { success: false, error: error.message || 'Erro ao remover membro' };
+  } catch (error: unknown) {
+    logger.error('[removeMember] Fatal error', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Erro ao remover membro' };
   }
 }
 
@@ -291,7 +292,7 @@ export async function transferOwnership(
       .eq('id', organizationId);
 
     if (orgError) {
-      console.error('[transferOwnership] Error updating organization:', orgError);
+      logger.error('[transferOwnership] Error updating organization', orgError);
       return { success: false, error: 'Erro ao atualizar organização' };
     }
 
@@ -303,7 +304,7 @@ export async function transferOwnership(
       .eq('user_id', newOwnerId);
 
     if (newOwnerError) {
-      console.error('[transferOwnership] Error updating new owner role:', newOwnerError);
+      logger.error('[transferOwnership] Error updating new owner role', newOwnerError);
       // Rollback
       await supabaseAdmin
         .from('organizations')
@@ -320,7 +321,7 @@ export async function transferOwnership(
       .eq('user_id', currentOwnerId);
 
     if (oldOwnerError) {
-      console.error('[transferOwnership] Error updating old owner role:', oldOwnerError);
+      logger.error('[transferOwnership] Error updating old owner role', oldOwnerError);
       // Continuar mesmo com erro (novo owner já foi setado)
     }
 
@@ -328,8 +329,8 @@ export async function transferOwnership(
     //   `[transferOwnership] ✅ Ownership transferred: ${currentOwnerId} → ${newOwnerId} (org ${organizationId})`
     // );
     return { success: true };
-  } catch (error: any) {
-    console.error('[transferOwnership] Fatal error:', error);
-    return { success: false, error: error.message || 'Erro ao transferir ownership' };
+  } catch (error: unknown) {
+    logger.error('[transferOwnership] Fatal error', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Erro ao transferir ownership' };
   }
 }

@@ -20,8 +20,11 @@ export {
 
 // Services
 export { AsaasCustomerService } from './customer-service';
+export type { DbCustomerRecord } from './customer-service';
 export { AsaasSubscriptionService } from './subscription-service';
 export { AsaasPaymentService } from './payment-service';
+export { AsaasAdminService } from './admin-service';
+export type { AsaasFinancialMetrics, AdminSubscriptionInfo, AdminPaymentInfo } from './admin-service';
 
 // Types
 export type {

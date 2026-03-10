@@ -107,7 +107,7 @@ export async function POST(req: Request) {
     // 🌐 FETCH: Buscar imagem do domínio permitido
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'StencilFlow/2.0',
+        'User-Agent': 'Black Line Pro/2.0',
       },
       // Timeout de 10 segundos
       signal: AbortSignal.timeout(10000),

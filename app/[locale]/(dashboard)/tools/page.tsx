@@ -3,20 +3,22 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 // import Image from 'next/image';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import DownloadControls from '@/components/split-a4/DownloadControls';
-import { Wand2, Palette, Upload, Download, Copy, Check, ArrowRight, X, Droplet, ChevronUp, ChevronDown, Grid3x3, Image as ImageIcon, ChevronLeft, ChevronRight, FlipHorizontal, FlipVertical, CheckCircle, XCircle } from 'lucide-react';
-import dynamic from 'next/dynamic';
-import { TileData } from '@/lib/download-helpers';
+import { Button } from '@/components/ui/button';
+import { Wand2, Palette, Upload, ArrowRight, X, Droplet, ChevronUp, ChevronDown, Grid3x3, Image as ImageIcon, ChevronLeft, ChevronRight, FlipHorizontal, FlipVertical, CheckCircle, XCircle } from 'lucide-react';
+// Note: Download, Copy, Check icons moved to extracted components
 import type { Area } from 'react-easy-crop';
 import { useTranslations } from 'next-intl';
-
-const ImageCropControl = dynamic(() => import('@/components/split-a4/ImageCropControl'), { ssr: false });
+import EnhanceResult from '@/components/tools/EnhanceResult';
+import RemoveBgResult from '@/components/tools/RemoveBgResult';
+import ColorMatchResult from '@/components/tools/ColorMatchResult';
+import SplitA4Config from '@/components/tools/SplitA4Config';
+import SplitA4Result from '@/components/tools/SplitA4Result';
 
 type ToolMode = 'ENHANCE' | 'COLOR_MATCH' | 'SPLIT_A4' | 'REMOVE_BG';
 
 export default function ToolsPage() {
   const t = useTranslations('tools');
-  
+
   const INK_BRANDS = [
     t('inkBrands.generic'),
     "Electric Ink",
@@ -29,7 +31,7 @@ export default function ToolsPage() {
     "Iron Works",
     "Radiant Colors"
   ];
-  
+
   const [activeMode, setActiveMode] = useState<ToolMode>('ENHANCE');
   const [inputImage, setInputImage] = useState<string | null>(null);
   const [resultImage, setResultImage] = useState<string | null>(null);
@@ -39,14 +41,14 @@ export default function ToolsPage() {
   const [selectedBrand, setSelectedBrand] = useState<string>(INK_BRANDS[0]);
   const [isLocked, setIsLocked] = useState(false);
   const [showInput, setShowInput] = useState(true);
-  
+
   // Toast notification
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  
+
   // Espelhar imagem
   const [flipHorizontal, setFlipHorizontal] = useState(false);
   const [flipVertical, setFlipVertical] = useState(false);
-  
+
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -169,9 +171,9 @@ export default function ToolsPage() {
       }
     };
     checkToolsStatus();
-    
+
     // Carregar configurações salvas
-    const savedConfig = localStorage.getItem('stencilflow_tools_config');
+    const savedConfig = localStorage.getItem('blacklinepro_tools_config');
     if (savedConfig) {
       try {
         const config = JSON.parse(savedConfig);
@@ -185,11 +187,11 @@ export default function ToolsPage() {
       }
     }
   }, []);
-  
+
   // Salvar configurações quando mudar
   useEffect(() => {
     const config = { paperSize, numA4s, orientation, overlapCm, processMode };
-    localStorage.setItem('stencilflow_tools_config', JSON.stringify(config));
+    localStorage.setItem('blacklinepro_tools_config', JSON.stringify(config));
   }, [paperSize, numA4s, orientation, overlapCm, processMode]);
 
 
@@ -266,7 +268,7 @@ export default function ToolsPage() {
       const img = new window.Image();
       img.onload = () => {
         // 1024px é o tamanho perfeito: leve para o servidor e ideal para a IA fazer o upscale
-        const MAX_DIM = 1024; 
+        const MAX_DIM = 1024;
         let width = img.width;
         let height = img.height;
 
@@ -292,13 +294,13 @@ export default function ToolsPage() {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
-        
+
         // Qualidade 0.6: Garante que o arquivo fique abaixo de 1MB, evitando o erro 413 da Vercel
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
-        console.log(`[STENCILFLOW] Imagem otimizada para envio: ${(compressedBase64.length / 1024 / 1024).toFixed(2)}MB`);
+        console.log(`[BLACK LINE PRO] Imagem otimizada para envio: ${(compressedBase64.length / 1024 / 1024).toFixed(2)}MB`);
         resolve(compressedBase64);
       };
-      
+
       img.onerror = () => resolve(base64);
       img.src = base64;
     });
@@ -483,7 +485,7 @@ export default function ToolsPage() {
       <div className="p-4 lg:p-6 max-w-2xl mx-auto text-center py-12 lg:py-20">
         <div className="mb-6 lg:mb-8">
           <div className="w-16 h-16 lg:w-20 lg:h-20 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Wand2 size={32} className="text-zinc-600" />
+            <Wand2 size={32} className="text-zinc-400" />
           </div>
           <h2 className="text-2xl lg:text-3xl font-bold text-white mb-3 lg:mb-4">
             {t('locked.title')}
@@ -493,10 +495,10 @@ export default function ToolsPage() {
           </p>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 lg:p-8 mb-6 lg:mb-8">
+        <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-lg p-6 lg:p-8 mb-6 lg:mb-8">
           <div className="space-y-4 text-left">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-blue-500 text-white mt-1 shrink-0">
+              <div className="p-2 rounded-lg bg-indigo-500 text-white mt-1 shrink-0">
                 <Wand2 size={16} />
               </div>
               <div>
@@ -506,7 +508,7 @@ export default function ToolsPage() {
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-pink-500 text-white mt-1 shrink-0">
+              <div className="p-2 rounded-lg bg-indigo-500 text-white mt-1 shrink-0">
                 <Palette size={16} />
               </div>
               <div>
@@ -516,7 +518,7 @@ export default function ToolsPage() {
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-purple-500 text-white mt-1 shrink-0">
+              <div className="p-2 rounded-lg bg-indigo-500 text-white mt-1 shrink-0">
                 <Grid3x3 size={16} />
               </div>
               <div>
@@ -527,12 +529,14 @@ export default function ToolsPage() {
           </div>
         </div>
 
-        <button
+        <Button
           onClick={handleUnlock}
-          className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-8 lg:px-12 py-3 lg:py-4 rounded-lg font-semibold text-base lg:text-lg transition shadow-lg"
+          variant="gradient"
+          size="xl"
+          className="w-full sm:w-auto px-8 lg:px-12 py-3 lg:py-4 rounded-lg shadow-lg bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400"
         >
           {t('locked.cta')}
-        </button>
+        </Button>
 
         <p className="text-zinc-500 text-sm mt-4">{t('locked.priceFrom')}</p>
       </div>
@@ -552,13 +556,12 @@ export default function ToolsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 mb-4 lg:mb-8">
           <button
             onClick={() => { setActiveMode('ENHANCE'); reset(); }}
-            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${
-              activeMode === 'ENHANCE'
-                ? 'bg-blue-900/20 border-blue-500 text-white'
+            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${activeMode === 'ENHANCE'
+                ? 'bg-indigo-900/20 border-indigo-500 text-white'
                 : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-            }`}
+              }`}
           >
-            <div className={`p-1.5 lg:p-2 rounded-lg ${activeMode === 'ENHANCE' ? 'bg-blue-500 text-white' : 'bg-zinc-800'}`}>
+            <div className={`p-1.5 lg:p-2 rounded-lg ${activeMode === 'ENHANCE' ? 'bg-indigo-500 text-white' : 'bg-zinc-800'}`}>
               <Wand2 size={18} />
             </div>
             <div className="text-left">
@@ -569,13 +572,12 @@ export default function ToolsPage() {
 
           <button
             onClick={() => { setActiveMode('COLOR_MATCH'); reset(); }}
-            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${
-              activeMode === 'COLOR_MATCH'
-                ? 'bg-pink-900/20 border-pink-500 text-white'
+            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${activeMode === 'COLOR_MATCH'
+                ? 'bg-indigo-900/20 border-indigo-500 text-white'
                 : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-            }`}
+              }`}
           >
-            <div className={`p-1.5 lg:p-2 rounded-lg ${activeMode === 'COLOR_MATCH' ? 'bg-pink-500 text-white' : 'bg-zinc-800'}`}>
+            <div className={`p-1.5 lg:p-2 rounded-lg ${activeMode === 'COLOR_MATCH' ? 'bg-indigo-500 text-white' : 'bg-zinc-800'}`}>
               <Palette size={18} />
             </div>
             <div className="text-left">
@@ -586,13 +588,12 @@ export default function ToolsPage() {
 
           <button
             onClick={() => { setActiveMode('SPLIT_A4'); reset(); }}
-            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${
-              activeMode === 'SPLIT_A4'
-                ? 'bg-purple-900/20 border-purple-500 text-white'
+            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${activeMode === 'SPLIT_A4'
+                ? 'bg-indigo-900/20 border-indigo-500 text-white'
                 : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-            }`}
+              }`}
           >
-            <div className={`p-1.5 lg:p-2 rounded-lg ${activeMode === 'SPLIT_A4' ? 'bg-purple-500 text-white' : 'bg-zinc-800'}`}>
+            <div className={`p-1.5 lg:p-2 rounded-lg ${activeMode === 'SPLIT_A4' ? 'bg-indigo-500 text-white' : 'bg-zinc-800'}`}>
               <Grid3x3 size={18} />
             </div>
             <div className="text-left">
@@ -603,13 +604,12 @@ export default function ToolsPage() {
 
           <button
             onClick={() => { setActiveMode('REMOVE_BG'); reset(); }}
-            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${
-              activeMode === 'REMOVE_BG'
-                ? 'bg-emerald-900/20 border-emerald-500 text-white'
+            className={`p-3 lg:p-4 rounded-xl border flex items-center gap-2 lg:gap-3 transition-all ${activeMode === 'REMOVE_BG'
+                ? 'bg-indigo-900/20 border-indigo-500 text-white'
                 : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-            }`}
+              }`}
           >
-            <div className={`p-1.5 lg:p-2 rounded-lg ${activeMode === 'REMOVE_BG' ? 'bg-emerald-500 text-white' : 'bg-zinc-800'}`}>
+            <div className={`p-1.5 lg:p-2 rounded-lg ${activeMode === 'REMOVE_BG' ? 'bg-indigo-500 text-white' : 'bg-zinc-800'}`}>
               <ImageIcon size={18} />
             </div>
             <div className="text-left">
@@ -620,8 +620,8 @@ export default function ToolsPage() {
         </div>
 
         {/* Main Workspace - Stack on mobile, 2 cols on desktop */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl min-h-[400px] lg:min-h-[500px] flex flex-col lg:flex-row overflow-hidden">
-          
+        <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-2xl min-h-[400px] lg:min-h-[500px] flex flex-col lg:flex-row overflow-hidden">
+
           {/* Input Area */}
           <div className={`lg:flex-1 p-4 lg:p-8 border-b lg:border-b-0 lg:border-r border-zinc-800 flex flex-col ${!showInput && (resultImage || colorResult || splitResult) ? 'hidden lg:flex' : 'flex'}`}>
             {!inputImage ? (
@@ -633,22 +633,20 @@ export default function ToolsPage() {
                   <div className="grid grid-cols-2 gap-2 mb-4">
                     <button
                       onClick={() => setImageSource('upload')}
-                      className={`p-3 rounded-lg border transition-all ${
-                        imageSource === 'upload'
-                          ? 'bg-purple-900/20 border-purple-500 text-white'
+                      className={`p-3 rounded-lg border transition-all ${imageSource === 'upload'
+                          ? 'bg-indigo-900/20 border-indigo-500 text-white'
                           : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-                      }`}
+                        }`}
                     >
                       <Upload size={20} className="mx-auto mb-1" />
                       <p className="text-xs font-medium">{t('upload.uploadBtn')}</p>
                     </button>
                     <button
                       onClick={() => setImageSource('gallery')}
-                      className={`p-3 rounded-lg border transition-all ${
-                        imageSource === 'gallery'
-                          ? 'bg-purple-900/20 border-purple-500 text-white'
+                      className={`p-3 rounded-lg border transition-all ${imageSource === 'gallery'
+                          ? 'bg-indigo-900/20 border-indigo-500 text-white'
                           : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800'
-                      }`}
+                        }`}
                     >
                       <ImageIcon size={20} className="mx-auto mb-1" />
                       <p className="text-xs font-medium">{t('upload.galleryBtn')}</p>
@@ -662,9 +660,9 @@ export default function ToolsPage() {
                       onClick={() => fileInputRef.current?.click()}
                     >
                       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
-                      <Upload size={40} className="text-zinc-600 group-hover:text-zinc-400 mb-4 transition-colors" />
+                      <Upload size={40} className="text-zinc-400 group-hover:text-zinc-400 mb-4 transition-colors" />
                       <p className="text-zinc-400 font-medium text-sm">{t('upload.clickToUpload')}</p>
-                      <p className="text-zinc-600 text-xs mt-2">{t('upload.fileTypes')}</p>
+                      <p className="text-zinc-400 text-xs mt-2">{t('upload.fileTypes')}</p>
                     </div>
                   ) : (
                     /* Gallery Grid com Carousel */
@@ -672,7 +670,7 @@ export default function ToolsPage() {
                       {loadingGallery ? (
                         <div className="flex items-center justify-center h-full"><LoadingSpinner /></div>
                       ) : galleryImages.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-zinc-600">
+                        <div className="flex flex-col items-center justify-center h-full text-zinc-400">
                           <ImageIcon size={40} className="mb-3 opacity-50" />
                           <p className="text-sm">{t('upload.emptyGallery')}</p>
                         </div>
@@ -684,7 +682,7 @@ export default function ToolsPage() {
                               <button
                                 onClick={() => setCurrentGalleryPage(Math.max(0, currentGalleryPage - 1))}
                                 disabled={currentGalleryPage === 0}
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-purple-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs"
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs"
                               >
                                 <ChevronLeft size={12} /> {t('upload.previous')}
                               </button>
@@ -695,13 +693,12 @@ export default function ToolsPage() {
                                     <button
                                       key={idx}
                                       onClick={() => setCurrentGalleryPage(idx)}
-                                      className={`w-1 h-1 rounded-full transition-all ${
-                                        idx === currentGalleryPage ? 'bg-purple-500 w-3' : 'bg-zinc-700'
-                                      }`}
+                                      className={`w-1 h-1 rounded-full transition-all ${idx === currentGalleryPage ? 'bg-indigo-500 w-3' : 'bg-zinc-700'
+                                        }`}
                                     />
                                   ))}
                                 </div>
-                                <span className="text-[9px] text-zinc-500 font-mono">
+                                <span className="text-xs text-zinc-500 font-mono">
                                   {currentGalleryPage * IMAGES_PER_PAGE + 1}-{Math.min((currentGalleryPage + 1) * IMAGES_PER_PAGE, galleryImages.length)} {t('upload.of')} {galleryImages.length}
                                 </span>
                               </div>
@@ -709,7 +706,7 @@ export default function ToolsPage() {
                               <button
                                 onClick={() => setCurrentGalleryPage(Math.min(Math.ceil(galleryImages.length / IMAGES_PER_PAGE) - 1, currentGalleryPage + 1))}
                                 disabled={currentGalleryPage >= Math.ceil(galleryImages.length / IMAGES_PER_PAGE) - 1}
-                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-purple-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs"
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white hover:border-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all text-xs"
                               >
                                 {t('upload.next')} <ChevronRight size={12} />
                               </button>
@@ -746,11 +743,11 @@ export default function ToolsPage() {
                                         alert(t('messages.galleryLoadError'));
                                       }
                                     }}
-                                    className="aspect-square bg-zinc-950 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-purple-500 transition-all"
+                                    className="aspect-square bg-zinc-950 rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all"
                                   >
-                                    <img 
-                                      src={img.url} 
-                                      alt="Gallery" 
+                                    <img
+                                      src={img.url}
+                                      alt="Gallery"
                                       className="w-full h-full object-cover"
                                     />
                                   </div>
@@ -768,9 +765,9 @@ export default function ToolsPage() {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
-                  <Upload size={40} className="text-zinc-600 group-hover:text-zinc-400 mb-4 transition-colors" />
+                  <Upload size={40} className="text-zinc-400 group-hover:text-zinc-400 mb-4 transition-colors" />
                   <p className="text-zinc-400 font-medium text-sm lg:text-base">{t('upload.clickToUploadImage')}</p>
-                  <p className="text-zinc-600 text-xs lg:text-sm mt-2">{t('upload.fileTypes')}</p>
+                  <p className="text-zinc-400 text-xs lg:text-sm mt-2">{t('upload.fileTypes')}</p>
                 </div>
               )
             ) : (
@@ -779,49 +776,47 @@ export default function ToolsPage() {
                   <h3 className="text-zinc-300 font-medium text-sm">{t('upload.originalImage')}</h3>
                   <div className="flex items-center gap-2">
                     {/* Botões de Espelhar */}
-                    <button 
+                    <button
                       onClick={() => setFlipHorizontal(!flipHorizontal)}
-                      className={`p-1.5 rounded-lg border transition-colors ${
-                        flipHorizontal 
-                          ? 'bg-purple-900/40 border-purple-500 text-purple-300' 
+                      className={`p-1.5 rounded-lg border transition-colors ${flipHorizontal
+                          ? 'bg-indigo-900/40 border-indigo-500 text-indigo-300'
                           : 'border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
-                      }`}
+                        }`}
                       title="Espelhar Horizontal"
                     >
                       <FlipHorizontal size={16} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => setFlipVertical(!flipVertical)}
-                      className={`p-1.5 rounded-lg border transition-colors ${
-                        flipVertical 
-                          ? 'bg-purple-900/40 border-purple-500 text-purple-300' 
+                      className={`p-1.5 rounded-lg border transition-colors ${flipVertical
+                          ? 'bg-indigo-900/40 border-indigo-500 text-indigo-300'
                           : 'border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
-                      }`}
+                        }`}
                       title="Espelhar Vertical"
                     >
                       <FlipVertical size={16} />
                     </button>
-                    <button onClick={reset} className="text-zinc-500 hover:text-red-400 transition-colors">
+                    <Button onClick={reset} variant="ghost" size="icon" className="h-8 w-8 min-h-0 min-w-0 text-zinc-500 hover:text-red-400" aria-label="Fechar">
                       <X size={20} />
-                    </button>
+                    </Button>
                   </div>
                 </div>
                 <div className="flex-1 bg-zinc-950 rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-hidden relative min-h-[150px] lg:min-h-0">
-                  <img 
-                    src={inputImage} 
-                    alt="Input" 
+                  <img
+                    src={inputImage}
+                    alt="Input"
                     className="max-w-full max-h-full object-contain rounded shadow-lg transition-transform"
-                    style={{ 
+                    style={{
                       transform: `${flipHorizontal ? 'scaleX(-1)' : ''} ${flipVertical ? 'scaleY(-1)' : ''}`.trim() || 'none'
                     }}
                   />
                 </div>
-                
+
                 {/* Brand Selector for Color Match */}
                 {activeMode === 'COLOR_MATCH' && (
                   <div className="mt-3 lg:mt-4">
                     <label className="block text-xs text-zinc-400 mb-2 font-medium flex items-center gap-1">
-                      <Droplet size={14} className="text-pink-500"/>
+                      <Droplet size={14} className="text-indigo-500" />
                       Selecione a Marca da Tinta
                     </label>
                     <div className="relative">
@@ -832,7 +827,7 @@ export default function ToolsPage() {
                           setColorResult(null);
                         }}
                         disabled={isProcessing}
-                        className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2.5 lg:p-3 text-sm text-white focus:border-pink-500 outline-none appearance-none cursor-pointer hover:border-zinc-600 transition-colors"
+                        className="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2.5 lg:p-3 text-sm text-white focus:border-indigo-500 outline-none appearance-none cursor-pointer hover:border-zinc-600 transition-colors"
                       >
                         {INK_BRANDS.map(brand => (
                           <option key={brand} value={brand}>{brand}</option>
@@ -847,272 +842,78 @@ export default function ToolsPage() {
 
                 {/* Configuration for Split A4 - COMPACTO */}
                 {activeMode === 'SPLIT_A4' && (
-                  <div className="mt-3 lg:mt-4 space-y-2.5">
-
-                    {/* Preview Interativo - Manipulação de Imagem */}
-                    <div>
-                      <ImageCropControl
-                        key={`${numA4s}-${orientation}-${paperSize}-${overlapCm}`}
-                        imageUrl={inputImage || ''}
-                        paperWidthCm={getPaperDimensions().width}
-                        paperHeightCm={getPaperDimensions().height}
-                        cols={cols}
-                        rows={rows}
-                        overlapCm={overlapCm}
-                        onCropComplete={(area, rotation, flip) => {
-                          setCroppedArea(area);
-                          setCropRotation(rotation);
-                          setCropFlip(flip);
-                          // setSplitResult(null); // REMOVIDO: não resetar resultado quando crop muda
-                        }}
-                      />
-                    </div>
-
-                    {/* ━━━ CONFIGURAÇÕES ━━━ */}
-
-                    {/* 1. Papel e Orientação */}
-                    <div>
-                      <label className="block text-[10px] text-zinc-500 mb-1.5 font-medium">📄 Papel e Orientação</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <select
-                          value={paperSize}
-                          onChange={(e) => {
-                            setPaperSize(e.target.value as any);
-                            setSplitResult(null);
-                            setCroppedArea(null);
-                            setCropRotation(0);
-                            setCropFlip({ horizontal: false, vertical: false });
-                            setOffsetXCm(0);
-                            setOffsetYCm(0);
-                          }}
-                          className="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-xs text-white"
-                        >
-                          <option value="A4">A4 (21×30cm)</option>
-                          <option value="A3">A3 (30×42cm)</option>
-                          <option value="Letter">Letter (22×28cm)</option>
-                        </select>
-                        <select
-                          value={orientation}
-                          onChange={(e) => {
-                            setOrientation(e.target.value as any);
-                            setSplitResult(null);
-                            setCroppedArea(null);
-                            setCropRotation(0);
-                            setCropFlip({ horizontal: false, vertical: false });
-                            setOffsetXCm(0);
-                            setOffsetYCm(0);
-                          }}
-                          className="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-xs text-white"
-                        >
-                          <option value="portrait">Retrato 📄</option>
-                          <option value="landscape">Paisagem 📃</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* 2. Grid - Quantidade de Folhas */}
-                    <div>
-                      <label className="block text-[10px] text-zinc-500 mb-1.5 font-medium">📐 Grid de Páginas</label>
-                      <div className="grid grid-cols-5 gap-1.5">
-                        {([1, 2, 4, 6, 8] as const).map((num) => (
-                          <button
-                            key={num}
-                            onClick={() => {
-                              setNumA4s(num);
-                              setSplitResult(null);
-                              setCroppedArea(null);
-                              setCropRotation(0);
-                              setCropFlip({ horizontal: false, vertical: false });
-                              setOffsetXCm(0);
-                              setOffsetYCm(0);
-                            }}
-                            className={`py-2.5 rounded-lg text-xs font-bold border-2 transition-all ${
-                              numA4s === num
-                                ? 'bg-purple-600 border-purple-500 text-white shadow-lg shadow-purple-900/30'
-                                : 'bg-zinc-900 border-zinc-700 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300'
-                            }`}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Info Consolidada do Grid */}
-                      <div className="mt-2 p-2.5 bg-purple-950/30 border border-purple-800/30 rounded-lg">
-                        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px]">
-                          <div className="flex items-center justify-between">
-                            <span className="text-purple-300/70">Layout:</span>
-                            <span className="text-emerald-400 font-mono font-semibold">
-                              {cols}×{rows}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-purple-300/70">Total:</span>
-                            <span className="text-purple-400 font-mono font-bold">
-                              {numA4s} folha{numA4s > 1 ? 's' : ''}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between col-span-2">
-                            <span className="text-purple-300/70">Imagem:</span>
-                            <span className="text-purple-400 font-mono">
-                              {tattooWidth.toFixed(1)}×{tattooHeight.toFixed(1)}cm
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 3. Ajustes Finos - Overlap e Offset */}
-                    <div>
-                      <label className="block text-[10px] text-zinc-500 mb-1.5 font-medium">🎯 Ajustes Finos</label>
-
-                      <div className="space-y-2">
-                        {/* Overlap */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] text-zinc-400">Overlap (sobreposição)</span>
-                            <span className="text-[10px] text-purple-400 font-mono">{overlapCm.toFixed(1)}cm</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="0"
-                            max="3"
-                            step="0.1"
-                            value={overlapCm}
-                            onChange={(e) => {
-                              setOverlapCm(Number(e.target.value));
-                              setSplitResult(null);
-                            }}
-                            className="w-full accent-purple-500"
-                          />
-                        </div>
-
-                        {/* Offset X e Y */}
-                        <div className="grid grid-cols-2 gap-2">
-                          {/* Offset X */}
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-[10px] text-zinc-400">Offset X</span>
-                              <span className="text-[10px] text-amber-400 font-mono">{offsetXCm.toFixed(1)}cm</span>
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max={gridWidth}
-                              step="0.1"
-                              value={offsetXCm}
-                              onChange={(e) => {
-                                setOffsetXCm(Number(e.target.value));
-                                setSplitResult(null);
-                              }}
-                              className="w-full accent-amber-500"
-                            />
-                          </div>
-
-                          {/* Offset Y */}
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-[10px] text-zinc-400">Offset Y</span>
-                              <span className="text-[10px] text-amber-400 font-mono">{offsetYCm.toFixed(1)}cm</span>
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max={gridHeight}
-                              step="0.1"
-                              value={offsetYCm}
-                              onChange={(e) => {
-                                setOffsetYCm(Number(e.target.value));
-                                setSplitResult(null);
-                              }}
-                              className="w-full accent-amber-500"
-                            />
-                          </div>
-                        </div>
-
-                        <p className="text-[9px] text-zinc-500 italic mt-1">
-                          💡 Overlap facilita colagem das folhas. Offset ajusta posição inicial no grid.
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* 4. Modo de Processamento */}
-                    <div>
-                      <label className="block text-[10px] text-zinc-500 mb-1.5 font-medium">🎨 Processamento</label>
-                      <div className="grid grid-cols-4 gap-1">
-                        <button
-                          onClick={() => {
-                            setProcessMode('reference');
-                            setSplitResult(null);
-                          }}
-                          className={`p-2 rounded text-[9px] font-medium transition-all ${
-                            processMode === 'reference'
-                              ? 'bg-purple-600 text-white border-2 border-purple-400'
-                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
-                          }`}
-                        >
-                          🖼️ Orig
-                        </button>
-                        <button
-                          onClick={() => {
-                            setProcessMode('topographic');
-                            setSplitResult(null);
-                          }}
-                          className={`p-2 rounded text-[9px] font-medium transition-all ${
-                            processMode === 'topographic'
-                              ? 'bg-emerald-600 text-white border-2 border-emerald-400'
-                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
-                          }`}
-                        >
-                          🗺️ Topo
-                        </button>
-                        <button
-                          onClick={() => {
-                            setProcessMode('perfect_lines');
-                            setSplitResult(null);
-                          }}
-                          className={`p-2 rounded text-[9px] font-medium transition-all ${
-                            processMode === 'perfect_lines'
-                              ? 'bg-purple-600 text-white border-2 border-purple-400'
-                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
-                          }`}
-                        >
-                          📐 Linhas
-                        </button>
-                        <button
-                          onClick={() => {
-                            setProcessMode('anime');
-                            setSplitResult(null);
-                          }}
-                          className={`p-2 rounded text-[9px] font-medium transition-all ${
-                            processMode === 'anime'
-                              ? 'bg-pink-600 text-white border-2 border-pink-400'
-                              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 border-2 border-transparent'
-                          }`}
-                          title="Para animes, desenhos, Maori, Tribal"
-                        >
-                          🎨 Ilust
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
+                  <SplitA4Config
+                    inputImage={inputImage || ''}
+                    paperSize={paperSize}
+                    orientation={orientation}
+                    numA4s={numA4s}
+                    overlapCm={overlapCm}
+                    offsetXCm={offsetXCm}
+                    offsetYCm={offsetYCm}
+                    processMode={processMode}
+                    cols={cols}
+                    rows={rows}
+                    gridWidth={gridWidth}
+                    gridHeight={gridHeight}
+                    tattooWidth={tattooWidth}
+                    tattooHeight={tattooHeight}
+                    paperDimensions={getPaperDimensions()}
+                    onPaperSizeChange={(value) => {
+                      setPaperSize(value);
+                      setSplitResult(null);
+                    }}
+                    onOrientationChange={(value) => {
+                      setOrientation(value);
+                      setSplitResult(null);
+                    }}
+                    onNumA4sChange={(value) => {
+                      setNumA4s(value);
+                      setSplitResult(null);
+                    }}
+                    onOverlapCmChange={(value) => {
+                      setOverlapCm(value);
+                      setSplitResult(null);
+                    }}
+                    onOffsetXCmChange={(value) => {
+                      setOffsetXCm(value);
+                      setSplitResult(null);
+                    }}
+                    onOffsetYCmChange={(value) => {
+                      setOffsetYCm(value);
+                      setSplitResult(null);
+                    }}
+                    onProcessModeChange={(value) => {
+                      setProcessMode(value);
+                      setSplitResult(null);
+                    }}
+                    onCropComplete={(area, rotation, flip) => {
+                      setCroppedArea(area);
+                      setCropRotation(rotation);
+                      setCropFlip(flip);
+                    }}
+                    onResetCropState={() => {
+                      setCroppedArea(null);
+                      setCropRotation(0);
+                      setCropFlip({ horizontal: false, vertical: false });
+                      setOffsetXCm(0);
+                      setOffsetYCm(0);
+                    }}
+                  />
                 )}
 
                 <button
                   onClick={handleProcess}
                   disabled={isProcessing || (activeMode === 'ENHANCE' && !!resultImage) || (activeMode === 'COLOR_MATCH' && !!colorResult) || (activeMode === 'SPLIT_A4' && !!splitResult) || (activeMode === 'REMOVE_BG' && !!resultImage)}
-                  className={`mt-3 lg:mt-4 w-full py-2.5 lg:py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-sm lg:text-base ${
-                    isProcessing
+                  className={`mt-3 lg:mt-4 w-full py-2.5 lg:py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all text-sm lg:text-base ${isProcessing
                       ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                       : activeMode === 'ENHANCE'
-                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20'
+                        ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/20'
                         : activeMode === 'COLOR_MATCH'
-                          ? 'bg-pink-600 hover:bg-pink-500 text-white shadow-lg shadow-pink-900/20'
+                          ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/20'
                           : activeMode === 'REMOVE_BG'
-                            ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/20'
-                            : 'bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-900/20'
-                  }`}
+                            ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/20'
+                            : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/20'
+                    }`}
                 >
                   {isProcessing ? <LoadingSpinner /> : (
                     <>
@@ -1126,22 +927,23 @@ export default function ToolsPage() {
           </div>
 
           {/* Output Area */}
-          <div className={`p-4 lg:p-8 bg-zinc-950/30 flex flex-col min-h-[400px] lg:min-h-0 ${
-            (resultImage || colorResult || splitResult) ? 'flex-1' : 'lg:flex-1'
-          }`}>
+          <div className={`p-4 lg:p-8 bg-zinc-950/30 flex flex-col min-h-[400px] lg:min-h-0 ${(resultImage || colorResult || splitResult) ? 'flex-1' : 'lg:flex-1'
+            }`}>
             {/* Mobile toggle */}
             {(resultImage || colorResult || splitResult) && (
-              <button
+              <Button
                 onClick={() => setShowInput(!showInput)}
-                className="lg:hidden mb-3 bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg flex items-center gap-1 text-xs text-zinc-300 self-start"
+                variant="secondary"
+                size="sm"
+                className="lg:hidden mb-3 gap-1 self-start"
               >
                 {showInput ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 {showInput ? 'Ocultar Input' : 'Mostrar Input'}
-              </button>
+              </Button>
             )}
 
             {!resultImage && !colorResult && !splitResult ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-zinc-600">
+              <div className="flex-1 flex flex-col items-center justify-center text-zinc-400">
                 {isProcessing ? (
                   <div className="text-center">
                     <LoadingSpinner text={
@@ -1168,174 +970,35 @@ export default function ToolsPage() {
               </div>
             ) : (
               <div className="flex-1 flex flex-col animate-in fade-in duration-500 lg:min-h-0">
-                
+
                 {/* Result for Enhance Mode */}
                 {activeMode === 'ENHANCE' && resultImage && (
-                  <div className="flex flex-col h-full lg:max-h-full">
-                    <div className="flex justify-between items-center mb-3 lg:mb-4 flex-shrink-0">
-                      <h3 className="text-blue-400 font-medium text-sm flex items-center gap-2">
-                        <Wand2 size={16} /> Resultado Aprimorado
-                      </h3>
-                      <a href={resultImage} download="enhanced-image.png" className="text-zinc-400 hover:text-white text-xs flex items-center gap-1">
-                        <Download size={14} /> Baixar
-                      </a>
-                    </div>
-                    <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-[200px] lg:min-h-0">
-                      <img 
-                        src={resultImage} 
-                        alt="Enhanced" 
-                        className="max-w-full max-h-full object-contain rounded shadow-2xl"
-                      />
-                    </div>
-                  </div>
+                  <EnhanceResult resultImage={resultImage} />
                 )}
 
                 {/* Result for Remove BG Mode */}
                 {activeMode === 'REMOVE_BG' && resultImage && (
-                  <div className="flex flex-col h-full lg:max-h-full">
-                    <div className="flex justify-between items-center mb-3 lg:mb-4 flex-shrink-0">
-                      <h3 className="text-emerald-400 font-medium text-sm flex items-center gap-2">
-                        <ImageIcon size={16} /> Fundo Removido
-                      </h3>
-                      <a href={resultImage} download="no-background.png" className="text-zinc-400 hover:text-white text-xs flex items-center gap-1">
-                        <Download size={14} /> Baixar
-                      </a>
-                    </div>
-                    <div className="flex-1 bg-[radial-gradient(#27272a_1px,transparent_1px)] [background-size:16px_16px] rounded-xl flex items-center justify-center p-2 lg:p-4 overflow-auto min-h-[200px] lg:min-h-0">
-                      <img 
-                        src={resultImage} 
-                        alt="No Background" 
-                        className="max-w-full max-h-full object-contain rounded shadow-2xl"
-                      />
-                    </div>
-                  </div>
+                  <RemoveBgResult resultImage={resultImage} />
                 )}
 
                 {/* Result for Color Match Mode */}
                 {activeMode === 'COLOR_MATCH' && colorResult && (
-                  <div className="flex flex-col h-full lg:max-h-full">
-                    <div className="mb-4 lg:mb-6 flex-shrink-0">
-                      <h3 className="text-pink-400 font-medium text-base lg:text-lg mb-1 flex items-center gap-2">
-                        <Palette size={18} /> Tintas Recomendadas
-                      </h3>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                        <p className="text-zinc-400 text-xs lg:text-sm italic pr-2">&quot;{colorResult.summary}&quot;</p>
-                        <span className="text-[10px] bg-pink-900/30 text-pink-300 border border-pink-800 px-2 py-1 rounded whitespace-nowrap self-start sm:self-auto">
-                          {selectedBrand}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-2 lg:space-y-3 lg:min-h-0 pb-4 lg:pb-0">
-                      {colorResult.colors?.map((c: any, idx: number) => (
-                        <div key={idx} className="bg-zinc-900 border border-zinc-800 p-2.5 lg:p-3 rounded-lg flex items-center gap-3 lg:gap-4 hover:border-zinc-700 transition-colors group">
-                          <div
-                            className="w-10 h-10 lg:w-12 lg:h-12 rounded-full shadow-inner ring-2 ring-inset ring-black/10 shrink-0 relative group-hover:scale-105 transition-transform"
-                            style={{ backgroundColor: c.hex }}
-                            title={`HEX: ${c.hex}`}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-white font-medium text-sm truncate" title={c.name}>{c.name}</h4>
-                            <p className="text-zinc-500 text-[10px] lg:text-xs truncate">{c.usage}</p>
-                          </div>
-                          <button
-                            onClick={() => handleCopyColor(c.name)}
-                            className="p-1.5 text-zinc-500 hover:text-white hover:bg-zinc-800 rounded transition-all shrink-0"
-                            title="Copiar Nome"
-                          >
-                            {copiedColor === c.name ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-zinc-800 flex-shrink-0">
-                      <p className="text-[10px] text-zinc-600 text-center">
-                        * Sugestões aproximadas. O tom real pode variar.
-                      </p>
-                    </div>
-                  </div>
+                  <ColorMatchResult
+                    colorResult={colorResult}
+                    selectedBrand={selectedBrand}
+                    copiedColor={copiedColor}
+                    onCopyColor={handleCopyColor}
+                  />
                 )}
 
                 {/* Result for Split A4 Mode */}
                 {activeMode === 'SPLIT_A4' && splitResult && (
-                  <div className="flex flex-col min-h-screen lg:h-full lg:max-h-full">
-                    <div className="mb-4 flex-shrink-0">
-                      <h3 className="text-purple-400 font-medium text-base lg:text-lg mb-1 flex items-center gap-2">
-                        <Grid3x3 size={18} /> Divisão em A4s
-                      </h3>
-                      <div className="space-y-1">
-                        <p className="text-zinc-400 text-xs">
-                          {splitResult.pages?.length || 0} folha(s) A4 · Grid {splitResult.gridInfo?.cols || 0} × {splitResult.gridInfo?.rows || 0}
-                        </p>
-                        <p className="text-zinc-500 text-[10px]">
-                          ✓ Proporção mantida · Ajustado com controles avançados
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto pr-2 min-h-[400px]">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-4">
-                        {splitResult.pages?.map((page: any) => (
-                          <div key={page.pageNumber} className="bg-zinc-900 border border-zinc-800 rounded-lg p-2 hover:border-purple-500 transition-all group">
-                            <div className="aspect-[210/297] bg-white rounded overflow-hidden mb-2 relative">
-                              <img
-                                src={page.imageData}
-                                alt={`Página ${page.pageNumber}`}
-                                className="w-full h-full object-contain"
-                              />
-                              <div className="absolute top-1 right-1 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-lg">
-                                #{page.pageNumber}
-                              </div>
-                              {overlapCm > 0 && (
-                                <div className="absolute bottom-1 left-1 bg-zinc-900/80 text-purple-300 text-[8px] px-1.5 py-0.5 rounded">
-                                  {overlapCm}cm overlap
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] text-zinc-500">
-                                Grid {page.position.col + 1},{page.position.row + 1}
-                              </span>
-                              <a
-                                href={page.imageData}
-                                download={`page-${page.pageNumber}.png`}
-                                className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors"
-                              >
-                                <Download size={12} />
-                              </a>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mt-3 pt-3 border-t border-zinc-800 space-y-3 flex-shrink-0">
-                      {/* Download Controls (ZIP/PDF/Individual) */}
-                      <DownloadControls
-                        tiles={splitResult.pages?.map((page: any) => ({
-                          image: page.imageData,
-                          pageNumber: page.pageNumber,
-                          row: page.position.row,
-                          col: page.position.col
-                        } as TileData)) || []}
-                        filename={`stencil-${paperSize.toLowerCase()}-${splitResult.pages?.length}folhas`}
-                        paperFormat={paperSize.toLowerCase() as 'a4' | 'a3' | 'letter'}
-                        orientation={orientation}
-                      />
-
-                      <div className="space-y-2">
-                        <p className="text-[10px] text-zinc-600">
-                          * Imprima em {paperSize} {orientation === 'portrait' ? 'retrato' : 'paisagem'} sem margens
-                        </p>
-                        {overlapCm > 0 && (
-                          <div className="bg-purple-900/20 border border-purple-800/30 rounded p-2 text-[10px] text-purple-300">
-                            💡 <strong>{overlapCm}cm de overlap</strong> entre páginas para facilitar a colagem/alinhamento
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                  <SplitA4Result
+                    splitResult={splitResult}
+                    paperSize={paperSize}
+                    orientation={orientation}
+                    overlapCm={overlapCm}
+                  />
                 )}
 
               </div>
@@ -1347,16 +1010,15 @@ export default function ToolsPage() {
 
       {/* Toast Notification */}
       {toast && (
-        <div 
-          className={`fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5 fade-in duration-300 ${
-            toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
-          }`}
+        <div
+          className={`fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-[100] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5 fade-in duration-300 ${toast.type === 'success' ? 'bg-indigo-600 text-white' : 'bg-red-600 text-white'
+            }`}
         >
           {toast.type === 'success' ? <CheckCircle size={20} /> : <XCircle size={20} />}
           <span className="font-medium text-sm">{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 hover:opacity-70">
+          <Button onClick={() => setToast(null)} variant="ghost" size="icon" className="ml-2 h-6 w-6 min-h-0 min-w-0 hover:opacity-70 text-white">
             <X size={16} />
-          </button>
+          </Button>
         </div>
       )}
     </div>

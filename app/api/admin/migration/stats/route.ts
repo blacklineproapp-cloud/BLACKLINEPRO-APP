@@ -1,33 +1,14 @@
 /**
- * API: Estatísticas da migração Stripe → Asaas
+ * API: Estatísticas da migração Stripe -> Asaas
  * GET /api/admin/migration/stats
  */
 
 import { NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { withAdminAuth } from '@/lib/api-middleware';
 import { supabaseAdmin } from '@/lib/supabase';
 import { StripeToAsaasMigration } from '@/lib/migration/stripe-to-asaas';
-import { ADMIN_EMAILS } from '@/lib/admin-config';
 
-export async function GET() {
-  try {
-    const { userId: clerkId } = await auth();
-
-    if (!clerkId) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
-    }
-
-    // Verificar se é admin
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('email')
-      .eq('clerk_id', clerkId)
-      .single();
-
-    if (!user || !ADMIN_EMAILS.includes(user.email)) {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-    }
-
+export const GET = withAdminAuth(async (req, { userId, adminId, adminEmail }) => {
     // Buscar estatísticas
     const stats = await StripeToAsaasMigration.getMigrationStats();
 
@@ -52,12 +33,4 @@ export async function GET() {
       failedItems: failedItems || [],
       recentMigrated: recentMigrated || [],
     });
-
-  } catch (error) {
-    console.error('[API] Erro ao buscar estatísticas:', error);
-    return NextResponse.json(
-      { error: 'Erro interno' },
-      { status: 500 }
-    );
-  }
-}
+});

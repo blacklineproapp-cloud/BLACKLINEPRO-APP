@@ -7,6 +7,7 @@
 
 import type { AsaasError } from './types';
 import { ASAAS_CONFIG } from './config';
+import { logger } from '../logger';
 
 // ============================================================================
 // CONFIGURAÇÃO
@@ -89,13 +90,13 @@ export async function asaasRequest<T>(
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     'access_token': apiKey,
-    'User-Agent': 'StencilFlow/1.0',
+    'User-Agent': 'Black Line Pro/1.0',
     ...options.headers,
   };
 
   // Log em desenvolvimento
   if (process.env.NODE_ENV === 'development') {
-    console.log(`[Asaas] ${options.method || 'GET'} ${endpoint}`);
+    logger.debug('[Asaas] Request', { method: options.method || 'GET', endpoint });
   }
 
   try {
@@ -113,7 +114,7 @@ export async function asaasRequest<T>(
       const errorMessage = asaasError.errors?.[0]?.description || 'Erro na API do Asaas';
       const errorCode = asaasError.errors?.[0]?.code || 'UNKNOWN_ERROR';
 
-      console.error(`[Asaas] Erro ${response.status}:`, asaasError);
+      logger.error('[Asaas] Erro na resposta', { statusCode: response.status, asaasError });
 
       throw new AsaasApiError(
         errorMessage,
@@ -130,7 +131,7 @@ export async function asaasRequest<T>(
     }
 
     // Erro de rede ou outro
-    console.error('[Asaas] Erro de requisição:', error);
+    logger.error('[Asaas] Erro de requisição', error);
     throw new AsaasApiError(
       'Erro de conexão com Asaas',
       'NETWORK_ERROR',

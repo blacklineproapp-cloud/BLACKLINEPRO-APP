@@ -6,6 +6,7 @@ import {
   EyeOff, User, Calendar 
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 
 interface Project {
@@ -73,12 +74,13 @@ export default function GenerationsPage() {
               <p className="text-zinc-400 text-sm">Monitoramento de gerações em tempo real</p>
             </div>
           </div>
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={() => loadProjects()}
-            className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg hover:bg-zinc-800 transition"
           >
             <RefreshCw size={18} className="text-zinc-400" />
-          </button>
+          </Button>
         </div>
 
         {/* Busca */}
@@ -90,7 +92,7 @@ export default function GenerationsPage() {
               placeholder="Filtrar por email do usuário..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-transparent border-none focus:outline-none text-sm w-full text-zinc-300 placeholder:text-zinc-600"
+              className="bg-transparent border-none focus:outline-none text-sm w-full text-zinc-300 placeholder:text-zinc-400"
             />
           </div>
         </div>
@@ -133,23 +135,25 @@ export default function GenerationsPage() {
 
             {/* Paginação */}
             <div className="mt-8 p-4 border-t border-zinc-800 flex items-center justify-between">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-sm disabled:opacity-50 hover:bg-zinc-800 transition"
               >
                 Anterior
-              </button>
+              </Button>
               <span className="text-sm text-zinc-500">
                 Página {page} de {totalPages}
               </span>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-sm disabled:opacity-50 hover:bg-zinc-800 transition"
               >
                 Próxima
-              </button>
+              </Button>
             </div>
           </>
         )}
@@ -169,12 +173,14 @@ export default function GenerationsPage() {
                     {selectedImage.user?.email} • {new Date(selectedImage.created_at).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
-                <button 
-                  onClick={() => setSelectedImage(null)} 
-                  className="text-zinc-400 hover:text-white p-2 shrink-0"
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setSelectedImage(null)}
+                  className="shrink-0"
                 >
                   <EyeOff size={20} />
-                </button>
+                </Button>
               </div>
 
               {/* Toggle Original/Stencil */}
@@ -182,7 +188,7 @@ export default function GenerationsPage() {
                 <button
                   onClick={() => setShowStencil(false)}
                   className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-                    !showStencil ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                    !showStencil ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'
                   }`}
                 >
                   Original
@@ -190,7 +196,7 @@ export default function GenerationsPage() {
                 <button
                   onClick={() => setShowStencil(true)}
                   className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-                    showStencil ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                    showStencil ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'
                   }`}
                 >
                   Estêncil
@@ -225,12 +231,13 @@ export default function GenerationsPage() {
                     </span>
                   </div>
                 </div>
-                <button
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setSelectedImage(null)}
-                  className="px-4 py-2 bg-zinc-800 text-white rounded-lg text-sm hover:bg-zinc-700 transition"
                 >
                   Fechar
-                </button>
+                </Button>
               </div>
             </div>
           </div>

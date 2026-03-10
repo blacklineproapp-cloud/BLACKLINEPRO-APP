@@ -20,7 +20,7 @@ export const Stats = ({ stats }: StatsProps) => {
               style={{
                 fontSize: '36px',
                 fontWeight: 800,
-                background: 'linear-gradient(135deg, #10b981 0%, #a855f7 100%)',
+                background: 'linear-gradient(135deg, #6366F1 0%, #a855f7 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 margin: '0',

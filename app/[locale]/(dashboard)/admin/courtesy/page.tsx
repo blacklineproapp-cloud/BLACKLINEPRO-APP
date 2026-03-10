@@ -7,6 +7,7 @@ import {
   AlertTriangle, CheckCircle, Clock, Mail
 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { Button } from '@/components/ui/button';
 
 interface CourtesyUser {
   id: string;
@@ -39,7 +40,7 @@ export default function CourtesyPage() {
   // Form states
   const [grantForm, setGrantForm] = useState({
     userEmail: '',
-    plan: 'starter' as 'starter' | 'pro' | 'studio',
+    plan: 'ink' as 'ink' | 'pro' | 'studio',
     expirationDate: '',
     sendEmail: false,
     notes: ''
@@ -112,7 +113,7 @@ export default function CourtesyPage() {
 
       alert(`✅ Cortesia concedida para ${data.user.email}!`);
       setGrantModal(false);
-      setGrantForm({ userEmail: '', plan: 'starter', expirationDate: '', sendEmail: false, notes: '' });
+      setGrantForm({ userEmail: '', plan: 'ink', expirationDate: '', sendEmail: false, notes: '' });
       loadCourtesies();
     } catch (err: any) {
       alert(`❌ ${err.message}`);
@@ -205,19 +206,20 @@ export default function CourtesyPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="outline"
+              size="icon"
               onClick={loadCourtesies}
-              className="p-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition"
             >
               <RefreshCw size={18} className="text-zinc-400" />
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setGrantModal(true)}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg flex items-center gap-2 transition"
+              className="gap-2"
             >
               <Plus size={18} />
               <span className="hidden sm:inline">Conceder Cortesia</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -230,12 +232,12 @@ export default function CourtesyPage() {
             </div>
             <div className="text-2xl font-bold">{stats.total}</div>
           </div>
-          <div className="bg-zinc-950 border border-emerald-800/30 rounded-lg p-4">
+          <div className="bg-zinc-950 border border-indigo-800/30 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle size={16} className="text-emerald-400" />
+              <CheckCircle size={16} className="text-indigo-400" />
               <span className="text-sm text-zinc-400">Ativas</span>
             </div>
-            <div className="text-2xl font-bold text-emerald-400">{stats.active}</div>
+            <div className="text-2xl font-bold text-indigo-400">{stats.active}</div>
           </div>
           <div className="bg-zinc-950 border border-red-800/30 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -256,13 +258,13 @@ export default function CourtesyPage() {
                 placeholder="Buscar por email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder:text-zinc-500 focus:border-emerald-600 focus:outline-none"
+                className="w-full pl-10 pr-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder:text-zinc-500 focus:border-indigo-600 focus:outline-none"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:border-emerald-600 focus:outline-none"
+              className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:border-indigo-600 focus:outline-none"
             >
               <option value="all">Todos os status</option>
               <option value="active">Ativas</option>
@@ -271,12 +273,12 @@ export default function CourtesyPage() {
             <select
               value={planFilter}
               onChange={(e) => setPlanFilter(e.target.value)}
-              className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:border-emerald-600 focus:outline-none"
+              className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:border-indigo-600 focus:outline-none"
             >
               <option value="all">Todos os planos</option>
-              <option value="starter">Starter</option>
-              <option value="pro">Pro</option>
-              <option value="studio">Studio</option>
+              <option value="ink">Blackline Ink</option>
+              <option value="pro">Blackline Pro</option>
+              <option value="studio">Blackline Studio</option>
             </select>
           </div>
         </div>
@@ -322,23 +324,26 @@ export default function CourtesyPage() {
                         {expired ? (
                           <span className="px-2 py-1 bg-red-900/30 text-red-400 rounded text-xs font-medium">Expirada</span>
                         ) : (
-                          <span className="px-2 py-1 bg-emerald-900/30 text-emerald-400 rounded text-xs font-medium">Ativa</span>
+                          <span className="px-2 py-1 bg-indigo-900/30 text-indigo-400 rounded text-xs font-medium">Ativa</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2">
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setRenewModal({ userId: courtesy.id, email: courtesy.email, currentExpiry: courtesy.admin_courtesy_expires_at })}
-                            className="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded text-xs transition"
+                            className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400"
                           >
                             Renovar
-                          </button>
-                          <button
+                          </Button>
+                          <Button
+                            variant="danger-subtle"
+                            size="sm"
                             onClick={() => setRevokeModal({ userId: courtesy.id, email: courtesy.email })}
-                            className="px-3 py-1 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded text-xs transition"
                           >
                             Revogar
-                          </button>
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -351,23 +356,25 @@ export default function CourtesyPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-800">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm transition"
               >
                 Anterior
-              </button>
+              </Button>
               <span className="text-sm text-zinc-400">
                 Página {page} de {totalPages}
               </span>
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm transition"
               >
                 Próxima
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -378,9 +385,9 @@ export default function CourtesyPage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Conceder Cortesia</h3>
-                <button onClick={() => setGrantModal(false)} className="text-zinc-400 hover:text-white">
+                <Button variant="ghost" size="icon" onClick={() => setGrantModal(false)} aria-label="Fechar">
                   <X size={20} />
-                </button>
+                </Button>
               </div>
               <div className="space-y-4">
                 <div>
@@ -389,7 +396,7 @@ export default function CourtesyPage() {
                     type="email"
                     value={grantForm.userEmail}
                     onChange={(e) => setGrantForm({ ...grantForm, userEmail: e.target.value })}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                     placeholder="usuario@exemplo.com"
                   />
                 </div>
@@ -398,11 +405,11 @@ export default function CourtesyPage() {
                   <select
                     value={grantForm.plan}
                     onChange={(e) => setGrantForm({ ...grantForm, plan: e.target.value as any })}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                   >
-                    <option value="starter">Starter</option>
-                    <option value="pro">Pro</option>
-                    <option value="studio">Studio</option>
+                    <option value="ink">Blackline Ink</option>
+                    <option value="pro">Blackline Pro</option>
+                    <option value="studio">Blackline Studio</option>
                   </select>
                 </div>
                 <div>
@@ -411,7 +418,7 @@ export default function CourtesyPage() {
                     type="datetime-local"
                     value={grantForm.expirationDate}
                     onChange={(e) => setGrantForm({ ...grantForm, expirationDate: e.target.value })}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -430,18 +437,18 @@ export default function CourtesyPage() {
                   <textarea
                     value={grantForm.notes}
                     onChange={(e) => setGrantForm({ ...grantForm, notes: e.target.value })}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                     rows={3}
                     maxLength={500}
                   />
                 </div>
-                <button
+                <Button
                   onClick={handleGrant}
                   disabled={actionLoading}
-                  className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg font-medium transition"
+                  className="w-full"
                 >
                   {actionLoading ? 'Concedendo...' : 'Conceder Cortesia'}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -453,9 +460,9 @@ export default function CourtesyPage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Revogar Cortesia</h3>
-                <button onClick={() => setRevokeModal(null)} className="text-zinc-400 hover:text-white">
+                <Button variant="ghost" size="icon" onClick={() => setRevokeModal(null)} aria-label="Fechar">
                   <X size={20} />
-                </button>
+                </Button>
               </div>
               <p className="text-sm text-zinc-400 mb-4">
                 Tem certeza que deseja revogar a cortesia de <strong>{revokeModal.email}</strong>?
@@ -466,26 +473,28 @@ export default function CourtesyPage() {
                   <textarea
                     value={revokeReason}
                     onChange={(e) => setRevokeReason(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                     rows={3}
                     maxLength={500}
                     placeholder="Ex: Violação dos termos de uso..."
                   />
                 </div>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={() => setRevokeModal(null)}
-                    className="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition"
+                    className="flex-1"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="destructive"
                     onClick={handleRevoke}
                     disabled={actionLoading}
-                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-lg font-medium transition"
+                    className="flex-1"
                   >
                     {actionLoading ? 'Revogando...' : 'Revogar'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -498,9 +507,9 @@ export default function CourtesyPage() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Renovar Cortesia</h3>
-                <button onClick={() => setRenewModal(null)} className="text-zinc-400 hover:text-white">
+                <Button variant="ghost" size="icon" onClick={() => setRenewModal(null)} aria-label="Fechar">
                   <X size={20} />
-                </button>
+                </Button>
               </div>
               <p className="text-sm text-zinc-400 mb-4">
                 Renovar cortesia de <strong>{renewModal.email}</strong>
@@ -515,23 +524,24 @@ export default function CourtesyPage() {
                     type="datetime-local"
                     value={renewDate}
                     onChange={(e) => setRenewDate(e.target.value)}
-                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-emerald-600 focus:outline-none"
+                    className="w-full px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
                 <div className="flex gap-2">
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={() => setRenewModal(null)}
-                    className="flex-1 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition"
+                    className="flex-1"
                   >
                     Cancelar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={handleRenew}
                     disabled={actionLoading}
-                    className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg font-medium transition"
+                    className="flex-1 bg-blue-600 hover:bg-blue-500"
                   >
                     {actionLoading ? 'Renovando...' : 'Renovar'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>

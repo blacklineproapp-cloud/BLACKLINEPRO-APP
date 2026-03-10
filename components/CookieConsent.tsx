@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { X, Cookie, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false);
@@ -88,8 +89,8 @@ export default function CookieConsent() {
         {!showSettings ? (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 backdrop-blur-xl">
             <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-emerald-600/20 rounded-full flex items-center justify-center">
-                <Cookie className="text-emerald-400" size={20} />
+              <div className="flex-shrink-0 w-10 h-10 bg-indigo-600/20 rounded-full flex items-center justify-center">
+                <Cookie className="text-indigo-400" size={20} />
               </div>
               
               <div className="flex-1">
@@ -99,41 +100,47 @@ export default function CookieConsent() {
                 <p className="text-zinc-400 text-sm leading-relaxed mb-4">
                   Utilizamos cookies essenciais para o funcionamento do site e cookies opcionais para analytics e marketing. 
                   Você pode escolher quais aceitar.{' '}
-                  <Link href="/cookies" className="text-emerald-400 hover:underline">
+                  <Link href="/cookies" className="text-indigo-400 hover:underline">
                     Saiba mais
                   </Link>
                 </p>
 
                 <div className="flex flex-wrap gap-3">
-                  <button
+                  <Button
                     onClick={acceptAll}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium text-sm transition"
+                    size="sm"
+                    className="px-4 py-2 rounded-lg"
                   >
                     Aceitar Todos
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={rejectNonEssential}
-                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-medium text-sm transition"
+                    variant="secondary"
+                    size="sm"
+                    className="px-4 py-2 rounded-lg"
                   >
                     Apenas Essenciais
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => setShowSettings(true)}
-                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-medium text-sm transition flex items-center gap-2"
+                    variant="secondary"
+                    size="sm"
+                    className="px-4 py-2 rounded-lg gap-2"
                   >
                     <Settings size={16} />
                     Personalizar
-                  </button>
+                  </Button>
                 </div>
               </div>
 
-              <button
+              <Button
                 onClick={rejectNonEssential}
-                className="flex-shrink-0 text-zinc-500 hover:text-white transition p-1"
+                variant="ghost"
+                size="icon"
                 aria-label="Fechar"
               >
                 <X size={20} />
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -143,12 +150,13 @@ export default function CookieConsent() {
               <h3 className="text-white font-semibold text-lg">
                 Preferências de Cookies
               </h3>
-              <button
+              <Button
                 onClick={() => setShowSettings(false)}
-                className="text-zinc-500 hover:text-white transition p-1"
+                variant="ghost"
+                size="icon"
               >
                 <X size={20} />
-              </button>
+              </Button>
             </div>
 
             <div className="space-y-4">
@@ -156,7 +164,7 @@ export default function CookieConsent() {
               <div className="bg-zinc-800/50 p-4 rounded-lg border border-zinc-700">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-white font-medium">Cookies Essenciais</h4>
-                  <div className="px-3 py-1 bg-emerald-600/20 text-emerald-400 text-xs font-medium rounded-full">
+                  <div className="px-3 py-1 bg-indigo-600/20 text-indigo-400 text-xs font-medium rounded-full">
                     Sempre Ativo
                   </div>
                 </div>
@@ -176,7 +184,7 @@ export default function CookieConsent() {
                       onChange={(e) => setPreferences({ ...preferences, analytics: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
                 <p className="text-zinc-400 text-sm">
@@ -195,7 +203,7 @@ export default function CookieConsent() {
                       onChange={(e) => setPreferences({ ...preferences, marketing: e.target.checked })}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
                 <p className="text-zinc-400 text-sm">
@@ -205,23 +213,26 @@ export default function CookieConsent() {
             </div>
 
             <div className="flex gap-3 mt-6">
-              <button
+              <Button
                 onClick={savePreferences}
-                className="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium text-sm transition"
+                size="sm"
+                className="flex-1 px-4 py-2 rounded-lg"
               >
                 Salvar Preferências
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={acceptAll}
-                className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-medium text-sm transition"
+                variant="secondary"
+                size="sm"
+                className="px-4 py-2 rounded-lg"
               >
                 Aceitar Todos
-              </button>
+              </Button>
             </div>
 
             <p className="text-zinc-500 text-xs mt-4 text-center">
               Consulte nossa{' '}
-              <Link href="/cookies" className="text-emerald-400 hover:underline">
+              <Link href="/cookies" className="text-indigo-400 hover:underline">
                 Política de Cookies
               </Link>
               {' '}para mais informações

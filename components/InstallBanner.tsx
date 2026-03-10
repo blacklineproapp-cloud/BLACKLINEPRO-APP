@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePWA } from '@/hooks/usePWA';
 import { X, Download, Share, Plus, Smartphone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/button';
 
 interface InstallBannerProps {
   /** Delay em ms antes de mostrar o banner (default: 3000) */
@@ -62,20 +63,22 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
       <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-slide-up">
         <div className="max-w-md mx-auto bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
           {/* Header com gradiente */}
-          <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-2 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-indigo-600 to-indigo-500 px-4 py-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Smartphone className="w-4 h-4 text-white" />
               <span className="text-white text-sm font-medium">
                 {t('title')}
               </span>
             </div>
-            <button
+            <Button
               onClick={handleDismiss}
-              className="text-white/80 hover:text-white transition-colors"
+              variant="ghost"
+              size="icon"
+              className="text-white/80 hover:text-white hover:bg-transparent"
               aria-label={t('closeLabel')}
             >
               <X className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
 
           {/* Conteúdo */}
@@ -86,7 +89,7 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src="/web-app-manifest-192x192.png" 
-                  alt="StencilFlow" 
+                  alt="Black Line Pro" 
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -102,9 +105,9 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
             </div>
 
             {/* Botão de Instalar */}
-            <button
+            <Button
               onClick={handleInstall}
-              className="w-full mt-4 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
+              className="w-full mt-4 bg-indigo-500 hover:bg-indigo-400 text-black py-3 px-4 rounded-xl active:scale-[0.98] gap-2"
             >
               {isIOS ? (
                 <>
@@ -117,7 +120,7 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
                   {t('installButton')}
                 </>
               )}
-            </button>
+            </Button>
 
             {/* Nota */}
             <p className="text-zinc-500 text-xs text-center mt-3">
@@ -136,19 +139,20 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
               <h3 className="text-white font-semibold text-lg">
                 {t('iosInstructions.title')}
               </h3>
-              <button
+              <Button
                 onClick={() => setShowIOSInstructions(false)}
-                className="text-zinc-400 hover:text-white transition-colors p-1"
+                variant="ghost"
+                size="icon"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </Button>
             </div>
 
             {/* Instruções */}
             <div className="p-4 space-y-4">
               {/* Passo 1 */}
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center text-sm font-bold">
+                <div className="flex-shrink-0 w-8 h-8 bg-indigo-500/20 text-indigo-500 rounded-full flex items-center justify-center text-sm font-bold">
                   1
                 </div>
                 <div>
@@ -163,7 +167,7 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
 
               {/* Passo 2 */}
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center text-sm font-bold">
+                <div className="flex-shrink-0 w-8 h-8 bg-indigo-500/20 text-indigo-500 rounded-full flex items-center justify-center text-sm font-bold">
                   2
                 </div>
                 <div>
@@ -178,7 +182,7 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
 
               {/* Passo 3 */}
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center text-sm font-bold">
+                <div className="flex-shrink-0 w-8 h-8 bg-indigo-500/20 text-indigo-500 rounded-full flex items-center justify-center text-sm font-bold">
                   3
                 </div>
                 <div>
@@ -194,12 +198,13 @@ export function InstallBanner({ delay = 3000 }: InstallBannerProps) {
 
             {/* Footer */}
             <div className="p-4 border-t border-zinc-800">
-              <button
+              <Button
                 onClick={() => setShowIOSInstructions(false)}
-                className="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+                variant="secondary"
+                className="w-full py-3 px-4 rounded-xl"
               >
                 {t('iosInstructions.confirmButton')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

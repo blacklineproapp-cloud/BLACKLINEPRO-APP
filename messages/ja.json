@@ -39,7 +39,7 @@
       "size": "サイズ調整",
       "saveProjects": "プロジェクト保存",
       "downloadHQ": "高品質ダウンロード",
-      "everythingStarter": "スターターの全機能",
+      "everythingStarter": "Inkの全機能",
       "aiGen": "AI生成",
       "upscale": "4Kアップスケーリング",
       "colorMatch": "カラーマッチ",
@@ -65,14 +65,15 @@
   },
   "landing": {
     "hero": {
-      "badge": "ステンシルフロー技術と精度",
+      "badge": "無制限生成 • 100%無料",
       "title": "ステンシルの",
       "titleHighlight": "アート。",
       "subtitle": "市場で最も先進的な技術であなたのアイデアに命を吹き込みます。細い線から複雑なシェーディングまで。",
       "cta": {
         "primary": "登録",
         "secondary": "料金",
-        "dashboard": "ダッシュボードへ"
+        "dashboard": "ダッシュボードへ",
+        "tryFree": "無料で試す"
       },
       "features": {
         "fidelity": {
@@ -88,6 +89,7 @@
           "sub": "即座に印刷"
         }
       },
+      "dragToCompare": "ドラッグして比較",
       "socialProof": "現在2,500人以上のアーティストが利用中",
       "tabs": {
         "editor": {
@@ -95,7 +97,7 @@
           "description": "ステシルのあらゆる細部を完全にコントロール。"
         },
         "generator": {
-          "title": "StencilFlow ジェネレーター",
+          "title": "Black Line Pro ジェネレーター",
           "description": "あなたのアイデアから独自のデザインを作成。"
         },
         "topographic": {
@@ -201,11 +203,12 @@
         "after": "後",
         "original": "オリジナル",
         "topographic": "トポグラフィック",
-        "lines": "ライン"
+        "lines": "ライン",
+        "dragToCompare": "ドラッグして比較"
       }
     },
     "comparison": {
-      "title": "なぜ StencilFlow なのか？",
+      "title": "なぜ Black Line Pro なのか？",
       "subtitle": "比較して違いを実感してください",
       "feature": "機能",
       "full": "完全",
@@ -227,37 +230,76 @@
       }
     },
     "howItWorks": {
+      "badge": "BYOKモデル — あなたのキー、あなたの生成",
       "title": "仕組み",
-      "subtitle": "シンプル、スピーディー、プロフェッショナル",
+      "subtitle": "GoogleのGemini無料キーを使って生成。無制限、コストゼロ、隠れた条件なし。",
       "step1": {
-        "title": "アップロード",
-        "description": "画像（写真、デッサン、参考資料）をアップロード"
+        "title": "無料キーを取得",
+        "description": "Google AI Studioにアクセスし、Googleアカウントでログインし、Gemini APIキーを作成。100%無料、2分で完了。",
+        "highlight": "aistudio.google.com",
+        "tag": "無料"
       },
       "step2": {
-        "title": "AIが処理",
-        "description": "数秒で完璧なステンシルに変換します"
+        "title": "Black Line Proに貼り付け",
+        "description": "エディターで「Geminiキーを設定」をクリックしてキーを貼り付けます。ブラウザにのみ保存され、私たちはキーを見ることはありません。",
+        "highlight": "安全でプライベート",
+        "tag": "1クリック"
       },
       "step3": {
-        "title": "ダウンロード",
-        "description": "印刷可能なPNGをダウンロードしてタトゥーを開始"
+        "title": "リファレンスをアップロード",
+        "description": "写真、デッサン、または任意のリファレンスをアップロード。Black Line ProがGeminiキーを使用して独自技術で処理します。",
+        "highlight": "JPG, PNG, WEBP",
+        "tag": "無制限"
+      },
+      "step4": {
+        "title": "ダウンロードしてタトゥー",
+        "description": "高品質PNGの完璧なステンシル、サーマル印刷対応。透かしなし、使用制限なし。",
+        "highlight": "高品質PNG",
+        "tag": "準備完了"
+      },
+      "cta": {
+        "noKey": "Geminiキーをまだお持ちでないですか？",
+        "noKeyDesc": "Google AI Studioで2分で作成。無料、クレジットカード不要。",
+        "createKey": "無料キーを作成"
       }
     },
     "pricing": {
+      "badge": "無料のGeminiキーで無制限生成",
       "title": "プランを選択",
       "subtitle": "すべての彫師に最適な価格設定",
       "cta": "プランを見る",
       "mostPopular": "最も人気",
       "features": {
-        "starter": ["フルステンシルエディター", "トポグラフィックモード", "パーフェクトラインモード", "費用管理"],
-        "pro": ["Starterの全機能", "プロフェッショナルデザイン生成", "カラーマッチ + 4Kエンハンス", "A4分割"],
-        "studio": ["Proの全機能", "月最大680件の生成", "優先サポート", "スタジオに最適"],
-        "enterprise": ["Studioの全機能", "月最大1,400件の生成", "24/7専用サポート", "SLA 99.9% 保証"]
+        "ink": [
+          "フルステンシルエディター",
+          "トポグラフィックモード",
+          "パーフェクトラインモード",
+          "費用管理"
+        ],
+        "pro": [
+          "Inkの全機能",
+          "プロフェッショナルデザイン生成",
+          "カラーマッチ + 4Kエンハンス",
+          "A4分割"
+        ],
+        "studio": [
+          "Proの全機能",
+          "月最大680件の生成",
+          "優先サポート",
+          "スタジオに最適"
+        ],
+        "enterprise": [
+          "Studioの全機能",
+          "月最大1,400件の生成",
+          "24/7専用サポート",
+          "SLA 99.9% 保証"
+        ]
       }
     },
     "finalCta": {
       "title": "ステンシル体験を革新する準備はできましたか？",
       "subtitle": "すでに",
-      "subtitleEnd": "人の彫師が StencilFlow を使用しています",
+      "subtitleEnd": "人の彫師が Black Line Pro を使用しています",
       "cta": "今すぐ始める",
       "dashboard": "ダッシュボードへ",
       "thousands": "数千人の",
@@ -302,7 +344,7 @@
     },
     "upgrade": {
       "title": "すべての機能を解放",
-      "subtitle": "月額 ¥1,500 で無制限にステンシルを作成",
+      "subtitle": "クラウドストレージ、プレミアムツール、広告なし",
       "cta": "プランを見る"
     },
     "workflow": {
@@ -366,7 +408,9 @@
       "user": "ユーザー",
       "settings": "設定",
       "upgrade": "アップグレード",
-      "logout": "ログアウト"
+      "logout": "ログアウト",
+      "signIn": "ログイン",
+      "signInCreate": "ログイン / アカウント作成"
     }
   },
   "PricingPage": {
@@ -391,8 +435,8 @@
       "save": "{percent}% お得"
     },
     "plans": {
-      "starter": {
-        "name": "Starter",
+      "ink": {
+        "name": "Ink",
         "description": "初心者に最適",
         "limit": "月間 {count} 回生成可能"
       },
@@ -602,12 +646,30 @@
     },
     "bodyRegion": {
       "label": "部位",
-      "free": { "name": "自由", "hint": "形式の制限なし" },
-      "arm": { "name": "腕", "hint": "細長い垂直デザイン" },
-      "chest": { "name": "胸", "hint": "幅広く中央に配置" },
-      "back": { "name": "背中", "hint": "大きなキャンバス、詳細" },
-      "leg": { "name": "足", "hint": "長く、曲線に沿う" },
-      "ribs": { "name": "脇腹", "hint": "垂直に細長い" }
+      "free": {
+        "name": "自由",
+        "hint": "形式の制限なし"
+      },
+      "arm": {
+        "name": "腕",
+        "hint": "細長い垂直デザイン"
+      },
+      "chest": {
+        "name": "胸",
+        "hint": "幅広く中央に配置"
+      },
+      "back": {
+        "name": "背中",
+        "hint": "大きなキャンバス、詳細"
+      },
+      "leg": {
+        "name": "足",
+        "hint": "長く、曲線に沿う"
+      },
+      "ribs": {
+        "name": "脇腹",
+        "hint": "垂直に細長い"
+      }
     },
     "negative": {
       "label": "除外事項（オプション）",
@@ -698,9 +760,18 @@
     "subtitle": "より多くのオプションとセキュリティを提供",
     "closeLabel": "通知を閉じる",
     "paymentMethods": {
-      "pix": {"name": "PIX", "description": "即時"},
-      "boleto": {"name": "Boleto", "description": "最大3日"},
-      "card": {"name": "カード", "description": "定期"}
+      "pix": {
+        "name": "PIX",
+        "description": "即時"
+      },
+      "boleto": {
+        "name": "Boleto",
+        "description": "最大3日"
+      },
+      "card": {
+        "name": "カード",
+        "description": "定期"
+      }
     },
     "recurrence": {
       "title": "定期支払いの仕組み：",
@@ -715,7 +786,7 @@
   "installBanner": {
     "title": "アプリをインストール",
     "closeLabel": "閉じる",
-    "appName": "StencilFlow",
+    "appName": "Black Line Pro",
     "description": "ホーム画面から素早くアクセス",
     "installButton": "アプリをインストール",
     "iosButton": "インストール方法",
@@ -730,6 +801,74 @@
       "step3Description": "アプリがホーム画面にインストールされます",
       "confirmButton": "了解"
     }
+  },
+  "subscription": {
+    "loading": "サブスクリプションを読み込み中...",
+    "errorLoading": "データの読み込みエラー",
+    "errorCancelling": "サブスクリプションのキャンセルエラー",
+    "cancelledSuccess": "サブスクリプションが正常にキャンセルされました。",
+    "errorProcessingCancellation": "キャンセル処理エラー",
+    "backToDashboard": "ダッシュボードに戻る",
+    "title": "マイサブスクリプション",
+    "subtitle": "プランと支払いを管理",
+    "plans": {
+      "free": {
+        "price": "無料",
+        "features": ["無制限生成（BYOK）", "ローカルストレージのみ"]
+      },
+      "legacy": {
+        "price": "R$ 25/月",
+        "features": ["フルエディター", "2 GBクラウド", "特別プラン"]
+      },
+      "ink": {
+        "price": "R$ 29/月",
+        "features": ["無制限生成（BYOK）", "5 GBクラウド", "広告なし"]
+      },
+      "pro": {
+        "price": "R$ 69/月",
+        "features": ["無制限生成（BYOK）", "10 GBクラウド", "プレミアムツール"]
+      },
+      "studio": {
+        "price": "R$ 199/月",
+        "features": ["無制限生成（BYOK）", "25 GBクラウド", "優先サポート"]
+      }
+    },
+    "status": {
+      "courtesy": "優待",
+      "active": "有効",
+      "scheduledCancel": "キャンセル予定",
+      "inactive": "無効"
+    },
+    "featuresIncluded": "含まれる機能：",
+    "accessUntil": "アクセス可能期限",
+    "nextBilling": "次回請求",
+    "noRenewal": "サブスクリプションは更新されません。",
+    "courtesyPlan": "優待プラン",
+    "courtesyDescription": "Black Line Proチームから優待アクセスが付与されています。",
+    "validUntil": "有効期限: {date}",
+    "paymentInfo": "PIX/Boleto/カードで支払い",
+    "changePaymentMethod": "支払い方法を変更するには、キャンセルして再度サブスクライブしてください",
+    "cancelButton": "キャンセル",
+    "subscribeNow": "今すぐサブスクライブ",
+    "geminiAndStorage": "Geminiキー & ストレージ",
+    "geminiConfigured": "Geminiキー設定済み",
+    "geminiNotConfigured": "Geminiキー未設定",
+    "geminiActiveDescription": "Googleキーによる無制限生成が有効",
+    "geminiSetupDescription": "無制限でステンシルを生成するために設定してください",
+    "configure": "設定 →",
+    "cloudStorage": "クラウドストレージ",
+    "storageIncluded": "{amount} GB含む",
+    "storageNotIncluded": "含まれていません",
+    "upgradeForCloud": "クラウドに保存するにはアップグレード",
+    "upgrade": "アップグレード →",
+    "paymentViaAsaas": "Asaas経由の支払い",
+    "asaasDescription": "サブスクリプションはAsaas経由でPIX、Boleto、またはカードで管理されています。",
+    "paymentQuestions": "支払いに関する質問はサポートにお問い合わせください。",
+    "myInvoices": "請求書一覧",
+    "invoicesDescription": "支払い履歴を確認（PIX、Boleto、カード）。",
+    "viewInvoices": "請求書を見る",
+    "needHelp": "ヘルプが必要ですか？",
+    "helpDescription": "プランや支払いに関する質問はサポートにお問い合わせください。"
   },
   "metadata": {
     "title": "ステンシルフロー - プロフェッショナルタトゥーステンシルエディター",

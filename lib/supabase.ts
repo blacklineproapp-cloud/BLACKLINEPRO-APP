@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { logger } from './logger';
 
 // Variáveis com fallback para Railway workers
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -6,15 +7,21 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl) {
-  console.error('[Supabase] Variáveis de ambiente não configuradas:');
-  console.error('  NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_URL');
+  logger.error('[Supabase] Variáveis de ambiente não configuradas', new Error('NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_URL não definidas'));
   throw new Error('supabaseUrl is required. Set NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL');
+}
+
+if (!supabaseServiceKey) {
+  throw new Error(
+    '[Supabase] SUPABASE_SERVICE_ROLE_KEY is required for server-side operations.\n' +
+    'Set it in .env.local or your deployment environment.'
+  );
 }
 
 // Cliente Supabase para uso no servidor (service role)
 export const supabaseAdmin = createClient(
   supabaseUrl,
-  supabaseServiceKey || supabaseAnonKey || '',
+  supabaseServiceKey,
   {
     auth: {
       autoRefreshToken: false,
@@ -63,7 +70,7 @@ export interface User {
   last_login: string;
   updated_at: string;
   credits: number;
-  plan: 'free' | 'starter' | 'pro' | 'studio' | 'enterprise' | 'legacy';
+  plan: 'free' | 'ink' | 'pro' | 'studio';
   usage_this_month?: any;
   daily_usage?: any;
   grace_period_until?: string;

@@ -31,7 +31,7 @@ interface UserAudit {
 }
 
 async function auditAdminChangedUsers() {
-  console.log('🔍 AUDITORIA COMPLETA DE USUÁRIOS STENCILFLOW\n');
+  console.log('🔍 AUDITORIA COMPLETA DE USUÁRIOS BLACK LINE PRO\n');
   console.log('='.repeat(80));
 
   // 1. Buscar todos os usuários pagos

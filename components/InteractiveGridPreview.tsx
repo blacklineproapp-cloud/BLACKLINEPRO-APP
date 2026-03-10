@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback, memo } from 'react';
 import { Move, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface InteractiveGridPreviewProps {
   imageUrl: string;
@@ -301,11 +302,11 @@ function InteractiveGridPreview({
     <div className="space-y-2">
       <div className="flex items-center justify-between text-xs text-zinc-400">
         <div className="flex items-center gap-2">
-          <Move size={14} className="text-purple-500" />
+          <Move size={14} className="text-indigo-500" />
           <span>Arraste a imagem</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="bg-purple-900/20 px-2 py-1 rounded text-purple-300 font-medium">
+          <div className="bg-indigo-900/20 px-2 py-1 rounded text-indigo-300 font-medium">
             {gridInfo.cols}×{gridInfo.rows} = {gridInfo.cols * gridInfo.rows} folhas
           </div>
           <div className="bg-zinc-900 px-2 py-1 rounded text-zinc-400 font-mono">
@@ -316,29 +317,35 @@ function InteractiveGridPreview({
 
       {/* Zoom Controls */}
       <div className="flex gap-2 items-center justify-center">
-        <button
+        <Button
+          variant="secondary"
+          size="icon"
           onClick={handleZoomOut}
-          className="p-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded transition-colors disabled:opacity-50"
+          className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded min-h-[44px] min-w-[44px]"
           disabled={zoom <= 0.5}
           title="Zoom Out (50% min)"
         >
           <ZoomOut size={16} />
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="secondary"
+          size="icon"
           onClick={handleZoomReset}
-          className="p-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded transition-colors"
+          className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded min-h-[44px] min-w-[44px]"
           title="Reset Zoom (100%)"
         >
           <Maximize2 size={16} />
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="secondary"
+          size="icon"
           onClick={handleZoomIn}
-          className="p-1.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded transition-colors disabled:opacity-50"
+          className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded min-h-[44px] min-w-[44px]"
           disabled={zoom >= 3}
           title="Zoom In (300% max)"
         >
           <ZoomIn size={16} />
-        </button>
+        </Button>
       </div>
 
       {/* Canvas Container com Zoom */}
@@ -365,17 +372,19 @@ function InteractiveGridPreview({
         /></div>
 
       <div className="flex gap-2">
-        <button
+        <Button
+          variant="secondary"
           onClick={() => {
             setOffsetX(0);
             setOffsetY(0);
             onPositionChange(0, 0);
           }}
-          className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-xs py-2 rounded transition-colors"
+          className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 text-xs py-2 rounded"
         >
           Resetar
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="secondary"
           onClick={() => {
             // Centralizar imagem na primeira página
             if (!imageObj) return;
@@ -394,10 +403,10 @@ function InteractiveGridPreview({
             setOffsetY(centerY);
             onPositionChange(centerX, centerY);
           }}
-          className="flex-1 bg-purple-900/20 hover:bg-purple-900/30 text-purple-400 text-xs py-2 rounded transition-colors"
+          className="flex-1 bg-indigo-900/20 hover:bg-indigo-900/30 text-indigo-400 text-xs py-2 rounded"
         >
           Centralizar
-        </button>
+        </Button>
       </div>
     </div>
   );
