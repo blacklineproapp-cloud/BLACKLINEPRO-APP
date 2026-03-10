@@ -17,12 +17,12 @@ interface RouteContext {
 }
 
 export const GET = withAdminAuth(async (
-  req: NextRequest,
+  req,
   ctx,
-  routeCtx: RouteContext
+  ...args: unknown[]
 ) => {
   // Pegar ID do usuário alvo
-  const { id: targetUserId } = await routeCtx.params;
+  const { id: targetUserId } = await (args[0] as RouteContext).params;
 
   // Parâmetros de query
   const { searchParams } = new URL(req.url);

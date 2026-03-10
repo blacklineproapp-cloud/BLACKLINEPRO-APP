@@ -75,7 +75,7 @@ EXECUTE NOW: Generate the enhanced 4K version of this image.`;
 
   if (base64Image.startsWith('http://') || base64Image.startsWith('https://')) {
     // É uma URL - baixar e converter para base64
-    logger.info('[Gemini] Detectada URL, baixando imagem:', base64Image.substring(0, 100));
+    logger.info('[Gemini] Detectada URL, baixando imagem', { url: base64Image.substring(0, 100) });
     try {
       const response = await fetch(base64Image);
       if (!response.ok) {
@@ -84,7 +84,7 @@ EXECUTE NOW: Generate the enhanced 4K version of this image.`;
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       cleanBase64 = buffer.toString('base64');
-      logger.info('[Gemini] Imagem baixada e convertida para base64, tamanho:', cleanBase64.length);
+      logger.info('[Gemini] Imagem baixada e convertida para base64', { tamanho: cleanBase64.length });
     } catch (error: any) {
       logger.error('[Gemini] Erro ao baixar imagem:', error);
       throw new Error(`Falha ao baixar imagem: ${error.message}`);

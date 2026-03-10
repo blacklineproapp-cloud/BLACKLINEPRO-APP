@@ -12,8 +12,8 @@ interface RouteParams {
 /**
  * GET - Obter detalhes do ticket com mensagens (Admin)
  */
-export const GET = withAdminAuth(async (req, { userId }, routeCtx: RouteParams) => {
-  const { id } = await routeCtx.params;
+export const GET = withAdminAuth(async (req, { userId }, ...args: unknown[]) => {
+  const { id } = await (args[0] as RouteParams).params;
   const ticketId = id;
 
   // Buscar ticket
@@ -88,13 +88,13 @@ export const GET = withAdminAuth(async (req, { userId }, routeCtx: RouteParams) 
  * - clear_cache: {}
  * - reset_usage: {}
  */
-export const POST = withAdminAuth(async (req, { userId }, routeCtx: RouteParams) => {
+export const POST = withAdminAuth(async (req, { userId }, ...args: unknown[]) => {
   const admin = await getOrCreateUser(userId);
   if (!admin) {
     return NextResponse.json({ error: 'Admin não encontrado' }, { status: 404 });
   }
 
-  const { id } = await routeCtx.params;
+  const { id } = await (args[0] as RouteParams).params;
   const ticketId = id;
   const body = await req.json();
   const { message, action, actionData } = body;
@@ -170,9 +170,9 @@ export const POST = withAdminAuth(async (req, { userId }, routeCtx: RouteParams)
  * PATCH - Atualizar status/prioridade do ticket (Admin)
  * Body: { status?, priority?, resolved? }
  */
-export const PATCH = withAdminAuth(async (req, { userId }, routeCtx: RouteParams) => {
+export const PATCH = withAdminAuth(async (req, { userId }, ...args: unknown[]) => {
   const admin = await getOrCreateUser(userId);
-  const { id } = await routeCtx.params;
+  const { id } = await (args[0] as RouteParams).params;
   const ticketId = id;
   const body = await req.json();
   const { status, priority, resolved } = body;

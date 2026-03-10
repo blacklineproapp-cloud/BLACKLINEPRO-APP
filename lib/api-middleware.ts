@@ -1,5 +1,5 @@
 import { auth } from '@clerk/nextjs/server';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { isAdmin, isSuperAdmin, getOrCreateUser } from './auth';
 import { supabaseAdmin } from './supabase';
 import { logger } from './logger';
@@ -26,7 +26,7 @@ import * as Sentry from '@sentry/nextjs';
 
 export interface AuthContext {
   userId: string;       // Clerk user ID
-  user: Record<string, unknown>;  // Supabase user record
+  user: Record<string, any>;  // Supabase user record
 }
 
 export interface AdminContext extends AuthContext {
@@ -34,9 +34,9 @@ export interface AdminContext extends AuthContext {
   adminEmail: string;
 }
 
-type AuthHandler = (req: Request, ctx: AuthContext, ...args: unknown[]) => Promise<NextResponse>;
-type AdminHandler = (req: Request, ctx: AdminContext, ...args: unknown[]) => Promise<NextResponse>;
-type SuperAdminHandler = (req: Request, ctx: AdminContext, ...args: unknown[]) => Promise<NextResponse>;
+type AuthHandler = (req: NextRequest, ctx: AuthContext, ...args: any[]) => Promise<NextResponse>;
+type AdminHandler = (req: NextRequest, ctx: AdminContext, ...args: any[]) => Promise<NextResponse>;
+type SuperAdminHandler = (req: NextRequest, ctx: AdminContext, ...args: any[]) => Promise<NextResponse>;
 
 // ============================================================================
 // ERROR HANDLING
@@ -61,7 +61,7 @@ function handleError(error: unknown, context: string): NextResponse {
 // ============================================================================
 
 export function withAuth(handler: AuthHandler) {
-  return async (req: Request, ...args: unknown[]): Promise<NextResponse> => {
+  return async (req: NextRequest, ...args: unknown[]): Promise<NextResponse> => {
     try {
       const { userId } = await auth();
 
@@ -93,7 +93,7 @@ export function withAuth(handler: AuthHandler) {
 // ============================================================================
 
 export function withAdminAuth(handler: AdminHandler) {
-  return async (req: Request, ...args: unknown[]): Promise<NextResponse> => {
+  return async (req: NextRequest, ...args: unknown[]): Promise<NextResponse> => {
     try {
       const { userId } = await auth();
 
@@ -144,7 +144,7 @@ export function withAdminAuth(handler: AdminHandler) {
 // ============================================================================
 
 export function withSuperAdminAuth(handler: SuperAdminHandler) {
-  return async (req: Request, ...args: unknown[]): Promise<NextResponse> => {
+  return async (req: NextRequest, ...args: unknown[]): Promise<NextResponse> => {
     try {
       const { userId } = await auth();
 

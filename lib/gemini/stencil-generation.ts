@@ -170,7 +170,7 @@ OUTPUT: Black contour lines on white. Both structure AND shadow boundaries.`;
 
   if (base64Image.startsWith('http://') || base64Image.startsWith('https://')) {
     // É uma URL - baixar e converter para base64
-    logger.info('[Gemini] Detectada URL, baixando imagem:', base64Image.substring(0, 100));
+    logger.info('[Gemini] Detectada URL, baixando imagem', { url: base64Image.substring(0, 100) });
     try {
       const response = await fetch(base64Image);
       if (!response.ok) {
@@ -179,7 +179,7 @@ OUTPUT: Black contour lines on white. Both structure AND shadow boundaries.`;
       const arrayBuffer = await response.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       cleanBase64 = buffer.toString('base64');
-      logger.info('[Gemini] Imagem baixada e convertida para base64, tamanho:', cleanBase64.length);
+      logger.info('[Gemini] Imagem baixada e convertida para base64', { tamanho: cleanBase64.length });
     } catch (error: any) {
       logger.error('[Gemini] Erro ao baixar imagem:', error);
       throw new Error(`Falha ao baixar imagem: ${error.message}`);
@@ -209,7 +209,7 @@ OUTPUT: Black contour lines on white. Both structure AND shadow boundaries.`;
     cleanBase64 = await prepareImageForStencil(cleanBase64);
     logger.info('[Gemini] Imagem pré-processada (sharpen + normalize)');
   } catch (prepError) {
-    logger.warn('[Gemini] Pré-processamento falhou, usando imagem original:', prepError);
+    logger.warn('[Gemini] Pré-processamento falhou, usando imagem original', { error: String(prepError) });
     // Continuar com a imagem original se o pré-processamento falhar
   }
 
@@ -253,7 +253,7 @@ OUTPUT: Black contour lines on white. Both structure AND shadow boundaries.`;
             );
 
             const usageMetadata = response.usageMetadata;
-            logger.info('[Gemini] 💰 usageMetadata:', JSON.stringify(usageMetadata));
+            logger.info('[Gemini] usageMetadata', { usageMetadata });
 
             return {
               image: finalImage,

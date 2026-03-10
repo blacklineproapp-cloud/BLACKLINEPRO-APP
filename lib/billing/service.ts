@@ -28,13 +28,7 @@ export interface ToolAccessParams {
   /** Clerk user ID (para admin check) */
   userId: string;
   /** User object do withAuth (contém id, is_paid, subscription_status, tools_unlocked) */
-  user: {
-    id: string;
-    is_paid: boolean;
-    subscription_status: string;
-    tools_unlocked: boolean;
-    [key: string]: any;
-  };
+  user: Record<string, any>;
   /** Nome da ferramenta (para logging e metadata) */
   toolName: OperationType;
   /** Função de check — mantida para compatibilidade mas não bloqueia por limite */

@@ -74,7 +74,7 @@ export const POST = withAuth(async (req, { userId, user }) => {
   const validPhone = phone && phone.replace(/\D/g, '').length >= 10 ? phone : undefined;
 
   // Buscar ou criar customer no Asaas
-  const { asaasCustomer, dbCustomer } = await AsaasCustomerService.findOrCreate({
+  const { asaasCustomer, dbCustomer: _dbCustomer } = await AsaasCustomerService.findOrCreate({
     userId: user.id,
     clerkId: userId,
     email: user.email,
@@ -82,6 +82,11 @@ export const POST = withAuth(async (req, { userId, user }) => {
     cpfCnpj: cpfCnpj,
     phone: validPhone,
   });
+
+  if (!_dbCustomer) {
+    return NextResponse.json({ error: 'Erro ao criar customer' }, { status: 500 });
+  }
+  const dbCustomer = _dbCustomer;
 
   // Guardar ID da assinatura anterior para cancelar DEPOIS de criar a nova
   const previousSubscriptionId = user.asaas_subscription_id;

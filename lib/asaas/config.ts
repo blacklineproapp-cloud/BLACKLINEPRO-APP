@@ -73,6 +73,6 @@ if (isDev) {
       logger.debug('[Asaas] DEBUG key: not set');
     }
   } catch (e) {
-    logger.warn('[Asaas] DEBUG key: error reading key', e);
+    logger.warn('[Asaas] DEBUG key: error reading key', e as any);
   }
 }

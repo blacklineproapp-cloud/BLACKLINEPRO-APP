@@ -290,7 +290,7 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     const isAdminRole = role === 'admin' || role === 'superadmin';
 
     if (isAdminRole) {
-      logger.info('[Auth] ✅ Admin verificado (Clerk metadata):', maskEmail(user.emailAddresses[0]?.emailAddress), 'role:', role);
+      logger.info('[Auth] Admin verificado (Clerk metadata)', { email: maskEmail(user.emailAddresses[0]?.emailAddress), role });
       return true;
     }
 
@@ -300,7 +300,7 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     const userEmail = user.emailAddresses[0]?.emailAddress?.toLowerCase() || '';
 
     if (isAdminEmail(userEmail)) {
-      logger.info('[Auth] ✅ Admin verificado (email):', maskEmail(userEmail));
+      logger.info('[Auth] Admin verificado (email)', { email: maskEmail(userEmail) });
       return true;
     }
 

@@ -24,7 +24,7 @@ export const POST = withAuth(async (req, { userId, user }) => {
   // Cancelar no Asaas
   logger.info('[Asaas] Cancelando assinatura', { subscriptionId: user.asaas_subscription_id });
 
-  await AsaasSubscriptionService.cancel(user.asaas_subscription_id);
+  await AsaasSubscriptionService.cancel(user.asaas_subscription_id as string);
 
   // Atualizar usuário no banco
   await supabaseAdmin.from('users').update({

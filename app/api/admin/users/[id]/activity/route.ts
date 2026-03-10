@@ -4,11 +4,11 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
 
 export const GET = withAdminAuth(async (
-  req: Request,
+  req,
   ctx,
-  routeCtx: { params: Promise<{ id: string }> }
+  ...args: unknown[]
 ) => {
-  const { id } = await routeCtx.params;
+  const { id } = await (args[0] as { params: Promise<{ id: string }> }).params;
 
   // Buscar últimas 50 atividades do usuário
   const { data: activities, error } = await supabaseAdmin

@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic';
  * GET /api/admin/sentry
  * Retorna issues do Sentry com tradução para português
  */
-export const GET = withAdminAuth(async (req: NextRequest) => {
+export const GET = withAdminAuth(async (req, { userId, adminId, adminEmail }) => {
   // Verificar se Sentry está configurado
   if (!isSentryConfigured()) {
     return NextResponse.json({
@@ -96,7 +96,7 @@ export const GET = withAdminAuth(async (req: NextRequest) => {
  * POST /api/admin/sentry
  * Ações em issues (resolver, ignorar, etc.)
  */
-export const POST = withAdminAuth(async (req: NextRequest) => {
+export const POST = withAdminAuth(async (req, { userId, adminId, adminEmail }) => {
   const body = await req.json();
   const { action, issueId } = body;
 
