@@ -1,11 +1,17 @@
-# *
+# Black Line Pro — Robots.txt
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
 User-agent: *
 Allow: /
-
-# Disallow private areas
 Disallow: /dashboard
 Disallow: /admin
+Disallow: /admin-bootstrap
 Disallow: /api/
 
-# Sitemap
 Sitemap: https://www.blacklinepro.com.br/sitemap.xml
