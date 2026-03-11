@@ -342,6 +342,7 @@
       "subscription": "Assinatura",
       "boletos": "Boletos",
       "invoices": "Faturas",
+      "apiKey": "API",
       "upgrade": "Upgrade",
       "logout": "Sair da Conta",
       "settings": "Configurações",
@@ -983,35 +984,35 @@
   },
   "welcome": {
     "title": "Bem-vindo ao Black Line Pro",
-    "subtitle": "100% Gratuito. Sem limites.",
-    "description": "Transforme qualquer imagem em stencil de tatuagem profissional usando inteligência artificial — totalmente grátis, sem restrições de gerações.",
+    "subtitle": "Stencils profissionais com IA",
+    "description": "Transforme qualquer imagem em stencil de tatuagem profissional usando IA do Google Gemini. Você usa sua própria chave API e paga apenas pelo que usar (~R$ 0,20/stencil).",
     "pill": {
-      "unlimited": "Gerações ilimitadas",
-      "ai": "IA de ponta",
-      "free": "Grátis pra sempre"
+      "unlimited": "Sem mensalidade",
+      "ai": "IA Gemini",
+      "free": "Pague só o que usar"
     },
     "howItWorks": {
       "title": "Como funciona?",
       "step1": {
-        "title": "Crie sua chave gratuita",
-        "desc": "Acesse o Google AI Studio e gere sua API Key em segundos. É grátis, não precisa de cartão."
+        "title": "Acesse o Google AI Studio",
+        "desc": "Vá em aistudio.google.com/apikey e clique em \"Configurar faturamento\" ao lado da sua chave. Adicione forma de pagamento e conclua."
       },
       "step2": {
-        "title": "Cole no editor",
-        "desc": "Insira sua chave no campo do editor. Ela fica salva no seu navegador com segurança."
+        "title": "Cole sua chave no editor",
+        "desc": "Copie a chave (AIza...) e cole quando o editor pedir. Ela fica salva apenas no seu navegador."
       },
       "step3": {
-        "title": "Gere stencils sem limites",
-        "desc": "Envie qualquer imagem e transforme em stencil profissional. Quantas vezes quiser."
+        "title": "Gere stencils profissionais",
+        "desc": "Envie qualquer imagem e transforme em stencil. Custo médio: ~R$ 0,20 por geração."
       },
-      "aiStudioHint": "Crie sua chave gratuita em"
+      "aiStudioHint": "Configure o faturamento em"
     },
     "plans": {
       "title": "Quer ir além?",
-      "subtitle": "O app já é completo e gratuito. Planos pagos removem anúncios e adicionam armazenamento na nuvem.",
+      "subtitle": "Planos pagos removem anúncios, adicionam armazenamento na nuvem e suporte prioritário.",
       "free": {
-        "name": "Gratuito",
-        "feat1": "Gerações ilimitadas",
+        "name": "Básico",
+        "feat1": "Sua chave API",
         "feat2": "Todas as ferramentas",
         "feat3": "Anúncios exibidos"
       },

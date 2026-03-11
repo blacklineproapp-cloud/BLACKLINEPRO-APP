@@ -4,7 +4,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, PenTool, Sparkles, Package, CreditCard, Menu, X, Rocket, HelpCircle, LogIn } from 'lucide-react';
+import { LayoutGrid, PenTool, Sparkles, Package, CreditCard, Menu, X, Rocket, HelpCircle, LogIn, Key } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { InstallBanner } from '@/components/InstallBanner';
@@ -124,12 +124,12 @@ export default function DashboardLayout({
             {/* Menu Links */}
             <div className="p-1.5 flex flex-col gap-0.5">
                <Link
-                 href="/faturas"
+                 href="/minha-api"
                  onClick={() => setIsMenuOpen(false)}
                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-800 transition-colors"
                >
-                  <CreditCard size={16} className="text-zinc-400" />
-                  <span className="text-xs text-zinc-300 font-medium">{t('myInvoices')}</span>
+                  <Key size={16} className="text-zinc-400" />
+                  <span className="text-xs text-zinc-300 font-medium">{t('apiKey')}</span>
                </Link>
 
                <Link 
@@ -236,10 +236,10 @@ export default function DashboardLayout({
           className="hidden md:flex"
         />
         <NavItem
-          href="/faturas"
-          active={pathname === '/faturas'}
-          icon={<CreditCard size={24} />}
-          label={t('invoices')}
+          href="/minha-api"
+          active={pathname === '/minha-api'}
+          icon={<Key size={24} />}
+          label={t('apiKey')}
           className="hidden md:flex"
         />
 

@@ -413,6 +413,7 @@
       "subscription": "Suscripción",
       "boletos": "Boletos",
       "invoices": "Facturas",
+      "apiKey": "API",
       "upgrade": "Mejorar",
       "logout": "Cerrar Sesión",
       "settings": "Configuración",
@@ -983,36 +984,36 @@
   },
   "welcome": {
     "title": "Bienvenido a Black Line Pro",
-    "subtitle": "100% Gratis. Sin límites.",
-    "description": "Transforma cualquier imagen en un estarcido de tatuaje profesional usando inteligencia artificial — totalmente gratis, sin restricciones de generaciones.",
+    "subtitle": "Estarcidos profesionales con IA",
+    "description": "Transforma cualquier imagen en un estarcido de tatuaje profesional usando Google Gemini AI. Usas tu propia clave API y pagas solo por lo que usas (~$0.04/estarcido).",
     "pill": {
-      "unlimited": "Generaciones ilimitadas",
-      "ai": "IA de vanguardia",
-      "free": "Gratis para siempre"
+      "unlimited": "Sin suscripción",
+      "ai": "Gemini AI",
+      "free": "Paga solo lo que uses"
     },
     "howItWorks": {
       "title": "¿Cómo funciona?",
       "step1": {
-        "title": "Crea tu clave gratuita",
-        "desc": "Accede a Google AI Studio y genera tu API Key en segundos. Es gratis, sin tarjeta de crédito."
+        "title": "Accede a Google AI Studio",
+        "desc": "Ve a aistudio.google.com/apikey y haz clic en \"Configurar facturación\" junto a tu clave. Agrega un método de pago y completa la configuración."
       },
       "step2": {
-        "title": "Pégala en el editor",
-        "desc": "Ingresa tu clave en el campo del editor. Se guarda de forma segura en tu navegador."
+        "title": "Pega tu clave en el editor",
+        "desc": "Copia la clave (AIza...) y pégala cuando el editor la solicite. Se guarda solo en tu navegador."
       },
       "step3": {
-        "title": "Genera estarcidos sin límites",
-        "desc": "Sube cualquier imagen y transfórmala en un estarcido profesional. Cuantas veces quieras."
+        "title": "Genera estarcidos profesionales",
+        "desc": "Sube cualquier imagen y transfórmala en un estarcido. Costo promedio: ~$0.04 por generación."
       },
-      "aiStudioHint": "Crea tu clave gratuita en"
+      "aiStudioHint": "Configura la facturación en"
     },
     "plans": {
       "title": "¿Quieres ir más allá?",
-      "subtitle": "La app ya es completa y gratuita. Los planes pagos eliminan anuncios y agregan almacenamiento en la nube.",
+      "subtitle": "Los planes pagos eliminan anuncios, agregan almacenamiento en la nube y soporte prioritario.",
       "free": {
-        "name": "Gratuito",
-        "feat1": "Generaciones ilimitadas",
-        "feat2": "Todas las herramientas",
+        "name": "Básico",
+        "feat1": "Tu clave API",
+        "feat2": "Todas las herramientas incluidas",
         "feat3": "Anuncios mostrados"
       },
       "paid": {

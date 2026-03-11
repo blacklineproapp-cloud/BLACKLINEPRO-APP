@@ -9,6 +9,52 @@ import { calculateCostWithFallback, type OperationType } from '@/lib/billing/cos
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
 
+/** Translate raw Gemini errors to user-friendly messages */
+function translateGeminiError(msg: string): { message: string; code: string; status: number } {
+  const lower = msg.toLowerCase();
+
+  if (lower.includes('resource_exhausted') || lower.includes('quota exceeded') || lower.includes('limit: 0')) {
+    return {
+      message: 'Limite da sua chave Gemini atingido. A geração de imagens requer billing ativo no Google Cloud. Acesse aistudio.google.com → configurações para ativar.',
+      code: 'QUOTA_EXCEEDED',
+      status: 429,
+    };
+  }
+  if (lower.includes('api_key_invalid') || lower.includes('permission_denied') || lower.includes('invalid api key')) {
+    return {
+      message: 'Sua chave API Gemini é inválida ou expirou. Acesse aistudio.google.com/apikey para gerar uma nova.',
+      code: 'INVALID_API_KEY',
+      status: 401,
+    };
+  }
+  if (lower.includes('rate limit') || lower.includes('too many requests')) {
+    return {
+      message: 'Muitas requisições seguidas. Aguarde alguns segundos e tente novamente.',
+      code: 'RATE_LIMITED',
+      status: 429,
+    };
+  }
+  if (lower.includes('timeout') || lower.includes('deadline_exceeded') || lower.includes('etimedout')) {
+    return {
+      message: 'A geração demorou demais. Tente com uma imagem menor ou tente novamente.',
+      code: 'TIMEOUT',
+      status: 504,
+    };
+  }
+  if (lower.includes('blocked') || lower.includes('safety') || lower.includes('finish_reason')) {
+    return {
+      message: 'A IA bloqueou esta imagem por questões de segurança. Tente outra imagem.',
+      code: 'CONTENT_BLOCKED',
+      status: 400,
+    };
+  }
+  return {
+    message: 'Erro ao gerar estêncil. Tente novamente em alguns segundos.',
+    code: 'GENERATION_ERROR',
+    status: 500,
+  };
+}
+
 export async function POST(req: Request) {
   try {
     // ─── BYOK PATH: usuário traz sua própria chave Gemini ───────────────────
@@ -71,9 +117,11 @@ export async function POST(req: Request) {
     return await processGeneration(req, userId, userData.id, false);
   } catch (error: any) {
     logger.error('[Generate] Erro ao gerar estêncil', { error });
+    const msg = error.message || '';
+    const friendly = translateGeminiError(msg);
     return NextResponse.json(
-      { error: error.message || 'Erro ao gerar estêncil' },
-      { status: 500 }
+      { error: friendly.message, errorCode: friendly.code },
+      { status: friendly.status }
     );
   }
 }

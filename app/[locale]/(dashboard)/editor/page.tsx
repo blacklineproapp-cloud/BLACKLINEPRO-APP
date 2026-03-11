@@ -495,12 +495,12 @@ export default function EditorPage() {
         setShowControls(true);
         showToast(data.message || t('messages.limitReached'), 'error');
       } else {
-        alert(data.error || t('messages.generateError'));
+        showToast(data.error || t('messages.generateError'), 'error');
         setShowControls(true);
       }
     } catch (error) {
       console.error(error);
-      alert(t('messages.generateError'));
+      showToast(t('messages.generateError'), 'error');
       setShowControls(true);
     } finally {
       setIsProcessing(false);

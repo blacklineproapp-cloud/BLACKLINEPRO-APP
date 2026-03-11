@@ -344,6 +344,7 @@
       "subscription": "Subscription",
       "boletos": "Boletos",
       "invoices": "Invoices",
+      "apiKey": "API",
       "upgrade": "Upgrade",
       "logout": "Log Out",
       "settings": "Settings",
@@ -980,35 +981,35 @@
   },
   "welcome": {
     "title": "Welcome to Black Line Pro",
-    "subtitle": "100% Free. No limits.",
-    "description": "Transform any image into a professional tattoo stencil using artificial intelligence — completely free, with unlimited generations.",
+    "subtitle": "Professional stencils with AI",
+    "description": "Transform any image into a professional tattoo stencil using Google Gemini AI. You use your own API key and pay only for what you use (~$0.04/stencil).",
     "pill": {
-      "unlimited": "Unlimited generations",
-      "ai": "Cutting-edge AI",
-      "free": "Free forever"
+      "unlimited": "No subscription",
+      "ai": "Gemini AI",
+      "free": "Pay only what you use"
     },
     "howItWorks": {
       "title": "How does it work?",
       "step1": {
-        "title": "Create your free key",
-        "desc": "Go to Google AI Studio and generate your API Key in seconds. It's free, no credit card needed."
+        "title": "Access Google AI Studio",
+        "desc": "Go to aistudio.google.com/apikey and click \"Set up billing\" next to your key. Add a payment method and complete setup."
       },
       "step2": {
-        "title": "Paste it in the editor",
-        "desc": "Enter your key in the editor field. It's securely saved in your browser."
+        "title": "Paste your key in the editor",
+        "desc": "Copy the key (AIza...) and paste it when the editor asks. It's saved only in your browser."
       },
       "step3": {
-        "title": "Generate stencils without limits",
-        "desc": "Upload any image and transform it into a professional stencil. As many times as you want."
+        "title": "Generate professional stencils",
+        "desc": "Upload any image and transform it into a stencil. Average cost: ~$0.04 per generation."
       },
-      "aiStudioHint": "Create your free key at"
+      "aiStudioHint": "Set up billing at"
     },
     "plans": {
       "title": "Want to go further?",
-      "subtitle": "The app is already complete and free. Paid plans remove ads and add cloud storage.",
+      "subtitle": "Paid plans remove ads, add cloud storage, and priority support.",
       "free": {
-        "name": "Free",
-        "feat1": "Unlimited generations",
+        "name": "Basic",
+        "feat1": "Your API key",
         "feat2": "All tools included",
         "feat3": "Ads displayed"
       },

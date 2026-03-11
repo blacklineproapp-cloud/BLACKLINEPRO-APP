@@ -23,21 +23,21 @@ const STEPS = [
   {
     number: 1,
     title: 'Acesse o Google AI Studio',
-    description: 'Clique no botão abaixo para abrir o Google AI Studio numa nova aba.',
+    description: 'Clique no botão abaixo para abrir a página de chaves do Google AI Studio.',
     cta: 'Abrir Google AI Studio',
     url: 'https://aistudio.google.com/apikey',
   },
   {
     number: 2,
-    title: 'Crie sua chave gratuita',
-    description: 'Clique em "Create API key" → selecione ou crie um projeto → copie a chave gerada.',
+    title: 'Ative o faturamento da sua chave',
+    description: 'Na lista de chaves, clique em "Configurar faturamento" ao lado da sua chave. Preencha seus dados de contato, adicione uma forma de pagamento e clique em "Concluir a configuração da conta".',
     cta: null,
     url: null,
   },
   {
     number: 3,
     title: 'Cole sua chave aqui',
-    description: 'Sua chave começa com "AIza...". Ela fica salva apenas no seu navegador — nunca enviamos para nossos servidores.',
+    description: 'Copie a chave (começa com "AIza...") e cole abaixo. Ela fica salva apenas no seu navegador — nunca enviamos para nossos servidores.',
     cta: null,
     url: null,
   },
@@ -172,7 +172,7 @@ function ApiKeySetupModal({ isOpen, onClose, onSuccess }: ApiKeySetupModalProps)
                 Configure sua chave Gemini
               </h2>
               <p className="text-xs text-zinc-500 mt-0.5">
-                Gratuito • Ilimitado • Sua própria chave
+Sua chave • Seu controle • Pague só o que usar
               </p>
             </div>
           </div>
@@ -227,15 +227,19 @@ function ApiKeySetupModal({ isOpen, onClose, onSuccess }: ApiKeySetupModalProps)
               <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-xl p-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-zinc-400">
                   <Sparkles size={12} className="text-indigo-400" />
-                  <span>Você ganha <strong className="text-white">1.500 gerações/dia</strong> de graça</span>
+                  <span>Geração de imagens com <strong className="text-white">IA do Google Gemini</strong></span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-zinc-400">
                   <Check size={12} className="text-green-500" />
-                  <span>Sem cartão de crédito necessário</span>
+                  <span>Custo médio: <strong className="text-white">~R$ 0,20 por stencil</strong></span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-zinc-400">
                   <Check size={12} className="text-green-500" />
-                  <span>Conta Google é o suficiente</span>
+                  <span>Requer billing ativo no Google Cloud</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-zinc-400">
+                  <Check size={12} className="text-green-500" />
+                  <span>Sua chave, seu controle — pague só o que usar</span>
                 </div>
               </div>
 
@@ -264,9 +268,9 @@ function ApiKeySetupModal({ isOpen, onClose, onSuccess }: ApiKeySetupModalProps)
             <div className="space-y-3">
               <div className="space-y-2">
                 {[
-                  { n: 1, text: 'No AI Studio, clique em "Create API key"' },
-                  { n: 2, text: 'Selecione um projeto existente ou crie um novo' },
-                  { n: 3, text: 'Copie a chave gerada (começa com AIza...)' },
+                  { n: 1, text: 'Na lista de chaves, clique em "Configurar faturamento" (ao lado da sua chave)' },
+                  { n: 2, text: 'Preencha dados de contato, adicione forma de pagamento e clique "Concluir configuração"' },
+                  { n: 3, text: 'Volte à lista de chaves e copie a chave (começa com AIza...)' },
                 ].map(item => (
                   <div key={item.n} className="flex items-start gap-3 p-3 bg-zinc-800/40 rounded-lg border border-zinc-700/40">
                     <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-[10px] font-bold text-indigo-300">

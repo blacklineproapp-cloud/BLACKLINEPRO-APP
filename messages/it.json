@@ -413,6 +413,7 @@
       "subscription": "Abbonamento",
       "boletos": "Boletos",
       "invoices": "Fatture",
+      "apiKey": "API",
       "upgrade": "Aggiorna",
       "logout": "Disconnetti",
       "settings": "Impostazioni",
@@ -983,36 +984,36 @@
   },
   "welcome": {
     "title": "Benvenuto su Black Line Pro",
-    "subtitle": "100% Gratuito. Senza limiti.",
-    "description": "Trasforma qualsiasi immagine in uno stencil per tatuaggi professionale usando l'intelligenza artificiale — completamente gratuito, senza restrizioni di generazioni.",
+    "subtitle": "Stencil professionali con IA",
+    "description": "Trasforma qualsiasi immagine in uno stencil per tatuaggi professionale usando Google Gemini AI. Usi la tua chiave API e paghi solo per ciò che usi (~$0,04/stencil).",
     "pill": {
-      "unlimited": "Generazioni illimitate",
-      "ai": "IA all'avanguardia",
-      "free": "Gratis per sempre"
+      "unlimited": "Nessun abbonamento",
+      "ai": "Gemini AI",
+      "free": "Paga solo ciò che usi"
     },
     "howItWorks": {
       "title": "Come funziona?",
       "step1": {
-        "title": "Crea la tua chiave gratuita",
-        "desc": "Accedi a Google AI Studio e genera la tua API Key in pochi secondi. È gratis, senza carta di credito."
+        "title": "Accedi a Google AI Studio",
+        "desc": "Vai su aistudio.google.com/apikey e clicca su \"Configura fatturazione\" accanto alla tua chiave. Aggiungi un metodo di pagamento e completa la configurazione."
       },
       "step2": {
-        "title": "Incollala nell'editor",
-        "desc": "Inserisci la tua chiave nel campo dell'editor. Viene salvata in sicurezza nel tuo browser."
+        "title": "Incolla la tua chiave nell'editor",
+        "desc": "Copia la chiave (AIza...) e incollala quando l'editor la richiede. Viene salvata solo nel tuo browser."
       },
       "step3": {
-        "title": "Genera stencil senza limiti",
-        "desc": "Carica qualsiasi immagine e trasformala in uno stencil professionale. Quante volte vuoi."
+        "title": "Genera stencil professionali",
+        "desc": "Carica qualsiasi immagine e trasformala in uno stencil. Costo medio: ~$0,04 per generazione."
       },
-      "aiStudioHint": "Crea la tua chiave gratuita su"
+      "aiStudioHint": "Configura la fatturazione su"
     },
     "plans": {
       "title": "Vuoi andare oltre?",
-      "subtitle": "L'app è già completa e gratuita. I piani a pagamento rimuovono le pubblicità e aggiungono archiviazione cloud.",
+      "subtitle": "I piani a pagamento rimuovono le pubblicità, aggiungono archiviazione cloud e supporto prioritario.",
       "free": {
-        "name": "Gratuito",
-        "feat1": "Generazioni illimitate",
-        "feat2": "Tutti gli strumenti",
+        "name": "Base",
+        "feat1": "La tua chiave API",
+        "feat2": "Tutti gli strumenti inclusi",
         "feat3": "Pubblicità mostrate"
       },
       "paid": {

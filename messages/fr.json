@@ -413,6 +413,7 @@
       "subscription": "Abonnement",
       "boletos": "Boletos",
       "invoices": "Factures",
+      "apiKey": "API",
       "upgrade": "Améliorer",
       "logout": "Déconnexion",
       "settings": "Paramètres",
@@ -983,35 +984,35 @@
   },
   "welcome": {
     "title": "Bienvenue sur Black Line Pro",
-    "subtitle": "100% Gratuit. Sans limites.",
-    "description": "Transformez n'importe quelle image en pochoir de tatouage professionnel grâce à l'intelligence artificielle — entièrement gratuit, sans restriction de générations.",
+    "subtitle": "Pochoirs professionnels avec IA",
+    "description": "Transformez n'importe quelle image en pochoir de tatouage professionnel avec Google Gemini AI. Vous utilisez votre propre clé API et ne payez que ce que vous utilisez (~0,04 $/pochoir).",
     "pill": {
-      "unlimited": "Générations illimitées",
-      "ai": "IA de pointe",
-      "free": "Gratuit pour toujours"
+      "unlimited": "Sans abonnement",
+      "ai": "Gemini AI",
+      "free": "Payez uniquement ce que vous utilisez"
     },
     "howItWorks": {
       "title": "Comment ça marche ?",
       "step1": {
-        "title": "Créez votre clé gratuite",
-        "desc": "Accédez à Google AI Studio et générez votre clé API en quelques secondes. C'est gratuit, sans carte bancaire."
+        "title": "Accédez à Google AI Studio",
+        "desc": "Allez sur aistudio.google.com/apikey et cliquez sur « Configurer la facturation » à côté de votre clé. Ajoutez un moyen de paiement et terminez la configuration."
       },
       "step2": {
-        "title": "Collez-la dans l'éditeur",
-        "desc": "Entrez votre clé dans le champ de l'éditeur. Elle est stockée en sécurité dans votre navigateur."
+        "title": "Collez votre clé dans l'éditeur",
+        "desc": "Copiez la clé (AIza...) et collez-la quand l'éditeur la demande. Elle est sauvegardée uniquement dans votre navigateur."
       },
       "step3": {
-        "title": "Générez des pochoirs sans limites",
-        "desc": "Envoyez n'importe quelle image et transformez-la en pochoir professionnel. Autant de fois que vous le souhaitez."
+        "title": "Générez des pochoirs professionnels",
+        "desc": "Envoyez n'importe quelle image et transformez-la en pochoir. Coût moyen : ~0,04 $ par génération."
       },
-      "aiStudioHint": "Créez votre clé gratuite sur"
+      "aiStudioHint": "Configurez la facturation sur"
     },
     "plans": {
       "title": "Envie d'aller plus loin ?",
-      "subtitle": "L'app est déjà complète et gratuite. Les plans payants suppriment les publicités et ajoutent du stockage cloud.",
+      "subtitle": "Les plans payants suppriment les publicités, ajoutent du stockage cloud et un support prioritaire.",
       "free": {
-        "name": "Gratuit",
-        "feat1": "Générations illimitées",
+        "name": "Basique",
+        "feat1": "Votre clé API",
         "feat2": "Tous les outils inclus",
         "feat3": "Publicités affichées"
       },

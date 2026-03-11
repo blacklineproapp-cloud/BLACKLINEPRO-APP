@@ -26,6 +26,8 @@ const isPublicRoute = createRouteMatcher([
   '/:locale/generator',
   '/:locale/tools',
   '/:locale/dashboard',
+  '/minha-api',
+  '/:locale/minha-api',
   '/api/stats',
   '/api/webhooks/clerk',
   '/api/webhooks/asaas',
