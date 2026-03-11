@@ -981,6 +981,51 @@
     "needHelp": "Hai Bisogno di Aiuto?",
     "helpDescription": "Contatta il nostro supporto per domande su piani e pagamenti."
   },
+  "welcome": {
+    "title": "Benvenuto su Black Line Pro",
+    "subtitle": "100% Gratuito. Senza limiti.",
+    "description": "Trasforma qualsiasi immagine in uno stencil per tatuaggi professionale usando l'intelligenza artificiale — completamente gratuito, senza restrizioni di generazioni.",
+    "pill": {
+      "unlimited": "Generazioni illimitate",
+      "ai": "IA all'avanguardia",
+      "free": "Gratis per sempre"
+    },
+    "howItWorks": {
+      "title": "Come funziona?",
+      "step1": {
+        "title": "Crea la tua chiave gratuita",
+        "desc": "Accedi a Google AI Studio e genera la tua API Key in pochi secondi. È gratis, senza carta di credito."
+      },
+      "step2": {
+        "title": "Incollala nell'editor",
+        "desc": "Inserisci la tua chiave nel campo dell'editor. Viene salvata in sicurezza nel tuo browser."
+      },
+      "step3": {
+        "title": "Genera stencil senza limiti",
+        "desc": "Carica qualsiasi immagine e trasformala in uno stencil professionale. Quante volte vuoi."
+      },
+      "aiStudioHint": "Crea la tua chiave gratuita su"
+    },
+    "plans": {
+      "title": "Vuoi andare oltre?",
+      "subtitle": "L'app è già completa e gratuita. I piani a pagamento rimuovono le pubblicità e aggiungono archiviazione cloud.",
+      "free": {
+        "name": "Gratuito",
+        "feat1": "Generazioni illimitate",
+        "feat2": "Tutti gli strumenti",
+        "feat3": "Pubblicità mostrate"
+      },
+      "paid": {
+        "name": "Piani PRO",
+        "price": "Da R$ 29",
+        "feat1": "Senza pubblicità",
+        "feat2": "Archiviazione cloud",
+        "feat3": "Supporto prioritario"
+      }
+    },
+    "next": "Continua",
+    "start": "Inizia a usare"
+  },
   "metadata": {
     "title": "Black Line Pro - Editor Professionale di Stencil per Tatuaggi",
     "description": "Trasforma qualsiasi immagine in uno stencil per tatuaggi professionale con la Tecnologia Black Line Pro. Editor completo, modalità topografica, linee perfette e strumenti premium. Gratis per iniziare."

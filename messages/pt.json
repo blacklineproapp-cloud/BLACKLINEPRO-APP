@@ -981,6 +981,51 @@
     "needHelp": "Precisa de Ajuda?",
     "helpDescription": "Entre em contato com nosso suporte para dúvidas sobre planos e pagamentos."
   },
+  "welcome": {
+    "title": "Bem-vindo ao Black Line Pro",
+    "subtitle": "100% Gratuito. Sem limites.",
+    "description": "Transforme qualquer imagem em stencil de tatuagem profissional usando inteligência artificial — totalmente grátis, sem restrições de gerações.",
+    "pill": {
+      "unlimited": "Gerações ilimitadas",
+      "ai": "IA de ponta",
+      "free": "Grátis pra sempre"
+    },
+    "howItWorks": {
+      "title": "Como funciona?",
+      "step1": {
+        "title": "Crie sua chave gratuita",
+        "desc": "Acesse o Google AI Studio e gere sua API Key em segundos. É grátis, não precisa de cartão."
+      },
+      "step2": {
+        "title": "Cole no editor",
+        "desc": "Insira sua chave no campo do editor. Ela fica salva no seu navegador com segurança."
+      },
+      "step3": {
+        "title": "Gere stencils sem limites",
+        "desc": "Envie qualquer imagem e transforme em stencil profissional. Quantas vezes quiser."
+      },
+      "aiStudioHint": "Crie sua chave gratuita em"
+    },
+    "plans": {
+      "title": "Quer ir além?",
+      "subtitle": "O app já é completo e gratuito. Planos pagos removem anúncios e adicionam armazenamento na nuvem.",
+      "free": {
+        "name": "Gratuito",
+        "feat1": "Gerações ilimitadas",
+        "feat2": "Todas as ferramentas",
+        "feat3": "Anúncios exibidos"
+      },
+      "paid": {
+        "name": "Planos PRO",
+        "price": "A partir de R$ 29",
+        "feat1": "Sem anúncios",
+        "feat2": "Armazenamento na nuvem",
+        "feat3": "Suporte prioritário"
+      }
+    },
+    "next": "Continuar",
+    "start": "Começar a usar"
+  },
   "metadata": {
     "title": "Black Line Pro - Editor Profissional de Stencils de Tatuagem",
     "description": "Transforme qualquer imagem em stencil de tatuagem profissional com a Tecnologia Black Line Pro. Editor completo, modo topográfico, linhas perfeitas e ferramentas premium. Grátis para começar."

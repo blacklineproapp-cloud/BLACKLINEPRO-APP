@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutGrid, PenTool, Sparkles, Package, CreditCard, Menu, X, Rocket, HelpCircle, LogIn } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { InstallBanner } from '@/components/InstallBanner';
 import { SignInButton } from '@clerk/nextjs';
@@ -61,10 +61,20 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   const { signOut } = useClerk();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
   const t = useTranslations('dashboard.nav');
+
+  // Buscar status do usuário para saber se é pago
+  useEffect(() => {
+    if (!isSignedIn) return;
+    fetch('/api/user/status')
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(d => setIsPaid(!!d.isSubscribed))
+      .catch(() => setIsPaid(false));
+  }, [isSignedIn]);
 
   const handleLogout = async () => {
     setIsMenuOpen(false);
@@ -183,13 +193,15 @@ export default function DashboardLayout({
           />
         </div>
 
-        <NavItem 
-          href="/dashboard"
-          active={pathname === '/dashboard'} 
-          icon={<LayoutGrid size={24} />} 
-          label={t('home')} 
-        />
-        <NavItem 
+        {isPaid && (
+          <NavItem
+            href="/dashboard"
+            active={pathname === '/dashboard'}
+            icon={<LayoutGrid size={24} />}
+            label={t('home')}
+          />
+        )}
+        <NavItem
           href="/editor"
           active={pathname === '/editor'} 
           icon={<PenTool size={24} />} 

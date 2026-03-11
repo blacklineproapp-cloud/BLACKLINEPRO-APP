@@ -981,6 +981,51 @@
     "needHelp": "¿Necesitas Ayuda?",
     "helpDescription": "Contacta con nuestro soporte para dudas sobre planes y pagos."
   },
+  "welcome": {
+    "title": "Bienvenido a Black Line Pro",
+    "subtitle": "100% Gratis. Sin límites.",
+    "description": "Transforma cualquier imagen en un estarcido de tatuaje profesional usando inteligencia artificial — totalmente gratis, sin restricciones de generaciones.",
+    "pill": {
+      "unlimited": "Generaciones ilimitadas",
+      "ai": "IA de vanguardia",
+      "free": "Gratis para siempre"
+    },
+    "howItWorks": {
+      "title": "¿Cómo funciona?",
+      "step1": {
+        "title": "Crea tu clave gratuita",
+        "desc": "Accede a Google AI Studio y genera tu API Key en segundos. Es gratis, sin tarjeta de crédito."
+      },
+      "step2": {
+        "title": "Pégala en el editor",
+        "desc": "Ingresa tu clave en el campo del editor. Se guarda de forma segura en tu navegador."
+      },
+      "step3": {
+        "title": "Genera estarcidos sin límites",
+        "desc": "Sube cualquier imagen y transfórmala en un estarcido profesional. Cuantas veces quieras."
+      },
+      "aiStudioHint": "Crea tu clave gratuita en"
+    },
+    "plans": {
+      "title": "¿Quieres ir más allá?",
+      "subtitle": "La app ya es completa y gratuita. Los planes pagos eliminan anuncios y agregan almacenamiento en la nube.",
+      "free": {
+        "name": "Gratuito",
+        "feat1": "Generaciones ilimitadas",
+        "feat2": "Todas las herramientas",
+        "feat3": "Anuncios mostrados"
+      },
+      "paid": {
+        "name": "Planes PRO",
+        "price": "Desde R$ 29",
+        "feat1": "Sin anuncios",
+        "feat2": "Almacenamiento en la nube",
+        "feat3": "Soporte prioritario"
+      }
+    },
+    "next": "Continuar",
+    "start": "Empezar a usar"
+  },
   "metadata": {
     "title": "Black Line Pro - Editor Profesional de Estarcidos de Tatuajes",
     "description": "Transforma cualquier imagen en estarcido de tatuaje profesional con la Tecnología Black Line Pro. Editor completo, modo topográfico, líneas perfectas y herramientas premium. Gratis para comenzar."

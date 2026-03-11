@@ -1,21 +1,28 @@
 import { auth } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
 import { getOrCreateUser } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { getPresignedUrl } from '@/lib/r2';
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { Link } from '@/i18n/routing';
 import DashboardClient from './DashboardClient';
-import AnonymousDashboard from '@/components/AnonymousDashboard';
 
 export default async function DashboardPage() {
   const tDashboard = await getTranslations('dashboard');
+  const locale = await getLocale();
   const { userId } = await auth();
 
+  // Anônimo ou não logado → editor
   if (!userId) {
-    return <AnonymousDashboard />;
+    redirect(`/${locale}/editor`);
   }
 
   const user = await getOrCreateUser(userId);
+
+  // Free user → editor (dashboard é só para pagantes)
+  if (user && !user.is_paid) {
+    redirect(`/${locale}/editor`);
+  }
 
   if (!user) {
     return (

@@ -981,6 +981,51 @@
     "needHelp": "Besoin d'Aide ?",
     "helpDescription": "Contactez notre support pour des questions sur les plans et les paiements."
   },
+  "welcome": {
+    "title": "Bienvenue sur Black Line Pro",
+    "subtitle": "100% Gratuit. Sans limites.",
+    "description": "Transformez n'importe quelle image en pochoir de tatouage professionnel grâce à l'intelligence artificielle — entièrement gratuit, sans restriction de générations.",
+    "pill": {
+      "unlimited": "Générations illimitées",
+      "ai": "IA de pointe",
+      "free": "Gratuit pour toujours"
+    },
+    "howItWorks": {
+      "title": "Comment ça marche ?",
+      "step1": {
+        "title": "Créez votre clé gratuite",
+        "desc": "Accédez à Google AI Studio et générez votre clé API en quelques secondes. C'est gratuit, sans carte bancaire."
+      },
+      "step2": {
+        "title": "Collez-la dans l'éditeur",
+        "desc": "Entrez votre clé dans le champ de l'éditeur. Elle est stockée en sécurité dans votre navigateur."
+      },
+      "step3": {
+        "title": "Générez des pochoirs sans limites",
+        "desc": "Envoyez n'importe quelle image et transformez-la en pochoir professionnel. Autant de fois que vous le souhaitez."
+      },
+      "aiStudioHint": "Créez votre clé gratuite sur"
+    },
+    "plans": {
+      "title": "Envie d'aller plus loin ?",
+      "subtitle": "L'app est déjà complète et gratuite. Les plans payants suppriment les publicités et ajoutent du stockage cloud.",
+      "free": {
+        "name": "Gratuit",
+        "feat1": "Générations illimitées",
+        "feat2": "Tous les outils inclus",
+        "feat3": "Publicités affichées"
+      },
+      "paid": {
+        "name": "Plans PRO",
+        "price": "À partir de R$ 29",
+        "feat1": "Sans publicités",
+        "feat2": "Stockage cloud",
+        "feat3": "Support prioritaire"
+      }
+    },
+    "next": "Continuer",
+    "start": "Commencer"
+  },
   "metadata": {
     "title": "Black Line Pro - Éditeur Professionnel de Pochoirs de Tatouage",
     "description": "Transformez n'importe quelle image en pochoir de tatouage professionnel avec la Technologie Black Line Pro. Éditeur complet, mode topographique, lignes parfaites et outils premium. Gratuit pour commencer."

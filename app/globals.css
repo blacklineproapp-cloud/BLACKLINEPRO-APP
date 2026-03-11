@@ -318,3 +318,16 @@ a {
   0%, 100% { transform: translateY(0px);  }
   50%       { transform: translateY(-8px); }
 }
+
+@keyframes shine {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%);  }
+}
+
+@keyframes lightning {
+  0%   { stroke-dasharray: 0 200; opacity: 0; filter: blur(1px); }
+  20%  { opacity: 1; filter: blur(0); }
+  50%  { stroke-dasharray: 200 0; opacity: 1; }
+  70%  { opacity: 0.6; }
+  100% { stroke-dasharray: 200 0; opacity: 0; }
+}

@@ -28,6 +28,7 @@ import { storage } from '@/lib/client-storage';
 import { compressIfNeeded } from '@/lib/image-compress';
 
 import AsaasCheckoutModal from '@/components/AsaasCheckoutModal';
+import WelcomeModal from '@/components/WelcomeModal';
 import { DrawingEditor } from '@/components/drawing';
 import type { Stroke } from '@/lib/drawing/types';
 
@@ -44,6 +45,7 @@ export default function EditorPage() {
   const { apiKey, hasKey, isLoaded: apiKeyLoaded } = useApiKey();
   const { isSignedIn } = useUser();
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [pendingGenerate, setPendingGenerate] = useState(false);
   const [showAds, setShowAds] = useState(false); // false até verificar status do usuário
 
   // Buscar se deve exibir ads (free logado ou anônimo)
@@ -53,9 +55,9 @@ export default function EditorPage() {
       return;
     }
     fetch('/api/user/status')
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error('not ok'); return r.json(); })
       .then(d => setShowAds(!!d.showAds))
-      .catch(() => setShowAds(false));
+      .catch(() => setShowAds(true));
   }, [isSignedIn]);
   
   const [originalImage, setOriginalImage] = useState<string | null>(null);
@@ -505,6 +507,15 @@ export default function EditorPage() {
     }
   };
 
+  // Disparar geração automaticamente após configurar chave API
+  useEffect(() => {
+    if (pendingGenerate && hasKey && originalImage) {
+      setPendingGenerate(false);
+      handleGenerate();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingGenerate, hasKey]);
+
   // Auto-save após gerar
   const autoSaveProject = async (stencilImage: string) => {
     try {
@@ -735,6 +746,9 @@ export default function EditorPage() {
 
   return (
     <div className="min-h-screen bg-[#09090b] flex flex-col">
+      {/* Welcome modal para free users (1x por sessão) */}
+      <WelcomeModal show={showAds} />
+
       {/* Banner para usuários anônimos */}
       {!isSignedIn && <AnonymousBanner apiKeySet={hasKey} />}
 
@@ -742,7 +756,10 @@ export default function EditorPage() {
       <ApiKeySetupModal
         isOpen={showApiKeyModal}
         onClose={() => setShowApiKeyModal(false)}
-        onSuccess={() => setShowApiKeyModal(false)}
+        onSuccess={() => {
+          setShowApiKeyModal(false);
+          setPendingGenerate(true);
+        }}
       />
 
       <div className="flex-1 flex flex-col lg:flex-row relative overflow-hidden">

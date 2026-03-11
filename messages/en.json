@@ -978,6 +978,51 @@
     "needHelp": "Need Help?",
     "helpDescription": "Contact our support for questions about plans and payments."
   },
+  "welcome": {
+    "title": "Welcome to Black Line Pro",
+    "subtitle": "100% Free. No limits.",
+    "description": "Transform any image into a professional tattoo stencil using artificial intelligence — completely free, with unlimited generations.",
+    "pill": {
+      "unlimited": "Unlimited generations",
+      "ai": "Cutting-edge AI",
+      "free": "Free forever"
+    },
+    "howItWorks": {
+      "title": "How does it work?",
+      "step1": {
+        "title": "Create your free key",
+        "desc": "Go to Google AI Studio and generate your API Key in seconds. It's free, no credit card needed."
+      },
+      "step2": {
+        "title": "Paste it in the editor",
+        "desc": "Enter your key in the editor field. It's securely saved in your browser."
+      },
+      "step3": {
+        "title": "Generate stencils without limits",
+        "desc": "Upload any image and transform it into a professional stencil. As many times as you want."
+      },
+      "aiStudioHint": "Create your free key at"
+    },
+    "plans": {
+      "title": "Want to go further?",
+      "subtitle": "The app is already complete and free. Paid plans remove ads and add cloud storage.",
+      "free": {
+        "name": "Free",
+        "feat1": "Unlimited generations",
+        "feat2": "All tools included",
+        "feat3": "Ads displayed"
+      },
+      "paid": {
+        "name": "PRO Plans",
+        "price": "From R$ 29",
+        "feat1": "No ads",
+        "feat2": "Cloud storage",
+        "feat3": "Priority support"
+      }
+    },
+    "next": "Continue",
+    "start": "Get started"
+  },
   "metadata": {
     "title": "Black Line Pro - Professional Tattoo Stencil Editor",
     "description": "Transform any image into a professional tattoo stencil with Black Line Pro Technology. Complete editor, topographic mode, perfect lines, and premium tools. Free to start."
