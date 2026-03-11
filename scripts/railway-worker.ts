@@ -12,7 +12,6 @@ const checks: Record<string, string | undefined> = {
   'Railway Redis URL': process.env.REDIS_URL,
   'Supabase URL': process.env.NEXT_PUBLIC_SUPABASE_URL,
   'Supabase Service Key': process.env.SUPABASE_SERVICE_ROLE_KEY,
-  'Gemini API Key': process.env.GEMINI_API_KEY,
   'Clerk Secret': process.env.CLERK_SECRET_KEY,
 };
 
