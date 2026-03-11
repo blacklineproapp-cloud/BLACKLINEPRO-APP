@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Zap, Clock, Crown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import AdSlot from './AdSlot';
 import { Button } from '@/components/ui/button';
 
@@ -78,36 +79,45 @@ export default function GeneratingAdOverlay({ slot = 'generating-overlay', isGen
           </div>
         </div>
 
-        {/* Ad slot ou promo */}
+        {/* Ad slot + fallback */}
         <div className="w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900/50">
-          {process.env.NEXT_PUBLIC_ADSENSE_CLIENT ? (
-            <div className="p-1">
-              <p className="text-[9px] text-zinc-400 text-center mb-1 uppercase tracking-widest">Publicidade</p>
+          <p className="text-[9px] text-zinc-500 text-center pt-2 uppercase tracking-[0.2em]">Publicidade</p>
+          {/* AdSense: renderiza quando aprovado. Fallback visual por baixo */}
+          <div className="relative min-h-[200px]">
+            <div className="relative z-10">
               <AdSlot slot={slot} format="rectangle" className="mx-auto" />
             </div>
-          ) : (
-            /* Fallback: promo do plano pago */
-            <div className="p-5 text-center">
-              <div className="w-10 h-10 rounded-xl bg-indigo-600/10 border border-indigo-500/30 flex items-center justify-center mx-auto mb-3">
-                <Zap size={18} className="text-indigo-400" />
+            {/* Fallback visual — aparece atrás do AdSense quando vazio */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none">
+              <div className="w-14 h-14 opacity-20">
+                <Image
+                  src="/icon-192x192.png"
+                  alt="Black Line Pro"
+                  width={56}
+                  height={56}
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <p className="text-white font-bold text-sm mb-1">Remova os anúncios</p>
-              <p className="text-zinc-400 text-xs mb-4 leading-relaxed">
-                Usuários do plano Ink e acima pulam essa espera e têm armazenamento em nuvem incluído.
+              <p className="text-zinc-600 text-[10px] font-semibold tracking-wider uppercase">
+                Anuncie Aqui
               </p>
-              <div className="flex flex-col gap-2">
-                <Button
-                  onClick={() => router.push('/pricing')}
-                  size="sm"
-                  className="w-full gap-2 text-xs py-2 px-4 rounded-lg"
-                >
-                  <Crown size={12} />
-                  Ver planos — a partir de R$ 29/mês
-                </Button>
-                <p className="text-zinc-400 text-[10px]">Sem fidelidade · Cancele quando quiser</p>
-              </div>
             </div>
-          )}
+          </div>
+          {/* Promo do plano pago */}
+          <div className="border-t border-zinc-800 p-4 text-center">
+            <p className="text-white font-bold text-sm mb-1">Remova a espera</p>
+            <p className="text-zinc-400 text-xs mb-3 leading-relaxed">
+              Plano Ink e acima: sem espera + armazenamento em nuvem.
+            </p>
+            <Button
+              onClick={() => router.push('/pricing')}
+              size="sm"
+              className="w-full gap-2 text-xs py-2 px-4 rounded-lg"
+            >
+              <Crown size={12} />
+              Ver planos
+            </Button>
+          </div>
         </div>
 
         {/* Skip info */}

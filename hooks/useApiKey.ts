@@ -56,6 +56,14 @@ export function useApiKey(): UseApiKeyReturn {
     setHasSeenTutorial(tutorialDone);
     setIsValidated(keyValidated);
     setIsLoaded(true);
+
+    // Sync across hook instances in the same tab
+    const handleKeyChanged = (e: Event) => {
+      const key = (e as CustomEvent).detail as string | null;
+      setApiKeyState(key);
+    };
+    window.addEventListener('blp-apikey-changed', handleKeyChanged);
+    return () => window.removeEventListener('blp-apikey-changed', handleKeyChanged);
   }, []);
 
   const setApiKey = useCallback((key: string) => {
@@ -64,6 +72,8 @@ export function useApiKey(): UseApiKeyReturn {
     localStorage.setItem(TUTORIAL_DONE_KEY, 'true');
     setApiKeyState(trimmed);
     setHasSeenTutorial(true);
+    // Notify other hook instances in the same tab
+    window.dispatchEvent(new CustomEvent('blp-apikey-changed', { detail: trimmed }));
   }, []);
 
   const removeApiKey = useCallback(() => {

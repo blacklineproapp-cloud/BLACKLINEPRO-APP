@@ -537,14 +537,12 @@ export default function EditorPage() {
           promptDetails: promptText,
         }),
       });
-      
-      const data = await res.json();
-      
+
       if (!res.ok) {
-        console.error('Erro ao salvar projeto:', data);
-        // Não mostrar alert para não incomodar, mas logar
-      } else {
+        console.warn('[AutoSave] Falhou:', res.status);
+        return;
       }
+      await res.json();
     } catch (error) {
       console.error('Erro ao auto-salvar:', error);
     }
