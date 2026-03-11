@@ -36,25 +36,24 @@ export const CourtesyPaymentLink = ({
 
   const planFeatures: Record<string, string[]> = {
     ink: [
-      '95 gerações de stencil por mês',
-      'Editor completo com todas as ferramentas',
-      'Salvar projetos ilimitados',
-      'Suporte prioritário',
+      'Gerações ilimitadas (BYOK)',
+      '5 GB armazenamento em nuvem',
+      'Sem anúncios',
+      'Editor completo + modos avançados',
     ],
     pro: [
-      '210 gerações de stencil por mês',
-      'Editor completo + ferramentas PRO',
-      'Geração IA',
-      'Color Match IA',
-      'Dividir A4',
-      'Aprimorar 4K',
+      'Gerações ilimitadas (BYOK)',
+      '10 GB armazenamento em nuvem',
+      'Ferramentas premium (Split A4, Color Match, Enhance 4K)',
+      'Generator de artes com IA',
+      'Suporte prioritário',
     ],
     studio: [
-      '680 gerações de stencil por mês',
-      'Todas as ferramentas PRO',
-      'Multi-usuário (3 contas)',
-      'Prioridade máxima no suporte',
-      'API de integração',
+      'Gerações ilimitadas (BYOK)',
+      '25 GB armazenamento em nuvem',
+      'Múltiplos usuários (team)',
+      'Suporte prioritário',
+      'Relatórios de uso',
     ],
   };
 

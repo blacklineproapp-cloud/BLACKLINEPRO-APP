@@ -24,6 +24,12 @@ import {
   ASAAS_CONFIG,
 } from '@/lib/asaas';
 import { activateUserAtomic } from '@/lib/admin/user-activation';
+import {
+  sendBoletoPixEmail,
+  sendPaymentOverdueEmail,
+  sendPaymentFailedEmail,
+  sendSubscriptionCanceledEmail,
+} from '@/lib/email';
 import type {
   AsaasWebhookPayload,
   AsaasPayment,
@@ -393,9 +399,37 @@ async function handlePaymentCreated(payment: AsaasPayment) {
     customerSource: source,
   });
 
-  // TODO: Enviar email com link do boleto/PIX
-  if (payment.billingType === 'BOLETO' && payment.bankSlipUrl) {
-    logger.info('[Asaas Webhook] Boleto disponível', { bankSlipUrl: payment.bankSlipUrl });
+  // Enviar email com link do boleto/PIX
+  if ((payment.billingType === 'BOLETO' || payment.billingType === 'PIX') && payment.dueDate) {
+    try {
+      // Buscar dados do usuário
+      const { data: userData } = await supabaseAdmin
+        .from('users')
+        .select('email, name')
+        .eq('id', dbCustomer.user_id)
+        .single();
+
+      if (userData?.email && userData?.name) {
+        // Determinar URL de pagamento
+        const paymentUrl = payment.billingType === 'BOLETO'
+          ? payment.bankSlipUrl || '#'
+          : payment.invoiceUrl || '#';
+
+        await sendBoletoPixEmail(
+          userData.email,
+          userData.name,
+          payment.billingType as 'BOLETO' | 'PIX',
+          paymentUrl,
+          payment.dueDate,
+          payment.value
+        );
+
+        logger.info('[Asaas Webhook] Email de boleto/PIX enviado', { userId: dbCustomer.user_id, billingType: payment.billingType });
+      }
+    } catch (emailError: unknown) {
+      logger.error('[Asaas Webhook] Erro ao enviar email de boleto/PIX', emailError);
+      // Não bloquear o webhook se email falhar
+    }
   }
 }
 
@@ -429,10 +463,22 @@ async function handlePaymentOverdue(payment: AsaasPayment) {
 
   logger.info('[Asaas Webhook] Grace period definido', { gracePeriodUntil: gracePeriodUntil.toISOString() });
 
-  // TODO: Enviar email de cobrança urgente
-  // - Assunto: "Seu pagamento venceu - Regularize em até 24 horas"
-  // - Link para pagar
-  // - Aviso que funcionalidades serão bloqueadas após 1 dia
+  // Enviar email de cobrança urgente
+  try {
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('email, name')
+      .eq('id', dbCustomer.user_id)
+      .single();
+
+    if (userData?.email && userData?.name) {
+      await sendPaymentOverdueEmail(userData.email, userData.name, gracePeriodUntil);
+      logger.info('[Asaas Webhook] Email de pagamento vencido enviado', { userId: dbCustomer.user_id });
+    }
+  } catch (emailError: unknown) {
+    logger.error('[Asaas Webhook] Erro ao enviar email de pagamento vencido', emailError);
+    // Não bloquear o webhook se email falhar
+  }
 }
 
 /**
@@ -504,7 +550,22 @@ async function handlePaymentFailed(payment: AsaasPayment) {
 
   logger.info('[Asaas Webhook] Grace period (falha cartão) definido', { gracePeriodUntil: gracePeriodUntil.toISOString() });
 
-  // TODO: Enviar email sobre falha no cartão com link para atualizar método de pagamento
+  // Enviar email sobre falha no cartão
+  try {
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('email, name')
+      .eq('id', dbCustomer.user_id)
+      .single();
+
+    if (userData?.email && userData?.name) {
+      await sendPaymentFailedEmail(userData.email, userData.name, 'Erro ao processar seu cartão de crédito');
+      logger.info('[Asaas Webhook] Email de falha no pagamento enviado', { userId: dbCustomer.user_id });
+    }
+  } catch (emailError: unknown) {
+    logger.error('[Asaas Webhook] Erro ao enviar email de falha no pagamento', emailError);
+    // Não bloquear o webhook se email falhar
+  }
 }
 
 /**
@@ -540,8 +601,23 @@ async function handleChargeback(payment: AsaasPayment) {
 
   logger.warn('[Asaas Webhook] Usuário bloqueado por chargeback', { userId: dbCustomer.user_id });
 
-  // TODO: Enviar email de notificação sobre chargeback
-  // TODO: Notificar admin sobre chargeback
+  // Enviar email de notificação sobre chargeback
+  try {
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('email, name')
+      .eq('id', dbCustomer.user_id)
+      .single();
+
+    if (userData?.email && userData?.name) {
+      // Repurpose subscription canceled email with chargeback message
+      await sendSubscriptionCanceledEmail(userData.email, userData.name);
+      logger.info('[Asaas Webhook] Email de notificação de chargeback enviado', { userId: dbCustomer.user_id });
+    }
+  } catch (emailError: unknown) {
+    logger.error('[Asaas Webhook] Erro ao enviar email de chargeback', emailError);
+    // Não bloquear o webhook se email falhar
+  }
 }
 
 // ============================================================================
@@ -610,8 +686,8 @@ async function handleSubscriptionCanceled(subscription: AsaasSubscription) {
   const { data: dbCustomer } = dbCustomerResult;
 
   // Atualizar usuário - APENAS status da assinatura
-  // Mantemos is_paid=true e o plano atual para que o usuário tenha acesso 
-  // até o fim do período já pago (subscription_expires_at). 
+  // Mantemos is_paid=true e o plano atual para que o usuário tenha acesso
+  // até o fim do período já pago (subscription_expires_at).
   // O cron job check-grace-period cuidará de remover o acesso na data exata.
   await supabaseAdmin.from('users').update({
     subscription_status: 'canceled',
@@ -626,7 +702,26 @@ async function handleSubscriptionCanceled(subscription: AsaasSubscription) {
     updated_at: new Date().toISOString(),
   }).eq('asaas_subscription_id', subscription.id);
 
-  // TODO: Enviar email de cancelamento
+  // Enviar email de cancelamento
+  try {
+    const { data: userData } = await supabaseAdmin
+      .from('users')
+      .select('email, name, subscription_expires_at')
+      .eq('id', dbCustomer.user_id)
+      .single();
+
+    if (userData?.email && userData?.name) {
+      const endDate = userData.subscription_expires_at
+        ? new Date(userData.subscription_expires_at)
+        : undefined;
+
+      await sendSubscriptionCanceledEmail(userData.email, userData.name, endDate);
+      logger.info('[Asaas Webhook] Email de cancelamento de assinatura enviado', { userId: dbCustomer.user_id });
+    }
+  } catch (emailError: unknown) {
+    logger.error('[Asaas Webhook] Erro ao enviar email de cancelamento', emailError);
+    // Não bloquear o webhook se email falhar
+  }
 }
 
 // ============================================================================

@@ -163,8 +163,8 @@ export function calculateUpsellValue(
 
   // Price differences (monthly)
   const priceDiffs: Record<string, number> = {
-    'ink_to_pro': 50, // R$100 - R$50
-    'pro_to_studio': 200, // R$300 - R$100
+    'ink_to_pro': 40, // R$69 - R$29
+    'pro_to_studio': 130, // R$199 - R$69
   };
 
   return {

@@ -87,7 +87,8 @@
         "ready": {
           "label": "A4対応",
           "sub": "即座に印刷"
-        }
+        },
+        "original": "オリジナル"
       },
       "dragToCompare": "ドラッグして比較",
       "socialProof": "現在2,500人以上のアーティストが利用中",
@@ -214,7 +215,7 @@
       "full": "完全",
       "basic": "基本",
       "limited": "限定的",
-      "priceStarting": "月額 R$ 50 〜",
+      "priceStarting": "月額 R$ 69 〜",
       "updateInfo": "2024年12月更新データ。価格は変動する場合があります。",
       "features": {
         "editor": "ステンシルエディター",
@@ -267,9 +268,20 @@
       "badge": "無料のGeminiキーで無制限生成",
       "title": "プランを選択",
       "subtitle": "すべての彫師に最適な価格設定",
-      "cta": "プランを見る",
+      "cta": {
+        "free": "エディターを開く",
+        "ink": "Inkを購読",
+        "pro": "Proを購読",
+        "studio": "Studioを購読"
+      },
       "mostPopular": "最も人気",
       "features": {
+        "free": [
+          "無制限生成（BYOK）",
+          "フルエディター + ジェネレーター",
+          "ローカル保存のみ",
+          "アカウント不要"
+        ],
         "ink": [
           "フルステンシルエディター",
           "トポグラフィックモード",

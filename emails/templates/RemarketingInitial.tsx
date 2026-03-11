@@ -72,13 +72,13 @@ export const RemarketingInitial = ({
               <Section style={styles.priceBox}>
                 <Text style={styles.priceLabel}>Plano Starter</Text>
                 <Text style={styles.priceValue}>
-                  R$ 50<span style={{ fontSize: '16px', fontWeight: 'normal' }}>/mês</span>
+                  R$ 29<span style={{ fontSize: '16px', fontWeight: 'normal' }}>/mês</span>
                 </Text>
                 <Text style={styles.priceFeatures}>
-                  95 gerações/mês • Editor Completo • Salvar Projetos Ilimitados
+                  Gerações ilimitadas (BYOK) • 5 GB Nuvem • Sem Anúncios
                 </Text>
                 <Text style={styles.priceSavings}>
-                  💰 Economize 40% no plano anual (R$ 30/mês)
+                  Blackline Ink — Comece agora!
                 </Text>
               </Section>
 

@@ -6,7 +6,7 @@
  */
 
 import sharp from 'sharp';
-import { logger } from './logger';
+import { logger, getErrorMessage } from './logger';
 
 // ============================================
 // CONSTANTES
@@ -66,7 +66,7 @@ export function validateBase64Size(base64String: string): ImageValidationResult 
     }
 
     return { valid: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Image Validation] Erro ao validar base64', error);
     return {
       valid: false,
@@ -128,18 +128,19 @@ export async function validateImageMetadata(
         size: buffer.length,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Image Validation] Erro ao ler metadata', error);
 
+    const errorMsg = getErrorMessage(error);
     // Erros específicos do Sharp
-    if (error.message?.includes('Input buffer')) {
+    if (errorMsg?.includes('Input buffer')) {
       return {
         valid: false,
         error: 'Formato de imagem não suportado ou arquivo corrompido',
       };
     }
 
-    if (error.message?.includes('JPEG')) {
+    if (errorMsg?.includes('JPEG')) {
       return {
         valid: false,
         error: 'Arquivo JPEG corrompido',
@@ -215,17 +216,18 @@ export async function validateImage(base64String: string): Promise<ImageValidati
 
     // 3. Validar metadata (formato, dimensões, etc)
     return await validateImageMetadata(buffer);
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Image Validation] Erro ao criar buffer', error);
-    
+
+    const errorMsg = getErrorMessage(error);
     // Mensagem específica para erro de pattern
-    if (error.message?.includes('did not match') || error.message?.includes('pattern')) {
+    if (errorMsg?.includes('did not match') || errorMsg?.includes('pattern')) {
       return {
         valid: false,
         error: 'Formato de imagem inválido. A imagem pode estar corrompida.',
       };
     }
-    
+
     return {
       valid: false,
       error: 'Base64 inválido ou corrompido',

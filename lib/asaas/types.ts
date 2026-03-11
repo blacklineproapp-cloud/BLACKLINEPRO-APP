@@ -431,6 +431,12 @@ export interface PlanConfig {
   features: string[];
 }
 
+/**
+ * ASAAS_PLANS — Configuração de planos para gateway Asaas
+ * ATUALIZADO: Março 2026 — Modelo BYOK (gerações ilimitadas)
+ * Planos: Ink (R$29), Pro (R$69), Studio (R$199)
+ * Sem descontos por ciclo (preço fixo × meses)
+ */
 export const ASAAS_PLANS: Record<string, PlanConfig> = {
   legacy: {
     name: 'Legacy',
@@ -440,46 +446,36 @@ export const ASAAS_PLANS: Record<string, PlanConfig> = {
       semiannual: 150.00,
       yearly: 300.00,
     },
-    features: ['Editor de Stencil', '100 gerações/mês'],
+    features: ['Editor de Stencil', 'Plano descontinuado'],
   },
-  starter: {
-    name: 'Starter',
+  ink: {
+    name: 'Blackline Ink',
     prices: {
-      monthly: 50.00,
-      quarterly: 135.00,    // 10% off
-      semiannual: 225.00,   // 25% off
-      yearly: 360.00,       // 40% off
+      monthly: 29.00,
+      quarterly: 87.00,      // 3x R$29
+      semiannual: 174.00,    // 6x R$29
+      yearly: 348.00,        // 12x R$29
     },
-    features: ['Editor completo', 'Modo Topográfico', '95 gerações/mês'],
+    features: ['Gerações ilimitadas (BYOK)', '5 GB nuvem', 'Sem anúncios'],
   },
   pro: {
-    name: 'Pro',
+    name: 'Blackline Pro',
     prices: {
-      monthly: 100.00,
-      quarterly: 270.00,    // 10% off
-      semiannual: 450.00,   // 25% off
-      yearly: 720.00,       // 40% off
+      monthly: 69.00,
+      quarterly: 207.00,     // 3x R$69
+      semiannual: 414.00,    // 6x R$69
+      yearly: 828.00,        // 12x R$69
     },
-    features: ['Tudo do Starter', 'IA Generativa', 'Color Match', '210 gerações/mês'],
+    features: ['Tudo do Ink', '10 GB nuvem', 'Ferramentas premium', 'IA Generativa'],
   },
   studio: {
-    name: 'Studio',
+    name: 'Blackline Studio',
     prices: {
-      monthly: 300.00,
-      quarterly: 810.00,    // 10% off
-      semiannual: 1350.00,  // 25% off
-      yearly: 2160.00,      // 40% off
+      monthly: 199.00,
+      quarterly: 597.00,     // 3x R$199
+      semiannual: 1194.00,   // 6x R$199
+      yearly: 2388.00,       // 12x R$199
     },
-    features: ['Tudo do Pro', '680 gerações/mês', 'Suporte prioritário'],
-  },
-  enterprise: {
-    name: 'Enterprise',
-    prices: {
-      monthly: 600.00,
-      quarterly: 1620.00,   // 10% off
-      semiannual: 2700.00,  // 25% off
-      yearly: 4320.00,      // 40% off
-    },
-    features: ['Tudo do Studio', '1400 gerações/mês', 'Suporte dedicado'],
+    features: ['Tudo do Pro', '25 GB nuvem', 'Multi-usuário', 'Suporte prioritário'],
   },
 };

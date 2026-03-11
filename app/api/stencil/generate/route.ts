@@ -8,7 +8,6 @@ import { recordUsage } from '@/lib/billing/limits';
 import { calculateCostWithFallback, type OperationType } from '@/lib/billing/costs';
 import { validateImage, createValidationErrorResponse } from '@/lib/image-validation';
 import { logger } from '@/lib/logger';
-import { applyPreviewProtection } from '@/lib/stencil-preview';
 
 export async function POST(req: Request) {
   try {
@@ -68,9 +67,8 @@ export async function POST(req: Request) {
 
     const isFreePlan = !userData.is_paid && !hasActiveCourtesy;
 
-    // BYOK: Gerações ilimitadas para todos os planos (usuário usa sua chave Gemini)
-    // Free users recebem preview com blur (upsell)
-    return await processGeneration(req, userId, userData.id, false, isFreePlan);
+    // BYOK: Gerações ilimitadas para todos os planos
+    return await processGeneration(req, userId, userData.id, false);
   } catch (error: any) {
     logger.error('[Generate] Erro ao gerar estêncil', { error });
     return NextResponse.json(
@@ -86,7 +84,7 @@ async function processGeneration(
   clerkUserId: string | null,
   userUuid: string | null,
   isAdmin: boolean,
-  isPreview: boolean = false,
+  _isPreview: boolean = false,
   userApiKey?: string
 ) {
   // Validar e parsear JSON
@@ -154,36 +152,6 @@ async function processGeneration(
         tokens: usageMetadata
       }
     });
-  }
-
-  // 🎣 FREE USERS (auth path only): Aplicar proteção de preview
-  if (isPreview && userUuid && clerkUserId) {
-    try {
-      const { data: userInfo } = await supabaseAdmin
-        .from('users')
-        .select('email')
-        .eq('id', userUuid)
-        .single();
-
-      const previewImage = await applyPreviewProtection(stencilImage, {
-        userEmail: userInfo?.email,
-        userId: clerkUserId,
-      });
-
-      return NextResponse.json({
-        image: previewImage,
-        isPreview: true,
-        message: 'Este é um preview. Assine para desbloquear o stencil em alta qualidade!',
-        remaining: 0,
-      });
-    } catch (previewError: any) {
-      logger.error('[Generate] Erro ao aplicar preview protection:', previewError);
-      return NextResponse.json({
-        image: stencilImage,
-        isPreview: true,
-        message: 'Assine para desbloquear o stencil em alta qualidade!',
-      });
-    }
   }
 
   return NextResponse.json({ image: stencilImage });

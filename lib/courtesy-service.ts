@@ -4,7 +4,7 @@
  */
 
 import { supabaseAdmin } from '@/lib/supabase';
-import { logger } from './logger';
+import { logger, getErrorMessage } from './logger';
 
 interface CourtesyCheckResult {
   isExpired: boolean;
@@ -118,13 +118,13 @@ export async function checkAndRevertExpiredCourtesy(
       message: 'Cortesia expirada - revertido para FREE'
     };
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Courtesy] Erro ao verificar cortesia', error);
     return {
       isExpired: false,
       wasReverted: false,
       expiresAt: null,
-      message: `Erro: ${error.message}`
+      message: `Erro: ${getErrorMessage(error)}`
     };
   }
 }

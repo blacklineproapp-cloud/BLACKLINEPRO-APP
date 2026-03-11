@@ -5,7 +5,7 @@
  * com qualidade profissional (Lanczos3/Mitchell)
  */
 
-import { logger } from './logger';
+import { logger, getErrorMessage } from './logger';
 
 interface ResizeOptions {
   targetWidthCm?: number;   // Largura desejada em CM
@@ -89,9 +89,9 @@ export async function resizeImage(
 
     return data;
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[ResizeHelper] Erro na requisição', error);
-    throw new Error(error.message || 'Erro ao comunicar com servidor');
+    throw new Error(getErrorMessage(error) || 'Erro ao comunicar com servidor');
   }
 }
 

@@ -1,5 +1,5 @@
 import { retryGeminiAPI } from '../retry';
-import { logger } from '../logger';
+import { logger, getErrorMessage } from '../logger';
 import { getModelsForKey, dedicatedEnhanceModel } from './models-config';
 
 // Aprimorar imagem (upscale 4K)
@@ -85,9 +85,9 @@ EXECUTE NOW: Generate the enhanced 4K version of this image.`;
       const buffer = Buffer.from(arrayBuffer);
       cleanBase64 = buffer.toString('base64');
       logger.info('[Gemini] Imagem baixada e convertida para base64', { tamanho: cleanBase64.length });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('[Gemini] Erro ao baixar imagem:', error);
-      throw new Error(`Falha ao baixar imagem: ${error.message}`);
+      throw new Error(`Falha ao baixar imagem: ${getErrorMessage(error)}`);
     }
   } else {
     // Já é base64, apenas limpar o prefixo data URI se existir
@@ -122,9 +122,9 @@ EXECUTE NOW: Generate the enhanced 4K version of this image.`;
 
       throw new Error('Modelo não retornou imagem no formato esperado');
     }, 'Gemini Enhance');
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Gemini] Erro ao aprimorar imagem:', error);
-    throw new Error(`Falha ao aprimorar imagem: ${error.message || 'Erro desconhecido'}`);
+    throw new Error(`Falha ao aprimorar imagem: ${getErrorMessage(error) || 'Erro desconhecido'}`);
   }
 }
 
@@ -191,8 +191,8 @@ OUTPUT: A clean image with the subject on white background, ready for stencil co
     }
 
     throw new Error('Modelo não retornou imagem no formato esperado');
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Gemini] Erro ao remover fundo:', error);
-    throw new Error(`Falha ao remover fundo: ${error.message || 'Erro desconhecido'}`);
+    throw new Error(`Falha ao remover fundo: ${getErrorMessage(error) || 'Erro desconhecido'}`);
   }
 }

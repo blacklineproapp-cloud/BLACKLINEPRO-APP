@@ -87,7 +87,8 @@
         "ready": {
           "label": "Listo para A4",
           "sub": "Imprime al instante"
-        }
+        },
+        "original": "Original"
       },
       "dragToCompare": "Arrastra para comparar",
       "socialProof": "+2.500 artistas usando hoy",

@@ -90,166 +90,189 @@ async function retryWithBackoff<T>(
   throw lastError;
 }
 
-// Helper para criar ou buscar usuário automaticamente
+// =============================================================================
+// getOrCreateUser — Sub-funções (refatorado de god function)
+// =============================================================================
+
+/**
+ * Busca usuário existente pelo clerk_id no Supabase
+ */
+async function findUserByClerkId(clerkId: string) {
+  return retryWithBackoff(async () => {
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('clerk_id', clerkId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = não encontrado
+      throw error;
+    }
+
+    return data;
+  });
+}
+
+/**
+ * Busca ou cria usuário pelo email (resolve duplicatas de clerk_id)
+ */
+async function resolveOrCreateUser(
+  clerkId: string,
+  email: string,
+  name: string,
+  picture: string | null
+) {
+  const normalizedEmail = email.toLowerCase().trim();
+
+  // Verificar se já existe usuário com este email
+  const { data: emailUser } = await supabaseAdmin
+    .from('users')
+    .select('*')
+    .eq('email', normalizedEmail)
+    .maybeSingle();
+
+  if (emailUser) {
+    logger.info('[Auth] Usuário existente encontrado, atualizando clerk_id', { email: maskEmail(normalizedEmail) });
+
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({ clerk_id: clerkId, name, picture })
+      .eq('id', emailUser.id)
+      .select()
+      .single();
+
+    if (updateError) {
+      logger.error('[Auth] Erro ao atualizar usuário existente:', updateError);
+      throw updateError;
+    }
+
+    logger.info('[Auth] Usuário existente atualizado', { email: maskEmail(normalizedEmail) });
+    return updated;
+  }
+
+  // Criar novo usuário
+  const newUser = await retryWithBackoff(async () => {
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .insert({
+        clerk_id: clerkId,
+        email: normalizedEmail,
+        name,
+        picture,
+        subscription_status: 'inactive',
+        is_paid: false,
+        tools_unlocked: false,
+        plan: 'free',
+        credits: 0,
+        usage_this_month: {},
+        daily_usage: {},
+      })
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') {
+        logger.warn('[Auth] Duplicate key error, tentando buscar usuário...');
+        const { data: existingByEmail } = await supabaseAdmin
+          .from('users')
+          .select('*')
+          .eq('email', normalizedEmail)
+          .single();
+
+        if (existingByEmail) return existingByEmail;
+      }
+
+      logger.error('[Auth] Erro ao criar usuário:', {
+        message: error.message,
+        details: error.details || 'Sem detalhes',
+        hint: error.hint || 'Sem dica',
+        code: error.code || 'Sem código',
+      });
+      throw error;
+    }
+
+    return data;
+  });
+
+  logger.info('[Auth] Usuário criado', { email: maskEmail(normalizedEmail) });
+  return newUser;
+}
+
+/**
+ * Verifica e reverte cortesia expirada (não bloqueante)
+ */
+async function handleCourtesyExpiration(userId: string, clerkId: string, currentUser: Record<string, unknown>) {
+  try {
+    const courtesyCheck = await checkAndRevertExpiredCourtesy(userId);
+
+    if (courtesyCheck.wasReverted) {
+      logger.info('[Auth] Cortesia expirada, revertido para FREE', { userId });
+      await invalidateCache(clerkId, 'users');
+
+      const { data: updatedUser } = await supabaseAdmin
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      return updatedUser || currentUser;
+    }
+  } catch (courtesyError) {
+    logger.error('[Auth] ⚠️ Erro ao verificar cortesia (não bloqueante):', courtesyError);
+  }
+
+  return currentUser;
+}
+
+// =============================================================================
+// getOrCreateUser — Orquestrador principal
+// =============================================================================
+
+/**
+ * Busca ou cria usuário no Supabase a partir do Clerk ID.
+ * Com cache Redis (5 min), retry com backoff, e tratamento de duplicatas.
+ */
 export async function getOrCreateUser(clerkId: string) {
   try {
-    // 🚀 OTIMIZAÇÃO: Cache de 15 minutos (reduz requests Redis em 80%)
-    // Dados de usuário mudam raramente (plano, email, nome)
-    // Quando admin muda plano, cache é invalidado manualmente
     const user = await getOrSetCache(
       clerkId,
       async () => {
-        // Tentar buscar usuário existente com retry
-        const existingUser = await retryWithBackoff(async () => {
-          const { data, error } = await supabaseAdmin
-            .from('users')
-            .select('*')
-            .eq('clerk_id', clerkId)
-            .single();
+        // 1. Buscar por clerk_id
+        const existingUser = await findUserByClerkId(clerkId);
+        if (existingUser) return existingUser;
 
-          if (error && error.code !== 'PGRST116') { // PGRST116 = não encontrado
-            throw error;
-          }
-
-          return data;
-        });
-
-        if (existingUser) {
-          return existingUser;
-        }
-
-        // Usuário não existe, buscar dados do Clerk e criar
+        // 2. Não encontrado — buscar dados do Clerk
         const clerkUser = await currentUser();
-
         if (!clerkUser) {
           logger.error('[Auth] Usuário não autenticado no Clerk');
           throw new Error('Usuário não autenticado');
         }
 
         const email = clerkUser.emailAddresses[0]?.emailAddress || '';
-        const normalizedEmail = email.toLowerCase().trim();
         const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'Usuário';
         const picture = clerkUser.imageUrl || null;
 
-        // Verificar se já existe usuário com este email (proteção extra)
-        const { data: emailUser } = await supabaseAdmin
-          .from('users')
-          .select('*')
-          .eq('email', normalizedEmail)
-          .maybeSingle();
-
-        if (emailUser) {
-          logger.info('[Auth] Usuário existente encontrado, atualizando clerk_id', { email: maskEmail(normalizedEmail) });
-
-          // Atualizar clerk_id do usuário existente
-          const { data: updated, error: updateError } = await supabaseAdmin
-            .from('users')
-            .update({
-              clerk_id: clerkId,
-              name: name,
-              picture: picture,
-            })
-            .eq('id', emailUser.id)
-            .select()
-            .single();
-
-          if (updateError) {
-            logger.error('[Auth] Erro ao atualizar usuário existente:', updateError);
-            throw updateError;
-          }
-
-          logger.info('[Auth] Usuário existente atualizado', { email: maskEmail(normalizedEmail) });
-          return updated;
-        }
-
-        // Criar usuário no Supabase com retry
-        const newUser = await retryWithBackoff(async () => {
-          const { data, error } = await supabaseAdmin
-            .from('users')
-            .insert({
-              clerk_id: clerkId,
-              email: normalizedEmail,
-              name: name,
-              picture: picture,
-              subscription_status: 'inactive',
-              is_paid: false,
-              tools_unlocked: false,
-              plan: 'free', // Usuário começa FREE, só muda após pagamento
-              credits: 0,
-              usage_this_month: {},
-              daily_usage: {},
-            })
-            .select()
-            .single();
-
-          if (error) {
-            // Se for erro de duplicação, tentar buscar o usuário
-            if (error.code === '23505') {
-              logger.warn('[Auth] Duplicate key error, tentando buscar usuário...');
-              const { data: existingByEmail } = await supabaseAdmin
-                .from('users')
-                .select('*')
-                .eq('email', normalizedEmail)
-                .single();
-
-              if (existingByEmail) {
-                return existingByEmail;
-              }
-            }
-
-            logger.error('[Auth] Erro ao criar usuário:', {
-              message: error.message,
-              details: error.details || 'Sem detalhes',
-              hint: error.hint || 'Sem dica',
-              code: error.code || 'Sem código'
-            });
-            throw error;
-          }
-
-          return data;
-        });
-
-        logger.info('[Auth] Usuário criado', { email: maskEmail(normalizedEmail) });
-        return newUser;
+        // 3. Resolver duplicata de email ou criar novo
+        return resolveOrCreateUser(clerkId, email, name, picture);
       },
       {
-        ttl: 300000, // 5 minutos (reduz memória em 66% vs 15min)
+        ttl: 300000,
         tags: [`user:${clerkId}`],
         namespace: 'users',
       }
     );
 
-    // 🔒 VERIFICAR CORTESIA EXPIRADA (apenas se usuário existe)
+    // 4. Verificar cortesia expirada
     if (user?.id) {
-      try {
-        const courtesyCheck = await checkAndRevertExpiredCourtesy(user.id);
-        
-        if (courtesyCheck.wasReverted) {
-          logger.info('[Auth] Cortesia expirada, revertido para FREE', { userId: user.id });
-          // Invalidar cache para forçar reload dos dados atualizados
-          await invalidateCache(clerkId, 'users');
-          
-          // Buscar dados atualizados
-          const { data: updatedUser } = await supabaseAdmin
-            .from('users')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-          
-          return updatedUser || user;
-        }
-      } catch (courtesyError) {
-        // Não bloquear login se verificação de cortesia falhar
-        logger.error('[Auth] ⚠️ Erro ao verificar cortesia (não bloqueante):', courtesyError);
-      }
+      return handleCourtesyExpiration(user.id, clerkId, user);
     }
 
     return user;
   } catch (err: unknown) {
     const error = err instanceof Error ? err : new Error(String(err));
-    logger.error('[Auth] Erro fatal ao criar/buscar usuário após múltiplas tentativas:', {
+    logger.error('[Auth] Erro fatal ao criar/buscar usuário', {
       message: error.message || 'Erro desconhecido',
-      details: String(err),
+      details: JSON.stringify(err),
       stack: error.stack,
     });
     return null;

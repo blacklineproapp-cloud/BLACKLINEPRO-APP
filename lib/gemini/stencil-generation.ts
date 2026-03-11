@@ -1,7 +1,7 @@
 import sharp from 'sharp';
 import { retryGeminiAPI } from '../retry';
 import { TOPOGRAPHIC_INSTRUCTION_OPTIMIZED, PERFECT_LINES_INSTRUCTION_OPTIMIZED, ANIME_ILLUSTRATION_INSTRUCTION_OPTIMIZED } from '../prompts-optimized';
-import { logger } from '../logger';
+import { logger, getErrorMessage } from '../logger';
 import { prepareImageForStencil, enforceMonochrome, ensureDimensionsMatch } from './image-preprocessing';
 import { getModelsForKey } from './models-config';
 
@@ -180,9 +180,9 @@ OUTPUT: Black contour lines on white. Both structure AND shadow boundaries.`;
       const buffer = Buffer.from(arrayBuffer);
       cleanBase64 = buffer.toString('base64');
       logger.info('[Gemini] Imagem baixada e convertida para base64', { tamanho: cleanBase64.length });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('[Gemini] Erro ao baixar imagem:', error);
-      throw new Error(`Falha ao baixar imagem: ${error.message}`);
+      throw new Error(`Falha ao baixar imagem: ${getErrorMessage(error)}`);
     }
   } else {
     // Já é base64, apenas limpar o prefixo data URI se existir
@@ -272,9 +272,9 @@ OUTPUT: Black contour lines on white. Both structure AND shadow boundaries.`;
       }
 
       throw new Error(`Modelo não retornou imagem (Reason: ${finishReason || 'Desconhecida'})`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('[Gemini] Erro ao gerar estêncil com Gemini:', error);
-      throw new Error(`Falha ao gerar estêncil: ${error.message || 'Erro desconhecido'}`);
+      throw new Error(`Falha ao gerar estêncil: ${getErrorMessage(error) || 'Erro desconhecido'}`);
     }
   }, `Gemini Stencil Generation (${style})`);
 }

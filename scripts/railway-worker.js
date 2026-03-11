@@ -9,8 +9,7 @@ console.log('');
 
 // Verificar configurações críticas
 const checks = {
-  'Redis URL': process.env.UPSTASH_REDIS_REST_URL,
-  'Redis Token': process.env.UPSTASH_REDIS_REST_TOKEN,
+  'Redis URL (TCP)': process.env.REDIS_URL,
   'Supabase URL': process.env.NEXT_PUBLIC_SUPABASE_URL,
   'Supabase Service Key': process.env.SUPABASE_SERVICE_ROLE_KEY,
   'Gemini API Key': process.env.GEMINI_API_KEY,

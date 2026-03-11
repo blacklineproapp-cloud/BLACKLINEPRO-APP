@@ -91,11 +91,11 @@ const nextConfig = {
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' data:",
               "connect-src 'self' https://*.supabase.co https://clerk.blacklinepro.com.br https://*.clerk.accounts.dev https://generativelanguage.googleapis.com https://www.facebook.com https://connect.facebook.net https://graph.facebook.com https://www.google-analytics.com https://*.ingest.us.sentry.io https://capig.madgicx.ai https://pagead2.googlesyndication.com https://*.google.com https://*.adtrafficquality.google https://*.r2.cloudflarestorage.com",
-              "frame-src 'self' https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://pagead2.googlesyndication.com https://*.google.com https://ep2.adtrafficquality.google",
+              "frame-src 'self' https://clerk.blacklinepro.com.br https://*.clerk.accounts.dev https://challenges.cloudflare.com https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://pagead2.googlesyndication.com https://*.google.com https://ep2.adtrafficquality.google",
               "worker-src 'self' blob:",
               "object-src 'none'",
               "base-uri 'self'",
-              "form-action 'self'",
+              "form-action 'self' https://clerk.blacklinepro.com.br https://*.clerk.accounts.dev",
               "frame-ancestors 'none'",
               "upgrade-insecure-requests"
             ].join('; ')

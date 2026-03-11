@@ -5,7 +5,10 @@
  * (Gemini, Stripe, Supabase, etc.)
  */
 
-import { logger } from './logger';
+import { logger, getErrorMessage } from './logger';
+
+ 
+type RetryError = any;
 
 export interface RetryOptions {
   /**
@@ -33,12 +36,12 @@ export interface RetryOptions {
    * Função para determinar se deve fazer retry
    * Retorna true para fazer retry, false para falhar imediatamente
    */
-  shouldRetry?: (error: any, attempt: number) => boolean;
+  shouldRetry?: (error: RetryError, attempt: number) => boolean;
 
   /**
    * Callback chamado antes de cada retry
    */
-  onRetry?: (error: any, attempt: number, delay: number) => void;
+  onRetry?: (error: RetryError, attempt: number, delay: number) => void;
 }
 
 /**
@@ -67,7 +70,7 @@ const RETRYABLE_CODES = [
 /**
  * Função padrão para determinar se deve fazer retry
  */
-function defaultShouldRetry(error: any, attempt: number): boolean {
+function defaultShouldRetry(error: RetryError, attempt: number): boolean {
   // Não retry se excedeu tentativas (verificado antes)
   // Verificar se é erro HTTP
   if (error?.status || error?.response?.status) {
@@ -157,7 +160,7 @@ export async function withRetry<T>(
     onRetry,
   } = options;
 
-  let lastError: any;
+  let lastError: unknown;
 
   for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
     try {
@@ -182,7 +185,7 @@ export async function withRetry<T>(
       if (onRetry) {
         onRetry(error, attempt, delay);
       } else {
-        logger.warn('[Retry] Tentativa falhou', { attempt, maxRetries, delayMs: delay, error: (error as any)?.message || error });
+        logger.warn('[Retry] Tentativa falhou', { attempt, maxRetries, delayMs: delay, error: getErrorMessage(error) });
       }
 
       // Aguardar antes de retry

@@ -54,7 +54,7 @@ export async function logUserActivity(params: LogActivityParams): Promise<string
     }
 
     return data as string;
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error('[Activity Logger] Erro fatal', err);
     return null;
   }
@@ -104,7 +104,7 @@ export async function logGeneration(params: {
     }
 
     return data?.id || null;
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error('[Activity Logger] Erro fatal ao registrar geração', err);
     return null;
   }
@@ -140,7 +140,7 @@ export async function updateGenerationStatus(params: {
     }
 
     return true;
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error('[Activity Logger] Erro fatal ao atualizar geração', err);
     return false;
   }

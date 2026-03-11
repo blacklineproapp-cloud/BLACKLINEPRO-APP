@@ -79,7 +79,7 @@ export async function generateLinesFromTopographic(
     }
 
     throw new Error('Modelo não retornou imagem simplificada');
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Pipeline 2-Etapas] Erro:', error);
     throw error;
   }

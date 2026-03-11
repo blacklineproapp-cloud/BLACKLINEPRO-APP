@@ -1,4 +1,4 @@
-import { logger } from '../logger';
+import { logger, getErrorMessage } from '../logger';
 import { textModel } from './models-config';
 
 // Analisar cores da imagem
@@ -123,8 +123,8 @@ ANALISE A IMAGEM AGORA:`;
     }
 
     return parsedData;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Gemini] Erro ao analisar cores:', error);
-    throw new Error(`Falha ao analisar cores: ${error.message || 'Erro desconhecido'}`);
+    throw new Error(`Falha ao analisar cores: ${getErrorMessage(error) || 'Erro desconhecido'}`);
   }
 }

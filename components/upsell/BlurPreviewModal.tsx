@@ -18,19 +18,19 @@ interface BlurPreviewModalProps {
 
 // Features destacadas para cada plano (Free → Ink/Pro)
 const INK_FEATURES = [
-  { label: 'Editor de Stencil', description: 'Crie stencils profissionais' },
-  { label: 'Modo Topográfico', description: 'Máximo detalhe nas linhas' },
-  { label: 'Ferramentas Básicas', description: 'Remove fundo, enhance' },
-  { label: '95 gerações/mês', description: 'Limite mensal' },
+  { label: 'Gerações ilimitadas (BYOK)', description: 'Use sua chave Gemini gratuita' },
+  { label: '5 GB armazenamento nuvem', description: 'Acesse de qualquer dispositivo' },
+  { label: 'Sem anúncios', description: 'Experiência limpa e profissional' },
+  { label: 'Editor completo + modos avançados', description: 'Topográfico, Linhas Perfeitas, Anime' },
 ];
 
 const PRO_FEATURES = [
   { label: 'Tudo do Ink', description: 'Todas as features' },
-  { label: 'IA Generativa', description: 'Crie designs do zero', isNew: true },
+  { label: '10 GB armazenamento nuvem', description: 'Galeria profissional completa', isNew: true },
+  { label: 'Generator de artes com IA', description: 'Crie designs do zero', isNew: true },
   { label: 'Color Match IA', description: 'Paleta inteligente', isNew: true },
   { label: 'Enhance 4K', description: 'Qualidade máxima', isNew: true },
   { label: 'Dividir A4', description: 'Impressão otimizada', isNew: true },
-  { label: '210 gerações/mês', description: '+115 gerações', isNew: true },
 ];
 
 export default function BlurPreviewModal({
@@ -176,12 +176,13 @@ export default function BlurPreviewModal({
                 </div>
               </div>
 
-              {/* Generations highlight */}
+              {/* BYOK highlight */}
               <div className="mt-3 p-2 rounded-lg bg-zinc-900/50 border border-zinc-700">
                 <div className="flex items-center gap-2">
                   <Zap size={14} className="text-amber-400" />
-                  <span className="text-sm font-medium text-white">95 gerações/mês</span>
+                  <span className="text-sm font-medium text-white">Gerações ilimitadas (BYOK)</span>
                 </div>
+                <span className="text-xs text-zinc-400 ml-5">+ 5 GB nuvem • Sem anúncios</span>
               </div>
             </div>
 
@@ -236,12 +237,13 @@ export default function BlurPreviewModal({
                 </div>
               </div>
 
-              {/* Generations highlight */}
+              {/* BYOK highlight */}
               <div className="mt-3 p-2 rounded-lg bg-zinc-900/50 border border-amber-500/30">
                 <div className="flex items-center gap-2">
                   <Zap size={14} className="text-amber-400" />
-                  <span className="text-sm font-medium text-white">210 gerações/mês</span>
+                  <span className="text-sm font-medium text-white">Gerações ilimitadas (BYOK)</span>
                 </div>
+                <span className="text-xs text-zinc-400 ml-5">+ 10 GB nuvem • Ferramentas premium</span>
               </div>
             </div>
 

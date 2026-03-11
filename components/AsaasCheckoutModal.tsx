@@ -56,19 +56,19 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
       name: 'Blackline Ink',
       icon: Zap,
       color: 'indigo',
-      limit: tPricing('plans.ink.limit', { count: 95 }),
+      limit: '5 GB nuvem • Sem anúncios',
     },
     pro: {
       name: 'Blackline Pro',
       icon: Crown,
       color: 'indigo',
-      limit: tPricing('plans.pro.limit', { count: 210 }),
+      limit: '10 GB nuvem • Ferramentas premium',
     },
     studio: {
       name: 'Blackline Studio',
       icon: Sparkles,
       color: 'amber',
-      limit: tPricing('plans.studio.limit', { count: 680 }),
+      limit: '25 GB nuvem • Multi-usuário',
     },
   };
 
@@ -137,9 +137,9 @@ export default function AsaasCheckoutModal({ plan, cycle = 'monthly', isOpen, on
         }, 2000);
       }
 
-    } catch (err: any) {
-      console.error('[Asaas Checkout] Erro:', err);
-      setError(err.message || t('error'));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : t('error');
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

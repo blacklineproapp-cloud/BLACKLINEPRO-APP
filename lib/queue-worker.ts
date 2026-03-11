@@ -115,7 +115,7 @@ export const stencilWorker = new Worker<StencilJobData>(
       logger.info('[Worker] Job stencil concluído', { jobId: job.id });
 
       return { success: true, image: stencilImage, userId };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('[Worker] Erro no job stencil', error, { jobId: job.id });
       throw error;
     }
@@ -157,7 +157,7 @@ export const enhanceWorker = new Worker<EnhanceJobData>(
 
       await job.updateProgress(100);
       return { success: true, image: enhancedImage, userId };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('[Worker] Erro no enhance', error, { jobId: job.id });
       throw error;
     }
@@ -198,7 +198,7 @@ export const iaGenWorker = new Worker<IaGenJobData>(
 
       await job.updateProgress(100);
       return { success: true, image: generatedImage, userId };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('[Worker] Erro no IA Gen', error, { jobId: job.id });
       throw error;
     }
@@ -239,7 +239,7 @@ export const colorMatchWorker = new Worker<ColorMatchJobData>(
 
       await job.updateProgress(100);
       return { success: true, colors, userId };
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('[Worker] Erro no Color Match', error, { jobId: job.id });
       throw error;
     }
@@ -332,7 +332,7 @@ async function gracefulShutdown(signal: string) {
   try {
     await Promise.allSettled(allWorkers.map(w => w.close()));
     logger.info('[Workers] Workers fechados com sucesso');
-  } catch (err: any) {
+  } catch (err: unknown) {
     logger.error('[Workers] Erro ao fechar workers', err);
   }
 

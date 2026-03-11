@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './supabase';
-import { logger } from './logger';
+import { logger, getErrorMessage } from './logger';
 import sharp from 'sharp';
 
 /**
@@ -64,13 +64,13 @@ export async function uploadImage(
       processedBuffer = await sharp(buffer)
         .png()
         .toBuffer();
-      
+
       if (processedBuffer.length === 0) {
         throw new Error('Buffer processado está vazio');
       }
-    } catch (sharpError: any) {
+    } catch (sharpError: unknown) {
       logger.error('[Storage] Erro ao processar imagem com Sharp', sharpError);
-      throw new Error(`Imagem inválida ou corrompida: ${sharpError.message}`);
+      throw new Error(`Imagem inválida ou corrompida: ${getErrorMessage(sharpError)}`);
     }
 
     // Definir caminho: userId/projectId/type.png
@@ -157,9 +157,9 @@ export async function uploadImageWithThumbnail(
       if (thumbnailBuffer.length === 0) {
         throw new Error('Buffer thumbnail está vazio');
       }
-    } catch (sharpError: any) {
+    } catch (sharpError: unknown) {
       logger.error('[Storage] Erro ao processar imagem com Sharp', sharpError);
-      throw new Error(`Imagem inválida ou corrompida: ${sharpError.message}`);
+      throw new Error(`Imagem inválida ou corrompida: ${getErrorMessage(sharpError)}`);
     }
 
     // Caminhos

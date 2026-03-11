@@ -1,5 +1,5 @@
 import { retryGeminiAPI } from '../retry';
-import { logger } from '../logger';
+import { logger, getErrorMessage } from '../logger';
 import { getModelsForKey } from './models-config';
 
 // Gerar ideia de tatuagem a partir de texto (e opcionalmente imagem de referência)
@@ -153,9 +153,9 @@ GERE A IMAGEM AGORA:`;
       const text = response.text();
       logger.error('[Gemini] Retornou texto ao invés de imagem:', text);
       throw new Error('Falha ao gerar imagem. O modelo retornou apenas texto.');
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('[Gemini] Erro ao gerar ideia com Gemini:', error);
-      throw new Error(`Falha ao gerar design: ${error.message || 'Erro desconhecido'}`);
+      throw new Error(`Falha ao gerar design: ${getErrorMessage(error) || 'Erro desconhecido'}`);
     }
   }, `Gemini IA Gen (${size})`);
 }

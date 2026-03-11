@@ -5,11 +5,11 @@ import { describe, it, expect, vi } from 'vitest';
 // ---------------------------------------------------------------------------
 
 const mockSelect = vi.fn();
-const mockFrom = vi.fn(() => ({ select: mockSelect }));
+const mockFrom = vi.fn((_table: string) => ({ select: mockSelect }));
 
 vi.mock('../../supabase', () => ({
   supabaseAdmin: {
-    from: (...args: any[]) => mockFrom(...args),
+    from: (table: string) => mockFrom(table),
   },
 }));
 

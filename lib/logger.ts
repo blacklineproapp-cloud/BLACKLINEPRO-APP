@@ -202,6 +202,16 @@ class Logger {
 export const logger = new Logger();
 
 /**
+ * Extrai mensagem de erro de forma segura para unknown catches
+ * Uso: catch (error: unknown) { throw new Error(getErrorMessage(error)); }
+ */
+export function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'Erro desconhecido';
+}
+
+/**
  * Mascara email para uso em logs
  * Exemplo: "usuario@email.com" -> "us***@email.com"
  *

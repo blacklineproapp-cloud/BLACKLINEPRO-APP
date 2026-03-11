@@ -116,7 +116,7 @@ export default function OrganizationCard({
               d="M13 10V3L4 14h7v7l9-11h-7z"
             />
           </svg>
-          <span>680 gerações/mês compartilhadas</span>
+          <span>Gerações ilimitadas (BYOK) • 25 GB nuvem compartilhado</span>
         </div>
       )}
     </div>

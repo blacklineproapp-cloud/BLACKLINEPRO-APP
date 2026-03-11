@@ -14,7 +14,7 @@ let localConfig: { apiKey?: string; webhookToken?: string } = {};
 
 if (isDev) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+     
     const local = require('./config.local');
     localConfig = local.LOCAL_ASAAS_CONFIG || {};
     if (localConfig.apiKey) {
@@ -73,6 +73,6 @@ if (isDev) {
       logger.debug('[Asaas] DEBUG key: not set');
     }
   } catch (e) {
-    logger.warn('[Asaas] DEBUG key: error reading key', e as any);
+    logger.warn('[Asaas] DEBUG key: error reading key', e instanceof Error ? { error: e.message } : {});
   }
 }

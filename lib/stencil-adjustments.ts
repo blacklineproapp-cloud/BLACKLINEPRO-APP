@@ -1,6 +1,6 @@
 import { AdjustControls, STENCIL_PRESETS } from './stencil-types';
 import { compressIfNeeded } from './image-compress';
-import { logger } from './logger';
+import { logger, getErrorMessage } from './logger';
 
 /**
  * Helper functions para aplicar ajustes em stencils
@@ -71,9 +71,9 @@ export async function applyAdjustments(
     const data = await response.json();
     logger.info('[Adjustments] Sucesso, imagem ajustada recebida');
     return data.image;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Adjustments] Erro ao aplicar ajustes', error);
-    throw new Error(error.message || 'Erro ao processar ajustes');
+    throw new Error(getErrorMessage(error) || 'Erro ao processar ajustes');
   }
 }
 

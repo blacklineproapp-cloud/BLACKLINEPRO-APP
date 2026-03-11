@@ -9,7 +9,7 @@ import RemarketingInitial from '@/emails/templates/RemarketingInitial';
 import RemarketingReminder from '@/emails/templates/RemarketingReminder';
 import RemarketingFinal from '@/emails/templates/RemarketingFinal';
 import CourtesyPaymentLink from '@/emails/templates/CourtesyPaymentLink';
-import { logger } from '../logger';
+import { logger, getErrorMessage } from '../logger';
 
 // Inicializar Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -116,7 +116,7 @@ export async function sendWelcomeEmail(email: string, nome: string) {
     });
 
     logger.info('[Email] Boas-vindas enviado', { email });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Email] Erro ao enviar boas-vindas', error);
   }
 }
@@ -202,7 +202,7 @@ export async function sendPaymentConfirmationEmail(
     });
 
     logger.info('[Email] Confirmação de pagamento enviado', { email });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Email] Erro ao enviar confirmação', error);
   }
 }
@@ -284,7 +284,7 @@ export async function sendPaymentFailedEmail(
     });
 
     logger.info('[Email] Notificação de falha enviado', { email });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Email] Erro ao enviar notificação', error);
   }
 }
@@ -368,7 +368,7 @@ export async function sendSubscriptionCanceledEmail(
     });
 
     logger.info('[Email] Cancelamento enviado', { email });
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Email] Erro ao enviar cancelamento', error);
   }
 }
@@ -441,9 +441,9 @@ export async function sendRemarketingEmail(
 
     logger.info('[Email] Remarketing enviado', { campaignType, email });
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Email] Erro ao enviar remarketing', error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -486,8 +486,225 @@ export async function sendCourtesyPaymentEmail(
 
     logger.info('[Email] Link de pagamento (cortesia) enviado', { email });
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Email] Erro ao enviar link de cortesia', error);
-    return { success: false, error: error.message };
+    return { success: false, error: getErrorMessage(error) };
+  }
+}
+
+/**
+ * Email de Boleto/PIX Gerado
+ * Enviado quando uma cobrança via Boleto ou PIX é criada
+ */
+export async function sendBoletoPixEmail(
+  email: string,
+  nome: string,
+  billingType: 'BOLETO' | 'PIX',
+  paymentUrl: string,
+  dueDate: string,
+  amount: number
+) {
+  if (!process.env.RESEND_API_KEY) {
+    logger.warn('[Email] Resend não configurado, pulando envio');
+    return;
+  }
+
+  try {
+    const formattedDueDate = new Date(dueDate).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    const paymentMethodLabel = billingType === 'BOLETO' ? 'Boleto Bancário' : 'PIX';
+
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: 'Cobrança Gerada - Black Line Pro',
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; line-height: 1.6; color: #1e293b; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; padding: 40px 20px; text-align: center; border-radius: 12px 12px 0 0; }
+              .content { background: #ffffff; padding: 40px; border: 1px solid #e2e8f0; border-top: none; }
+              .amount { font-size: 36px; font-weight: bold; color: #3b82f6; text-align: center; margin: 20px 0; }
+              .info-box { background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; margin: 20px 0; border-radius: 4px; }
+              .info-item { margin: 10px 0; }
+              .info-label { font-weight: 600; color: #1e293b; }
+              .info-value { color: #475569; }
+              .button { display: inline-block; background: #3b82f6; color: white; padding: 14px 36px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: 600; }
+              .footer { text-align: center; color: #64748b; font-size: 14px; margin-top: 40px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>💳 Cobrança Gerada</h1>
+                <p>${paymentMethodLabel} disponível para pagamento</p>
+              </div>
+              <div class="content">
+                <p>Olá, <strong>${nome}</strong>!</p>
+
+                <p>Uma nova cobrança foi gerada para sua assinatura Black Line Pro.</p>
+
+                <div class="amount">
+                  R$ ${amount.toFixed(2)}
+                </div>
+
+                <div class="info-box">
+                  <div class="info-item">
+                    <div class="info-label">Método de Pagamento:</div>
+                    <div class="info-value">${paymentMethodLabel}</div>
+                  </div>
+                  <div class="info-item">
+                    <div class="info-label">Vencimento:</div>
+                    <div class="info-value">${formattedDueDate}</div>
+                  </div>
+                </div>
+
+                <p style="text-align: center; margin: 30px 0;">
+                  <a href="${paymentUrl}" class="button">
+                    📱 Pagar ${paymentMethodLabel}
+                  </a>
+                </p>
+
+                <p style="font-size: 14px; color: #64748b; margin-top: 30px;">
+                  Clique no botão acima para acessar o link de pagamento. Você também pode copiar o código ${billingType === 'BOLETO' ? 'de barras' : 'PIX'} para pagar através do seu banco.
+                </p>
+
+                <p style="margin-top: 30px;">
+                  <strong>Precisa de ajuda?</strong>
+                </p>
+                <p>Se tiver dúvidas sobre o pagamento, responda este email. Estamos aqui para ajudar!</p>
+              </div>
+              <div class="footer">
+                <p>Black Line Pro - Editor Profissional de Stencils</p>
+                <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/assinatura">Gerenciar Assinatura</a></p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `
+    });
+
+    logger.info('[Email] Email de boleto/PIX enviado', { email, billingType });
+  } catch (error: unknown) {
+    logger.error('[Email] Erro ao enviar email de boleto/PIX', error);
+  }
+}
+
+/**
+ * Email de Pagamento Vencido (Período de Graça)
+ * Enviado quando pagamento vence e usuário entra em período de graça
+ */
+export async function sendPaymentOverdueEmail(
+  email: string,
+  nome: string,
+  gracePeriodUntil: Date
+) {
+  if (!process.env.RESEND_API_KEY) {
+    logger.warn('[Email] Resend não configurado, pulando envio');
+    return;
+  }
+
+  try {
+    const formattedDate = gracePeriodUntil.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: 'Pagamento Vencido - Regularize sua assinatura',
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body { font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; line-height: 1.6; color: #1e293b; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: #f59e0b; color: white; padding: 40px 20px; text-align: center; border-radius: 12px 12px 0 0; }
+              .content { background: #ffffff; padding: 40px; border: 1px solid #e2e8f0; border-top: none; }
+              .warning-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px; margin: 20px 0; border-radius: 4px; }
+              .warning-title { font-weight: 700; color: #92400e; font-size: 16px; margin-bottom: 10px; }
+              .warning-text { color: #78350f; line-height: 1.8; }
+              .deadline { font-size: 18px; font-weight: bold; color: #f59e0b; text-align: center; margin: 15px 0; }
+              .button { display: inline-block; background: #f59e0b; color: white; padding: 14px 36px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: 600; }
+              .footer { text-align: center; color: #64748b; font-size: 14px; margin-top: 40px; }
+              .steps { background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; }
+              .step { margin: 12px 0; }
+              .step-number { display: inline-block; background: #f59e0b; color: white; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; margin-right: 10px; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>⚠️ Pagamento Vencido</h1>
+                <p>Período de graça disponível</p>
+              </div>
+              <div class="content">
+                <p>Olá, <strong>${nome}</strong>!</p>
+
+                <p>Seu pagamento da assinatura Black Line Pro venceu e você está em período de graça.</p>
+
+                <div class="warning-box">
+                  <div class="warning-title">⏰ Período de Graça até:</div>
+                  <div class="deadline">${formattedDate}</div>
+                  <div class="warning-text">
+                    <p>Regularize seu pagamento antes do prazo para manter o acesso às funcionalidades premium.</p>
+                  </div>
+                </div>
+
+                <p style="text-align: center; margin: 30px 0;">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/assinatura" class="button">
+                    💳 Regularizar Pagamento
+                  </a>
+                </p>
+
+                <div class="steps">
+                  <p style="font-weight: 600; margin-bottom: 15px;">O que você precisa fazer:</p>
+                  <div class="step">
+                    <span class="step-number">1</span>
+                    Acesse sua página de assinatura
+                  </div>
+                  <div class="step">
+                    <span class="step-number">2</span>
+                    Atualize seu método de pagamento
+                  </div>
+                  <div class="step">
+                    <span class="step-number">3</span>
+                    Pague imediatamente para reativar
+                  </div>
+                </div>
+
+                <p style="margin-top: 30px; padding: 15px; background: #fef3c7; border-radius: 8px; color: #92400e;">
+                  <strong>Atenção:</strong> Após o período de graça, você perderá acesso às funcionalidades premium até regularizar o pagamento.
+                </p>
+
+                <p style="margin-top: 30px;">
+                  Se tiver dúvidas, responda este email. Estamos aqui para ajudar!
+                </p>
+              </div>
+              <div class="footer">
+                <p>Black Line Pro - Editor Profissional de Stencils</p>
+                <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/assinatura">Gerenciar Assinatura</a></p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `
+    });
+
+    logger.info('[Email] Email de pagamento vencido enviado', { email });
+  } catch (error: unknown) {
+    logger.error('[Email] Erro ao enviar email de pagamento vencido', error);
   }
 }

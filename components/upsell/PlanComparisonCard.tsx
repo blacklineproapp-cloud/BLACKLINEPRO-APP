@@ -26,35 +26,34 @@ interface PlanComparisonCardProps {
 const UPGRADE_FEATURES: Record<PlanType, { key: string; label: string; description: string; isNew?: boolean }[]> = {
   free: [],
   ink: [
-    { key: 'editor', label: 'Editor de Stencil', description: 'Crie stencils profissionais' },
-    { key: 'topographic', label: 'Modo Topográfico', description: 'Máximo detalhe' },
-    { key: 'perfectLines', label: 'Linhas Perfeitas', description: 'Contornos precisos' },
-    { key: 'tools', label: 'Ferramentas Básicas', description: 'Remove fundo, enhance' },
-    { key: 'generations', label: '95 gerações/mês', description: 'Limite mensal' },
+    { key: 'byok', label: 'Gerações ilimitadas (BYOK)', description: 'Use sua chave Gemini gratuita' },
+    { key: 'cloud', label: '5 GB armazenamento nuvem', description: 'Acesse de qualquer dispositivo' },
+    { key: 'noAds', label: 'Sem anúncios', description: 'Experiência limpa e profissional' },
+    { key: 'editor', label: 'Editor completo + modos avançados', description: 'Topográfico, Linhas Perfeitas, Anime' },
   ],
   pro: [
     { key: 'allInk', label: 'Tudo do Ink', description: 'Todas as features anteriores' },
-    { key: 'ai', label: 'IA Generativa', description: 'Crie designs do zero', isNew: true },
+    { key: 'cloud', label: '10 GB armazenamento nuvem', description: 'Galeria profissional completa', isNew: true },
+    { key: 'ai', label: 'Generator de artes com IA', description: 'Crie designs do zero', isNew: true },
     { key: 'colorMatch', label: 'Color Match IA', description: 'Paleta inteligente', isNew: true },
     { key: 'enhance4K', label: 'Enhance 4K', description: 'Qualidade máxima', isNew: true },
     { key: 'splitA4', label: 'Dividir A4', description: 'Impressão otimizada', isNew: true },
-    { key: 'generations', label: '210 gerações/mês', description: '+115 gerações', isNew: true },
   ],
   studio: [
     { key: 'allPro', label: 'Tudo do Pro', description: 'Todas as features anteriores' },
-    { key: 'generations', label: '680 gerações/mês', description: '+470 gerações', isNew: true },
+    { key: 'cloud', label: '25 GB armazenamento nuvem', description: 'Para toda a equipe', isNew: true },
+    { key: 'multiUser', label: 'Múltiplos usuários (team)', description: 'Compartilhe com a equipe', isNew: true },
     { key: 'priority', label: 'Suporte Prioritário', description: 'Atendimento preferencial', isNew: true },
-    { key: 'multiUser', label: 'Ideal para Estúdios', description: 'Múltiplos artistas', isNew: true },
-    { key: 'reports', label: 'Relatórios de Uso', description: 'Acompanhe consumo', isNew: true },
+    { key: 'reports', label: 'Relatórios de Uso', description: 'Acompanhe consumo da equipe', isNew: true },
   ],
 };
 
 // O que cada upgrade oferece em relação ao plano anterior
 const UPGRADE_HIGHLIGHTS: Record<PlanType, string[]> = {
   free: [],
-  ink: ['Editor completo', 'Ferramentas básicas', '95 gerações/mês'],
-  pro: ['+115 gerações/mês', 'IA Generativa', 'Color Match', 'Enhance 4K', 'Dividir A4'],
-  studio: ['+470 gerações/mês', 'Suporte prioritário', 'Ideal para estúdios'],
+  ink: ['Gerações ilimitadas', '5 GB nuvem', 'Sem anúncios'],
+  pro: ['10 GB nuvem', 'IA Generativa', 'Color Match', 'Enhance 4K', 'Dividir A4'],
+  studio: ['25 GB nuvem', 'Multi-usuário', 'Suporte prioritário'],
 };
 
 export default function PlanComparisonCard({
@@ -127,17 +126,21 @@ export default function PlanComparisonCard({
           )}
         </div>
 
-        {/* Generations limit highlight */}
+        {/* BYOK + Storage highlight */}
         <div className="mt-3 p-2 rounded-lg bg-zinc-900/50 border border-zinc-700">
           <div className="flex items-center gap-2">
             <Zap size={14} className="text-amber-400" />
             <span className="text-sm font-medium text-white">
-              {limits.editorGenerations === -1
-                ? 'Ilimitado'
-                : `${limits.editorGenerations} gerações/mês`
-              }
+              Gerações ilimitadas (BYOK)
             </span>
           </div>
+          {planInfo.storageGB && planInfo.storageGB > 0 && (
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-xs text-zinc-400 ml-5">
+                + {planInfo.storageGB} GB armazenamento em nuvem
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

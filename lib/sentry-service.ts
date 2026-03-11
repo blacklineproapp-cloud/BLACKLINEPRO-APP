@@ -103,7 +103,7 @@ export async function fetchSentryIssues(
 
     const issues: SentryIssue[] = await response.json();
     return issues;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Sentry Service] Erro ao buscar issues', error);
     throw error;
   }
@@ -132,7 +132,7 @@ export async function fetchSentryIssueDetails(issueId: string): Promise<SentryIs
     }
 
     return await response.json();
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Sentry Service] Erro ao buscar detalhes da issue', error);
     throw error;
   }
@@ -165,7 +165,7 @@ export async function fetchIssueEvents(
     }
 
     return await response.json();
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Sentry Service] Erro ao buscar eventos', error);
     throw error;
   }
@@ -192,7 +192,7 @@ export async function resolveIssue(issueId: string): Promise<boolean> {
     });
 
     return response.ok;
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Sentry Service] Erro ao resolver issue', error);
     return false;
   }
@@ -243,7 +243,7 @@ export async function fetchProjectStats(): Promise<{
       errorCount24h: errors,
       warningCount24h: warnings,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error('[Sentry Service] Erro ao buscar estatísticas', error);
     return {
       issueCount: 0,

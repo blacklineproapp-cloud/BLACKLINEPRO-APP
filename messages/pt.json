@@ -430,10 +430,10 @@
     "back": "Voltar",
     "howItWorks": {
       "title": "Como Funciona",
-      "desc": "Assine e use o Black Line Pro durante todo o período escolhido. Cada plano tem um limite de gerações mensal incluído.",
+      "desc": "Modelo BYOK: use sua chave Gemini gratuita do Google para gerações ilimitadas. Planos pagos adicionam armazenamento em nuvem, ferramentas premium e experiência sem anúncios.",
       "recurrent": "Assinatura recorrente - Renovação automática",
       "cancelAnytime": "Cancele a qualquer momento - Sem multas ou taxas",
-      "limitsRenew": "Limites renovam todo mês - Mesmo em planos anuais",
+      "limitsRenew": "Gerações ilimitadas em todos os planos via BYOK",
       "immediateAccess": "Acesso imediato após pagamento - Comece a usar agora",
       "savePercent": "Economize {percent}% pagando {cycle}"
     },
@@ -817,7 +817,7 @@
       "title": "Ferramentas Premium",
       "subtitle": "Desbloqueie ferramentas avançadas para seus estênceis",
       "cta": "Ver Planos e Preços",
-      "priceFrom": "A partir de R$ 50/mês"
+      "priceFrom": "A partir de R$ 69/mês"
     },
     "modes": {
       "enhance": {

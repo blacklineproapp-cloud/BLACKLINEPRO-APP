@@ -8,7 +8,7 @@
  */
 
 import { supabaseAdmin } from '../supabase';
-import { logger } from '../logger';
+import { logger, getErrorMessage } from '../logger';
 import type { PlanType } from '../billing/types';
 
 // ============================================================================
@@ -172,8 +172,8 @@ export async function activateUserAtomic(
         }
       }
     }
-  } catch (syncError: any) {
-    logger.warn('[UserActivation] Falha na sincronização Asaas', { error: syncError.message });
+  } catch (syncError: unknown) {
+    logger.warn('[UserActivation] Falha na sincronização Asaas', { error: getErrorMessage(syncError) });
   }
 
   logger.info('[UserActivation] Ativação concluída', { message: result.message });

@@ -26,11 +26,11 @@ import { applyAdjustments, resetControls } from '@/lib/stencil-adjustments';
 import { processImageOnClient } from '@/lib/canvas-processor';
 import { storage } from '@/lib/client-storage';
 import { compressIfNeeded } from '@/lib/image-compress';
-import BlurPreviewModal from '@/components/upsell/BlurPreviewModal';
+
 import AsaasCheckoutModal from '@/components/AsaasCheckoutModal';
 import { DrawingEditor } from '@/components/drawing';
 import type { Stroke } from '@/lib/drawing/types';
-import type { PlanType } from '@/lib/billing/plans';
+
 import type { BillingCycle } from '@/lib/billing/types';
 
 type Style = 'standard' | 'perfect_lines' | 'anime';
@@ -93,10 +93,6 @@ export default function EditorPage() {
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isRestoringHistoryRef = useRef(false); // Flag para ignorar mudanças do histórico
   const rafIdRef = useRef<number | null>(null); // RequestAnimationFrame para slider suave
-
-  // Blur Preview Modal (upsell para free users)
-  const [showBlurPreview, setShowBlurPreview] = useState(false);
-  const [blurredPreviewImage, setBlurredPreviewImage] = useState<string | null>(null);
 
   // Ad overlay para usuários free/anônimos durante geração
   const [showAdOverlay, setShowAdOverlay] = useState(false);
@@ -455,14 +451,6 @@ export default function EditorPage() {
       const data = await res.json();
 
       if (res.ok) {
-        // 🎣 FREE USERS: Se é preview (blur + watermark), mostrar modal de upsell
-        if (data.isPreview) {
-          setBlurredPreviewImage(data.image);
-          setShowBlurPreview(true);
-          setShowControls(true);
-          return;
-        }
-
         let finalStencil = data.image;
 
         // 📐 RESIZE: Redimensionar stencil para o tamanho físico escolhido
@@ -549,15 +537,6 @@ export default function EditorPage() {
     } catch (error) {
       console.error('Erro ao auto-salvar:', error);
     }
-  };
-
-  // Handler para quando o usuário clica em assinar no BlurPreviewModal
-  const handleUpsellSubscribe = (plan: PlanType, cycle: BillingCycle) => {
-    setShowBlurPreview(false);
-    // Abrir o CheckoutModal estilizado com Stripe Elements
-    setCheckoutPlan(plan as 'ink' | 'pro');
-    setCheckoutCycle(cycle);
-    setShowCheckout(true);
   };
 
   const handleSave = async () => {
@@ -1240,15 +1219,7 @@ export default function EditorPage() {
         onResizeComplete={handleResizeComplete}
       />
 
-      {/* Blur Preview Modal (Upsell para free users) */}
-      <BlurPreviewModal
-        isOpen={showBlurPreview}
-        onClose={() => setShowBlurPreview(false)}
-        blurredImageSrc={blurredPreviewImage || ''}
-        onSubscribe={handleUpsellSubscribe}
-      />
-
-      {/* Checkout Modal (Stripe Elements estilizado) */}
+      {/* Checkout Modal (Asaas) */}
       <AsaasCheckoutModal
         plan={checkoutPlan}
         cycle={checkoutCycle}

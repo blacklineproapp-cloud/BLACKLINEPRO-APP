@@ -1,5 +1,6 @@
 import { Redis } from 'ioredis';
 import { logger } from './logger';
+import { CircuitBreaker } from './circuit-breaker';
 
 /**
  * Sistema de Cache Híbrido com Redis
@@ -7,10 +8,8 @@ import { logger } from './logger';
  * Usa Redis quando disponível (produção) e fallback para memória (desenvolvimento)
  * Compartilhado entre instâncias + persistente + alta performance
  *
- * 🚀 MIGRAÇÃO: Upstash → Railway Redis
- * - Railway Redis usa protocolo TCP nativo (ioredis)
- * - Upstash cobrava US$ 12/mês desnecessariamente
- * - Railway Redis é GRÁTIS e mais rápido (mesmo datacenter)
+ * Railway Redis via protocolo TCP nativo (ioredis)
+ * Mesmo datacenter = latência mínima
  */
 
 // ============================================
@@ -57,6 +56,17 @@ if (!redisClient && process.env.REDIS_URL) {
     redisClient = null;
   }
 }
+
+// ============================================
+// CIRCUIT BREAKER (protege contra cascading failures)
+// ============================================
+
+const redisBreaker = new CircuitBreaker({
+  name: 'Redis',
+  failureThreshold: 5,
+  resetTimeoutMs: 30_000,
+  successThreshold: 2,
+});
 
 // ============================================
 // FALLBACK: CACHE EM MEMÓRIA
@@ -152,10 +162,11 @@ export async function getOrSetCache<T>(
   // Construir chave completa com namespace
   const fullKey = namespace ? `${namespace}:${key}` : key;
 
-  // 1. Tentar buscar do Redis (sem rodar fetcher ainda)
-  if (redisClient) {
+  // 1. Tentar buscar do Redis (com circuit breaker)
+  if (redisClient && redisBreaker.canExecute()) {
     try {
       const cached = await redisClient.get(fullKey);
+      redisBreaker.recordSuccess();
 
       if (cached) {
         logger.debug('[Cache] Redis HIT', { key: fullKey });
@@ -165,8 +176,8 @@ export async function getOrSetCache<T>(
     } catch (error) {
       logger.error('[Cache] Erro ao acessar cache (GET)', error, { key: fullKey });
       cacheMetrics.errors++;
+      redisBreaker.recordFailure();
       // Apenas logar erro do Redis e continuar para fallback/fetcher
-      // NÃO chamar fetcher aqui dentro
     }
   }
 
@@ -194,12 +205,14 @@ export async function getOrSetCache<T>(
       tags,
     });
 
-    // Salvar Redis
-    if (redisClient) {
+    // Salvar Redis (com circuit breaker)
+    if (redisClient && redisBreaker.canExecute()) {
       try {
         await redisClient.setex(fullKey, Math.floor(ttl / 1000), JSON.stringify(data));
+        redisBreaker.recordSuccess();
       } catch (error) {
         logger.error('[Cache] Erro ao definir cache (SET)', error, { key: fullKey });
+        redisBreaker.recordFailure();
       }
     }
   })();
@@ -218,13 +231,15 @@ export async function setCache<T>(
   const { ttl = 300000, namespace } = options;
   const fullKey = namespace ? `${namespace}:${key}` : key;
 
-  if (redisClient) {
+  if (redisClient && redisBreaker.canExecute()) {
     try {
       await redisClient.setex(fullKey, Math.floor(ttl / 1000), JSON.stringify(data));
+      redisBreaker.recordSuccess();
       logger.debug('[Cache] Redis SET', { key: fullKey });
       return;
     } catch (error) {
       logger.error('[Cache] Erro ao definir cache', error, { key: fullKey });
+      redisBreaker.recordFailure();
     }
   }
 
@@ -244,13 +259,15 @@ export async function setCache<T>(
 export async function invalidateCache(key: string, namespace?: string): Promise<void> {
   const fullKey = namespace ? `${namespace}:${key}` : key;
 
-  if (redisClient) {
+  if (redisClient && redisBreaker.canExecute()) {
     try {
       await redisClient.del(fullKey);
+      redisBreaker.recordSuccess();
       logger.debug('[Cache] Redis invalidado', { key: fullKey });
       return;
     } catch (error) {
       logger.error('[Cache] Erro ao invalidar cache', error, { key: fullKey });
+      redisBreaker.recordFailure();
     }
   }
 
@@ -267,9 +284,10 @@ export async function invalidateCacheByPattern(
 ): Promise<number> {
   const fullPattern = namespace ? `${namespace}:${pattern}` : pattern;
 
-  if (redisClient) {
+  if (redisClient && redisBreaker.canExecute()) {
     try {
       const keys = await redisClient.keys(fullPattern);
+      redisBreaker.recordSuccess();
       if (keys.length > 0) {
         await redisClient.del(...keys);
         logger.info('[Cache] Redis entradas invalidadas por padrão', { count: keys.length, pattern: fullPattern });
@@ -278,6 +296,7 @@ export async function invalidateCacheByPattern(
       return 0;
     } catch (error) {
       logger.error('[Cache] Erro ao invalidar por padrão', error, { pattern: fullPattern });
+      redisBreaker.recordFailure();
     }
   }
 
@@ -298,9 +317,10 @@ export async function invalidateCacheByPattern(
  * Invalida cache por tag
  */
 export async function invalidateCacheByTag(tag: string): Promise<number> {
-  if (redisClient) {
+  if (redisClient && redisBreaker.canExecute()) {
     try {
       const keys = await redisClient.smembers(`tag:${tag}`);
+      redisBreaker.recordSuccess();
       if (keys.length > 0) {
         await redisClient.del(...keys);
         await redisClient.del(`tag:${tag}`);
@@ -310,6 +330,7 @@ export async function invalidateCacheByTag(tag: string): Promise<number> {
       return 0;
     } catch (error) {
       logger.error('[Cache] Erro ao invalidar por tag', error, { tag });
+      redisBreaker.recordFailure();
     }
   }
 
@@ -329,13 +350,15 @@ export async function invalidateCacheByTag(tag: string): Promise<number> {
  * Limpa todo o cache
  */
 export async function clearAllCache(): Promise<void> {
-  if (redisClient) {
+  if (redisClient && redisBreaker.canExecute()) {
     try {
       await redisClient.flushdb();
+      redisBreaker.recordSuccess();
       logger.info('[Cache] Todo cache Redis limpo');
       return;
     } catch (error) {
       logger.error('[Cache] Erro ao limpar cache', error);
+      redisBreaker.recordFailure();
     }
   }
 
@@ -354,10 +377,12 @@ export async function getCacheStats(): Promise<{
   hits: number;
   misses: number;
   errors: number;
+  circuitBreaker?: ReturnType<CircuitBreaker['getStats']>;
 }> {
-  if (redisClient) {
+  if (redisClient && redisBreaker.canExecute()) {
     try {
       const dbsize = await redisClient.dbsize();
+      redisBreaker.recordSuccess();
 
       return {
         type: 'redis',
@@ -365,9 +390,11 @@ export async function getCacheStats(): Promise<{
         hits: cacheMetrics.hits,
         misses: cacheMetrics.misses,
         errors: cacheMetrics.errors,
+        circuitBreaker: redisBreaker.getStats(),
       };
     } catch (error) {
       logger.error('[Cache] Erro ao obter stats', error);
+      redisBreaker.recordFailure();
     }
   }
 

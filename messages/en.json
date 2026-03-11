@@ -61,8 +61,8 @@
       "apiAccess": "API Access",
       "integration": "Custom Integration",
       "exclusiveService": "Exclusive Service",
-      "genLimitStudio": "Up to 680 generations/month",
-      "genLimitEnterprise": "Up to 1,400 generations/month"
+      "genLimitStudio": "Unlimited generations (BYOK)",
+      "genLimitEnterprise": "Unlimited generations (BYOK)"
     }
   },
   "landing": {
@@ -432,10 +432,10 @@
     "back": "Back",
     "howItWorks": {
       "title": "How It Works",
-      "desc": "Subscribe and use Black Line Pro throughout your chosen period. Each plan includes a monthly generation limit.",
+      "desc": "BYOK model: use your free Google Gemini key for unlimited generations. Paid plans add cloud storage, premium tools, and an ad-free experience.",
       "recurrent": "Recurring subscription - Automatic renewal",
       "cancelAnytime": "Cancel anytime - No penalties or fees",
-      "limitsRenew": "Limits renew every month - Even on annual plans",
+      "limitsRenew": "Unlimited generations on all plans via BYOK",
       "immediateAccess": "Immediate access after payment - Start using now",
       "savePercent": "Save {percent}% by paying {cycle}"
     },
